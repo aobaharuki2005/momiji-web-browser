@@ -1549,9 +1549,9 @@ RefPtr<dom::Promise> ReplaceTrackOperation::CallImpl(ErrorResult& aError) {
     if (aError.Failed()) {
       return nullptr;
     }
-    MOZ_LOG(gSenderLog, LogLevel::Debug,
-            ("%s Cannot call replaceTrack when transceiver is stopping",
-             __FUNCTION__));
+    MOZ_LOG_FMT(gSenderLog, LogLevel::Debug,
+                "{} Cannot call replaceTrack when transceiver is stopping",
+                __FUNCTION__);
     error->MaybeRejectWithInvalidStateError(
         "Cannot call replaceTrack when transceiver is stopping");
     return error;
@@ -1564,8 +1564,8 @@ RefPtr<dom::Promise> ReplaceTrackOperation::CallImpl(ErrorResult& aError) {
   }
 
   if (!sender->SeamlessTrackSwitch(mNewTrack)) {
-    MOZ_LOG(gSenderLog, LogLevel::Info,
-            ("%s Could not seamlessly replace track", __FUNCTION__));
+    MOZ_LOG_FMT(gSenderLog, LogLevel::Info,
+                "{} Could not seamlessly replace track", __FUNCTION__);
     p->MaybeRejectWithInvalidModificationError(
         "Could not seamlessly replace track");
     return p;
@@ -1607,9 +1607,9 @@ already_AddRefed<dom::Promise> RTCRtpSender::ReplaceTrack(
     }
   }
 
-  MOZ_LOG(gSenderLog, LogLevel::Debug,
-          ("%s[%s]: %s (%p to %p)", mPc->GetHandle().c_str(), GetMid().c_str(),
-           __FUNCTION__, mSenderTrack.get(), aWithTrack));
+  MOZ_LOG_FMT(gSenderLog, LogLevel::Debug, "{}[{}]: {} ({} to {})",
+              mPc->GetHandle().c_str(), GetMid().c_str(), __FUNCTION__,
+              fmt::ptr(mSenderTrack.get()), fmt::ptr(aWithTrack));
 
   // Return the result of chaining the following steps to connection's
   // operations chain:
@@ -1735,9 +1735,9 @@ void RTCRtpSender::MaybeUpdateConduit() {
   }
 
   if (!mSenderTrack && !wasTransmitting && mTransmitting) {
-    MOZ_LOG(gSenderLog, LogLevel::Debug,
-            ("%s[%s]: %s Starting transmit conduit without send track!",
-             mPc->GetHandle().c_str(), GetMid().c_str(), __FUNCTION__));
+    MOZ_LOG_FMT(gSenderLog, LogLevel::Debug,
+                "{}[{}]: {} Starting transmit conduit without send track!",
+                mPc->GetHandle().c_str(), GetMid().c_str(), __FUNCTION__);
   }
 }
 
@@ -1960,9 +1960,9 @@ Maybe<RTCRtpSender::VideoConfig> RTCRtpSender::GetNewVideoConfig() {
     // seem like a failure to set an answer, it just means that codec
     // negotiation failed. For now, we're just doing the same thing we do
     // if negotiation as a whole failed.
-    MOZ_LOG(gSenderLog, LogLevel::Error,
-            ("%s[%s]: %s  No video codecs were negotiated (send).",
-             mPc->GetHandle().c_str(), GetMid().c_str(), __FUNCTION__));
+    MOZ_LOG_FMT(gSenderLog, LogLevel::Error,
+                "{}[{}]: {}  No video codecs were negotiated (send).",
+                mPc->GetHandle().c_str(), GetMid().c_str(), __FUNCTION__);
     return Nothing();
   }
 
@@ -2020,9 +2020,9 @@ Maybe<RTCRtpSender::VideoConfig> RTCRtpSender::GetNewVideoConfig() {
   newConfig.mVideoRtpRtcpConfig = Some(details.GetRtpRtcpConfig());
 
   if (newConfig == oldConfig) {
-    MOZ_LOG(gSenderLog, LogLevel::Debug,
-            ("%s[%s]: %s  No change in video config", mPc->GetHandle().c_str(),
-             GetMid().c_str(), __FUNCTION__));
+    MOZ_LOG_FMT(gSenderLog, LogLevel::Debug,
+                "{}[{}]: {}  No change in video config",
+                mPc->GetHandle().c_str(), GetMid().c_str(), __FUNCTION__);
     return Nothing();
   }
 
@@ -2057,9 +2057,9 @@ Maybe<RTCRtpSender::AudioConfig> RTCRtpSender::GetNewAudioConfig() {
       // seem like a failure to set an answer, it just means that codec
       // negotiation failed. For now, we're just doing the same thing we do
       // if negotiation as a whole failed.
-      MOZ_LOG(gSenderLog, LogLevel::Error,
-              ("%s[%s]: %s No audio codecs were negotiated (send)",
-               mPc->GetHandle().c_str(), GetMid().c_str(), __FUNCTION__));
+      MOZ_LOG_FMT(gSenderLog, LogLevel::Error,
+                  "{}[{}]: {} No audio codecs were negotiated (send)",
+                  mPc->GetHandle().c_str(), GetMid().c_str(), __FUNCTION__);
       return Nothing();
     }
 
@@ -2111,9 +2111,9 @@ Maybe<RTCRtpSender::AudioConfig> RTCRtpSender::GetNewAudioConfig() {
   }
 
   if (newConfig == oldConfig) {
-    MOZ_LOG(gSenderLog, LogLevel::Debug,
-            ("%s[%s]: %s  No change in audio config", mPc->GetHandle().c_str(),
-             GetMid().c_str(), __FUNCTION__));
+    MOZ_LOG_FMT(gSenderLog, LogLevel::Debug,
+                "{}[{}]: {}  No change in audio config",
+                mPc->GetHandle().c_str(), GetMid().c_str(), __FUNCTION__);
     return Nothing();
   }
 

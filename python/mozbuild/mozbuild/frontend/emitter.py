@@ -1484,6 +1484,21 @@ class TreeMetadataEmitter(LoggingMixin):
                 else:
                     processed_moz_src_files += [file]
 
+        if context.get("PP_FILES_EXTRA_DEPS") and not any(
+            context.get(v)
+            for v in (
+                "FINAL_TARGET_PP_FILES",
+                "OBJDIR_PP_FILES",
+                "LOCALIZED_PP_FILES",
+            )
+        ):
+            raise SandboxValidationError(
+                "PP_FILES_EXTRA_DEPS is set but no preprocessed files "
+                "(FINAL_TARGET_PP_FILES, OBJDIR_PP_FILES, LOCALIZED_PP_FILES, "
+                "or an EXTRA_PP_* variant) are defined in this directory.",
+                context,
+            )
+
         components = []
         for var, cls in (
             ("EXPORTS", Exports),
@@ -1608,7 +1623,23 @@ class TreeMetadataEmitter(LoggingMixin):
                     context,
                 )
 
-            yield cls(context, all_files)
+            kwargs = {}
+            if cls in (
+                FinalTargetPreprocessedFiles,
+                LocalizedPreprocessedFiles,
+                ObjdirPreprocessedFiles,
+            ):
+                pp_extra_deps = context.get("PP_FILES_EXTRA_DEPS") or []
+                for d in pp_extra_deps:
+                    if isinstance(d, SourcePath) and not os.path.exists(d.full_path):
+                        raise SandboxValidationError(
+                            f"Path specified in PP_FILES_EXTRA_DEPS does not "
+                            f"exist: {d} (resolved to {d.full_path})",
+                            context,
+                        )
+                kwargs["extra_deps"] = list(pp_extra_deps)
+
+            yield cls(context, all_files, **kwargs)
 
         for c in components:
             if c.endswith(".manifest"):

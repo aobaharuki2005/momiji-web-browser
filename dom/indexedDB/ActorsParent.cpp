@@ -9455,8 +9455,6 @@ bool Database::InvalidateAll(const nsTBaseHashSet<nsPtrHashKey<T>>& aTable) {
                      aTable, [](const auto& entry) { return entry; }, fallible),
                  false);
 
-  IDB_REPORT_INTERNAL_ERR();
-
   for (const auto& elementToInvalidate : elementsToInvalidate) {
     MOZ_ASSERT(elementToInvalidate);
 

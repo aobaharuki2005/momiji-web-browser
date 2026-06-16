@@ -482,7 +482,10 @@ function dohHandler(req, res) {
       responseIP = "none";
       if (packet.questions[0].type == "HTTPS") {
         let priority = 1;
-        if (packet.questions[0].name === "foo.notexisted.com") {
+        // The query name may be port-prefixed (e.g. _8080._https.foo...) when
+        // network.dns.port_prefixed_qname_https_rr is enabled, so match the
+        // host as a suffix rather than exactly.
+        if (packet.questions[0].name.endsWith("foo.notexisted.com")) {
           priority = 0;
         }
         answers.push({

@@ -2359,7 +2359,12 @@ already_AddRefed<CSSValue> nsComputedDOMStyle::GetTransformValue(
    */
   nsStyleTransformMatrix::TransformReferenceBox refBox(mInnerFrame, nsRect());
   gfx::Matrix4x4 matrix = nsStyleTransformMatrix::ReadTransforms(
-      aTransform, refBox, float(mozilla::AppUnitsPerCSSPixel()));
+      aTransform, refBox, float(mozilla::AppUnitsPerCSSPixel()),
+      mozilla::StyleZoom::ONE);  // One is passed in, as computed value does not
+                                 // need zooming
+  // TODO(salipov, bug 2045846): Fix zooming for transforms other than matrix.
+  // Note that unzooming may be neded here for transforms using lengths as
+  // opposed to numbers.
 
   return MatrixToCSSValue(matrix);
 }

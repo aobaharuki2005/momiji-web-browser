@@ -1771,10 +1771,12 @@ void nsCSSFrameConstructor::CreateGeneratedContentItem(
                  aPseudoElement == PseudoStyleType::After ||
                  aPseudoElement == PseudoStyleType::Marker ||
                  aPseudoElement == PseudoStyleType::Backdrop ||
-                 aPseudoElement == PseudoStyleType::Checkmark,
+                 aPseudoElement == PseudoStyleType::Checkmark ||
+                 aPseudoElement == PseudoStyleType::PickerIcon,
              "unexpected aPseudoElement");
 
   if (aPseudoElement != PseudoStyleType::Backdrop &&
+      aPseudoElement != PseudoStyleType::PickerIcon &&
       HasUAWidget(aOriginatingElement) &&
       !aOriginatingElement.IsHTMLElement(nsGkAtoms::details)) {
     // ::before / ::after / ::marker shouldn't work on <video> / <input>.
@@ -1816,6 +1818,10 @@ void nsCSSFrameConstructor::CreateGeneratedContentItem(
     case PseudoStyleType::Checkmark:
       elemName = nsGkAtoms::mozgeneratedcontentcheckmark;
       property = nsGkAtoms::checkmarkPseudoProperty;
+      break;
+    case PseudoStyleType::PickerIcon:
+      elemName = nsGkAtoms::mozgeneratedcontentpickericon;
+      property = nsGkAtoms::pickerIconPseudoProperty;
       break;
     default:
       MOZ_ASSERT_UNREACHABLE("unexpected aPseudoElement");
@@ -3230,7 +3236,9 @@ static nsIFrame* FindAncestorWithGeneratedContentPseudo(nsIFrame* aFrame) {
     auto pseudo = f->Style()->GetPseudoType();
     if (pseudo == PseudoStyleType::Before || pseudo == PseudoStyleType::After ||
         pseudo == PseudoStyleType::Marker ||
-        pseudo == PseudoStyleType::Backdrop) {
+        pseudo == PseudoStyleType::Backdrop ||
+        pseudo == PseudoStyleType::Checkmark ||
+        pseudo == PseudoStyleType::PickerIcon) {
       return f;
     }
   }
@@ -5648,6 +5656,9 @@ nsIFrame* nsCSSFrameConstructor::FindSiblingInternal(
 
   auto getFarPseudo = [&](const nsIContent* aContent) -> nsIFrame* {
     if (aDirection == SiblingDirection::Forward) {
+      if (auto* pickerIcon = nsLayoutUtils::GetPickerIconFrame(aContent)) {
+        return pickerIcon;
+      }
       return nsLayoutUtils::GetAfterFrame(aContent);
     }
     if (auto* before = nsLayoutUtils::GetBeforeFrame(aContent)) {
@@ -9207,6 +9218,11 @@ void nsCSSFrameConstructor::ProcessChildren(
       CreateGeneratedContentItem(aState, aFrame, *aContent->AsElement(),
                                  *parentStyle, PseudoStyleType::After,
                                  itemsToConstruct);
+      if (aContent->IsHTMLElement(nsGkAtoms::select)) {
+        CreateGeneratedContentItem(aState, aFrame, *aContent->AsElement(),
+                                   *parentStyle, PseudoStyleType::PickerIcon,
+                                   itemsToConstruct);
+      }
     }
   } else {
     ClearLazyBits(aContent->GetFirstChild(), nullptr);

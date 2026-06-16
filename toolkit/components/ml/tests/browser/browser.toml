@@ -6,6 +6,22 @@ support-files = [
   "data/**/*.*"
 ]
 
+# Asserts best-onnx resolves to onnx-native; gated to platforms that bundle
+# the native onnxruntime (matches browser_ml_native.js skip-if).
+["browser_ml_best_onnx.js"]
+skip-if = [
+  "arch == 'x86'",
+  "asan",
+  "debug",
+  "os == 'android'",
+  "tsan",
+  "verify",
+]
+
+# Simulates a missing native runtime via a worker stub and asserts the
+# fallback resolves to wasm onnx. Pair with the test above.
+["browser_ml_best_onnx_fallback.js"]
+
 ["browser_ml_cache.js"]
 
 ["browser_ml_cluster_algos.js"]

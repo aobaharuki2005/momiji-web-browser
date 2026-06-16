@@ -10,12 +10,15 @@
 #include <gdk/gdkkeysyms-compat.h>
 #include <X11/Xatom.h>
 #include <X11/extensions/XShm.h>
+#include <X11/extensions/Xfixes.h>
 #include <X11/extensions/shape.h>
 #include "gfxXlibSurface.h"
 #include "GLContextGLX.h"  // for GLContextGLX::FindVisual()
 #include "GLContextEGL.h"  // for GLContextEGL::FindVisual()
 #include "WindowSurfaceX11Image.h"
 #include "WindowSurfaceX11SHM.h"
+#include "nsDragService.h"
+#include "nsDragServiceX11.h"
 
 using namespace mozilla;
 using namespace mozilla::gfx;
@@ -157,6 +160,166 @@ bool nsWindowX11::ConfigureX11GLVisual() {
   return false;
 }
 
+// If aForce = true we create a new session if there isn't any one.
+static RefPtr<nsDragSessionX11> GetDragSession(RefPtr<nsWindow> aWindow,
+                                               bool aForce) {
+  if (!aWindow || !aWindow->GetGdkWindow()) {
+    LOGDRAG("DataOffer::GetDragSession(): missing mWindow, quit!");
+    return nullptr;
+  }
+  RefPtr<nsDragService> dragService = nsDragService::GetInstance();
+  NS_ENSURE_TRUE(dragService, nullptr);
+  RefPtr<nsDragSessionX11> dragSession =
+      static_cast<nsDragSessionX11*>(dragService->GetCurrentSession(aWindow));
+  if (!dragSession && aForce) {
+    LOGDRAG(
+        "DataOffer::GetDragSession(): missing current session, creating a new "
+        "one.");
+    // This may be the start of an external drag session.
+    nsIWidget* widget = aWindow;
+    dragSession =
+        static_cast<nsDragSessionX11*>(dragService->StartDragSession(widget));
+  }
+  NS_ENSURE_TRUE(dragSession, nullptr);
+  return dragSession;
+}
+
+static gboolean drag_motion_event_cb(GtkWidget* aWidget,
+                                     GdkDragContext* aDragContext, gint aX,
+                                     gint aY, guint aTime, gpointer aData) {
+  RefPtr<nsWindow> window = nsWindow::FromGtkWidget(aWidget);
+
+  RefPtr<nsDragSessionX11> dragSession =
+      GetDragSession(window, /* aForce */ true);
+  NS_ENSURE_TRUE(dragSession, FALSE);
+
+  nsDragSession::AutoEventLoop loop(dragSession);
+
+  auto point = window->GdkPointToDevicePixels({aX, aY});
+
+  // We're getting aX,aY in mShell coordinates space.
+  // mContainer is shifted by CSD decorations so translate the coords
+  // to mContainer space where our content lives.
+  if (aWidget == window->GetGtkWidget()) {
+    point = point - window->GetClientOffset();
+  }
+
+  LOGDRAG("WindowDragDropHandler target nsWindow [%p] point [%d, %d]",
+          window.get(), (int)point.x, (int)point.y);
+
+  return dragSession->ScheduleMotionEvent(
+      window, aDragContext, window->GdkPointToDevicePixels({aX, aY}), aTime);
+}
+
+void nsWindowX11::WindowDragLeaveHandler(GtkWidget* aWidget) {
+  LOGDRAG("WindowDragLeaveHandler()\n");
+
+  RefPtr<nsDragService> dragService = nsDragService::GetInstance();
+  nsDragSession* dragSession =
+      static_cast<nsDragSession*>(dragService->GetCurrentSession(this));
+  if (!dragSession) {
+    LOGDRAG("    Received dragleave after drag had ended.\n");
+    return;
+  }
+
+  nsDragSession::AutoEventLoop loop(dragSession);
+
+  nsWindow* mostRecentDragWindow = dragSession->GetMostRecentDestWindow();
+  if (!mostRecentDragWindow) {
+    // This can happen when the target will not accept a drop.  A GTK drag
+    // source sends the leave message to the destination before the
+    // drag-failed signal on the source widget, but the leave message goes
+    // via the X server, and so doesn't get processed at least until the
+    // event loop runs again.
+    LOGDRAG("    Failed - GetMostRecentDestWindow()!\n");
+    return;
+  }
+
+  if (aWidget != GetGtkWidget()) {
+    // When the drag moves between widgets, GTK can send leave signal for
+    // the old widget after the motion or drop signal for the new widget.
+    // We'll send the leave event when the motion or drop event is run.
+    LOGDRAG("    Failed - GtkWidget mismatch!\n");
+    return;
+  }
+
+  LOGDRAG("WindowDragLeaveHandler nsWindow %p\n", (void*)mostRecentDragWindow);
+  dragSession->ScheduleLeaveEvent();
+}
+
+static void drag_leave_event_cb(GtkWidget* aWidget,
+                                GdkDragContext* aDragContext, guint aTime,
+                                gpointer aData) {
+  LOGDRAG("mShell::drag_leave");
+  RefPtr<nsWindowX11> window =
+      static_cast<nsWindowX11*>(nsWindow::FromGtkWidget(aWidget));
+  if (!window) {
+    LOGDRAG("    Failed - can't find nsWindow!\n");
+    return;
+  }
+  window->WindowDragLeaveHandler(aWidget);
+}
+
+static gboolean drag_drop_event_cb(GtkWidget* aWidget,
+                                   GdkDragContext* aDragContext, gint aX,
+                                   gint aY, guint aTime, gpointer aData) {
+  RefPtr<nsWindow> window = nsWindow::FromGtkWidget(aWidget);
+
+  RefPtr<nsDragSessionX11> dragSession =
+      GetDragSession(window, /* aForce */ false);
+  NS_ENSURE_TRUE(dragSession, FALSE);
+
+  nsDragSession::AutoEventLoop loop(dragSession);
+
+  auto point = window->GdkPointToDevicePixels({aX, aY});
+  // We're getting aX,aY in mShell coordinates space.
+  // mContainer is shifted by CSD decorations so translate the coords
+  // to mContainer space where our content lives.
+  if (aWidget == window->GetGtkWidget()) {
+    point = point - window->GetClientOffset();
+  }
+
+  LOGDRAG("WindowDragDropHandler nsWindow [%p] point [%d, %d]", window.get(),
+          (int)point.x, (int)point.y);
+
+  // If drag-drop returns true, we need to terminate D&D by gtk_drag_finish().
+  return dragSession->ScheduleDropEvent(window, aDragContext, point, aTime);
+}
+
+void nsWindowX11::OnDragDataReceivedEvent(GtkWidget* aWidget,
+                                          GdkDragContext* aDragContext, gint aX,
+                                          gint aY,
+                                          GtkSelectionData* aSelectionData,
+                                          guint aInfo, guint aTime,
+                                          gpointer aData) {
+  LOGDRAG("nsWindow::OnDragDataReceived");
+
+  RefPtr<nsDragService> dragService = nsDragService::GetInstance();
+  nsDragSessionX11* dragSession =
+      static_cast<nsDragSessionX11*>(dragService->GetCurrentSession(this));
+  if (dragSession) {
+    nsDragSession::AutoEventLoop loop(dragSession);
+    dragSession->DragDataReceived(aWidget, aDragContext, aX, aY, aSelectionData,
+                                  aInfo, aTime);
+  }
+}
+
+static void drag_data_received_event_cb(GtkWidget* aWidget,
+                                        GdkDragContext* aDragContext, gint aX,
+                                        gint aY,
+                                        GtkSelectionData* aSelectionData,
+                                        guint aInfo, guint aTime,
+                                        gpointer aData) {
+  RefPtr<nsWindowX11> window =
+      static_cast<nsWindowX11*>(nsWindow::FromGtkWidget(aWidget));
+  if (!window) {
+    return;
+  }
+  LOGDRAG("mShell::drag_data_received_event_cb [%p]", window.get());
+  window->OnDragDataReceivedEvent(aWidget, aDragContext, aX, aY, aSelectionData,
+                                  aInfo, aTime, aData);
+}
+
 void nsWindowX11::CreateNative() {
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wdeprecated-declarations"
@@ -164,16 +327,32 @@ void nsWindowX11::CreateNative() {
 #pragma GCC diagnostic pop
 
   mSurfaceProvider.Initialize(GetX11Window());
+}
 
+void nsWindowX11::ConfigureToplevelWindowNative() {
   // Set window manager hint to keep fullscreen windows composited.
   //
   // If the window were to get unredirected, there could be visible
   // tearing because Gecko does not align its framebuffer updates with
   // vblank.
+  //
+  // This must be (re-)applied whenever the shell's X window is created,
+  // including after CSD-triggered re-realize in SetCustomTitlebar().
   SetCompositorHint(GTK_WIDGET_COMPOSITED_ENABLED);
+
+  gtk_drag_dest_set((GtkWidget*)mShell, (GtkDestDefaults)0, nullptr, 0,
+                    (GdkDragAction)0);
+  g_signal_connect(mShell, "drag_motion", G_CALLBACK(drag_motion_event_cb),
+                   nullptr);
+  g_signal_connect(mShell, "drag_leave", G_CALLBACK(drag_leave_event_cb),
+                   nullptr);
+  g_signal_connect(mShell, "drag_drop", G_CALLBACK(drag_drop_event_cb),
+                   nullptr);
+  g_signal_connect(mShell, "drag_data_received",
+                   G_CALLBACK(drag_data_received_event_cb), nullptr);
 }
 
-void nsWindowX11::DestroyNative() {}
+void nsWindowX11::DestroyNative() { UnlockNativePointer(); }
 
 void nsWindowX11::SetCompositorHint(WindowComposeRequest aState) {
   gulong value = aState;
@@ -216,6 +395,100 @@ void nsWindowX11::SetProgress(unsigned long progressPercent) {
   progressPercent = MIN(progressPercent, 100);
   set_window_hint_cardinal(GDK_WINDOW_XID(GetToplevelGdkWindow()),
                            PROGRESS_HINT, progressPercent);
+}
+
+static bool SupportsPointerBarriers(Display* aDisplay) {
+  MOZ_ASSERT(StaticPrefs::dom_pointer_lock_native_lock_enabled());
+  // XXX We expect the capability doesn't change as we use only one display
+  // everywhere.
+  static const bool sSupported = [&] {
+    int eventBase = -1;
+    int errorBase = -1;
+    if (!XFixesQueryExtension(aDisplay, &eventBase, &errorBase)) {
+      return false;
+    }
+
+    int major = 0;
+    int minor = 0;
+    if (!XFixesQueryVersion(aDisplay, &major, &minor)) {
+      return false;
+    }
+
+    return major >= 5;
+  }();
+  return sSupported;
+}
+
+void nsWindowX11::UpdateNativePointerBarriers() {
+  if (!StaticPrefs::dom_pointer_lock_native_lock_enabled()) {
+    MOZ_ASSERT(!mIsNativePointerLocked);
+    MOZ_ASSERT(!mNativePointerBarriers);
+    return;
+  }
+
+  if (NS_WARN_IF(!mGdkWindow)) {
+    return;
+  }
+
+  Display* display = GDK_DISPLAY_XDISPLAY(gdk_window_get_display(mGdkWindow));
+  if (NS_WARN_IF(!SupportsPointerBarriers(display))) {
+    MOZ_ASSERT(!mNativePointerBarriers);
+    return;
+  }
+
+  if (mNativePointerBarriers) {
+    XFixesDestroyPointerBarrier(display, mNativePointerBarriers->mLeft);
+    XFixesDestroyPointerBarrier(display, mNativePointerBarriers->mRight);
+    XFixesDestroyPointerBarrier(display, mNativePointerBarriers->mTop);
+    XFixesDestroyPointerBarrier(display, mNativePointerBarriers->mBottom);
+    mNativePointerBarriers.reset();
+  }
+
+  if (mIsNativePointerLocked) {
+    Window window = GetX11Window();
+    mNativePointerBarriers.emplace(
+        XFixesCreatePointerBarrier(
+            display, window, mClientArea.X(), mClientArea.Y(), mClientArea.X(),
+            mClientArea.YMost(), BarrierPositiveX, 0, nullptr),
+        XFixesCreatePointerBarrier(display, window, mClientArea.XMost(),
+                                   mClientArea.Y(), mClientArea.XMost(),
+                                   mClientArea.YMost(), BarrierNegativeX, 0,
+                                   nullptr),
+        XFixesCreatePointerBarrier(
+            display, window, mClientArea.X(), mClientArea.Y(),
+            mClientArea.XMost(), mClientArea.Y(), BarrierPositiveY, 0, nullptr),
+        XFixesCreatePointerBarrier(display, window, mClientArea.X(),
+                                   mClientArea.YMost(), mClientArea.XMost(),
+                                   mClientArea.YMost(), BarrierNegativeY, 0,
+                                   nullptr));
+  }
+}
+
+void nsWindowX11::LockNativePointer(
+    NativePointerLockMode aNativePointerLockMode) {
+  if (!StaticPrefs::dom_pointer_lock_native_lock_enabled()) {
+    MOZ_ASSERT(!mIsNativePointerLocked);
+    MOZ_ASSERT(!mNativePointerBarriers);
+    return;
+  }
+
+  if (mIsNativePointerLocked) {
+    MOZ_ASSERT(mNativePointerBarriers);
+    return;
+  }
+
+  mIsNativePointerLocked = true;
+  UpdateNativePointerBarriers();
+}
+
+void nsWindowX11::UnlockNativePointer() {
+  if (!mIsNativePointerLocked) {
+    MOZ_ASSERT(!mNativePointerBarriers);
+    return;
+  }
+  MOZ_ASSERT(StaticPrefs::dom_pointer_lock_native_lock_enabled());
+  mIsNativePointerLocked = false;
+  UpdateNativePointerBarriers();
 }
 
 void nsWindowX11::NativeShow(bool aAction) {

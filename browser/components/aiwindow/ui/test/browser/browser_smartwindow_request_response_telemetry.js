@@ -796,7 +796,7 @@ describe("SmartWindowRequestResponseTelemetry", () => {
     }
   });
 
-  it("records invalidPageContent and http_status 406 on streaming 406", async () => {
+  it("records fastlyBlocked and http_status 406 on streaming 406", async () => {
     sb.stub(openAIEngine, "build").resolves(
       makeFakeEngine({
         // eslint-disable-next-line require-yield
@@ -823,8 +823,8 @@ describe("SmartWindowRequestResponseTelemetry", () => {
     Assert.equal(events.length, 1, "One model_response event was recorded");
     Assert.equal(
       events[0].extra.error,
-      "invalidPageContent",
-      "model_response: error is invalidPageContent"
+      "fastlyBlocked",
+      "model_response: error is fastlyBlocked"
     );
     Assert.equal(
       Number(events[0].extra.http_status),

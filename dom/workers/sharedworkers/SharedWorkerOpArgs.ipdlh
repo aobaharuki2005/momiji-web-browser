@@ -43,6 +43,11 @@ struct SharedWorkerSetLocaleOverrideOpArgs
   nsString[] languages;
 };
 
+struct SharedWorkerUpdateTimezoneOverrideOpArgs
+{
+  nsString timezoneOverride;
+};
+
 union SharedWorkerOpArgs {
   SharedWorkerSuspendOpArgs;
   SharedWorkerResumeOpArgs;
@@ -53,6 +58,7 @@ union SharedWorkerOpArgs {
   SharedWorkerAddWindowIDOpArgs;
   SharedWorkerRemoveWindowIDOpArgs;
   SharedWorkerSetLocaleOverrideOpArgs;
+  SharedWorkerUpdateTimezoneOverrideOpArgs;
 };
 
 } // namespace dom

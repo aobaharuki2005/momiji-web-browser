@@ -7,7 +7,7 @@
 with Files("**"):
     BUG_COMPONENT = ("Toolkit", "Picture-in-Picture")
 
-EXTRA_JS_MODULES += [
+MOZ_SRC_FILES += [
     "DesktopPictureInPictureProvider.sys.mjs",
 ]
 

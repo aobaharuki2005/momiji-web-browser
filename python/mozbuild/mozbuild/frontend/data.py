@@ -1240,13 +1240,18 @@ class FinalTargetPreprocessedFiles(ContextDerived):
     this object fills that role. It just has a reference to the underlying
     HierarchicalStringList, which is created when parsing
     FINAL_TARGET_PP_FILES.
+
+    `extra_deps` carries the per-directory ``PP_FILES_EXTRA_DEPS`` value
+    so backends can wire it as build-graph order on the preprocess edge
+    for each file in ``files``.
     """
 
-    __slots__ = ("files",)
+    __slots__ = ("files", "extra_deps")
 
-    def __init__(self, sandbox, files):
+    def __init__(self, sandbox, files, extra_deps=()):
         ContextDerived.__init__(self, sandbox)
         self.files = files
+        self.extra_deps = list(extra_deps)
 
     @staticmethod
     def get_obj_basename(f):

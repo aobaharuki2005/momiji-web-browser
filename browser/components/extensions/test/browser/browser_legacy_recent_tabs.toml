@@ -10,7 +10,7 @@ prefs = [
 ]
 support-files = [
   "head.js",
-  "empty.xpi",
+  "204.sjs",
 ]
 
 ["browser_ext_sessions_forgetClosedTab.js"]

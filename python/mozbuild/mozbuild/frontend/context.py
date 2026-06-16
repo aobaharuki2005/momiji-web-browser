@@ -1783,6 +1783,23 @@ VARIABLES = {
         """Like ``OBJDIR_FILES``, with preprocessing. Use sparingly.
         """,
     ),
+    "PP_FILES_EXTRA_DEPS": (
+        ContextDerivedTypedList(Path, StrictOrderingOnAppendList),
+        list,
+        """Extra build-graph dependencies for preprocessed files in this directory.
+
+        Applies to every entry in ``FINAL_TARGET_PP_FILES``,
+        ``OBJDIR_PP_FILES``, ``LOCALIZED_PP_FILES``, and the
+        ``EXTRA_PP_*`` variants in this moz.build. Use this when those
+        entries reference generated files via
+        ``#include @TOPOBJDIR@/...``: the preprocessor opens those files
+        at build time, so they must exist before the preprocess step runs.
+
+        Path syntax matches ``GENERATED_FILES``'s ``extra_deps``: an
+        objdir-relative path like ``"!/source-repo.h"`` resolves against
+        ``$topobjdir``; a plain path resolves against the source tree.
+        """,
+    ),
     "FINAL_LIBRARY": (
         str,
         str,

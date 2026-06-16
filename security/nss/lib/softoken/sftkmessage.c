@@ -152,6 +152,7 @@ sftk_MessageCryptInit(CK_SESSION_HANDLE hSession, CK_MECHANISM_PTR pMechanism,
             crv = CKR_MECHANISM_INVALID;
             break;
     }
+    sftk_FreeAttribute(att);
     if (context->cipherInfo == NULL) {
         crv = sftk_MapCryptError(PORT_GetError());
         if (crv == CKR_OK) {

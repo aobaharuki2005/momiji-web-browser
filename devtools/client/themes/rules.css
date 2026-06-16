@@ -987,3 +987,16 @@
   text-decoration: 1px solid underline;
   text-underline-offset: 2px;
 }
+
+[data-function-expression].tooltip-anchor {
+  text-decoration: underline;
+  text-decoration-color: var(--theme-highlight-blue);
+  text-decoration-style: dotted;
+  text-decoration-skip-ink: none;
+  text-decoration-thickness: 2px;
+  text-underline-offset: 2px;
+
+  .css-explainers-function-name {
+    text-decoration: none;
+  }
+}

@@ -838,7 +838,8 @@ static Element* GetPseudo(const nsIContent* aContent, nsAtom* aPseudoProperty) {
              aPseudoProperty == nsGkAtoms::afterPseudoProperty ||
              aPseudoProperty == nsGkAtoms::markerPseudoProperty ||
              aPseudoProperty == nsGkAtoms::backdropPseudoProperty ||
-             aPseudoProperty == nsGkAtoms::checkmarkPseudoProperty);
+             aPseudoProperty == nsGkAtoms::checkmarkPseudoProperty ||
+             aPseudoProperty == nsGkAtoms::pickerIconPseudoProperty);
   if (!aContent->MayHaveAnonymousChildren()) {
     return nullptr;
   }
@@ -899,6 +900,17 @@ nsIFrame* nsLayoutUtils::GetCheckmarkFrame(const nsIContent* aContent) {
 }
 
 /*static*/
+Element* nsLayoutUtils::GetPickerIconPseudo(const nsIContent* aContent) {
+  return GetPseudo(aContent, nsGkAtoms::pickerIconPseudoProperty);
+}
+
+/*static*/
+nsIFrame* nsLayoutUtils::GetPickerIconFrame(const nsIContent* aContent) {
+  Element* pseudo = GetPickerIconPseudo(aContent);
+  return pseudo ? pseudo->GetPrimaryFrame() : nullptr;
+}
+
+/*static*/
 void nsLayoutUtils::AppendGeneratedContentPseudos(
     const Element* aElement, nsTArray<nsIContent*>& aPseudos) {
   if (aElement->HasProperties()) {
@@ -916,6 +928,9 @@ void nsLayoutUtils::AppendGeneratedContentPseudos(
     }
     if (auto* after = nsLayoutUtils::GetAfterPseudo(aElement)) {
       aPseudos.AppendElement(after);
+    }
+    if (auto* pickerIcon = nsLayoutUtils::GetPickerIconPseudo(aElement)) {
+      aPseudos.AppendElement(pickerIcon);
     }
   }
 }
@@ -6762,7 +6777,7 @@ widget::TransparencyMode nsLayoutUtils::GetFrameTransparency(
   const nsStyleBackground* bg = bgSC->StyleBackground();
   if (NS_GET_A(bg->BackgroundColor(bgSC)) < 255 ||
       // bottom layer's clip is used for the color
-      bg->BottomLayer().mClip != StyleGeometryBox::BorderBox) {
+      bg->BottomLayer().mClip != StyleBackgroundClip::BorderBox) {
     return TransparencyMode::Transparent;
   }
   return TransparencyMode::Opaque;
@@ -8807,7 +8822,8 @@ ScrollMetadata nsLayoutUtils::ComputeScrollMetadata(
         // Restore the visual viewport offset to the copy stored on the
         // main thread.
         presShell->ScrollToVisual(presShell->GetVisualViewportOffset(),
-                                  FrameMetrics::eRestore, ScrollMode::Instant);
+                                  ScrollOffsetUpdateType::Restore,
+                                  ScrollMode::Instant);
       }
     }
 

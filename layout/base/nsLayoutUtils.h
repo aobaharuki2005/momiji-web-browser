@@ -304,6 +304,12 @@ class nsLayoutUtils {
   static nsIFrame* GetCheckmarkFrame(const nsIContent* aContent);
 
   /**
+   * Returns the ::picker-icon pseudo-element for aContent, if any.
+   */
+  static mozilla::dom::Element* GetPickerIconPseudo(const nsIContent* aContent);
+  static nsIFrame* GetPickerIconFrame(const nsIContent* aContent);
+
+  /**
    * Stores generated content pseudos such as ::after into aPseudos.
    */
   static void AppendGeneratedContentPseudos(

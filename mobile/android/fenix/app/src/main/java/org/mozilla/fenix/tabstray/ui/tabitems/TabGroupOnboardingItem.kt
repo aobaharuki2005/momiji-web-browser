@@ -51,9 +51,12 @@ fun TabGroupOnboardingGridItem(
             .testTag(TabsTrayTestTag.TAB_GROUP_ONBOARDING_GRID_ITEM),
         title = stringResource(R.string.tab_group_onboarding_item_title),
         illustration = {
-            TabGroupOnboardingImage(
+            Image(
+                painter = painterResource(R.drawable.mozac_ic_kit_tab_groups),
+                contentDescription = null,
                 modifier = Modifier
-                    .padding(vertical = FirefoxTheme.layout.space.static150),
+                    .padding(vertical = FirefoxTheme.layout.space.static150)
+                    .testTag(TabsTrayTestTag.TAB_GROUP_ONBOARDING_ILLUSTRATION),
             )
         },
         contentSpacing = 0.dp,
@@ -90,7 +93,11 @@ fun TabGroupOnboardingListItem(
             modifier = Modifier.weight(1f),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            TabGroupOnboardingImage()
+            Image(
+                painter = painterResource(R.drawable.mozac_ic_kit_tab_groups_list_view),
+                contentDescription = null,
+                modifier = Modifier.testTag(TabsTrayTestTag.TAB_GROUP_ONBOARDING_ILLUSTRATION),
+            )
 
             Spacer(modifier = Modifier.width(FirefoxTheme.layout.space.static200))
 
@@ -120,17 +127,6 @@ fun TabGroupOnboardingListItem(
             modifier = Modifier.testTag(TabsTrayTestTag.TAB_GROUP_ONBOARDING_ITEM_DISMISS),
         )
     }
-}
-
-@Composable
-private fun TabGroupOnboardingImage(
-    modifier: Modifier = Modifier,
-) {
-    Image(
-        painter = painterResource(R.drawable.mozac_ic_kit_tab_groups),
-        contentDescription = null,
-        modifier = modifier.testTag(TabsTrayTestTag.TAB_GROUP_ONBOARDING_ILLUSTRATION),
-    )
 }
 
 @PreviewLightDark

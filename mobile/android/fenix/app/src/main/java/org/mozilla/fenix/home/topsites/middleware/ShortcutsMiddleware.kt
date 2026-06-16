@@ -12,11 +12,15 @@ import mozilla.components.feature.top.sites.TopSitesUseCases
 import mozilla.components.lib.state.Middleware
 import mozilla.components.lib.state.Store
 import mozilla.components.lib.state.ext.flow
+import mozilla.components.service.merino.manifest.MerinoManifestProvider
 import org.mozilla.fenix.components.AppStore
 import org.mozilla.fenix.home.topsites.store.ShortcutsAction
 import org.mozilla.fenix.home.topsites.store.ShortcutsState
 import org.mozilla.fenix.home.topsites.store.ShortcutsStore
+import org.mozilla.fenix.home.topsites.store.toPopularSite
 import org.mozilla.fenix.utils.Settings
+
+private const val POPULAR_SITES_LIMIT = 8
 
 /**
  * [Middleware] implementation for handling [ShortcutsAction] and managing the [ShortcutsState]
@@ -24,6 +28,7 @@ import org.mozilla.fenix.utils.Settings
  *
  * @param appStore The [AppStore] to observe for top site updates.
  * @param topSitesUseCases The [TopSitesUseCases] used to persist new pinned shortcuts.
+ * @param merinoManifestProvider The [MerinoManifestProvider] used to read popular site suggestions.
  * @param settings The [Settings] used to read whether the add shortcut tile is enabled.
  * @param scope The lifecycle-aware [CoroutineScope] used to launch coroutines. The consumer is
  * responsible for providing a scope that gets canceled when the consuming component is destroyed
@@ -32,6 +37,7 @@ import org.mozilla.fenix.utils.Settings
 class ShortcutsMiddleware(
     private val appStore: AppStore,
     private val topSitesUseCases: TopSitesUseCases,
+    private val merinoManifestProvider: MerinoManifestProvider,
     private val settings: Settings,
     private val scope: CoroutineScope,
 ) : Middleware<ShortcutsState, ShortcutsAction> {
@@ -60,6 +66,13 @@ class ShortcutsMiddleware(
     ) {
         store.dispatch(
             ShortcutsAction.UpdateShowAddShortcut(settings.enableAddShortcutsImprovement),
+        )
+
+        store.dispatch(
+            ShortcutsAction.UpdatePopularSites(
+                merinoManifestProvider.getTopDomains(limit = POPULAR_SITES_LIMIT)
+                    .map { it.toPopularSite() },
+            ),
         )
 
         scope.launch {

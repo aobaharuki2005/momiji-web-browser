@@ -53,9 +53,6 @@
     },
     "90": {
       "value": "#121114"
-    },
-    "05": {
-      "value": "#f7f6fb"
     }
   },
   "red": {
@@ -344,14 +341,6 @@
     },
     "90": {
       "value": "#1e111b"
-    }
-  },
-  "purple-desaturated": {
-    "30": {
-      "value": "#c0a7d4"
-    },
-    "50": {
-      "value": "#816297"
     }
   },
   "violet-desaturated": {

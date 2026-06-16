@@ -62,6 +62,11 @@ class Animation : public DOMEventTargetHelper,
   virtual ~Animation();
 
  public:
+  enum class FromJS : bool {
+    No,
+    Yes,
+  };
+
   explicit Animation(nsIGlobalObject* aGlobal);
 
   // Constructs a copy of |aOther| with a new effect and timeline.
@@ -111,15 +116,6 @@ class Animation : public DOMEventTargetHelper,
   virtual void SetEffect(AnimationEffect* aEffect);
   void SetEffectNoUpdate(AnimationEffect* aEffect);
 
-  void SetTimeline(AnimationTimeline* aTimeline) {
-    // Can't refer to timeline by name from JS side.
-    const auto prevTimelineName = GetTimelineName();
-    SetTimeline(aTimeline, nullptr);
-    if (prevTimelineName) {
-      RemovedNamedTimelineReferenceFromJS(prevTimelineName);
-    }
-  }
-
   void RemovedNamedTimelineReferenceFromJS(const nsAtom* aName);
 
   AnimationTimeline* GetTimelineFromJS() const {
@@ -131,13 +127,17 @@ class Animation : public DOMEventTargetHelper,
     }
     return timeline;
   }
-  void SetTimelineFromJS(AnimationTimeline* aTimeline) {
-    return SetTimeline(aTimeline);
-  }
+
+  virtual void TimelineWillSetFromJS() {}
+  virtual bool TimelineOverridenByJS() const { return false; }
+  void SetTimelineFromJS(AnimationTimeline* aTimeline);
   AnimationTimeline* GetTimeline() const { return mTimeline; }
-  void SetTimeline(AnimationTimeline* aTimeline, const nsAtom* aTimelineName);
-  void SetTimelineNoUpdate(AnimationTimeline* aTimeline,
-                           const nsAtom* aTimelineName);
+  // Timeline may be overriden through JS, any update from the CSS side
+  // will not take effect. Returns true if the timeline did update.
+  bool SetTimeline(AnimationTimeline* aTimeline, const nsAtom* aTimelineName,
+                   FromJS aFromJS);
+  bool SetTimelineNoUpdate(AnimationTimeline* aTimeline,
+                           const nsAtom* aTimelineName, FromJS aFromJS);
 
   const AnimationRange& GetTimelineRange() const { return mTimelineRange; }
   void SetTimelineRange(AnimationRange&& aRange);
@@ -461,6 +461,7 @@ class Animation : public DOMEventTargetHelper,
   DocGroup* GetDocGroup();
 
   void PostUpdate();
+  bool MakeReadyAndMaybeTrigger();
 
   void AutoAlignStartTime();
 

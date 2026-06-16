@@ -125,7 +125,10 @@ val TabListBorderMiddleItemShape: Shape
 val tablistItemThumbnailBorder: BorderStroke
     @Composable
     @ReadOnlyComposable
-    get() = BorderStroke(width = AcornLayout.AcornBorder.thin, color = MaterialTheme.colorScheme.outlineVariant)
+    get() = BorderStroke(
+        width = AcornLayout.AcornBorder.thin,
+        color = MaterialTheme.colorScheme.surfaceContainerHighest,
+    )
 
 /**
  * Shape information for a tab item displayed in a list.
@@ -348,7 +351,7 @@ fun tabItemConditionalBorder(selectionState: TabsTrayItemSelectionState): Border
 @Composable
 @ReadOnlyComposable
 fun tabItemBorderFocused(): BorderStroke {
-    return BorderStroke(width = FirefoxTheme.layout.border.thick, color = MaterialTheme.colorScheme.tertiary)
+    return BorderStroke(width = FirefoxTheme.layout.border.thick, brush = FirefoxTheme.gradients.tabOutline.brush)
 }
 
 /**

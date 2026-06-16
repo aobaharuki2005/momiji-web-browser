@@ -15,7 +15,6 @@ import io.mockk.just
 import io.mockk.mockk
 import io.mockk.verify
 import mozilla.components.support.test.robolectric.testContext
-import org.junit.Assert.assertNotNull
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -23,6 +22,7 @@ import org.mozilla.fenix.GleanMetrics.Homepage
 import org.mozilla.fenix.R
 import org.mozilla.fenix.helpers.FenixGleanTestRule
 import org.mozilla.fenix.home.HomeFragmentDirections
+import kotlin.test.assertNotNull
 
 @RunWith(AndroidJUnit4::class)
 class TrackingProtectionControllerTest {
@@ -37,18 +37,24 @@ class TrackingProtectionControllerTest {
             }
             every { navigate(any<NavDirections>(), anyNullable<NavOptions>()) } just Runs
         }
-        val controller = TrackingProtectionController(navController)
+        val currentSessionId = "test"
+        val controller = TrackingProtectionController(navController, currentSessionId)
 
         controller.handleProtectionStatusPillClicked()
 
         verify { navController.currentDestination }
-        verify { navController.navigate(HomeFragmentDirections.actionHomeFragmentToGlobalProtectionsDashboard(), null) }
+        verify {
+            navController.navigate(
+                directions = HomeFragmentDirections.actionHomeFragmentToGlobalProtectionsDashboard(currentSessionId),
+                navOptions = null,
+            )
+        }
     }
 
     @Test
     fun `WHEN the protection status pill is clicked THEN record telemetry`() {
         val navController: NavController = mockk(relaxed = true)
-        val controller = TrackingProtectionController(navController)
+        val controller = TrackingProtectionController(navController, "test")
 
         controller.handleProtectionStatusPillClicked()
 

@@ -285,19 +285,24 @@ const STATE_ORDER = [
 ];
 
 const getLayerString = () => {
-  const defaultLayers = [
-    "tokens-foundation",
-    "tokens-prefers-contrast",
-    "tokens-forced-colors",
-    "tokens-browser-theme",
+  const themeLayers = ["tokens-foundation", "tokens-browser-theme"];
+  const a11yLayers = ["tokens-prefers-contrast", "tokens-forced-colors"];
+
+  const themeLayersWithOverrides = [
+    ...themeLayers,
+    ...OVERRIDE_IDENTIFIERS.flatMap(({ name }) =>
+      themeLayers.map(layer => `${layer}-${name}`)
+    ),
   ];
 
-  const layersWithOverrides = defaultLayers.flatMap(layer => [
+  const a11yLayersWithOverrides = a11yLayers.flatMap(layer => [
     layer,
     ...OVERRIDE_IDENTIFIERS.map(({ name }) => `${layer}-${name}`),
   ]);
 
-  return `@layer ${layersWithOverrides.join(", ").trim()};\n\n`;
+  const layers = [...themeLayersWithOverrides, ...a11yLayersWithOverrides];
+
+  return `@layer ${layers.join(", ")};\n\n`;
 };
 
 /**
@@ -718,33 +723,65 @@ ${formattedVars}
 }
 
 /**
+ * Builds a `light-dark()` CSS value from a token layer's `light` and `dark` keys.
+ *
+ * @param {object} [layerValue] - Token layer from JSON with `light` and `dark` set.
+ * @returns {string|undefined} `light-dark(light, dark)`, or undefined if either key is missing.
+ */
+function getLightDarkPair(layerValue) {
+  if (layerValue?.light && layerValue?.dark) {
+    return `light-dark(${layerValue.light}, ${layerValue.dark})`;
+  }
+  return undefined;
+}
+
+/**
  * Finds the original value of a token for a given media query and surface.
  *
  * @param {object} token - Token object parsed by style-dictionary.
  * @param {string} prop - Name of the property we're querying for.
- * @param {string} surface
+ * @param {string} [surface]
  *  The desktop surface we're generating CSS for, either "brand" or "platform".
- * @returns {string} The original token value based on our parameters.
+ * @returns {string|undefined} The original token value based on our parameters.
  */
 function getOriginalTokenValue(token, prop, surface) {
   const { value } = token.original;
-  if (surface) {
-    return value[surface]?.[prop];
-  }
-  // Non-object default values apply to the foundation layer.
+
+  // Non-object values apply to the foundation layer only.
   if (typeof value !== "object") {
     return prop === "default" ? value : undefined;
   }
-  // Tokens that define a nativeTheme override use it as the foundation value.
+
+  // Brand and platform CSS read from their surface layer. shared reads from the root.
+  const layer = surface ? value[surface] : value;
+  if (!layer || typeof layer !== "object") {
+    return undefined;
+  }
+
+  // Tokens that define nativeTheme use it as the foundation value.
+  // Otherwise use default when defined.
+  // Otherwise, use light/dark pair if handling shared tokens.
   if (prop === "default") {
-    return value.nativeTheme ?? value.default;
+    return (
+      layer.nativeTheme ??
+      layer.default ??
+      (!surface ? getLightDarkPair(layer) : undefined)
+    );
   }
+
   // Only tokens with a nativeTheme override need a browser-theme value.
-  // Tokens without one use the default value in the foundation layer.
+  // nativeTheme override can exist on surface layer or root level.
   if (prop === "browserTheme") {
-    return value.nativeTheme ? value.default : undefined;
+    const browserThemeValue = layer.default ?? getLightDarkPair(layer);
+    if (!browserThemeValue) {
+      return undefined;
+    }
+    return layer.nativeTheme || value.nativeTheme
+      ? browserThemeValue
+      : undefined;
   }
-  return value[prop];
+
+  return layer[prop];
 }
 
 /**
@@ -766,7 +803,12 @@ function transformToken({ token, originalVal, dictionary, surface }) {
   let value = originalVal;
   if (dictionary.usesReference(value)) {
     dictionary.getReferences(value).forEach(ref => {
-      value = value.replace(`{${ref.path.join(".")}}`, `var(--${ref.name})`);
+      try {
+        value = value.replace(`{${ref.path.join(".")}}`, `var(--${ref.name})`);
+      } catch (ex) {
+        console.error(`Error processing token ref: ${originalVal}`);
+        throw ex;
+      }
     });
   }
 
@@ -786,29 +828,37 @@ function transformToken({ token, originalVal, dictionary, surface }) {
 const createLightDarkTransform = surface => {
   let name = `lightDarkTransform/${surface}`;
 
+  const getLayerValue = token =>
+    surface === "shared" ? token.original.value : token.original.value[surface];
+
   // Matcher function for determining if a token's value needs to undergo
   // a light-dark transform.
   let matcher = token => {
-    if (surface != "shared") {
-      return (
-        token.original.value[surface]?.light &&
-        token.original.value[surface]?.dark
-      );
+    const layerValue = getLayerValue(token);
+    if (
+      !layerValue ||
+      typeof layerValue !== "object" ||
+      layerValue.nativeTheme ||
+      layerValue.default ||
+      !layerValue.light ||
+      !layerValue.dark
+    ) {
+      return false;
     }
-    return token.original.value.light && token.original.value.dark;
+    return !(surface !== "shared" && token.original.value.nativeTheme);
   };
 
   // Function that uses the token's original value to create a new "default"
   // light-dark value and updates the original value object.
   let transformer = token => {
+    const layerValue = getLayerValue(token);
+    const lightDarkVal = getLightDarkPair(layerValue);
     if (surface != "shared") {
-      let lightDarkVal = `light-dark(${token.original.value[surface].light}, ${token.original.value[surface].dark})`;
       token.original.value[surface].default = lightDarkVal;
       return token.value;
     }
-    let value = `light-dark(${token.original.value.light}, ${token.original.value.dark})`;
-    token.original.value.default = value;
-    return value;
+    token.original.value.default = lightDarkVal;
+    return lightDarkVal;
   };
 
   StyleDictionary.registerTransform({

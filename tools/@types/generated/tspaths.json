@@ -6190,9 +6190,6 @@
       "resource://gre/modules/LangPackMatcher.sys.mjs": [
         "../../../intl/locale/LangPackMatcher.sys.mjs"
       ],
-      "resource://gre/modules/LayoutUtils.sys.mjs": [
-        "../../../toolkit/modules/LayoutUtils.sys.mjs"
-      ],
       "resource://gre/modules/LightweightThemeConsumer.sys.mjs": [
         "../../../toolkit/modules/LightweightThemeConsumer.sys.mjs"
       ],

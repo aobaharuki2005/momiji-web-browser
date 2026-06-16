@@ -528,6 +528,8 @@ class Browsertime(Perftest, metaclass=ABCMeta):
         for var, val in self.config.get("environment", {}).items():
             browsertime_options.extend(["--firefox.env", f"{var}={val}"])
 
+        browsertime_options.extend(["--firefox.env", "MOZ_REMOTE_SETTINGS_DEVTOOLS=1"])
+
         # Parse the test commands (if any) from the test manifest
         cmds = evaluate_list_from_string(test.get("test_cmds", "[]"))
         parsed_cmds = [":::".join([str(i) for i in item]) for item in cmds if item]
@@ -988,6 +990,7 @@ class Browsertime(Perftest, metaclass=ABCMeta):
         env = dict(os.environ)
         env["PYTHON"] = sys.executable
         env["MINIDUMP_SAVE_PATH"] = str(self.crash_directory)
+        env["MOZ_REMOTE_SETTINGS_DEVTOOLS"] = "1"
         if self.browsertime_video and self.browsertime_ffmpeg:
             ffmpeg_dir = os.path.dirname(os.path.abspath(self.browsertime_ffmpeg))
             old_path = env.setdefault("PATH", "")

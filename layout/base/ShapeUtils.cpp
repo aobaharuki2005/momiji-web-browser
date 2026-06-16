@@ -147,8 +147,9 @@ nsRect ShapeUtils::ComputeInsetRect(
 bool ShapeUtils::ComputeRectRadii(const StyleBorderRadius& aBorderRadius,
                                   const nsRect& aRefBox, const nsRect& aRect,
                                   nsRectCornerRadii& aRadii) {
-  return nsIFrame::ComputeBorderRadii(aBorderRadius, aRefBox.Size(),
-                                      aRect.Size(), Sides(), aRadii);
+  return nsIFrame::ComputeBorderRadii(
+      aBorderRadius, {{1.0f}, {1.0f}, {1.0f}, {1.0f}}, aRefBox.Size(),
+      aRect.Size(), Sides(), aRadii);
 }
 
 /* static */

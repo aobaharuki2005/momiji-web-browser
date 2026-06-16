@@ -172,10 +172,9 @@ class ReftestManifest:
 
         urlprefix = ""
         defaults = []
-        for i, line in enumerate(lines):
+        for i, raw_line in enumerate(lines):
             lineno = i + 1
-            if isinstance(line, bytes):
-                line = line.decode()
+            line = raw_line.decode() if isinstance(raw_line, bytes) else raw_line
 
             # Entire line is a comment.
             if line.startswith("#"):

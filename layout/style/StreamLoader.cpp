@@ -6,6 +6,7 @@
 
 #include "mozilla/Encoding.h"
 #include "mozilla/StaticPrefs_network.h"
+#include "mozilla/StyleSheet.h"
 #include "mozilla/TaskQueue.h"
 #include "mozilla/dom/CacheExpirationTime.h"
 #include "mozilla/net/ChannelClassifierUtils.h"

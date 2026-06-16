@@ -14,6 +14,7 @@
 #include "mozilla/SpinEventLoopUntil.h"
 #include "mozilla/SystemPrincipal.h"
 #include "mozilla/UniquePtr.h"
+#include "nsComponentManagerUtils.h"
 #include "nsIChannel.h"
 #include "nsIInputStream.h"
 #include "nsILoadInfo.h"

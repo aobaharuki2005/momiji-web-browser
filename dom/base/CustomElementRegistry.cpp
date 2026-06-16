@@ -34,6 +34,7 @@
 #include "nsInterfaceHashtable.h"
 #include "nsNameSpaceManager.h"
 #include "nsPIDOMWindow.h"
+#include "nsPIDOMWindowInlines.h"
 #include "xpcprivate.h"
 
 namespace mozilla::dom {
@@ -1309,6 +1310,75 @@ void CustomElementRegistry::Upgrade(nsINode& aRoot) {
       if (definition) {
         nsContentUtils::EnqueueUpgradeReaction(element, definition);
       }
+    }
+  }
+}
+
+/* https://html.spec.whatwg.org/#dom-customelementregistry-initialize */
+void CustomElementRegistry::Initialize(nsINode& aRoot, ErrorResult& aRv) {
+  MOZ_ASSERT(StaticPrefs::dom_scoped_custom_element_registries_enabled());
+
+  // Step 1: If this's is scoped is false and either root is a Document node or
+  // root's node document's custom element registry is not this, then throw a
+  // "NotSupportedError" DOMException.
+  if (!mIsScoped) {
+    if (aRoot.IsDocument()) {
+      aRv.ThrowNotSupportedError(
+          "Global registry cannot initialize a Document");
+      return;
+    }
+    CustomElementRegistry* docRegistry =
+        aRoot.OwnerDoc()->GetCustomElementRegistry();
+    if (docRegistry != this) {
+      aRv.ThrowNotSupportedError(
+          "Global registry can only initialize nodes whose owning document "
+          "uses this registry");
+      return;
+    }
+  }
+
+  // Step 2: If root is a Document node whose custom element registry is null,
+  // then set root's custom element registry to this.
+  // Step 3: Otherwise, if root is a ShadowRoot node whose custom element
+  // registry is null, then set root's custom element registry to this.
+  if (aRoot.IsDocument()) {
+    Document* doc = aRoot.AsDocument();
+    if (!doc->GetCustomElementRegistry()) {
+      CustomElementRegistry::SetScopedRegistry(*doc, *this);
+    }
+  } else if (ShadowRoot* shadowRoot = ShadowRoot::FromNode(aRoot)) {
+    if (!shadowRoot->GetCustomElementRegistry()) {
+      shadowRoot->SetCustomElementRegistry(this);
+    }
+  }
+
+  // Step 4: For each inclusive descendant inclusiveDescendant of root, in tree
+  // order:
+  const nsINode* root = &aRoot;
+  for (nsINode* node = &aRoot; node; node = node->GetNextNode(root)) {
+    // Step 4.1: If inclusiveDescendant is not an Element node, then continue.
+    if (!node->IsElement()) {
+      continue;
+    }
+    Element* element = node->AsElement();
+    CustomElementRegistry* registry = element->GetCustomElementRegistry();
+    // Step 4.2: If inclusiveDescendant's custom element registry is null:
+    if (!registry) {
+      // Step 4.2.1: Set inclusiveDescendant's custom element registry to this.
+      element->SetCustomElementRegistry(this);
+      // TODO(keithamus, bug 2018913): Step 4.2.2: If this's is scoped is true,
+      // then append inclusiveDescendant's node document to this's scoped
+      // document set.
+    } else if (registry != this) {
+      // Step 4.3: If inclusiveDescendant's custom element registry is not this,
+      //           then continue.
+      continue;
+    }
+    // Step 4.4: Try to upgrade inclusiveDescendant.
+    // Only try to upgrade if element has custom element data (is an upgrade
+    // candidate).
+    if (element->GetCustomElementData()) {
+      nsContentUtils::TryToUpgradeElement(element);
     }
   }
 }

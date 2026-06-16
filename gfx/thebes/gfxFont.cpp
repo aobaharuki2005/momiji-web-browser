@@ -3968,10 +3968,14 @@ bool gfxFont::InitFakeSmallCapsRun(
           const auto globalTransform = StyleTextTransform::UPPERCASE;
           // No mask needed; we're doing case conversion, not password-hiding.
           const char16_t maskChar = 0;
+          bool useCapitalEsZet =
+              StaticPrefs::
+                  layout_css_text_transform_uppercase_eszett_enabled() &&
+              HasCharacter(0x1e9e);
           bool mergeNeeded = nsCaseTransformTextRunFactory::TransformString(
               origString, convertedString, Some(globalTransform), maskChar,
-              /* aCaseTransformsOnly = */ false, aLanguage, charsToMergeArray,
-              deletedCharsArray);
+              /* aCaseTransformsOnly = */ false, useCapitalEsZet, aLanguage,
+              charsToMergeArray, deletedCharsArray);
 
           // Check whether the font supports the uppercased characters needed;
           // if not, we're not going to be able to simulate small-caps.

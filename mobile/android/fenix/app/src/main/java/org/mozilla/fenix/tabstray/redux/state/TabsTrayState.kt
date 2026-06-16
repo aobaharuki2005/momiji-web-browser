@@ -237,4 +237,15 @@ data class TabsTrayState(
     private companion object {
         const val MIN_TABS_FOR_TAB_GROUP_ONBOARDING = 2
     }
+
+    /**
+     * Whether the floating toolbar should be visible.
+     */
+    val isFloatingToolbarVisible: Boolean
+        get() {
+            val privateTabsLocked = privateBrowsing.isLocked && selectedPage == Page.PrivateTabs
+            val tabGroupsPageSelected = config.tabGroupsEnabled && selectedPage == Page.TabGroups
+
+            return mode is Mode.Normal && !privateTabsLocked && !tabGroupsPageSelected
+        }
 }

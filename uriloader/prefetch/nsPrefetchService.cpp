@@ -17,6 +17,7 @@
 #include "nsIWebProgress.h"
 #include "nsICacheInfoChannel.h"
 #include "nsIHttpChannel.h"
+#include "nsIHttpProtocolHandler.h"
 #include "nsIURL.h"
 #include "nsISupportsPriority.h"
 #include "nsNetUtil.h"
@@ -133,6 +134,21 @@ nsresult nsPrefetchNode::OpenChannel() {
     success =
         httpChannel->SetRequestHeader("Sec-Purpose"_ns, "prefetch"_ns, false);
     MOZ_ASSERT(NS_SUCCEEDED(success));
+
+    // A prefetch request's initiator is "prefetch", so it sends the document
+    // Accept header regardless of destination.
+    // https://fetch.spec.whatwg.org/#fetching (step 12.2)
+    nsCOMPtr<nsIHttpProtocolHandler> httpHandler(
+        do_GetService(NS_NETWORK_PROTOCOL_CONTRACTID_PREFIX "http"));
+    if (httpHandler) {
+      nsAutoCString documentAcceptHeader;
+      success = httpHandler->GetDocumentAcceptHeader(documentAcceptHeader);
+      MOZ_ASSERT(NS_SUCCEEDED(success));
+
+      success = httpChannel->SetRequestHeader("Accept"_ns, documentAcceptHeader,
+                                              false);
+      MOZ_ASSERT(NS_SUCCEEDED(success));
+    }
   }
 
   // Reduce the priority of prefetch network requests.

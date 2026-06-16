@@ -2257,6 +2257,12 @@ nsHttpHandler::GetRfpUserAgent(nsACString& value) {
 }
 
 NS_IMETHODIMP
+nsHttpHandler::GetDocumentAcceptHeader(nsACString& value) {
+  value = mDocumentAcceptHeader;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsHttpHandler::GetAppName(nsACString& value) {
   value = mLegacyAppName;
   return NS_OK;

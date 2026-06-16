@@ -1116,7 +1116,7 @@ class ThenableJob : public MicroTaskEntry {
     PromiseResolveThenableJob,
     PromiseResolveBuiltinThenableJob,
 #ifdef NIGHTLY_BUILD
-    // Job used by MaybeDeferredPromiseResolve (JS::SafeResolve): runs
+    // Job used by SafePromiseResolve (JS::SafeResolve): runs
     // PerformPromiseResolution on `promise` with the resolution value stored
     // in the Thenable slot. The Then slot is unused for this target.
     DeferredResolveJob,
@@ -1199,13 +1199,6 @@ static bool RejectPromiseFunction(JSContext* cx, unsigned argc, Value* vp);
 static JSFunction* GetResolveFunctionFromReject(JSFunction* reject);
 static JSFunction* GetRejectFunctionFromResolve(JSFunction* resolve);
 static JSFunction* GetResolveFunctionFromPromise(PromiseObject* promise);
-
-#ifdef NIGHTLY_BUILD
-[[nodiscard]] static bool RequiresDeferredPromiseResolution(
-    JSContext* cx, HandleValue value, bool* needsDeferral);
-[[nodiscard]] static bool EnqueueDeferredResolveJob(
-    JSContext* cx, Handle<PromiseObject*> promise, HandleValue resolution);
-#endif  // NIGHTLY_BUILD
 
 #ifdef DEBUG
 
@@ -1348,17 +1341,8 @@ void js::SetAlreadyResolvedPromiseWithDefaultResolvingFunction(
   //         ! CreateBuiltinFunction(stepsResolve, lengthResolve, "",
   //                                 « [[Promise]], [[AlreadyResolved]] »).
   Handle<PropertyName*> funName = cx->names().empty_;
-#ifdef NIGHTLY_BUILD
-  // Thenable-curtailment proposal: the resolve function takes an optional
-  // `doSafeResolve` second parameter, so its length becomes 2 when the pref
-  // is enabled. Otherwise it remains 1, matching the current spec.
-  unsigned resolveLength =
-      JS::Prefs::experimental_promise_safe_resolve() ? 2 : 1;
-#else
-  unsigned resolveLength = 1;
-#endif
-  resolveFn.set(NewNativeFunction(cx, ResolvePromiseFunction, resolveLength,
-                                  funName, gc::AllocKind::FUNCTION_EXTENDED,
+  resolveFn.set(NewNativeFunction(cx, ResolvePromiseFunction, 1, funName,
+                                  gc::AllocKind::FUNCTION_EXTENDED,
                                   GenericObject));
   if (!resolveFn) {
     return false;
@@ -1623,18 +1607,6 @@ static bool ResolvePromiseFunction(JSContext* cx, unsigned argc, Value* vp) {
   JSFunction* resolve = &args.callee().as<JSFunction>();
   HandleValue resolutionVal = args.get(0);
 
-#ifdef NIGHTLY_BUILD
-  // Thenable-curtailment proposal: the resolve function takes a second
-  // `doSafeResolve` parameter. When true (and the pref is enabled), and
-  // resolving would synchronously run user code, the user-code-running steps
-  // are deferred to a microtask.
-  //
-  // Here we are strict and do not coerce, but that's potentially an area
-  // for future feedback.
-  bool doSafeResolve = JS::Prefs::experimental_promise_safe_resolve() &&
-                       args.get(1).isBoolean() && args.get(1).toBoolean();
-#endif  // NIGHTLY_BUILD
-
   // Step 3. Let promise be F.[[Promise]].
   const Value& promiseVal =
       resolve->getExtendedSlot(ResolveFunctionSlot_Promise);
@@ -1662,27 +1634,6 @@ static bool ResolvePromiseFunction(JSContext* cx, unsigned argc, Value* vp) {
     args.rval().setUndefined();
     return true;
   }
-
-#ifdef NIGHTLY_BUILD
-  // Thenable-curtailment proposal: if the caller asked for safe resolution
-  // and the value would run user code, defer to a microtask. Subsequent
-  // resolve/reject is a no-op because SetAlreadyResolvedResolutionFunction has
-  // happened.
-  if (doSafeResolve) {
-    bool needsDeferral = false;
-    if (!RequiresDeferredPromiseResolution(cx, resolutionVal, &needsDeferral)) {
-      return false;
-    }
-    if (needsDeferral) {
-      Rooted<PromiseObject*> promiseObj(cx, &promise->as<PromiseObject>());
-      if (!EnqueueDeferredResolveJob(cx, promiseObj, resolutionVal)) {
-        return false;
-      }
-      args.rval().setUndefined();
-      return true;
-    }
-  }
-#endif  // NIGHTLY_BUILD
 
   // Steps 7-15.
   if (!ResolvePromiseInternal(cx, promise, resolutionVal)) {
@@ -2804,12 +2755,15 @@ static bool PromiseReactionJob(JSContext* cx, HandleObject reactionObjIn) {
  *
  * Steps 1.a-d.
  *
- * A PromiseResolveThenableJob is set as the native function of an extended
- * JSFunction object, with all information required for the job's
- * execution stored in the function's extended slots.
+ * With the thenable-curtailment proposal
+ * (https://tc39.es/proposal-thenable-curtailment/) these steps are the
+ * PerformPromiseResolveThenable abstract operation: the body shared between
+ * the enqueued thenable job (the ~sync~ resolution path) and the synchronous
+ * thenable invocation done by PerformPromiseResolution in ~deferred~ mode.
  */
-static bool PromiseResolveThenableJob(JSContext* cx, HandleObject promise,
-                                      HandleValue thenable, HandleObject then) {
+static bool PerformPromiseResolveThenable(JSContext* cx, HandleObject promise,
+                                          HandleValue thenable,
+                                          HandleObject then) {
   // Step 1.a. Let resolvingFunctions be
   //           CreateResolvingFunctions(promiseToResolve).
   RootedTuple<JSObject*, JSObject*, Value, SavedFrame*, Value> roots(cx);
@@ -3076,8 +3030,16 @@ static bool PromiseResolveBuiltinThenableJob(JSContext* cx,
 /**
  * Thenable-curtailment: https://tc39.es/proposal-thenable-curtailment/
  *
- * PerformPromiseResolution (promise, resolution)
+ * PerformPromiseResolution (promise, resolution, called)
  *
+ * This realizes PerformPromiseResolution with `called` fixed to ~deferred~:
+ * it is only ever reached from the deferred-resolve job enqueued by
+ * SafePromiseResolve. (The ~sync~ resolution path is the ordinary
+ * ResolvePromiseInternal used by the resolve function.) Because we are in
+ * ~deferred~ mode, a callable `then` is invoked synchronously via
+ * PerformPromiseResolveThenable rather than by enqueuing a further job, so
+ * the deferred resolution takes the same number of microtask ticks as an
+ * ordinary thenable resolution.
  */
 [[nodiscard]] static bool PerformPromiseResolution(
     JSContext* cx, Handle<PromiseObject*> promise, HandleValue resolution) {
@@ -3125,9 +3087,11 @@ static bool PromiseResolveBuiltinThenableJob(JSContext* cx,
     return FulfillMaybeWrappedPromise(cx, promise, resolution);
   }
 
-  // Steps 7-9
-  RootedValue promiseVal(cx, ObjectValue(*promise));
-  return EnqueuePromiseResolveThenableJob(cx, promiseVal, resolution, thenVal);
+  // Step 7. (called is ~deferred~.) Run the thenable now instead of enqueuing
+  // another job: PerformPromiseResolveThenable(promise, resolution, then).
+  RootedObject promiseObj(cx, promise);
+  RootedObject thenObj(cx, &thenVal.toObject());
+  return PerformPromiseResolveThenable(cx, promiseObj, resolution, thenObj);
 }
 
 /**
@@ -3162,13 +3126,17 @@ static bool PromiseResolveBuiltinThenableJob(JSContext* cx,
 /**
  * Thenable-curtailment: https://tc39.es/proposal-thenable-curtailment/
  *
- * MaybeDeferredPromiseResolve (promiseCapability, resolution)
+ * SafePromiseResolve (promiseCapability, resolution)
  *
  * Resolves `promise` with `resolution`. If the synchronous resolution steps
  * might run user code (Proxy, accessor, or callable "then" data property),
- * mark the promise's resolving functions as no-ops and defers the actual
+ * mark the promise's resolving functions as no-ops and defer the actual
  * PerformPromiseResolution steps to a freshly-enqueued microtask.
  *
+ * The spec routes the deferral through a null-prototype wrapper thenable
+ * resolved via the promise's [[Resolve]] function; that wrapper is never
+ * exposed to user code, so we skip allocating it and instead latch the
+ * resolving functions directly and enqueue the deferred-resolve job here.
  */
 bool js::SafeResolvePromise(JSContext* cx, Handle<PromiseObject*> promise,
                             HandleValue resolution) {
@@ -8548,7 +8516,7 @@ JS_PUBLIC_API bool JS::RunJSMicroTask(JSContext* cx,
       case ThenableJob::PromiseResolveThenableJob: {
         // MG:XXX: Unify naming: is it `then` or `handler` make up your mind.
         RootedField<JSObject*, 3> then(roots, job->then());
-        return PromiseResolveThenableJob(cx, promise, thenable, then);
+        return PerformPromiseResolveThenable(cx, promise, thenable, then);
       }
       case ThenableJob::PromiseResolveBuiltinThenableJob: {
         RootedField<JSObject*, 2> thenableObj(roots,

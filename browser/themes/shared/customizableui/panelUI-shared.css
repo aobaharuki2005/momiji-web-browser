@@ -2511,6 +2511,12 @@ radiogroup:focus-visible > .subviewradio[focused="true"] {
   }
 }
 
+@media not -moz-pref("browser.nova.enabled") {
+  #ipprotection-header-content {
+    color: var(--text-color);
+  }
+}
+
 #ipprotection-experiment-badge {
   margin-inline-start: var(--space-xsmall);
   display: inline-block;

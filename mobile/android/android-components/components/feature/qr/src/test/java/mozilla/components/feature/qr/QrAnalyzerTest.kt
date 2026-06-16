@@ -4,8 +4,13 @@
 
 package mozilla.components.feature.qr
 
+import android.graphics.Bitmap
+import android.graphics.Color
 import android.media.Image
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import com.google.zxing.BarcodeFormat
+import com.google.zxing.common.BitMatrix
+import com.google.zxing.qrcode.QRCodeWriter
 import mozilla.components.support.test.mock
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
@@ -71,6 +76,66 @@ class QrAnalyzerTest {
 
         assertEquals(4, source.width)
         assertEquals(2, source.height)
+    }
+
+    @Test
+    fun `GIVEN a bitmap containing a QR code WHEN analyze is called THEN it returns the payload and leaves state untouched`() {
+        val analyzer = QrAnalyzer()
+        val payload = "https://example.com/qr"
+
+        val result = analyzer.analyze(qrBitmap(payload))
+
+        assertEquals(payload, result)
+        assertEquals(QrAnalyzer.STATE_FIND_QRCODE, analyzer.state)
+    }
+
+    @Test
+    fun `GIVEN a bitmap with no QR code WHEN analyze is called THEN it returns null and leaves state untouched`() {
+        val analyzer = QrAnalyzer()
+        val bitmap = Bitmap.createBitmap(64, 64, Bitmap.Config.ARGB_8888).apply { eraseColor(Color.WHITE) }
+
+        val result = analyzer.analyze(bitmap)
+
+        assertNull(result)
+        assertEquals(QrAnalyzer.STATE_FIND_QRCODE, analyzer.state)
+    }
+
+    @Test
+    fun `GIVEN a color-inverted QR bitmap WHEN analyze is called THEN it decodes via the inverted retry`() {
+        val analyzer = QrAnalyzer()
+        val payload = "inverted-qr-payload"
+
+        val result = analyzer.analyze(qrBitmap(payload, foreground = Color.WHITE, background = Color.BLACK))
+
+        assertEquals(payload, result)
+    }
+
+    @Test
+    fun `GIVEN state is STATE_QRCODE_EXIST WHEN analyze(bitmap) is called THEN it still decodes and does not touch state`() {
+        val analyzer = QrAnalyzer()
+        analyzer.state = QrAnalyzer.STATE_QRCODE_EXIST
+        val payload = "https://example.com/state-independent"
+
+        val result = analyzer.analyze(qrBitmap(payload))
+
+        assertEquals(payload, result)
+        assertEquals(QrAnalyzer.STATE_QRCODE_EXIST, analyzer.state)
+    }
+
+    private fun qrBitmap(
+        payload: String,
+        size: Int = 200,
+        foreground: Int = Color.BLACK,
+        background: Int = Color.WHITE,
+    ): Bitmap {
+        val matrix: BitMatrix = QRCodeWriter().encode(payload, BarcodeFormat.QR_CODE, size, size)
+        val bitmap = Bitmap.createBitmap(size, size, Bitmap.Config.ARGB_8888)
+        for (x in 0 until size) {
+            for (y in 0 until size) {
+                bitmap.setPixel(x, y, if (matrix[x, y]) foreground else background)
+            }
+        }
+        return bitmap
     }
 
     private fun mockYuvImage(

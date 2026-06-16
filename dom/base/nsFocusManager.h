@@ -13,6 +13,7 @@
 #include "nsIContent.h"
 #include "nsIFocusManager.h"
 #include "nsIObserver.h"
+#include "nsPIDOMWindowInlines.h"  // FIXME: Stop including inline definitions!
 #include "nsWeakReference.h"
 
 #define FOCUSMANAGER_CONTRACTID "@mozilla.org/focus-manager;1"

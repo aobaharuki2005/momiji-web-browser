@@ -33,6 +33,7 @@
 #include "nsIPrefBranch.h"
 #include "nsIPrefService.h"
 #include "nsPIDOMWindow.h"
+#include "nsPIDOMWindowInlines.h"
 #include "nsServiceManagerUtils.h"
 #include "nsThreadManager.h"
 #include "nsTHashSet.h"

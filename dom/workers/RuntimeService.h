@@ -111,6 +111,9 @@ class RuntimeService final : public nsIObserver {
   void PropagateStorageAccessPermissionGranted(
       const nsPIDOMWindowInner& aWindow);
 
+  void UpdateTimezoneOverrideForWorkers(const nsPIDOMWindowInner& aWindow,
+                                        const nsAString& aTimezone);
+
   NavigatorProperties GetNavigatorProperties() const {
     MutexAutoLock lock(mMutex);
     return mNavigatorProperties;

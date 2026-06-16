@@ -31,6 +31,127 @@ newtab-card-dismiss-button =
     .title = Baztertu
     .aria-label = Baztertu
 
+## Strings for "Homepage" and "Firefox Home" sections of about:settings#home.
+## Homepage panel
+
+home-homepage-title =
+    .label = Hasiera-orria
+home-homepage-new-windows =
+    .label = Leiho berriak
+home-homepage-new-tabs =
+    .label = Fitxa berriak
+# This option leads to the "Custom Homepage" subpage
+home-homepage-custom-homepage-button =
+    .label = Aukeratu gune zehatza
+
+## Custom URLs subpage
+
+# Subheader on the Custom Homepage subpage. Followed by a form to enter URLs and a list of URLs already saved, if any.
+home-custom-homepage-card-header =
+    .label = Webgunearen helbidea
+home-custom-homepage-address =
+    .placeholder = Idatzi helbidea
+home-custom-homepage-address-button =
+    .label = Gehitu helbidea
+# Shown when no custom websites/URLs to use as a homepage have been added yet
+home-custom-homepage-no-results =
+    .label = Ez da webgunerik gehitu oraindik.
+home-custom-homepage-delete-address-button =
+    .aria-label = Ezabatu helbidea
+    .title = Ezabatu helbidea
+# Further options to use when setting the home page. Two action buttons are placed in line with this prompt
+# to replace the current home page with a currently open page or bookmark.
+home-custom-homepage-replace-with-prompt =
+    .label = Ordeztu honekin
+# Button that appears in-line after text "Replace with" (home-custom-homepage-replace-with-prompt)
+home-custom-homepage-current-pages-button =
+    .label = Unean irekitako orriak
+# Button that appears in-line after text "Replace with" (home-custom-homepage-replace-with-prompt)
+home-custom-homepage-bookmarks-button =
+    .label = Laster-markak…
+
+## Firefox Home content
+
+home-prefs-content-header =
+    .label = { -firefox-home-brand-name }
+home-prefs-search-header2 =
+    .label = Bilatu
+home-prefs-stories-header2 =
+    .label = Istorioak
+    .description = { -brand-product-name } familiak hautatutako aparteko edukia
+home-prefs-widgets-header =
+    .label = Widgetak
+# Lists is a widget on New Tab, similar to a to-do widget
+home-prefs-lists-header =
+    .label = Zerrendak
+# Timer is a widget on New Tab, similar to the Pomodoro timer.
+home-prefs-timer-header =
+    .label = Tenporizadorea
+# Sports is a widget on New Tab showing sports scores and schedules.
+home-prefs-sports-widget-header =
+    .label = Kirolak
+# Clock is a widget on New Tab that displays time zones around the world.
+home-prefs-clocks-header =
+    .label = Erlojua
+home-prefs-mission-message2 =
+    .message = Gure babesleek web hobeagoa eraikitzeko misioan laguntzen gaituzte.
+home-prefs-manage-topics-link2 =
+    .label = Kudeatu gaiak
+home-prefs-choose-wallpaper-link2 =
+    .label = Aukeratu horma-papera
+home-prefs-firefox-logo-header =
+    .label = { -brand-short-name } logoa
+# Informational message bar that appears in the Firefox Home section when the options are disabled.
+# The user must select Firefox Home as their homepage for either new tabs or new windows to enable
+# the features in settings.
+home-prefs-firefox-home-disabled-notice =
+    .message = Eginbide hauek erabiltzeko, ezarri fitxa edo leiho berriak '{ -firefox-home-brand-name }' aukerara.
+# Variables:
+#   $num (number) - Number of rows displayed
+home-prefs-sections-rows-option-srd =
+    .label =
+        { $num ->
+            [one] Errenkada bat
+           *[other] { $num } errenkada
+        }
+# Dropdown option shown when an extension replaces the contents of new windows or tabs.
+# Variables:
+#   $extension (string) - Name of the extension
+home-prefs-homepage-extension-option =
+    .label = Gehigarria ({ $extension })
+home-restore-defaults-srd =
+    .label = Berrezarri lehenetsiak
+    .accesskey = B
+home-mode-choice-default-fx-srd =
+    .label = { -firefox-home-brand-name } (Lehenetsia)
+home-mode-choice-custom-srd =
+    .label = URL pertsonalizatuak…
+home-mode-choice-blank-srd =
+    .label = Orri zuria
+home-prefs-shortcuts-header-srd =
+    .label = Lasterbideak
+home-prefs-shortcuts-select =
+    .aria-label = Lasterbideak
+home-prefs-shortcuts-by-option-sponsored-srd =
+    .label = Babesleen lasterbideak
+home-prefs-recommended-by-option-sponsored-stories-srd =
+    .label = Babesleen istorioak
+home-prefs-highlights-option-visited-pages-srd =
+    .label = Bisitatutako orriak
+home-prefs-highlights-options-bookmarks-srd =
+    .label = Laster-markak
+home-prefs-highlights-option-most-recent-download-srd =
+    .label = Azken deskarga
+home-prefs-recent-activity-header-srd =
+    .label = Azken jarduera
+home-prefs-recent-activity-select =
+    .aria-label = Azken jarduera
+home-prefs-weather-header-srd =
+    .label = Eguraldia
+home-prefs-support-firefox-header-srd =
+    .label = Lagundu { -brand-product-name }
+home-prefs-mission-message-learn-more-link-srd = Ezagutu nola
+
 ## Search box component.
 
 # "Search" is a verb/action
@@ -151,6 +272,8 @@ newtab-menu-section-block = Blokeatu
 # "Follow", "unfollow", and "following" are social media terms that refer to subscribing to or unsubscribing from a section of stories.
 # e.g. Following the travel section of stories.
 newtab-menu-section-unfollow-topic = Utzi jarraitzeari
+# Context menu option to open a support page explaining the New Tab personalization features and privacy controls.
+newtab-menu-section-learn-more = Argibide gehiago
 # "Follow", "unfollow", and "following" are social media terms that refer to subscribing to or unsubscribing from a section of stories.
 # e.g. Following the travel section of stories.
 newtab-menu-section-unfollow = Ez jarraitu gaia
@@ -757,8 +880,6 @@ newtab-widget-lists-button-add-item = Gehitu elementua
 newtab-widget-lists-input-add-an-item2 =
     .placeholder = Gehitu elementua
     .aria-label = Gehitu elementua
-newtab-widget-lists-input-add-an-item =
-    .placeholder = Gehitu elementua
 newtab-widget-lists-input-error = Idatzi testua elementua gehitu ahal izateko.
 newtab-widget-lists-input-menu-open-link = Ireki lotura
 newtab-widget-lists-input-menu-move-up = Eraman gora
@@ -786,11 +907,6 @@ newtab-widget-lists-name-placeholder-checklist2 =
 newtab-widget-lists-name-placeholder-new2 =
     .placeholder = Zerrenda berria
     .aria-label = Editatu zerrendaren izena
-newtab-widget-lists-name-placeholder-checklist =
-    .placeholder = Zerrenda
-# The placeholder value of the name field for a newly created list
-newtab-widget-lists-name-placeholder-new =
-    .placeholder = Zerrenda berria
 newtab-widget-section-title = Widgetak
 newtab-widget-menu-hide = Ezkutatu widgeta
 newtab-widget-menu-change-size = Aldatu tamaina
@@ -1055,6 +1171,28 @@ newtab-sports-widget-match-full-time = Partidaren amaiera
 newtab-sports-widget-match-halftime = Atsedenaldia
 newtab-sports-widget-match-extra-time = Luzapena
 newtab-sports-widget-match-penalties = Penaltiak
+# Separator shown between two teams in a placeholder match row when no upcoming
+# match details are available yet.
+newtab-sports-widget-match-vs = -
+# Note shown in the Upcoming tab when no match details are available yet.
+newtab-sports-widget-no-upcoming-matches = Adi egon hurrengo partiden xehetasunetara
+
+## Sports widget live-games pagination. Shown when 2+ matches are live at the same time
+
+# arrow button that goes to the previous page of live matches.
+newtab-sports-widget-pagination-previous =
+    .aria-label = Aurrekoa
+    .title = Aurrekoa
+# arrow button that goes to the next page of live matches.
+newtab-sports-widget-pagination-next =
+    .aria-label = Hurrengoa
+    .title = Hurrengoa
+# Dot indicator that jumps directly to a given live match.
+# $index (number) - 1-based position of this dot in the list.
+# $total (number) - Total number of live matches.
+newtab-sports-widget-pagination-dot =
+    .aria-label = Zuzeneko partida { $index }/{ $total }
+    .title = Zuzeneko partida { $index }/{ $total }
 
 ## Accessible labels for match rows in the sports widget. These are read by
 ## screen readers to announce the match details and status.
@@ -1115,6 +1253,8 @@ newtab-sports-widget-team-name-label-eng =
     .label = Ingalaterra
 newtab-sports-widget-team-name-label-sco =
     .label = Eskozia
+# Placeholder used in a match row's aria-label for an undecided team (shown visually as "--").
+newtab-sports-widget-team-tbd = Zehazteke
 
 ## Sports widget OMC messages
 ## Shown as on-screen messages promoting the Sports widget and World Cup wallpapers.

@@ -308,8 +308,6 @@ class nsGlobalWindowInner final : public mozilla::dom::EventTarget,
 
   void GetEventTargetParent(mozilla::EventChainPreVisitor& aVisitor) override;
 
-  MOZ_CAN_RUN_SCRIPT_BOUNDARY nsresult
-  PreHandleEvent(mozilla::EventChainVisitor&) override;
   // TODO: Convert this to MOZ_CAN_RUN_SCRIPT (bug 1415230)
   MOZ_CAN_RUN_SCRIPT_BOUNDARY nsresult
   PostHandleEvent(mozilla::EventChainPostVisitor& aVisitor) override;
@@ -688,6 +686,8 @@ class nsGlobalWindowInner final : public mozilla::dom::EventTarget,
   void ForgetSharedWorker(mozilla::dom::SharedWorker* aSharedWorker);
 
   void UpdateSharedWorkersLanguageOverride(const nsCString& aLanguageOverride);
+
+  void UpdateSharedWorkerTimezoneOverride(const nsAString& aTimezoneOverride);
 
  public:
   void Alert(nsIPrincipal& aSubjectPrincipal, mozilla::ErrorResult& aError);
@@ -1239,7 +1239,7 @@ class nsGlobalWindowInner final : public mozilla::dom::EventTarget,
   bool IsPlayingAudio() override;
 
   // Dispatch a runnable related to the global.
-  nsresult Dispatch(already_AddRefed<nsIRunnable>&& aRunnable) const final;
+  nsresult Dispatch(already_AddRefed<nsIRunnable> aRunnable) const final;
   nsISerialEventTarget* SerialEventTarget() const final;
 
   void DisableIdleCallbackRequests();
@@ -1542,41 +1542,6 @@ inline nsISupports* ToSupports(nsGlobalWindowInner* p) {
 
 inline nsISupports* ToCanonicalSupports(nsGlobalWindowInner* p) {
   return static_cast<mozilla::dom::EventTarget*>(p);
-}
-
-// XXX: EWW - This is an awful hack - let's not do this
-#include "nsGlobalWindowOuter.h"
-
-inline nsIGlobalObject* nsGlobalWindowInner::GetRelevantGlobal() const {
-  return const_cast<nsGlobalWindowInner*>(this);
-}
-
-inline nsGlobalWindowOuter* nsGlobalWindowInner::GetInProcessTopInternal() {
-  nsGlobalWindowOuter* outer = GetOuterWindowInternal();
-  nsCOMPtr<nsPIDOMWindowOuter> top = outer ? outer->GetInProcessTop() : nullptr;
-  if (top) {
-    return nsGlobalWindowOuter::Cast(top);
-  }
-  return nullptr;
-}
-
-inline nsGlobalWindowOuter*
-nsGlobalWindowInner::GetInProcessScriptableTopInternal() {
-  nsPIDOMWindowOuter* top = GetInProcessScriptableTop();
-  return nsGlobalWindowOuter::Cast(top);
-}
-
-inline nsIScriptContext* nsGlobalWindowInner::GetContextInternal() {
-  if (mOuterWindow) {
-    return GetOuterWindowInternal()->mContext;
-  }
-
-  return nullptr;
-}
-
-inline nsGlobalWindowOuter* nsGlobalWindowInner::GetOuterWindowInternal()
-    const {
-  return nsGlobalWindowOuter::Cast(GetOuterWindow());
 }
 
 #endif /* nsGlobalWindowInner_h_ */

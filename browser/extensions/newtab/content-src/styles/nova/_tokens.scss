@@ -17,20 +17,20 @@
 
 :root.nova-tokens {
   /** background-color **/
-  --background-color-box: light-dark(var(--color-white), var(--color-gray-75));
-  --background-color-box-info: light-dark(var(--color-gray-15), var(--color-gray-60));
-  --background-color-canvas: light-dark(var(--color-gray-05), var(--color-gray-90));
+  --background-color-box: light-dark(var(--color-white), var(--color-gray-70));
+  --background-color-box-info: light-dark(var(--color-gray-15), var(--color-gray-65));
+  --background-color-canvas: light-dark(var(--color-gray-0), var(--color-gray-90));
   --background-color-critical: light-dark(var(--color-red-10), var(--color-red-70));
   --background-color-information: light-dark(var(--color-violet-10), var(--color-violet-70));
   --background-color-success: light-dark(var(--color-green-10), var(--color-green-70));
   --background-color-warning: light-dark(var(--color-yellow-10), var(--color-yellow-70));
 
   /** border **/
-  --border-color: light-dark(var(--color-gray-30), var(--color-gray-50));
-  --border-color-deemphasized: light-dark(var(--color-gray-20), var(--color-gray-60));
+  --border-color: light-dark(var(--color-gray-30), var(--color-gray-45));
+  --border-color-deemphasized: light-dark(var(--color-gray-20), var(--color-gray-55));
   --border-color-error: light-dark(var(--color-red-50), var(--color-red-20));
-  --border-color-interactive: var(--color-gray-40);
-  --border-color-interactive-disabled: light-dark(var(--color-gray-25), var(--color-gray-50));
+  --border-color-interactive: light-dark(var(--color-gray-35), var(--color-gray-45));
+  --border-color-interactive-disabled: light-dark(var(--color-gray-25), var(--color-gray-60));
   --border-color-transparent: transparent;
   --border-radius-large: 12px;
   --border-radius-xlarge: 16px;
@@ -119,7 +119,6 @@
   --color-cyan-80: #002D38;
   --color-cyan-90: #011C23;
   --color-gray-0: #FCFBFF;
-  --color-gray-05: #F7F6FB;
   --color-gray-10: #EFEDF2;
   --color-gray-15: #E3E2E7;
   --color-gray-20: #D6D5DA;
@@ -177,8 +176,6 @@
   --color-purple-70: #4F216B;
   --color-purple-80: #311842;
   --color-purple-90: #1A1220;
-  --color-purple-desaturated-30: #C0A7D4;
-  --color-purple-desaturated-50: #816297;
   --color-red-0: #FCF2F3;
   --color-red-10: #FFD9DF;
   --color-red-20: #FFB6BF;
@@ -247,6 +244,7 @@
   --panel-background-color: Field;
   --panel-border-color: ThreeDShadow;
   --panel-border-radius: 16px;
+  --panel-menuitem-border-radius: var(--border-radius-xxlarge);
   --panel-padding: var(--panel-padding-block);
   --panel-padding-block: 8px;
   --panel-text-color: FieldText;

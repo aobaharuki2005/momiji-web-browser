@@ -6,7 +6,7 @@ package org.mozilla.fenix.helpers
 
 import androidx.test.platform.app.InstrumentationRegistry
 import mozilla.components.feature.sitepermissions.SitePermissionsRules
-import org.mozilla.fenix.ext.settings
+import org.mozilla.fenix.ext.components
 
 /**
  * Helper for querying the status and modifying various features and settings in the application.
@@ -49,6 +49,11 @@ interface FeatureSettingsHelper {
      * Whether the Unified Trust Panel is enabled or not.
      */
     var isUnifiedTrustPanelEnabled: Boolean
+
+    /**
+     * Whether the Homepage Sports Widget is visible or not.
+     */
+    var isHomepageSportsWidgetVisible: Boolean
 
     /**
      * The current "Enhanced Tracking Protection" policy.
@@ -160,7 +165,7 @@ interface FeatureSettingsHelper {
     fun resetAllFeatureFlags()
 
     companion object {
-        val settings = InstrumentationRegistry.getInstrumentation().targetContext.settings()
+        val settings = InstrumentationRegistry.getInstrumentation().targetContext.components.settings
     }
 }
 

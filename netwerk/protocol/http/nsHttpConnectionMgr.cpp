@@ -3797,9 +3797,6 @@ void nsHttpConnectionMgr::RegisterOriginCoalescingKey(HttpConnectionBase* conn,
 
 bool nsHttpConnectionMgr::GetConnectionData(nsTArray<HttpRetParams>* aArg) {
   for (const RefPtr<ConnectionEntry>& ent : mCT.Values()) {
-    if (ent->mConnInfo->GetPrivate()) {
-      continue;
-    }
     aArg->AppendElement(ent->GetConnectionData());
   }
 

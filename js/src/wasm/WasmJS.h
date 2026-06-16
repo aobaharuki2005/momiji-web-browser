@@ -100,12 +100,10 @@ struct ImportValues;
 
 bool IsSharedWasmMemoryObject(JSObject* obj);
 
-#ifdef ENABLE_SOURCE_PHASE_IMPORTS
 [[nodiscard]] bool CompileForESM(JSContext* cx,
                                  const JS::ReadOnlyCompileOptions& options,
                                  const BytecodeSource& source,
                                  MutableHandleObject moduleObj);
-#endif
 
 }  // namespace wasm
 
@@ -187,7 +185,7 @@ class WasmGlobalObject : public NativeObject {
   static bool valueSetterImpl(JSContext* cx, const CallArgs& args);
   static bool valueSetter(JSContext* cx, unsigned argc, Value* vp);
 
-  wasm::GCPtrVal& mutableVal();
+  wasm::HeapPtrVal& mutableVal();
 
  public:
   static const unsigned RESERVED_SLOTS = 2;
@@ -204,7 +202,7 @@ class WasmGlobalObject : public NativeObject {
 
   bool isMutable() const;
   wasm::ValType type() const;
-  const wasm::GCPtrVal& val() const;
+  const wasm::HeapPtrVal& val() const;
   void setVal(wasm::HandleVal value);
   void* addressOfCell() const;
 };

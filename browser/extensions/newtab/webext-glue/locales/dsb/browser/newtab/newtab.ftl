@@ -31,6 +31,129 @@ newtab-card-dismiss-button =
     .title = Zachyśiś
     .aria-label = Zachyśiś
 
+## Strings for "Homepage" and "Firefox Home" sections of about:settings#home.
+## Homepage panel
+
+home-homepage-title =
+    .label = Startowy bok
+home-homepage-new-windows =
+    .label = Nowe wokna
+home-homepage-new-tabs =
+    .label = Nowe rejtariki
+# This option leads to the "Custom Homepage" subpage
+home-homepage-custom-homepage-button =
+    .label = Wubjeŕśo wěste sedło
+
+## Custom URLs subpage
+
+# Subheader on the Custom Homepage subpage. Followed by a form to enter URLs and a list of URLs already saved, if any.
+home-custom-homepage-card-header =
+    .label = Adrese websedłow
+home-custom-homepage-address =
+    .placeholder = Adresu zapódaś
+home-custom-homepage-address-button =
+    .label = Adresu pśidaś
+# Shown when no custom websites/URLs to use as a homepage have been added yet
+home-custom-homepage-no-results =
+    .label = Hyšći žedne websedła pśidane.
+home-custom-homepage-delete-address-button =
+    .aria-label = Adresu lašowaś
+    .title = Adresu lašowaś
+# Further options to use when setting the home page. Two action buttons are placed in line with this prompt
+# to replace the current home page with a currently open page or bookmark.
+home-custom-homepage-replace-with-prompt =
+    .label = Wuměniś z
+# Button that appears in-line after text "Replace with" (home-custom-homepage-replace-with-prompt)
+home-custom-homepage-current-pages-button =
+    .label = Aktualne wócynjone boki
+# Button that appears in-line after text "Replace with" (home-custom-homepage-replace-with-prompt)
+home-custom-homepage-bookmarks-button =
+    .label = Cytańske znamjenja…
+
+## Firefox Home content
+
+home-prefs-content-header =
+    .label = { -firefox-home-brand-name }
+home-prefs-search-header2 =
+    .label = Pytaś
+home-prefs-stories-header2 =
+    .label = Tšojenja
+    .description = Wuwześowe wopśimjeśe, kótarež se pśez swójźbu { -brand-product-name } wótwardujo
+home-prefs-widgets-header =
+    .label = Asistenty
+# Lists is a widget on New Tab, similar to a to-do widget
+home-prefs-lists-header =
+    .label = Lisćiny
+# Timer is a widget on New Tab, similar to the Pomodoro timer.
+home-prefs-timer-header =
+    .label = Měritko casa
+# Sports is a widget on New Tab showing sports scores and schedules.
+home-prefs-sports-widget-header =
+    .label = Sport
+# Clock is a widget on New Tab that displays time zones around the world.
+home-prefs-clocks-header =
+    .label = Zeger
+home-prefs-mission-message2 =
+    .message = Naše sponsory našu misiju pódpěraju, aby lěpšy web twórili.
+home-prefs-manage-topics-link2 =
+    .label = Temy zastojaś
+home-prefs-choose-wallpaper-link2 =
+    .label = Wubjeŕśo slězynowy wobraz
+home-prefs-firefox-logo-header =
+    .label = Logo { -brand-short-name }
+# Informational message bar that appears in the Firefox Home section when the options are disabled.
+# The user must select Firefox Home as their homepage for either new tabs or new windows to enable
+# the features in settings.
+home-prefs-firefox-home-disabled-notice =
+    .message = Aby toś te funkcije wužywał, stajśo nowe rejtariki abo nowe wokna do { -firefox-home-brand-name }.
+# Variables:
+#   $num (number) - Number of rows displayed
+home-prefs-sections-rows-option-srd =
+    .label =
+        { $num ->
+            [one] { $num } smužka
+            [two] { $num } smužce
+            [few] { $num }smužki
+           *[other] { $num } smužkow
+        }
+# Dropdown option shown when an extension replaces the contents of new windows or tabs.
+# Variables:
+#   $extension (string) - Name of the extension
+home-prefs-homepage-extension-option =
+    .label = Rozšyrjenje ({ $extension })
+home-restore-defaults-srd =
+    .label = Standard wótnowiś
+    .accesskey = S
+home-mode-choice-default-fx-srd =
+    .label = { -firefox-home-brand-name } (standard)
+home-mode-choice-custom-srd =
+    .label = Swójske URL…
+home-mode-choice-blank-srd =
+    .label = Prozny bok
+home-prefs-shortcuts-header-srd =
+    .label = Zwězanja
+home-prefs-shortcuts-select =
+    .aria-label = Zwězanja
+home-prefs-shortcuts-by-option-sponsored-srd =
+    .label = Sponserowane zwězanja
+home-prefs-recommended-by-option-sponsored-stories-srd =
+    .label = Sponserowane tšojenja pokazaś
+home-prefs-highlights-option-visited-pages-srd =
+    .label = Woglědane boki
+home-prefs-highlights-options-bookmarks-srd =
+    .label = Cytańske znamjenja
+home-prefs-highlights-option-most-recent-download-srd =
+    .label = Nejnowše ześěgnjenje
+home-prefs-recent-activity-header-srd =
+    .label = Nejnowša aktiwita
+home-prefs-recent-activity-select =
+    .aria-label = Nejnowša aktiwita
+home-prefs-weather-header-srd =
+    .label = Wjedro
+home-prefs-support-firefox-header-srd =
+    .label = { -brand-product-name } pódpěraś
+home-prefs-mission-message-learn-more-link-srd = Zgóńśo kak
+
 ## Search box component.
 
 # "Search" is a verb/action
@@ -151,6 +274,8 @@ newtab-menu-section-block = Blokěrowaś
 # "Follow", "unfollow", and "following" are social media terms that refer to subscribing to or unsubscribing from a section of stories.
 # e.g. Following the travel section of stories.
 newtab-menu-section-unfollow-topic = Wěcej njeslědowaś
+# Context menu option to open a support page explaining the New Tab personalization features and privacy controls.
+newtab-menu-section-learn-more = Dalšne informacije
 # "Follow", "unfollow", and "following" are social media terms that refer to subscribing to or unsubscribing from a section of stories.
 # e.g. Following the travel section of stories.
 newtab-menu-section-unfollow = Temje wěcej njeslědowaś
@@ -762,8 +887,6 @@ newtab-widget-lists-button-add-item = Zapisk pśidaś
 newtab-widget-lists-input-add-an-item2 =
     .placeholder = Zapisk pśidaś
     .aria-label = Zapisk pśidaś
-newtab-widget-lists-input-add-an-item =
-    .placeholder = Zapisk pśidaś
 newtab-widget-lists-input-error = Pšosym zapśimujśo tekst, aby zapisk pśidał.
 newtab-widget-lists-input-menu-open-link = Wótkaz wócyniś
 newtab-widget-lists-input-menu-move-up = Górjej
@@ -791,11 +914,6 @@ newtab-widget-lists-name-placeholder-checklist2 =
 newtab-widget-lists-name-placeholder-new2 =
     .placeholder = Nowa lisćina
     .aria-label = Mě lisćiny wobźěłaś
-newtab-widget-lists-name-placeholder-checklist =
-    .placeholder = Kontrolna lisćina
-# The placeholder value of the name field for a newly created list
-newtab-widget-lists-name-placeholder-new =
-    .placeholder = Nowa lisćina
 newtab-widget-section-title = Asistenty
 newtab-widget-menu-hide = Asistent schowaś
 newtab-widget-menu-change-size = Wjelikosć změniś
@@ -1066,6 +1184,28 @@ newtab-sports-widget-match-full-time = Wšen cas
 newtab-sports-widget-match-halftime = Połcas
 newtab-sports-widget-match-extra-time = Pódlejšenje
 newtab-sports-widget-match-penalties = Pokutne kopy
+# Separator shown between two teams in a placeholder match row when no upcoming
+# match details are available yet.
+newtab-sports-widget-match-vs = pśeśiwo
+# Note shown in the Upcoming tab when no match details are available yet.
+newtab-sports-widget-no-upcoming-matches = Wóstajśo na běžnem za pśichodne grajne drobnostki
+
+## Sports widget live-games pagination. Shown when 2+ matches are live at the same time
+
+# arrow button that goes to the previous page of live matches.
+newtab-sports-widget-pagination-previous =
+    .aria-label = Pjerwjejšny
+    .title = Pjerwjejšny
+# arrow button that goes to the next page of live matches.
+newtab-sports-widget-pagination-next =
+    .aria-label = Pśiducy
+    .title = Pśiducy
+# Dot indicator that jumps directly to a given live match.
+# $index (number) - 1-based position of this dot in the list.
+# $total (number) - Total number of live matches.
+newtab-sports-widget-pagination-dot =
+    .aria-label = Graśe live { $index } z { $total }
+    .title = Graśe live { $index } z { $total }
 
 ## Accessible labels for match rows in the sports widget. These are read by
 ## screen readers to announce the match details and status.
@@ -1126,6 +1266,8 @@ newtab-sports-widget-team-name-label-eng =
     .label = Engelska
 newtab-sports-widget-team-name-label-sco =
     .label = Šotiska
+# Placeholder used in a match row's aria-label for an undecided team (shown visually as "--").
+newtab-sports-widget-team-tbd = Musy se póstajiś
 
 ## Sports widget OMC messages
 ## Shown as on-screen messages promoting the Sports widget and World Cup wallpapers.

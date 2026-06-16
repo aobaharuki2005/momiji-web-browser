@@ -195,8 +195,6 @@ def setup_zed(command_context, interactive):
 
     # Our C/C++ tab size does not match the default
     new_settings["languages"] = {"C": {"tab_size": 2}, "C++": {"tab_size": 2}}
-    # FIXME: Remove once modelines are supported:
-    # https://github.com/zed-industries/zed/issues/4762
     new_settings["file_types"] = {
         "Python": [
             "**/moz.build",

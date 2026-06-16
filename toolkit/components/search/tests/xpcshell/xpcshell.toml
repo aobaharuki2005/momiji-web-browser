@@ -89,6 +89,8 @@ tags = "remote-settings searchmain"
 
 ["test_getSubmission_params_prefNimbus_invalid.js"]
 
+["test_hideOneOffButton.js"]
+
 ["test_identifiers.js"]
 
 ["test_ignorelist.js"]
@@ -247,6 +249,8 @@ support-files = ["settings/v7-loadPath-migration.json"]
 ["test_settings_migration_renames.js"]
 support-files = ["settings/v6-migration-renames.json"]
 
+["test_settings_no_duplicate_after_rename.js"]
+
 ["test_settings_none.js"]
 
 ["test_settings_obsolete.js"]
@@ -263,6 +267,8 @@ support-files = [
 ["test_sort_orders.js"]
 
 ["test_telemetry_default.js"]
+
+["test_telemetry_installed_engine_counts.js"]
 
 ["test_userEngine.js"]
 

@@ -1316,5 +1316,32 @@ describe("Reducers", () => {
       assert.equal(next.widgetState, "sports-intro");
       assert.deepEqual(next.selectedTeams, ["ENG"]);
     });
+
+    it("WIDGETS_SPORTS_SET_CELEBRATIONS replaces the celebrations map", () => {
+      const celebrations = {
+        endedAt: { 7: 12345 },
+        celebrated: [3, 5],
+      };
+      const next = SportsWidget(stateWithMatches(), {
+        type: at.WIDGETS_SPORTS_SET_CELEBRATIONS,
+        data: celebrations,
+      });
+      assert.deepEqual(next.celebrations, celebrations);
+    });
+
+    it("WIDGETS_SPORTS_SET_CELEBRATIONS preserves other SportsWidget fields", () => {
+      const prev = {
+        ...stateWithMatches(),
+        widgetState: "sports-matches",
+        selectedTeams: ["ENG"],
+      };
+      const next = SportsWidget(prev, {
+        type: at.WIDGETS_SPORTS_SET_CELEBRATIONS,
+        data: { endedAt: {}, celebrated: [1] },
+      });
+      assert.equal(next.widgetState, "sports-matches");
+      assert.deepEqual(next.selectedTeams, ["ENG"]);
+      assert.deepEqual(next.data.matches, baseMatches);
+    });
   });
 });

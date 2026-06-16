@@ -272,7 +272,7 @@ struct PromiseReactionRecordBuilder {
     JS::Handle<SavedFrame*> unwrappedRejectionStack = nullptr);
 
 #ifdef NIGHTLY_BUILD
-// Implements the MaybeDeferredPromiseResolve abstract operation from the
+// Implements the SafePromiseResolve abstract operation from the
 // https://tc39.es/proposal-thenable-curtailment/
 // See the function definition in Promise.cpp for the observable contract.
 [[nodiscard]] bool SafeResolvePromise(JSContext* cx,

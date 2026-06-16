@@ -406,6 +406,8 @@ skip-if = [
   "http3",
 ]
 
+["test_ext_scripting_documentId.html"]
+
 ["test_ext_scripting_executeScript.html"]
 skip-if = [
   "http2",
@@ -490,11 +492,15 @@ scheme = "https"
 
 ["test_ext_subframes_privileges.html"]
 
+["test_ext_tabs_capture_blur.html"]
+
 ["test_ext_tabs_captureTab.html"]
 skip-if = [
   "http2",
   "http3",
 ]
+
+["test_ext_tabs_connect.html"]
 
 ["test_ext_tabs_create_cookieStoreId.html"]
 
@@ -534,6 +540,16 @@ skip-if = [
 
 ["test_ext_unlimitedStorage.html"]
 
+["test_ext_userScripts_execute.html"]
+
+["test_ext_userScripts_execute_activeTab.html"]
+
+["test_ext_userScripts_execute_injectImmediately.html"]
+
+["test_ext_userScripts_execute_null_principal.html"]
+
+["test_ext_userScripts_execute_world.html"]
+
 ["test_ext_web_accessible_incognito.html"]
 skip-if = [
   "os == 'android'", # bug 1397615, bug 1513544
@@ -551,6 +567,13 @@ skip-if = [
   "http2",
   "http3",
   "os == 'android' && debug", # bug 1397615
+]
+
+["test_ext_webnavigation_documentId.html"]
+
+["test_ext_webnavigation_documentId_incognito.html"]
+skip-if = [
+  "os == 'android'" # Cannot open tabs in private browsing on Android (bug 1372178)
 ]
 
 ["test_ext_webnavigation_filters.html"]

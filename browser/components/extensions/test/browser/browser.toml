@@ -43,7 +43,7 @@ support-files = [
   "search-engines/*",
   "searchSuggestionEngine.xml",
   "searchSuggestionEngine.sjs",
-  "empty.xpi",
+  "204.sjs",
   "../../../../../toolkit/components/extensions/test/mochitest/head_webrequest.js",
   "../../../../../toolkit/components/extensions/test/mochitest/redirection.sjs",
   "../../../../../toolkit/components/reader/tests/browser/readerModeNonArticle.html",
@@ -421,6 +421,8 @@ run-if = [
 
 ["browser_ext_runtime_openOptionsPage.js"]
 
+["browser_ext_runtime_openOptionsPage_containers.js"]
+
 ["browser_ext_runtime_openOptionsPage_uninstall.js"]
 
 ["browser_ext_runtime_setUninstallURL.js"]
@@ -514,6 +516,8 @@ https_first_disabled = true
 ["browser_ext_tabs_audio.js"]
 
 ["browser_ext_tabs_autoDiscardable.js"]
+
+["browser_ext_tabs_capture_blur.js"]
 
 ["browser_ext_tabs_containerIsolation.js"]
 https_first_disabled = true

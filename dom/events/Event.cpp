@@ -44,6 +44,7 @@
 #include "nsIFrame.h"
 #include "nsJSEnvironment.h"
 #include "nsLayoutUtils.h"
+#include "nsPIDOMWindowInlines.h"
 #include "nsPIWindowRoot.h"
 #include "nsRFPService.h"
 

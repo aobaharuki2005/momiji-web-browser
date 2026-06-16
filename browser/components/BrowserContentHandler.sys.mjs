@@ -8,6 +8,10 @@ import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
+  AIWindow:
+    "moz-src:///browser/components/aiwindow/ui/modules/AIWindow.sys.mjs",
+  AIWindowAccountAuth:
+    "moz-src:///browser/components/aiwindow/ui/modules/AIWindowAccountAuth.sys.mjs",
   AsyncShutdown: "resource://gre/modules/AsyncShutdown.sys.mjs",
   BrowserWindowTracker: "resource:///modules/BrowserWindowTracker.sys.mjs",
   BrowserUtils: "resource://gre/modules/BrowserUtils.sys.mjs",
@@ -24,6 +28,33 @@ ChromeUtils.defineESModuleGetters(lazy, {
     "resource://messaging-system/lib/SpecialMessageActions.sys.mjs",
   UpdatePing: "resource://gre/modules/UpdatePing.sys.mjs",
 });
+
+/**
+ * Whether `openBrowserWindow` should open the window as Smart Window.
+ * Composes the shared `AIWindow.shouldOpenAsSmartWindow()` check (feature
+ * state) with the BCH-specific gates: don't force smart when a private
+ * window was explicitly requested, and require a synchronous signal that
+ * the user previously signed in (the FxA check itself is async; we
+ * approximate it via the ToS consent timestamp, which is set on first
+ * successful sign-in). If the user has since signed out, Smart Window
+ * still opens and `onFirstWindowReady` re-verifies via FxA and prompts
+ * sign-in as needed.
+ *
+ * Note this does NOT check `SessionStartup.willRestore()` — that's only
+ * relevant for the startup window (to avoid a smart → classic flash when
+ * SessionStore is about to restore the previously saved window type), and
+ * is gated at the call site for the startup path.
+ *
+ * @param {boolean} forcePrivate
+ * @returns {boolean}
+ */
+function canOpenAsSmartWindow(forcePrivate = false) {
+  return (
+    !forcePrivate &&
+    lazy.AIWindow.shouldOpenAsSmartWindow() &&
+    lazy.AIWindowAccountAuth.hasToSConsent
+  );
+}
 
 XPCOMUtils.defineLazyServiceGetters(lazy, {
   UpdateManager: ["@mozilla.org/updates/update-manager;1", Ci.nsIUpdateManager],
@@ -271,6 +302,13 @@ function openBrowserWindow(
 ) {
   const isStartup =
     cmdLine && cmdLine.state == Ci.nsICommandLine.STATE_INITIAL_LAUNCH;
+  // SessionStore restores the previously saved window type on startup;
+  // suppress the smart-window decision here to avoid a smart → classic flash
+  // when the saved state was classic. Only relevant for the startup window —
+  // windows opened mid-session aren't subject to session-restore overrides.
+  const openAsSmart =
+    canOpenAsSmartWindow(forcePrivate) &&
+    !(isStartup && lazy.SessionStartup.willRestore());
 
   let args;
   if (!urlOrUrlList) {
@@ -335,13 +373,22 @@ function openBrowserWindow(
 
   // We can't provide arguments to openWindow as a JS array.
   if (!urlOrUrlList) {
-    // If we have a single string guaranteed to not contain '|' we can simply
-    // wrap it in an nsISupportsString object.
     let [url] = args;
-    args = Cc["@mozilla.org/supports-string;1"].createInstance(
+    let string = Cc["@mozilla.org/supports-string;1"].createInstance(
       Ci.nsISupportsString
     );
-    args.data = url;
+    string.data = url;
+
+    // Smart Window needs args as an nsIMutableArray so handleAIWindowOptions can append its attributes
+    if (openAsSmart) {
+      let array = Cc["@mozilla.org/array;1"].createInstance(Ci.nsIMutableArray);
+      array.appendElement(string);
+      args = array;
+    } else {
+      // Single string guaranteed to not contain '|' can simply be wrapped
+      // in an nsISupportsString object.
+      args = string;
+    }
   } else {
     // Otherwise, pass an nsIArray.
     if (args.length > 1) {
@@ -362,6 +409,7 @@ function openBrowserWindow(
     args,
     features: gBrowserContentHandler.getFeatures(cmdLine),
     private: forcePrivate,
+    aiWindow: openAsSmart,
   });
 }
 
@@ -723,6 +771,17 @@ nsBrowserContentHandler.prototype = {
 
     if (startPage == "about:blank") {
       startPage = "";
+    }
+
+    // Substitute about:home with the Smart Window URL when the user has
+    // chosen Smart Window as default. Done here (rather than in
+    // getFirstWindowArgs) so that BrowserHandler.defaultArgs — which
+    // browser-init.js compares against to decide session-restore /
+    // crash-recovery overrides — reflects the same URL. A user with
+    // browser.startup.page=0 has explicitly chosen blank startup, which we
+    // respect — they'll get Smart Window chrome with about:blank content.
+    if (startPage === "about:home" && canOpenAsSmartWindow()) {
+      startPage = lazy.AIWindow.initialStartupURL;
     }
 
     if (!skipStartPage && startPage) {

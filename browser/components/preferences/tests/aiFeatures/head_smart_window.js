@@ -22,7 +22,7 @@
 
 ChromeUtils.defineESModuleGetters(this, {
   getModelForChoice:
-    "moz-src:///browser/components/aiwindow/ui/modules/AIWindowConstants.sys.mjs",
+    "moz-src:///browser/components/aiwindow/models/Utils.sys.mjs",
 });
 
 async function modelFor(choiceId) {

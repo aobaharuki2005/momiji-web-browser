@@ -411,7 +411,15 @@ WebAuthnService::Cancel(uint64_t aTransactionId) {
     RejectActiveRegisterPromise();
     ActiveService()->Cancel(aTransactionId);
     mActiveTransaction.reset();
+    return NS_OK;
   }
+
+  // about:webauthn drives an interactive management session through Listen()
+  // and RunCommand(), which always run on the authrs service and are not
+  // tracked as an mActiveTransaction. Its Cancel() must reach authrs too, or
+  // the session's status receiver (a blocking background task) is never torn
+  // down and blocks shutdown.
+  AuthrsService()->Cancel(aTransactionId);
   return NS_OK;
 }
 

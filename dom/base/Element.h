@@ -302,7 +302,7 @@ class TrustedHTMLOrTrustedScriptOrTrustedScriptURLOrString;
 class Element : public FragmentOrElement {
  public:
 #ifdef MOZILLA_INTERNAL_API
-  explicit Element(already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo)
+  explicit Element(already_AddRefed<mozilla::dom::NodeInfo> aNodeInfo)
       : FragmentOrElement(std::move(aNodeInfo)),
         mState(ElementState::READONLY | ElementState::DEFINED |
                ElementState::LTR) {
@@ -1683,8 +1683,9 @@ class Element : public FragmentOrElement {
 
   // https://dom.spec.whatwg.org/#concept-attach-a-shadow-root
   already_AddRefed<ShadowRoot> AttachShadowWithoutNameChecks(
-      const ShadowRootInit&, bool aNotify = true,
-      CustomSlotDispatch = CustomSlotDispatch::No);
+      const ShadowRootInit&,
+      const Maybe<CustomElementRegistry*>& aRegistry = Nothing(),
+      CustomSlotDispatch = CustomSlotDispatch::No, bool aNotify = true);
 
   // Attach UA Shadow Root if it is not attached.
   enum class NotifyUAWidget : bool { No, Yes };

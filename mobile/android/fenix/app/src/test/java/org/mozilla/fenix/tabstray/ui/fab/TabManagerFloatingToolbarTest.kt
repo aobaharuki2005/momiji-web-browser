@@ -56,7 +56,6 @@ class TabManagerFloatingToolbarTest {
                 TabManagerFloatingToolbar(
                     tabsTrayStore = remember { TabsTrayStore(initialState = initialState) },
                     isSignedIn = true,
-                    pbmLocked = false,
                     modifier = Modifier
                         .background(color = MaterialTheme.colorScheme.surface)
                         .padding(all = 16.dp),
@@ -84,7 +83,6 @@ class TabManagerFloatingToolbarTest {
                 TabManagerFloatingToolbar(
                     tabsTrayStore = remember { TabsTrayStore(initialState = initialState) },
                     isSignedIn = true,
-                    pbmLocked = false,
                     modifier = Modifier
                         .background(color = MaterialTheme.colorScheme.surface)
                         .padding(all = 16.dp),
@@ -112,7 +110,6 @@ class TabManagerFloatingToolbarTest {
                 TabManagerFloatingToolbar(
                     tabsTrayStore = remember { TabsTrayStore(initialState = initialState) },
                     isSignedIn = true,
-                    pbmLocked = false,
                     modifier = Modifier
                         .background(color = MaterialTheme.colorScheme.surface)
                         .padding(all = 16.dp),

@@ -112,6 +112,7 @@ for (const type of [
   "BOOKMARK_URL",
   "CARD_SECTION_IMPRESSION",
   "CLEAR_PREF",
+  "CLICK_SECTION_LEARN_MORE",
   "COPY_DOWNLOAD_LINK",
   "DELETE_BOOKMARK_BY_ID",
   "DELETE_HISTORY_URL",
@@ -313,9 +314,12 @@ for (const type of [
   "WIDGETS_SPORTS_CHANGE_SELECTED_TEAMS",
   "WIDGETS_SPORTS_CHANGE_WIDGET_STATE",
   "WIDGETS_SPORTS_LIVE_HIDDEN",
+  "WIDGETS_SPORTS_LIVE_REFRESH",
   "WIDGETS_SPORTS_LIVE_UPDATE",
   "WIDGETS_SPORTS_LIVE_VISIBLE",
+  "WIDGETS_SPORTS_MARK_CELEBRATED",
   "WIDGETS_SPORTS_OPEN_MATCH_SEARCH",
+  "WIDGETS_SPORTS_SET_CELEBRATIONS",
   "WIDGETS_SPORTS_SET_FOLLOWED_ONLY",
   "WIDGETS_SPORTS_SET_LIVE_INDEX",
   "WIDGETS_SPORTS_SET_MATCHES_TAB",
@@ -1090,7 +1094,7 @@ class DiscoveryStreamAdminUI extends (external_React_default()).PureComponent {
     }, /*#__PURE__*/external_React_default().createElement("moz-toggle", {
       id: "inferred-personalization-overrides",
       pressed: overridesEnabled || null,
-      onToggle: this.handleDebugOverridesToggle,
+      ontoggle: this.handleDebugOverridesToggle,
       label: "Enable overrides"
     })))), /*#__PURE__*/external_React_default().createElement(Row, {
       className: "inferred-overrides-refresh-row"
@@ -1238,7 +1242,7 @@ class DiscoveryStreamAdminUI extends (external_React_default()).PureComponent {
       id: "sections-toggle",
       disabled: !unifiedAdsSpocsEnabled || null,
       pressed: allizomEnabled || null,
-      onToggle: this.handleAllizomToggle,
+      ontoggle: this.handleAllizomToggle,
       label: "Toggle allizom"
     }))), /*#__PURE__*/external_React_default().createElement(Row, null, /*#__PURE__*/external_React_default().createElement("td", {
       className: "min"
@@ -1329,7 +1333,7 @@ class DiscoveryStreamAdminUI extends (external_React_default()).PureComponent {
     }, /*#__PURE__*/external_React_default().createElement("moz-toggle", {
       id: "sections-toggle",
       pressed: sectionsEnabled || null,
-      onToggle: this.handleSectionsToggle,
+      ontoggle: this.handleSectionsToggle,
       label: "Toggle DS Sections"
     })), /*#__PURE__*/external_React_default().createElement("details", {
       className: "details-section"
@@ -1338,21 +1342,21 @@ class DiscoveryStreamAdminUI extends (external_React_default()).PureComponent {
     }, /*#__PURE__*/external_React_default().createElement("moz-toggle", {
       id: "newtab_leaderboard",
       pressed: leaderboardPressed || null,
-      onToggle: this.toggleIABBanners,
+      ontoggle: this.toggleIABBanners,
       label: "Enable IAB Leaderboard"
     })), /*#__PURE__*/external_React_default().createElement("div", {
       className: "toggle-wrapper"
     }, /*#__PURE__*/external_React_default().createElement("moz-toggle", {
       id: "newtab_billboard",
       pressed: billboardPressed || null,
-      onToggle: this.toggleIABBanners,
+      ontoggle: this.toggleIABBanners,
       label: "Enable IAB Billboard"
     })), /*#__PURE__*/external_React_default().createElement("div", {
       className: "toggle-wrapper"
     }, /*#__PURE__*/external_React_default().createElement("moz-toggle", {
       id: "newtab_rectangle",
       pressed: mediumRectangleEnabledPressed || null,
-      onToggle: this.toggleIABBanners,
+      ontoggle: this.toggleIABBanners,
       label: "Enable IAB Medium Rectangle (MREC)"
     }))), /*#__PURE__*/external_React_default().createElement("button", {
       className: "button",
@@ -2368,6 +2372,18 @@ const LinkMenuOptions = {
     id: "newtab-menu-manage-sponsored-content",
     action: actionCreators.OnlyToMain({ type: actionTypes.SETTINGS_OPEN }),
     userEvent: "OPEN_NEWTAB_PREFS",
+  }),
+  SectionLearnMore: ({ learnMoreUrl }) => ({
+    id: "newtab-menu-section-learn-more",
+    action: actionCreators.OnlyToMain({
+      type: actionTypes.OPEN_LINK,
+      data: { url: learnMoreUrl },
+    }),
+    impression: actionCreators.OnlyToMain({
+      type: actionTypes.CLICK_SECTION_LEARN_MORE,
+      data: {},
+    }),
+    userEvent: "CLICK_SECTION_LEARN_MORE",
   }),
   // eslint-disable-next-line max-params
   OurSponsorsAndYourPrivacy: (
@@ -6815,6 +6831,10 @@ const INITIAL_STATE = {
     lastLiveUpdated: null,
     // Index into the live matches list for the Now tab's single-card pager.
     liveIndex: 0,
+    // End-of-match celebration bookkeeping (set by the feed): `endedAt` maps a
+    // just-ended match's global_event_id to the ms timestamp it left /live;
+    // `celebrated` lists ids that have already triggered a celebration.
+    celebrations: { endedAt: {}, celebrated: [] },
   },
 };
 
@@ -7840,6 +7860,8 @@ function SportsWidget(prevState = INITIAL_STATE.SportsWidget, action) {
     }
     case actionTypes.WIDGETS_SPORTS_SET_LIVE_INDEX:
       return { ...prevState, liveIndex: action.data };
+    case actionTypes.WIDGETS_SPORTS_SET_CELEBRATIONS:
+      return { ...prevState, celebrations: action.data };
     default:
       return prevState;
   }
@@ -10673,13 +10695,16 @@ function SectionContextMenu({
   sectionKey,
   following,
   sectionPersonalization,
-  sectionPosition
+  sectionPosition,
+  learnMoreUrl
 }) {
   const SECTIONS_CONTEXT_MENU_OPTIONS = [];
   if (following) {
     SECTIONS_CONTEXT_MENU_OPTIONS.push("SectionUnfollow");
   }
   SECTIONS_CONTEXT_MENU_OPTIONS.push("SectionBlock");
+  SECTIONS_CONTEXT_MENU_OPTIONS.push("Separator");
+  SECTIONS_CONTEXT_MENU_OPTIONS.push("SectionLearnMore");
   const [showContextMenu, setShowContextMenu] = (0,external_React_namespaceObject.useState)(false);
   const onClick = e => {
     e.preventDefault();
@@ -10708,7 +10733,8 @@ function SectionContextMenu({
       sectionPersonalization,
       sectionKey,
       sectionPosition,
-      title
+      title,
+      learnMoreUrl
     }
   }));
 }
@@ -11847,7 +11873,8 @@ function CardSection({
     sectionKey: sectionKey,
     title: title,
     type: type,
-    sectionPosition: sectionPosition
+    sectionPosition: sectionPosition,
+    learnMoreUrl: prefs["sectionsLearnMore.url"]
   }));
   return /*#__PURE__*/external_React_default().createElement("section", {
     className: "ds-section",
@@ -11876,7 +11903,8 @@ function CardSection({
     title: title,
     type: type,
     sectionPosition: sectionPosition,
-    buttonType: "ghost"
+    buttonType: "ghost",
+    learnMoreUrl: prefs["sectionsLearnMore.url"]
   }) : sectionContextWrapper)), /*#__PURE__*/external_React_default().createElement("div", {
     ref: gridRef,
     className: `ds-section-grid ds-card-grid`,
@@ -12161,6 +12189,8 @@ const PREF_WIDGETS_SYSTEM_CLOCKS_ENABLED =
  * @property {string} trainhopEnabledKey - Key in trainhopConfig.widgets.* for the enabled override.
  * @property {string|null} trainhopSizeKey - Key in trainhopConfig.widgets.* for the size default suggestion.
  * @property {string|null} trainhopSidebarKey - Key in trainhopConfig.widgets.* for the hasSidebar override.
+ * @property {string} widgetsSettingsVisibleKey - Key in trainhopConfig.widgetsSettings.* that additively reveals this widget's toggle in the settings UIs (does not enable the widget).
+ * @property {string} widgetsSettingsEnabledKey - Key in trainhopConfig.widgetsSettings.* that overrides this widget's default enabled value (written to the pref default branch; an explicit user toggle still wins).
  */
 
 /** @type {WidgetRegistryEntry[]} */
@@ -12178,6 +12208,8 @@ const WIDGET_REGISTRY = [
     trainhopEnabledKey: "sportsWidgetEnabled",
     trainhopSizeKey: "sportsWidgetSize",
     trainhopSidebarKey: null,
+    widgetsSettingsVisibleKey: "sportsWidgetVisible",
+    widgetsSettingsEnabledKey: "sportsWidgetEnabled",
   },
   {
     id: "clocks",
@@ -12192,6 +12224,8 @@ const WIDGET_REGISTRY = [
     trainhopEnabledKey: "clocksEnabled",
     trainhopSizeKey: "clocksSize",
     trainhopSidebarKey: null,
+    widgetsSettingsVisibleKey: "clocksVisible",
+    widgetsSettingsEnabledKey: "clocksEnabled",
   },
   {
     id: "lists",
@@ -12206,6 +12240,8 @@ const WIDGET_REGISTRY = [
     trainhopEnabledKey: "listsEnabled",
     trainhopSizeKey: "listsSize",
     trainhopSidebarKey: null,
+    widgetsSettingsVisibleKey: "listsVisible",
+    widgetsSettingsEnabledKey: "listsEnabled",
   },
   {
     id: "focusTimer",
@@ -12220,6 +12256,8 @@ const WIDGET_REGISTRY = [
     trainhopEnabledKey: "timerEnabled",
     trainhopSizeKey: "timerSize",
     trainhopSidebarKey: null,
+    widgetsSettingsVisibleKey: "focusTimerVisible",
+    widgetsSettingsEnabledKey: "focusTimerEnabled",
   },
   {
     id: "weather",
@@ -12234,6 +12272,8 @@ const WIDGET_REGISTRY = [
     trainhopEnabledKey: "weatherEnabled",
     trainhopSizeKey: "weatherSize",
     trainhopSidebarKey: "weatherSidebar",
+    widgetsSettingsVisibleKey: "weatherVisible",
+    widgetsSettingsEnabledKey: "weatherEnabled",
   },
 ];
 
@@ -12278,8 +12318,10 @@ function resolveWidgetOrder(prefs) {
 
 /**
  * Returns true if the widget is available to the user, based on the
- * trainhop/system gate. Does not consider whether the user has turned the
- * widget on, or whether the widgets container is enabled.
+ * system pref, the trainhopConfig.widgets addable key, or a
+ * widgetsSettings.*Visible override (revealing a toggle also makes the widget
+ * addable so the toggle is functional). Does not consider whether the user has
+ * turned the widget on, or whether the widgets container is enabled.
  *
  * @param {object} widget - a WIDGET_REGISTRY entry
  * @param {object} prefs - current pref values from the Redux store
@@ -12288,7 +12330,45 @@ function resolveWidgetOrder(prefs) {
 function isWidgetAddable(widget, prefs) {
   return Boolean(
     prefs.trainhopConfig?.widgets?.[widget.trainhopEnabledKey] ||
+    prefs.trainhopConfig?.widgetsSettings?.[widget.widgetsSettingsVisibleKey] ||
     prefs[widget.systemEnabledPref]
+  );
+}
+
+/**
+ * Returns true if this widget's toggle should be shown in the settings UIs
+ * (about:preferences#home and the Customize menu). A widget is shown when it is
+ * addable (system pref, trainhopConfig.widgets, or widgetsSettings.*Visible) or
+ * when the legacy `widgetsConfig` Nimbus variable enables it. Showing a toggle
+ * does NOT enable the widget — enablement is the widget's own enabled pref,
+ * whose default can be overridden via widgetsSettings.*Enabled.
+ *
+ * @param {object} widget - a WIDGET_REGISTRY entry
+ * @param {object} prefs - current pref values from the Redux store
+ * @returns {boolean}
+ */
+function isWidgetToggleVisible(widget, prefs) {
+  return Boolean(
+    isWidgetAddable(widget, prefs) ||
+    prefs.widgetsConfig?.[widget.trainhopEnabledKey]
+  );
+}
+
+/**
+ * Returns true if the Widgets container/section toggle should be shown.
+ * Additive across the system pref, the legacy `widgetsConfig` variable, the
+ * `trainhopConfig.widgets.enabled` addable key, and the new
+ * `trainhopConfig.widgetsSettings.enabled` override.
+ *
+ * @param {object} prefs - current pref values from the Redux store
+ * @returns {boolean}
+ */
+function isWidgetsContainerVisible(prefs) {
+  return Boolean(
+    prefs["widgets.system.enabled"] ||
+    prefs.widgetsConfig?.enabled ||
+    prefs.trainhopConfig?.widgets?.enabled ||
+    prefs.trainhopConfig?.widgetsSettings?.enabled
   );
 }
 
@@ -12390,10 +12470,123 @@ const DEFAULT_GRADIENT_STOPS = [{
   offset: "100%",
   color: "var(--color-pink-40)"
 }];
+const DEFAULT_CONFETTI_COUNT = 42;
+
+// Flat confetti shapes (border-radius + clip-path) used by the default "mixed"
+// confetti.
+const CONFETTI_SHAPES = [{
+  radius: "1px",
+  clip: "none"
+},
+// rectangle / streamer
+{
+  radius: "50%",
+  clip: "none"
+},
+// circle / oval
+{
+  radius: "0",
+  clip: "polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%)"
+},
+// diamond
+{
+  radius: "0",
+  clip: "polygon(50% 0%, 0% 100%, 100% 100%)"
+} // triangle
+];
+
+// The "soccer" shape mode mixes team-colored soccer balls (the `ball` entries)
+// with the smaller flat shapes. Duplicate `{ ball: true }` to weight balls more
+// heavily relative to the flat confetti.
+const SOCCER_POOL = [{
+  ball: true
+}, {
+  ball: true
+}, {
+  ball: true
+}, {
+  ball: true
+}, ...CONFETTI_SHAPES];
+
+// Deterministic [0, 1) pseudo-random so confetti pieces stay stable across the
+// re-renders within a single celebration run (keyed by celebrationId) but vary
+// from one run to the next.
+const celebrationRandom = seed => {
+  const value = Math.sin(seed) * 10000;
+  return value - Math.floor(value);
+};
+
+// Builds the confetti pieces for one run from the supplied colors, randomizing
+// position/size/fall/spin per piece via CSS custom props. "soccer" draws from
+// SOCCER_POOL (team-colored balls mixed with flat shapes); otherwise from the
+// flat-only CONFETTI_SHAPES.
+const buildConfettiPieces = (run, colors, count, shapeMode) => {
+  const pool = shapeMode === "soccer" ? SOCCER_POOL : CONFETTI_SHAPES;
+  // Sports spreads its confetti into a continuous shower: pieces sit in even
+  // columns (no clumping) and enter staggered over ~1.1s rather than bursting
+  // together. delay + duration stays under the celebration lifecycle (hold +
+  // exit) so every piece still finishes before the overlay unmounts.
+  const spread = shapeMode === "soccer";
+  return Array.from({
+    length: count
+  }, (_, i) => {
+    const base = (run + 1) * 100 + i;
+    const color = colors[i % colors.length];
+    const shape = pool[Math.floor(celebrationRandom(base + 6) * pool.length)];
+    const isBall = !!shape.ball;
+    // Soccer balls are larger and square so the panel pattern reads; flat
+    // shapes are smaller thin slivers.
+    const width = isBall ? Math.round(12 + celebrationRandom(base + 0.5) * 5) : Math.round(6 + celebrationRandom(base + 0.5) * 4);
+    const height = isBall ? width : Math.round(width * (1.4 + celebrationRandom(base + 5) * 0.8));
+    // Even column placement (with sub-column jitter) for the shower; pure
+    // random otherwise. Capped at 98% so wide pieces don't overflow the edge.
+    const left = spread ? `${Math.min((i + celebrationRandom(base + 7)) / count * 100, 98).toFixed(2)}%` : `${(celebrationRandom(base) * 100).toFixed(2)}%`;
+    // Staggered entry (random across the run, so no left-to-right wipe) vs the
+    // tight 0-350ms burst the other widgets use.
+    const delay = spread ? `${Math.round(celebrationRandom(base + 1) * 1100)}ms` : `${Math.round(celebrationRandom(base + 1) * 350)}ms`;
+    // Slow fall, but delay + duration stays under the celebration lifecycle
+    // (hold + exit) so pieces finish before the overlay unmounts.
+    const duration = spread ? `${Math.round(2600 + celebrationRandom(base + 2) * 800)}ms` : `${Math.round(3000 + celebrationRandom(base + 2) * 1200)}ms`;
+    // Moderate sway + spin for the shower; wider tumble otherwise.
+    const rotate = spread ? `${Math.round(celebrationRandom(base + 3) * 400 - 200)}deg` : `${Math.round(celebrationRandom(base + 3) * 720 - 360)}deg`;
+    const drift = spread ? `${Math.round(celebrationRandom(base + 4) * 90 - 45)}px` : `${Math.round(celebrationRandom(base + 4) * 80 - 40)}px`;
+    return {
+      id: i,
+      ball: isBall,
+      color,
+      left,
+      delay,
+      duration,
+      rotate,
+      drift,
+      width: `${width}px`,
+      height: `${height}px`,
+      radius: isBall ? "50%" : shape.radius ?? "50%",
+      clip: isBall ? "none" : shape.clip ?? "none"
+    };
+  });
+};
+
+// Maps a piece's values onto the CSS custom props its rule reads.
+const confettiPieceStyle = piece => ({
+  "--confetti-x": piece.left,
+  "--confetti-w": piece.width,
+  "--confetti-h": piece.height,
+  "--confetti-color": piece.color,
+  "--confetti-delay": piece.delay,
+  "--confetti-duration": piece.duration,
+  "--confetti-rotate": piece.rotate,
+  "--confetti-drift": piece.drift,
+  "--confetti-radius": piece.radius,
+  "--confetti-clip": piece.clip
+});
 const WidgetCelebration = ({
   classNamePrefix = "widget-celebration",
   celebrationFrame,
   celebrationId,
+  confettiColors,
+  confettiCount = DEFAULT_CONFETTI_COUNT,
+  confettiShape = "mixed",
   gradientStops = DEFAULT_GRADIENT_STOPS,
   headlineL10nId,
   illustrationSrc,
@@ -12401,6 +12594,12 @@ const WidgetCelebration = ({
   subheadL10nId
 }) => {
   const className = suffix => suffix ? `${classNamePrefix}-${suffix}` : classNamePrefix;
+  // Only expose the live region when there's copy to announce; a copy-less
+  // celebration (e.g. sports) is purely decorative.
+  const hasCopy = !!(headlineL10nId || subheadL10nId);
+  // Deterministic, so it's safe to compute on every render without reshuffling.
+  const confettiPieces = confettiColors?.length ? buildConfettiPieces(celebrationId, confettiColors, confettiCount, confettiShape) : [];
+  const ballSymbolId = `${classNamePrefix}-ball-${celebrationId}`;
   const resolvedIllustrationSrc = illustrationSrc?.endsWith(".svg") ? `${illustrationSrc}?run=${celebrationId}` : illustrationSrc;
   const strokeSize = celebrationFrame.strokeInset * 2;
   const strokeWidth = celebrationFrame.width - strokeSize;
@@ -12408,8 +12607,8 @@ const WidgetCelebration = ({
   return /*#__PURE__*/external_React_default().createElement("div", {
     className: className(),
     key: celebrationId,
-    role: "status",
-    "aria-live": "polite",
+    role: hasCopy ? "status" : undefined,
+    "aria-live": hasCopy ? "polite" : undefined,
     onAnimationEnd: event => {
       if (event.target === event.currentTarget && event.animationName === "widget-celebration-lifecycle") {
         onComplete?.();
@@ -12462,7 +12661,51 @@ const WidgetCelebration = ({
     rx: celebrationFrame.radius,
     ry: celebrationFrame.radius,
     pathLength: "100"
-  }))), /*#__PURE__*/external_React_default().createElement("div", {
+  }))), confettiPieces.length ? /*#__PURE__*/external_React_default().createElement("div", {
+    className: className("confetti"),
+    "aria-hidden": "true"
+  }, /*#__PURE__*/external_React_default().createElement("svg", {
+    className: className("confetti-defs"),
+    "aria-hidden": "true"
+  }, /*#__PURE__*/external_React_default().createElement("symbol", {
+    id: ballSymbolId,
+    viewBox: "0 0 24 24"
+  }, /*#__PURE__*/external_React_default().createElement("circle", {
+    cx: "12",
+    cy: "12",
+    r: "11",
+    fill: "currentColor",
+    stroke: "#1c1c1c",
+    strokeWidth: "1.4"
+  }), /*#__PURE__*/external_React_default().createElement("path", {
+    d: "M12 8.6 16 11.4 14.4 15.4 9.6 15.4 8 11.4Z",
+    fill: "#1c1c1c"
+  }), /*#__PURE__*/external_React_default().createElement("g", {
+    stroke: "#1c1c1c",
+    strokeWidth: "1.1",
+    fill: "none"
+  }, /*#__PURE__*/external_React_default().createElement("path", {
+    d: "M12 8.6V1.2"
+  }), /*#__PURE__*/external_React_default().createElement("path", {
+    d: "M16 11.4 22.6 8.6"
+  }), /*#__PURE__*/external_React_default().createElement("path", {
+    d: "M14.4 15.4 18.8 21"
+  }), /*#__PURE__*/external_React_default().createElement("path", {
+    d: "M9.6 15.4 5.2 21"
+  }), /*#__PURE__*/external_React_default().createElement("path", {
+    d: "M8 11.4 1.4 8.6"
+  })))), confettiPieces.map(piece => piece.ball ? /*#__PURE__*/external_React_default().createElement("svg", {
+    key: piece.id,
+    className: className("confetti-piece"),
+    viewBox: "0 0 24 24",
+    style: confettiPieceStyle(piece)
+  }, /*#__PURE__*/external_React_default().createElement("use", {
+    href: `#${ballSymbolId}`
+  })) : /*#__PURE__*/external_React_default().createElement("i", {
+    key: piece.id,
+    className: className("confetti-piece"),
+    style: confettiPieceStyle(piece)
+  }))) : null, hasCopy ? /*#__PURE__*/external_React_default().createElement("div", {
     className: className("copy")
   }, /*#__PURE__*/external_React_default().createElement("span", {
     className: className("headline"),
@@ -12470,7 +12713,7 @@ const WidgetCelebration = ({
   }), /*#__PURE__*/external_React_default().createElement("span", {
     className: className("subhead"),
     "data-l10n-id": subheadL10nId
-  })), resolvedIllustrationSrc && /*#__PURE__*/external_React_default().createElement("img", {
+  })) : null, resolvedIllustrationSrc && /*#__PURE__*/external_React_default().createElement("img", {
     alt: "",
     "aria-hidden": "true",
     className: className("illustration"),
@@ -12660,11 +12903,237 @@ function MoveSubmenu({
     disabled: true
   }))));
 }
+;// CONCATENATED MODULE: ./content-src/components/Widgets/useWidgetTelemetry.jsx
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
+
+
+
+
+const IMPRESSION_THRESHOLD = 0.3;
+
+/**
+ * Shared telemetry hook for function-component widgets. Returns recorders
+ * for the four widget telemetry actions (impression, user event, enabled,
+ * error) so call sites don't hand-build payloads. `widget` is a
+ * WIDGET_REGISTRY entry; `widget.telemetryName` becomes `widget_name`.
+ *
+ *   const {
+ *     impressionRef,
+ *     recordImpression,
+ *     recordUserAction,
+ *     recordEnabled,
+ *     recordError,
+ *   } = useWidgetTelemetry({ dispatch, widget, widgetSize });
+ *
+ *   <article ref={impressionRef}>...</article>
+ *   recordUserAction("learn_more", { source: "context_menu" });
+ *
+ * Per-call options on `recordUserAction`: `value` (action_value), `size`
+ * (overrides widgetSize), `alsoToMain: true` (routes via AlsoToMain), and
+ * `legacy: true` (co-dispatches `legacyUserEventType` with `{ userAction }`).
+ *
+ * `recordImpression()` is a manual one-shot fire that shares the observer's
+ * impressionFired guard; useful when a widget needs to record an impression
+ * outside the IntersectionObserver path.
+ *
+ * Constructor `legacyImpressionTypes` (array) and `legacyUserEventType`
+ * bridge the Bug 2012779 transition: while WIDGETS_TIMER_* / WIDGETS_LISTS_*
+ * legacy events still exist alongside the unified events, FocusTimer and
+ * Lists pass the matching legacy action types so the hook emits both. Both
+ * co-dispatches fire legacy first, unified second.
+ */
+const useWidgetTelemetry = ({
+  dispatch,
+  widget,
+  widgetSize,
+  legacyImpressionTypes,
+  legacyUserEventType
+}) => {
+  const {
+    telemetryName
+  } = widget;
+  const sizeRef = (0,external_React_namespaceObject.useRef)(widgetSize);
+  (0,external_React_namespaceObject.useEffect)(() => {
+    sizeRef.current = widgetSize;
+  }, [widgetSize]);
+
+  // Legacy bridge types are fixed per call site, so capture once at mount;
+  // refs keep them out of the recorder callbacks' dependency arrays.
+  const legacyImpressionTypesRef = (0,external_React_namespaceObject.useRef)(legacyImpressionTypes);
+  const legacyUserEventTypeRef = (0,external_React_namespaceObject.useRef)(legacyUserEventType);
+  const buildPayload = (0,external_React_namespaceObject.useCallback)(({
+    size,
+    rest
+  } = {}) => ({
+    widget_name: telemetryName,
+    widget_size: size ?? sizeRef.current,
+    ...rest
+  }), [telemetryName]);
+  const impressionFired = (0,external_React_namespaceObject.useRef)(false);
+  const fireImpression = (0,external_React_namespaceObject.useCallback)(size => {
+    if (impressionFired.current) {
+      return;
+    }
+    impressionFired.current = true;
+    const data = buildPayload({
+      size
+    });
+    const legacyTypes = legacyImpressionTypesRef.current;
+    if (legacyTypes && legacyTypes.length) {
+      (0,external_ReactRedux_namespaceObject.batch)(() => {
+        // Legacy first, then unified, matching the pre-hook dispatch order
+        // in FocusTimer / Lists so existing tests don't need to flip.
+        for (const type of legacyTypes) {
+          dispatch(actionCreators.AlsoToMain({
+            type
+          }));
+        }
+        dispatch(actionCreators.AlsoToMain({
+          type: actionTypes.WIDGETS_IMPRESSION,
+          data
+        }));
+      });
+    } else {
+      dispatch(actionCreators.AlsoToMain({
+        type: actionTypes.WIDGETS_IMPRESSION,
+        data
+      }));
+    }
+  }, [dispatch, buildPayload]);
+
+  // The observer owns observation directly so the callback ref can attach to
+  // elements that mount after the initial render (e.g. widgets that gate
+  // rendering on a Redux pref or async data).
+  const observerRef = (0,external_React_namespaceObject.useRef)(null);
+  const observedEl = (0,external_React_namespaceObject.useRef)(null);
+  (0,external_React_namespaceObject.useEffect)(() => {
+    if (typeof IntersectionObserver === "undefined") {
+      return undefined;
+    }
+    const observer = new IntersectionObserver(entries => {
+      // Filter to the currently-observed element so a queued callback for a
+      // previously-unobserved ref target doesn't fire a stale impression.
+      if (entries.some(e => e.isIntersecting && e.target === observedEl.current)) {
+        fireImpression();
+        observer.disconnect();
+      }
+    }, {
+      threshold: IMPRESSION_THRESHOLD
+    });
+    observerRef.current = observer;
+    if (observedEl.current && !impressionFired.current) {
+      observer.observe(observedEl.current);
+    }
+    return () => {
+      observer.disconnect();
+      observerRef.current = null;
+    };
+  }, [fireImpression]);
+  const impressionRef = (0,external_React_namespaceObject.useCallback)(el => {
+    if (observedEl.current === el) {
+      return;
+    }
+    const observer = observerRef.current;
+    if (observedEl.current && observer) {
+      observer.unobserve(observedEl.current);
+    }
+    observedEl.current = el;
+    if (el && observer && !impressionFired.current) {
+      observer.observe(el);
+    }
+  }, []);
+  const recordImpression = (0,external_React_namespaceObject.useCallback)(({
+    size
+  } = {}) => {
+    fireImpression(size);
+  }, [fireImpression]);
+  const recordUserAction = (0,external_React_namespaceObject.useCallback)((userAction, {
+    source,
+    value,
+    size,
+    alsoToMain,
+    legacy
+  } = {}) => {
+    const route = alsoToMain ? actionCreators.AlsoToMain : actionCreators.OnlyToMain;
+    const rest = {
+      widget_source: source,
+      user_action: userAction
+    };
+    if (value !== undefined) {
+      rest.action_value = value;
+    }
+    const data = buildPayload({
+      size,
+      rest
+    });
+    const main = route({
+      type: actionTypes.WIDGETS_USER_EVENT,
+      data
+    });
+    const legacyType = legacy ? legacyUserEventTypeRef.current : null;
+    if (legacyType) {
+      // Legacy first, then unified, matching the pre-hook dispatch order
+      // in FocusTimer / Lists so existing tests don't need to flip.
+      const legacyAction = route({
+        type: legacyType,
+        data: {
+          userAction
+        }
+      });
+      (0,external_ReactRedux_namespaceObject.batch)(() => {
+        dispatch(legacyAction);
+        dispatch(main);
+      });
+    } else {
+      dispatch(main);
+    }
+  }, [dispatch, buildPayload]);
+  const recordEnabled = (0,external_React_namespaceObject.useCallback)((enabled, {
+    source,
+    size
+  } = {}) => {
+    const data = buildPayload({
+      size,
+      rest: {
+        widget_source: source,
+        enabled
+      }
+    });
+    dispatch(actionCreators.OnlyToMain({
+      type: actionTypes.WIDGETS_ENABLED,
+      data
+    }));
+  }, [dispatch, buildPayload]);
+  const recordError = (0,external_React_namespaceObject.useCallback)((errorType, {
+    size
+  } = {}) => {
+    const data = buildPayload({
+      size,
+      rest: {
+        error_type: errorType
+      }
+    });
+    dispatch(actionCreators.AlsoToMain({
+      type: actionTypes.WIDGETS_ERROR,
+      data
+    }));
+  }, [dispatch, buildPayload]);
+  return {
+    impressionRef,
+    recordImpression,
+    recordUserAction,
+    recordEnabled,
+    recordError
+  };
+};
 ;// CONCATENATED MODULE: ./content-src/components/Widgets/Lists/Lists.jsx
 function Lists_extends() { return Lists_extends = Object.assign ? Object.assign.bind() : function (n) { for (var e = 1; e < arguments.length; e++) { var t = arguments[e]; for (var r in t) ({}).hasOwnProperty.call(t, r) && (n[r] = t[r]); } return n; }, Lists_extends.apply(null, arguments); }
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
+
 
 
 
@@ -12810,7 +13279,6 @@ function Lists({
   const inputRef = (0,external_React_namespaceObject.useRef)(null);
   const reorderListRef = (0,external_React_namespaceObject.useRef)(null);
   const widgetRef = (0,external_React_namespaceObject.useRef)(null);
-  const impressionFired = (0,external_React_namespaceObject.useRef)(false);
   const {
     celebrationFrame,
     celebrationId,
@@ -12818,6 +13286,21 @@ function Lists({
     isCelebrating,
     triggerCelebration
   } = useWidgetCelebration(widgetRef);
+
+  // Pre-hook code reported widget_size as "medium" when the widgets row is
+  // not maximizable, regardless of the resolved widgetSize. Preserve that.
+  const telemetrySize = widgetsMayBeMaximized ? widgetSize : "medium";
+  const {
+    impressionRef,
+    recordUserAction,
+    recordEnabled
+  } = useWidgetTelemetry({
+    dispatch,
+    widget: listsWidget,
+    widgetSize: telemetrySize,
+    legacyImpressionTypes: [actionTypes.WIDGETS_LISTS_USER_IMPRESSION],
+    legacyUserEventType: actionTypes.WIDGETS_LISTS_USER_EVENT
+  });
   const handleListInteraction = (0,external_React_namespaceObject.useCallback)(() => handleUserInteraction("lists"), [handleUserInteraction]);
   const handleSelectList = (0,external_React_namespaceObject.useCallback)(listId => {
     setIsEditing(false);
@@ -12829,28 +13312,8 @@ function Lists({
     handleListInteraction();
   }, [dispatch, handleListInteraction]);
 
-  // store selectedList with useMemo so it isnt re-calculated on every re-render
+  // store selectedList with useMemo so it isn't re-calculated on every re-render
   const isValidUrl = (0,external_React_namespaceObject.useCallback)(str => URL.canParse(str), []);
-  const handleIntersection = (0,external_React_namespaceObject.useCallback)(() => {
-    if (impressionFired.current) {
-      return;
-    }
-    impressionFired.current = true;
-    (0,external_ReactRedux_namespaceObject.batch)(() => {
-      dispatch(actionCreators.AlsoToMain({
-        type: actionTypes.WIDGETS_LISTS_USER_IMPRESSION
-      }));
-      const telemetryData = {
-        widget_name: "lists",
-        widget_size: widgetsMayBeMaximized ? widgetSize : "medium"
-      };
-      dispatch(actionCreators.AlsoToMain({
-        type: actionTypes.WIDGETS_IMPRESSION,
-        data: telemetryData
-      }));
-    });
-  }, [dispatch, widgetsMayBeMaximized, widgetSize]);
-  const listsRef = useIntersectionObserver(handleIntersection);
   const reorderLists = (0,external_React_namespaceObject.useCallback)((draggedElement, targetElement, before = false) => {
     const draggedIndex = selectedList.tasks.findIndex(({
       id
@@ -12951,22 +13414,10 @@ function Lists({
             lists: updatedLists
           }
         }));
-        dispatch(actionCreators.OnlyToMain({
-          type: actionTypes.WIDGETS_LISTS_USER_EVENT,
-          data: {
-            userAction: USER_ACTION_TYPES.TASK_CREATE
-          }
-        }));
-        const telemetryData = {
-          widget_name: "lists",
-          widget_source: "widget",
-          user_action: USER_ACTION_TYPES.TASK_CREATE,
-          widget_size: widgetsMayBeMaximized ? widgetSize : "medium"
-        };
-        dispatch(actionCreators.OnlyToMain({
-          type: actionTypes.WIDGETS_USER_EVENT,
-          data: telemetryData
-        }));
+        recordUserAction(USER_ACTION_TYPES.TASK_CREATE, {
+          source: "widget",
+          legacy: true
+        });
       });
       setNewTask("");
     }
@@ -13025,22 +13476,11 @@ function Lists({
         }
       }));
       if (userAction) {
-        dispatch(actionCreators.AlsoToMain({
-          type: actionTypes.WIDGETS_LISTS_USER_EVENT,
-          data: {
-            userAction
-          }
-        }));
-        const telemetryData = {
-          widget_name: "lists",
-          widget_source: "widget",
-          user_action: userAction,
-          widget_size: widgetsMayBeMaximized ? widgetSize : "medium"
-        };
-        dispatch(actionCreators.AlsoToMain({
-          type: actionTypes.WIDGETS_USER_EVENT,
-          data: telemetryData
-        }));
+        recordUserAction(userAction, {
+          source: "widget",
+          legacy: true,
+          alsoToMain: true
+        });
       }
     });
     handleListInteraction();
@@ -13064,22 +13504,10 @@ function Lists({
           lists: updatedLists
         }
       }));
-      dispatch(actionCreators.OnlyToMain({
-        type: actionTypes.WIDGETS_LISTS_USER_EVENT,
-        data: {
-          userAction: USER_ACTION_TYPES.TASK_DELETE
-        }
-      }));
-      const telemetryData = {
-        widget_name: "lists",
-        widget_source: "widget",
-        user_action: USER_ACTION_TYPES.TASK_DELETE,
-        widget_size: widgetsMayBeMaximized ? widgetSize : "medium"
-      };
-      dispatch(actionCreators.OnlyToMain({
-        type: actionTypes.WIDGETS_USER_EVENT,
-        data: telemetryData
-      }));
+      recordUserAction(USER_ACTION_TYPES.TASK_DELETE, {
+        source: "widget",
+        legacy: true
+      });
     });
     handleListInteraction();
   }
@@ -13124,22 +13552,10 @@ function Lists({
           type: actionTypes.WIDGETS_LISTS_CHANGE_SELECTED,
           data: id
         }));
-        dispatch(actionCreators.OnlyToMain({
-          type: actionTypes.WIDGETS_LISTS_USER_EVENT,
-          data: {
-            userAction: USER_ACTION_TYPES.LIST_CREATE
-          }
-        }));
-        const telemetryData = {
-          widget_name: "lists",
-          widget_source: "widget",
-          user_action: USER_ACTION_TYPES.LIST_CREATE,
-          widget_size: widgetsMayBeMaximized ? widgetSize : "medium"
-        };
-        dispatch(actionCreators.OnlyToMain({
-          type: actionTypes.WIDGETS_USER_EVENT,
-          data: telemetryData
-        }));
+        recordUserAction(USER_ACTION_TYPES.LIST_CREATE, {
+          source: "widget",
+          legacy: true
+        });
       });
       handleListInteraction();
       return;
@@ -13159,22 +13575,10 @@ function Lists({
             lists: updatedLists
           }
         }));
-        dispatch(actionCreators.OnlyToMain({
-          type: actionTypes.WIDGETS_LISTS_USER_EVENT,
-          data: {
-            userAction: USER_ACTION_TYPES.LIST_EDIT
-          }
-        }));
-        const telemetryData = {
-          widget_name: "lists",
-          widget_source: "widget",
-          user_action: USER_ACTION_TYPES.LIST_EDIT,
-          widget_size: widgetsMayBeMaximized ? widgetSize : "medium"
-        };
-        dispatch(actionCreators.OnlyToMain({
-          type: actionTypes.WIDGETS_USER_EVENT,
-          data: telemetryData
-        }));
+        recordUserAction(USER_ACTION_TYPES.LIST_EDIT, {
+          source: "widget",
+          legacy: true
+        });
       });
       setIsEditing(false);
       handleListInteraction();
@@ -13221,22 +13625,10 @@ function Lists({
           type: actionTypes.WIDGETS_LISTS_CHANGE_SELECTED,
           data: key
         }));
-        dispatch(actionCreators.OnlyToMain({
-          type: actionTypes.WIDGETS_LISTS_USER_EVENT,
-          data: {
-            userAction: USER_ACTION_TYPES.LIST_DELETE
-          }
-        }));
-        const telemetryData = {
-          widget_name: "lists",
-          widget_source: "widget",
-          user_action: USER_ACTION_TYPES.LIST_DELETE,
-          widget_size: widgetsMayBeMaximized ? widgetSize : "medium"
-        };
-        dispatch(actionCreators.OnlyToMain({
-          type: actionTypes.WIDGETS_USER_EVENT,
-          data: telemetryData
-        }));
+        recordUserAction(USER_ACTION_TYPES.LIST_DELETE, {
+          source: "widget",
+          legacy: true
+        });
       });
     }
     handleListInteraction();
@@ -13250,16 +13642,9 @@ function Lists({
           value: false
         }
       }));
-      const telemetryData = {
-        widget_name: "lists",
-        widget_source: "context_menu",
-        enabled: false,
-        widget_size: widgetsMayBeMaximized ? widgetSize : "medium"
-      };
-      dispatch(actionCreators.OnlyToMain({
-        type: actionTypes.WIDGETS_ENABLED,
-        data: telemetryData
-      }));
+      recordEnabled(false, {
+        source: "context_menu"
+      });
     });
   }
   function handleCopyListToClipboard() {
@@ -13282,23 +13667,9 @@ function Lists({
     } catch (err) {
       console.error("Copy failed", err);
     }
-    (0,external_ReactRedux_namespaceObject.batch)(() => {
-      dispatch(actionCreators.OnlyToMain({
-        type: actionTypes.WIDGETS_LISTS_USER_EVENT,
-        data: {
-          userAction: USER_ACTION_TYPES.LIST_COPY
-        }
-      }));
-      const telemetryData = {
-        widget_name: "lists",
-        widget_source: "widget",
-        user_action: USER_ACTION_TYPES.LIST_COPY,
-        widget_size: widgetsMayBeMaximized ? widgetSize : "medium"
-      };
-      dispatch(actionCreators.OnlyToMain({
-        type: actionTypes.WIDGETS_USER_EVENT,
-        data: telemetryData
-      }));
+    recordUserAction(USER_ACTION_TYPES.LIST_COPY, {
+      source: "widget",
+      legacy: true
     });
     handleListInteraction();
   }
@@ -13321,18 +13692,13 @@ function Lists({
           value: size
         }
       }));
-      dispatch(actionCreators.OnlyToMain({
-        type: actionTypes.WIDGETS_USER_EVENT,
-        data: {
-          widget_name: "lists",
-          widget_source: "context_menu",
-          user_action: USER_ACTION_TYPES.CHANGE_SIZE,
-          action_value: size,
-          widget_size: size
-        }
-      }));
+      recordUserAction(USER_ACTION_TYPES.CHANGE_SIZE, {
+        source: "context_menu",
+        value: size,
+        size
+      });
     });
-  }, [dispatch]);
+  }, [dispatch, recordUserAction]);
   const sizeSubmenuRef = useSizeSubmenu(handleChangeSize);
   (0,external_React_namespaceObject.useEffect)(() => {
     setIsAddingTask(false);
@@ -13403,7 +13769,7 @@ function Lists({
     className: `lists widget ${novaEnabled ? "col-4" : ""} ${listsSizeClass} ${isMaximized ? "is-maximized" : ""}${showEmptyState ? " is-empty" : ""}${hasVisibleTasks ? " has-visible-tasks" : ""}${isAddingTask ? " is-adding-task" : ""}${isCelebrating ? " is-celebrating" : ""}`,
     ref: el => {
       widgetRef.current = el;
-      listsRef.current = [el];
+      impressionRef(el);
     }
   }, isCelebrating && celebrationFrame ? /*#__PURE__*/external_React_default().createElement(WidgetCelebration, {
     classNamePrefix: "lists-celebration",
@@ -16294,17 +16660,42 @@ function SportsMatchRow_extends() { return SportsMatchRow_extends = Object.assig
 
 
 const SportsMatchRow_PREF_SPORTS_WIDGET_SIZE = "widgets.sportsWidget.size";
-const STATUS_L10N_MAP = {
+const SportsMatchRow_USER_ACTION_TYPES = {
+  OPEN_MATCH_SEARCH: "open_match_search"
+};
+
+// Visible placeholder shown in place of a team's country code when the
+// match-up isn't decided yet.
+const TBD_PLACEHOLDER = "--";
+
+// The /matches API has been observed sending the American spelling
+// "canceled" alongside the British "cancelled" we localise to. Map both keys
+// to the same Fluent IDs (see UPCOMING_STATUS_ARIA_L10N_MAP below) so the
+// badge and aria-label render either way without a data-team-side fix.
+const UPCOMING_STATUS_L10N_MAP = {
   delayed: "newtab-sports-widget-delayed",
   postponed: "newtab-sports-widget-postponed",
   suspended: "newtab-sports-widget-suspended",
-  cancelled: "newtab-sports-widget-cancelled"
+  cancelled: "newtab-sports-widget-cancelled",
+  canceled: "newtab-sports-widget-cancelled"
+};
+
+// Keep the keys in sync with LIVE_STATUS_TYPES in SportsFeed.sys.mjs so any
+// new in-progress status either gets a localized footer here or is filtered
+// out at the feed before reaching the row.
+const LIVE_STATUS_L10N_MAP = {
+  halftime: "newtab-sports-widget-match-halftime",
+  "extra time": "newtab-sports-widget-match-extra-time"
+};
+const RESULTS_STATUS_L10N_MAP = {
+  final: "newtab-sports-widget-match-full-time"
 };
 const UPCOMING_STATUS_ARIA_L10N_MAP = {
   delayed: "newtab-sports-widget-match-aria-label-upcoming-delayed",
   postponed: "newtab-sports-widget-match-aria-label-upcoming-postponed",
   suspended: "newtab-sports-widget-match-aria-label-upcoming-suspended",
-  cancelled: "newtab-sports-widget-match-aria-label-upcoming-cancelled"
+  cancelled: "newtab-sports-widget-match-aria-label-upcoming-cancelled",
+  canceled: "newtab-sports-widget-match-aria-label-upcoming-cancelled"
 };
 function ScorePill({
   homeScore,
@@ -16327,12 +16718,74 @@ function ScorePill({
     className: "sports-score-penalty"
   }, "(", awayPenalty, ")"));
 }
+
+// Renders one side of a match row: the team flag and code, or a placeholder
+// when the team is not yet decided.
+function MatchTeam({
+  team,
+  isFollowed
+}) {
+  if (!team) {
+    return /*#__PURE__*/external_React_default().createElement("div", {
+      className: "sports-match-team"
+    }, /*#__PURE__*/external_React_default().createElement("span", {
+      className: "sports-match-flag-wrapper"
+    }, /*#__PURE__*/external_React_default().createElement("span", {
+      className: "sports-match-flag sports-match-flag-tbd",
+      "aria-hidden": "true"
+    })), /*#__PURE__*/external_React_default().createElement("span", {
+      className: "sports-match-code"
+    }, TBD_PLACEHOLDER));
+  }
+  return /*#__PURE__*/external_React_default().createElement("div", {
+    className: "sports-match-team"
+  }, /*#__PURE__*/external_React_default().createElement("span", {
+    className: `sports-match-flag-wrapper${isFollowed ? " is-followed" : ""}`
+  }, /*#__PURE__*/external_React_default().createElement("img", {
+    className: "sports-match-flag",
+    src: team.icon_url,
+    alt: team.name,
+    title: team.name
+  }), isFollowed && /*#__PURE__*/external_React_default().createElement("span", {
+    className: "sports-match-flag-check",
+    "aria-hidden": "true"
+  })), /*#__PURE__*/external_React_default().createElement("span", {
+    className: "sports-match-code"
+  }, isFollowed ? /*#__PURE__*/external_React_default().createElement("strong", null, team.key) : team.key));
+}
+
+// Fallback shown in the Upcoming tab if the backend returns no matches.
+function UpcomingMatchPlaceholder({
+  size = "large"
+}) {
+  return /*#__PURE__*/external_React_default().createElement((external_React_default()).Fragment, null, /*#__PURE__*/external_React_default().createElement("div", {
+    className: `sports-match-row sports-match-row-${size} sports-match-row-placeholder`,
+    "aria-hidden": "true"
+  }, /*#__PURE__*/external_React_default().createElement(MatchTeam, {
+    team: null
+  }), /*#__PURE__*/external_React_default().createElement("div", {
+    className: "sports-match-upcoming"
+  }, /*#__PURE__*/external_React_default().createElement("span", {
+    className: "sports-match-time sports-match-vs",
+    "data-l10n-id": "newtab-sports-widget-match-vs"
+  })), /*#__PURE__*/external_React_default().createElement(MatchTeam, {
+    team: null
+  })), size === "large" && /*#__PURE__*/external_React_default().createElement("p", {
+    className: "sports-upcoming-empty-info"
+  }, /*#__PURE__*/external_React_default().createElement("span", {
+    className: "sports-upcoming-empty-info-icon",
+    "aria-hidden": "true"
+  }), /*#__PURE__*/external_React_default().createElement("span", {
+    "data-l10n-id": "newtab-sports-widget-no-upcoming-matches"
+  })));
+}
 function SportsMatchRow({
   match,
   variant,
   size = "large",
   handleInteraction,
-  followedTeams
+  followedTeams,
+  tbdTeamName = ""
 }) {
   const dispatch = (0,external_ReactRedux_namespaceObject.useDispatch)();
   // Read the widget size pref (not `size`, which can be "list" when the
@@ -16352,8 +16805,10 @@ function SportsMatchRow({
     away_penalty,
     query
   } = match;
-  const isHomeFollowed = !!followedTeams?.has(home_team.key);
-  const isAwayFollowed = !!followedTeams?.has(away_team.key);
+  const isHomeFollowed = !!(home_team && followedTeams?.has(home_team.key));
+  const isAwayFollowed = !!(away_team && followedTeams?.has(away_team.key));
+  const homeTeamName = home_team ? home_team.name : tbdTeamName;
+  const awayTeamName = away_team ? away_team.name : tbdTeamName;
   const dateTimestamp = new Date(date).getTime();
   // (developer note): Assumes home_score/away_score exclude extra time goals
   const displayHomeScore = home_score + (home_extra || 0);
@@ -16370,8 +16825,8 @@ function SportsMatchRow({
   // translatable.
   function getAriaLabelL10n() {
     const teams = {
-      homeTeam: home_team.name,
-      awayTeam: away_team.name
+      homeTeam: homeTeamName,
+      awayTeam: awayTeamName
     };
     if (variant === "results") {
       if (hasPenalties) {
@@ -16407,7 +16862,7 @@ function SportsMatchRow({
     }
     // Upcoming. Non-scheduled statuses use a per-status Fluent ID; the
     // default ("scheduled") announces kickoff time/date.
-    const upcomingId = UPCOMING_STATUS_ARIA_L10N_MAP[status_type] || "newtab-sports-widget-match-aria-label-upcoming";
+    const upcomingId = UPCOMING_STATUS_ARIA_L10N_MAP[status_type?.toLowerCase()] || "newtab-sports-widget-match-aria-label-upcoming";
     return {
       id: upcomingId,
       args: {
@@ -16420,13 +16875,34 @@ function SportsMatchRow({
   function renderMiddle() {
     switch (variant) {
       case "now":
-        return /*#__PURE__*/external_React_default().createElement(ScorePill, {
-          homeScore: displayHomeScore,
-          awayScore: displayAwayScore,
-          variant: "now"
-        });
+        {
+          const liveStatusL10nId = LIVE_STATUS_L10N_MAP[status_type?.toLowerCase()];
+          if (!liveStatusL10nId) {
+            return /*#__PURE__*/external_React_default().createElement(ScorePill, {
+              homeScore: displayHomeScore,
+              awayScore: displayAwayScore,
+              variant: "now"
+            });
+          }
+          return /*#__PURE__*/external_React_default().createElement("div", {
+            className: "sports-match-live"
+          }, /*#__PURE__*/external_React_default().createElement(ScorePill, {
+            homeScore: displayHomeScore,
+            awayScore: displayAwayScore,
+            variant: "now"
+          }), /*#__PURE__*/external_React_default().createElement("div", {
+            className: "sports-match-live-footer"
+          }, /*#__PURE__*/external_React_default().createElement("span", {
+            "data-l10n-id": liveStatusL10nId
+          })));
+        }
       case "results":
         {
+          // Per Figma the Results footer is always "Full time" (optionally
+          // "• Penalties"); default to it for unmapped status_types so any
+          // stale live-state value that leaks into this bucket doesn't render
+          // raw API text in the UI.
+          const resultsStatusL10nId = RESULTS_STATUS_L10N_MAP[status_type?.toLowerCase()] || "newtab-sports-widget-match-full-time";
           return /*#__PURE__*/external_React_default().createElement("div", {
             className: "sports-match-result"
           }, /*#__PURE__*/external_React_default().createElement(ScorePill, {
@@ -16438,8 +16914,8 @@ function SportsMatchRow({
           }), /*#__PURE__*/external_React_default().createElement("div", {
             className: "sports-match-result-footer"
           }, /*#__PURE__*/external_React_default().createElement("span", {
-            "data-l10n-id": "newtab-sports-widget-match-full-time"
-          }), hasPenalties && /*#__PURE__*/external_React_default().createElement((external_React_default()).Fragment, null, /*#__PURE__*/external_React_default().createElement("span", {
+            "data-l10n-id": resultsStatusL10nId
+          }), hasPenalties && size !== "list" && /*#__PURE__*/external_React_default().createElement((external_React_default()).Fragment, null, /*#__PURE__*/external_React_default().createElement("span", {
             "aria-hidden": "true"
           }, "\u2022"), /*#__PURE__*/external_React_default().createElement("span", {
             "data-l10n-id": "newtab-sports-widget-match-penalties"
@@ -16448,7 +16924,7 @@ function SportsMatchRow({
       // Default is the upcoming variant
       default:
         {
-          const statusL10nId = STATUS_L10N_MAP[status_type];
+          const statusL10nId = UPCOMING_STATUS_L10N_MAP[status_type?.toLowerCase()];
           const dateArgs = JSON.stringify({
             date: dateTimestamp
           });
@@ -16485,7 +16961,7 @@ function SportsMatchRow({
       data: {
         widget_name: "sports",
         widget_source: "widget",
-        user_action: "open_match_search",
+        user_action: SportsMatchRow_USER_ACTION_TYPES.OPEN_MATCH_SEARCH,
         action_value: variant,
         widget_size: widgetSize
       }
@@ -16522,35 +16998,13 @@ function SportsMatchRow({
     tabIndex: 0,
     onClick: openMatchSearch,
     onKeyDown
-  }), /*#__PURE__*/external_React_default().createElement("div", {
-    className: "sports-match-team"
-  }, /*#__PURE__*/external_React_default().createElement("span", {
-    className: `sports-match-flag-wrapper${isHomeFollowed ? " is-followed" : ""}`
-  }, /*#__PURE__*/external_React_default().createElement("img", {
-    className: "sports-match-flag",
-    src: home_team.icon_url,
-    alt: home_team.name,
-    title: home_team.name
-  }), isHomeFollowed && /*#__PURE__*/external_React_default().createElement("span", {
-    className: "sports-match-flag-check",
-    "aria-hidden": "true"
-  })), /*#__PURE__*/external_React_default().createElement("span", {
-    className: "sports-match-code"
-  }, isHomeFollowed ? /*#__PURE__*/external_React_default().createElement("strong", null, home_team.key) : home_team.key)), renderMiddle(), /*#__PURE__*/external_React_default().createElement("div", {
-    className: "sports-match-team"
-  }, /*#__PURE__*/external_React_default().createElement("span", {
-    className: `sports-match-flag-wrapper${isAwayFollowed ? " is-followed" : ""}`
-  }, /*#__PURE__*/external_React_default().createElement("img", {
-    className: "sports-match-flag",
-    src: away_team.icon_url,
-    alt: away_team.name,
-    title: away_team.name
-  }), isAwayFollowed && /*#__PURE__*/external_React_default().createElement("span", {
-    className: "sports-match-flag-check",
-    "aria-hidden": "true"
-  })), /*#__PURE__*/external_React_default().createElement("span", {
-    className: "sports-match-code"
-  }, isAwayFollowed ? /*#__PURE__*/external_React_default().createElement("strong", null, away_team.key) : away_team.key)));
+  }), /*#__PURE__*/external_React_default().createElement(MatchTeam, {
+    team: home_team,
+    isFollowed: isHomeFollowed
+  }), renderMiddle(), /*#__PURE__*/external_React_default().createElement(MatchTeam, {
+    team: away_team,
+    isFollowed: isAwayFollowed
+  }));
 }
 
 ;// CONCATENATED MODULE: ./content-src/components/Widgets/SportsWidget/LivePagination.jsx
@@ -16561,20 +17015,34 @@ function SportsMatchRow({
 // eslint-disable-next-line no-unused-vars
 
 
+const LivePagination_USER_ACTION_TYPES = {
+  CHANGE_LIVE_MATCH: "change_live_match"
+};
 
-// Pager for the Now tab when 2+ live games are happening at once. Chevron
-// buttons step through the live matches (already sorted followed-first); dot
-// indicators show position and let the user jump directly to a match.
-// Chevron icon direction is mirrored under RTL via CSS (`:dir(rtl)`).
+// Arrow icons are mirrored under RTL via :dir(rtl) CSS.
 function LivePagination({
   dispatch,
   liveIndex,
   liveCount,
   size,
+  widgetSize,
   handleInteraction
 }) {
   const buttonSize = size === "medium" ? "small" : undefined;
   const goTo = nextIndex => {
+    if (nextIndex === liveIndex) {
+      return;
+    }
+    dispatch(actionCreators.OnlyToMain({
+      type: actionTypes.WIDGETS_USER_EVENT,
+      data: {
+        widget_name: "sports",
+        widget_source: "widget",
+        user_action: LivePagination_USER_ACTION_TYPES.CHANGE_LIVE_MATCH,
+        action_value: String(nextIndex + 1),
+        widget_size: widgetSize
+      }
+    }));
     dispatch(actionCreators.AlsoToMain({
       type: actionTypes.WIDGETS_SPORTS_CHANGE_LIVE_INDEX,
       data: nextIndex
@@ -16628,6 +17096,15 @@ function LivePagination({
 
 
 
+// Stream URLs come from an untrusted backend, so only allow http(s) through to
+// the href; anything else (e.g. javascript:) renders as a non-navigating link.
+function safeStreamUrl(url) {
+  try {
+    return ["http:", "https:"].includes(new URL(url).protocol) ? url : "";
+  } catch (e) {
+    return "";
+  }
+}
 
 // Map known backend entitlement strings to localized tag IDs. Anything not in
 // this map falls back to the raw string from `stream.entitlement`.
@@ -16665,10 +17142,12 @@ function StreamRow({
   };
   return /*#__PURE__*/external_React_default().createElement("li", {
     className: "watch-live-modal-row"
-  }, /*#__PURE__*/external_React_default().createElement(SafeAnchor, {
+  }, /*#__PURE__*/external_React_default().createElement("a", {
     className: "watch-live-modal-row-link",
-    url: stream.url,
-    onLinkClick: handleClick
+    href: safeStreamUrl(stream.url),
+    target: "_blank",
+    rel: "noopener noreferrer",
+    onClick: handleClick
   }, /*#__PURE__*/external_React_default().createElement("span", {
     className: "watch-live-modal-row-text"
   }, /*#__PURE__*/external_React_default().createElement("span", {
@@ -16925,6 +17404,20 @@ function useLocalizedTeamNames(teams) {
   // Only expose names that match the current `teams` reference.
   return resolved.teams === teams ? resolved.names : null;
 }
+
+/**
+ * Resolves the localized "To be determined" placeholder name used in a match
+ * row's aria-label for an undecided team. Returns "" until resolved.
+ */
+function useTbdTeamName() {
+  const [tbdName, setTbdName] = (0,external_React_namespaceObject.useState)("");
+  (0,external_React_namespaceObject.useEffect)(() => {
+    document.l10n?.formatValues?.([{
+      id: "newtab-sports-widget-team-tbd"
+    }])?.then(([value]) => value && setTbdName(value));
+  }, []);
+  return tbdName;
+}
 ;// CONCATENATED MODULE: ./content-src/components/Widgets/SportsWidget/stageLabels.mjs
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -17012,6 +17505,41 @@ function groupMatchesBySection(matches) {
   return sections;
 }
 
+;// CONCATENATED MODULE: ./content-src/components/Widgets/SportsWidget/matchResult.mjs
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
+
+// Resolves the winning team's `key` for a finished match, or null for a draw.
+// Mirrors the score resolution used in SportsMatchRow: regular + extra time,
+// then a penalty shootout when the aggregate is level.
+const getMatchWinnerKey = match => {
+  if (!match) {
+    return null;
+  }
+  const homeScore = (match.home_score || 0) + (match.home_extra || 0);
+  const awayScore = (match.away_score || 0) + (match.away_extra || 0);
+  if (homeScore > awayScore) {
+    return match.home_team.key;
+  }
+  if (awayScore > homeScore) {
+    return match.away_team.key;
+  }
+  // Level aggregate: a shootout decides it only when both penalty scores are
+  // present (mirrors the SportsMatchRow `hasPenalties` guard).
+  const hasPenalties =
+    match.home_penalty !== null &&
+    match.home_penalty !== undefined &&
+    match.away_penalty !== null &&
+    match.away_penalty !== undefined;
+  if (hasPenalties && match.home_penalty !== match.away_penalty) {
+    return match.home_penalty > match.away_penalty
+      ? match.home_team.key
+      : match.away_team.key;
+  }
+  return null;
+};
+
 ;// CONCATENATED MODULE: ./content-src/components/Widgets/SportsWidget/SportsWidget.jsx
 function SportsWidget_extends() { return SportsWidget_extends = Object.assign ? Object.assign.bind() : function (n) { for (var e = 1; e < arguments.length; e++) { var t = arguments[e]; for (var r in t) ({}).hasOwnProperty.call(t, r) && (n[r] = t[r]); } return n; }, SportsWidget_extends.apply(null, arguments); }
 /* This Source Code Form is subject to the terms of the Mozilla Public
@@ -17019,6 +17547,9 @@ function SportsWidget_extends() { return SportsWidget_extends = Object.assign ? 
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
 // eslint-disable-next-line no-unused-vars
+
+
+
 
 
 
@@ -17041,6 +17572,7 @@ const MATCHES_TABS = {
   NOW: "now",
   UPCOMING: "upcoming"
 };
+const SPORTS_CELEBRATION_ILLUSTRATION = "chrome://newtab/content/data/content/assets/firefox-motion-head-pop-up-no-bg.svg";
 function getVisibleMatchesTabs(hasLiveGames, hasPreviousResults) {
   return Object.values(MATCHES_TABS)
   // Only show the Now tab when there are live games.
@@ -17060,12 +17592,26 @@ const SportsWidget_USER_ACTION_TYPES = {
   CHANGE_SIZE: "change_size",
   CHANGE_TAB: "change_tab",
   LEARN_MORE: "learn_more",
-  TOGGLE_FOLLOWED_ONLY: "toggle_followed_only"
+  TOGGLE_FOLLOWED_ONLY: "toggle_followed_only",
+  REFRESH_LIVE: "refresh_live"
 };
+
+// UI-side cooldown between successive clicks of the live refresh button. Must
+// match (or exceed) the MIN_MANUAL_REFRESH_MS floor enforced by SportsFeed —
+// the feed silently drops faster requests, so a shorter button cooldown would
+// surface as a no-op click.
+const LIVE_REFRESH_COOLDOWN_MS = 15000;
+
+// Minimum time the refresh icon spins after a click, so even an instant /live
+// response still reads as "something happened" rather than a flicker.
+const LIVE_REFRESH_MIN_SPIN_MS = 2000;
 const SportsWidget_PREF_NOVA_ENABLED = "nova.enabled";
 const SportsWidget_PREF_SPORTS_WIDGET_SIZE = "widgets.sportsWidget.size";
 const PREF_SPORTS_WIDGET_LIVE_ENABLED = "widgets.sportsWidget.live.enabled";
 const PREF_FORCE_LIVE_DATA_TRUSTABLE = "widgets.sports.forceLiveDataTrustable";
+const PREF_SPORTS_CELEBRATIONS_ENABLED = "widgets.sportsWidget.celebrations.enabled";
+const PREF_SPORTS_CELEBRATIONS_WINDOW_MS = "widgets.sportsWidget.celebrations.windowMs";
+const DEFAULT_CELEBRATION_WINDOW_MS = 86400000; // 24 hours
 
 // World Cup 2026 kickoff: June 11, 2026 at 19:00 UTC. Used as a temporary
 // guard to ignore /live data while the endpoint still serves mock matches
@@ -17079,7 +17625,7 @@ function sortFollowedFirst(matches, selectedTeamsSet) {
   if (!selectedTeamsSet.size) {
     return matches;
   }
-  const involvesFollowed = match => selectedTeamsSet.has(match.home_team.key) || selectedTeamsSet.has(match.away_team.key);
+  const involvesFollowed = match => selectedTeamsSet.has(match.home_team?.key) || selectedTeamsSet.has(match.away_team?.key);
   return [...matches].map((match, index) => ({
     match,
     index
@@ -17091,6 +17637,49 @@ function sortFollowedFirst(matches, selectedTeamsSet) {
     }
     return a.index - b.index;
   }).map(entry => entry.match);
+}
+
+// The match that most recently ended and is still eligible to celebrate:
+// within the window and not yet celebrated. Keyed off the feed's `endedAt`
+// stamp rather than the display order, so the celebration targets the match
+// that actually ended even when it isn't the top result. Searches finished
+// (previous) and current matches, since a just-ended match can briefly remain
+// in `current` before the backend moves it to `previous`.
+function findCelebrationMatch(matches, celebrations, windowMs) {
+  const endedAt = celebrations?.endedAt;
+  if (!endedAt) {
+    return null;
+  }
+  const celebrated = new Set(celebrations?.celebrated ?? []);
+  const now = Date.now();
+  let best = null;
+  for (const match of matches) {
+    const id = match?.global_event_id;
+    const ts = id === null || id === undefined ? undefined : endedAt[id];
+    if (!ts || now - ts >= windowMs || celebrated.has(id)) {
+      continue;
+    }
+    if (!best || ts > endedAt[best.global_event_id]) {
+      best = match;
+    }
+  }
+  return best;
+}
+
+// Moves the match with `id` to the front of `matches` (used to surface the
+// just-ended match as the Results highlight). No-op when it isn't present.
+function bubbleMatchToFront(matches, id) {
+  if (id === null || id === undefined) {
+    return matches;
+  }
+  const index = matches.findIndex(match => match.global_event_id === id);
+  if (index <= 0) {
+    return matches;
+  }
+  const next = [...matches];
+  const [match] = next.splice(index, 1);
+  next.unshift(match);
+  return next;
 }
 
 // Returns the match shown in the highlight view for the active tab, or null
@@ -17127,12 +17716,12 @@ function getFollowedGradient(match, selectedTeamsSet, teamColorsByKey) {
   if (!match) {
     return null;
   }
-  const homeFollowed = selectedTeamsSet.has(match.home_team.key);
-  const awayFollowed = selectedTeamsSet.has(match.away_team.key);
+  const homeFollowed = selectedTeamsSet.has(match.home_team?.key);
+  const awayFollowed = selectedTeamsSet.has(match.away_team?.key);
   if (homeFollowed === awayFollowed) {
     return null;
   }
-  const followedKey = homeFollowed ? match.home_team.key : match.away_team.key;
+  const followedKey = homeFollowed ? match.home_team?.key : match.away_team?.key;
   const colors = teamColorsByKey.get(followedKey);
   if (!colors || colors.length < 2) {
     return null;
@@ -17156,6 +17745,9 @@ function SportsWidget_SportsWidget({
 }) {
   const prefs = (0,external_ReactRedux_namespaceObject.useSelector)(state => state.Prefs.values);
   const sportsWidgetData = (0,external_ReactRedux_namespaceObject.useSelector)(state => state.SportsWidget);
+  // Resolved once here and passed down to every match row so a list of matches
+  // makes a single Fluent lookup for the undecided-team aria-label name.
+  const tbdTeamName = useTbdTeamName();
   const widgetSize = resolveWidgetSize(SPORTS_WIDGET_REGISTRY_ENTRY, prefs);
   // Mirror SportsFeed.liveEnabled — raw pref OR the trainhop override. The
   // canonical key is trainhopConfig.widgets.sportsWidgetLiveEnabled (the flat
@@ -17228,8 +17820,21 @@ function SportsWidget_SportsWidget({
     return map;
   }, [teams]);
 
+  // Celebration window (trainhop > pref > default) and the match that just
+  // ended, keyed off the feed's `endedAt` stamp rather than the display order.
+  // It's surfaced as the Results highlight (below) and consumed by the
+  // celebration trigger, so the celebration targets the match that actually
+  // ended even when it isn't the top result.
+  const {
+    celebrations
+  } = sportsWidgetData;
+  const celebrationWindowMs = prefs.trainhopConfig?.sportsCelebrations?.windowMs ?? prefs.trainhopConfig?.widgets?.sportsWidgetCelebrationsWindowMs ?? prefs.trainhopConfig?.sports?.celebrationsWindowMs ?? prefs[PREF_SPORTS_CELEBRATIONS_WINDOW_MS] ?? DEFAULT_CELEBRATION_WINDOW_MS;
+  const celebrationMatch = (0,external_React_namespaceObject.useMemo)(() => findCelebrationMatch([...(rawMatches?.previous ?? []), ...(rawMatches?.current ?? [])], celebrations, celebrationWindowMs), [rawMatches, celebrations, celebrationWindowMs]);
+
   // Bubble followed teams to the front for the highlight view and list view
   // when the followed-only toggle is on; with it off, matches stay chronological.
+  // The just-ended celebration match always bubbles to the very front so the
+  // celebration plays over its result.
   const resultsFollowedOnly = sportsWidgetData.followedOnly?.results ?? true;
   const upcomingFollowedOnly = sportsWidgetData.followedOnly?.upcoming ?? true;
   const {
@@ -17240,11 +17845,11 @@ function SportsWidget_SportsWidget({
     const previous = rawMatches?.previous ?? [];
     const next = rawMatches?.next ?? [];
     return {
-      sortedPrevious: resultsFollowedOnly ? sortFollowedFirst(previous, selectedTeamsSet) : previous,
+      sortedPrevious: bubbleMatchToFront(resultsFollowedOnly ? sortFollowedFirst(previous, selectedTeamsSet) : previous, celebrationMatch?.global_event_id),
       sortedCurrent: sortFollowedFirst(rawLive ?? [], selectedTeamsSet),
       sortedNext: upcomingFollowedOnly ? sortFollowedFirst(next, selectedTeamsSet) : next
     };
-  }, [rawMatches, rawLive, selectedTeamsSet, resultsFollowedOnly, upcomingFollowedOnly]);
+  }, [rawMatches, rawLive, selectedTeamsSet, resultsFollowedOnly, upcomingFollowedOnly, celebrationMatch]);
 
   // List-view toggle states for the Results and Upcoming tabs are lifted up
   // here so we can tell whether a highlight match is currently visible (for
@@ -17274,10 +17879,18 @@ function SportsWidget_SportsWidget({
   const impressionFired = (0,external_React_namespaceObject.useRef)(false);
   const errorFired = (0,external_React_namespaceObject.useRef)(false);
   const introVideoRef = (0,external_React_namespaceObject.useRef)(null);
+  // Caps the intro animation to two plays per widget mount.
+  // Toggling the widget off and back on remounts the component and resets this counter.
+  // You can also refresh the new tab page or open a new tab to reset the counter.
+  const introVideoPlayCount = (0,external_React_namespaceObject.useRef)(0);
   const playIntroVideo = (0,external_React_namespaceObject.useMemo)(() => {
     const prefersReducedMotion = globalThis.matchMedia?.("(prefers-reduced-motion: reduce)").matches ?? false;
+    const maxIntroVideoPlays = 2;
     return () => {
       if (prefersReducedMotion) {
+        return;
+      }
+      if (introVideoPlayCount.current >= maxIntroVideoPlays) {
         return;
       }
       const video = introVideoRef.current;
@@ -17285,7 +17898,9 @@ function SportsWidget_SportsWidget({
         return;
       }
       video.currentTime = 0;
-      video.play().catch(() => {});
+      video.play().then(() => {
+        introVideoPlayCount.current += 1;
+      }).catch(() => {});
     };
   }, []);
   const [watchLiveOpen, setWatchLiveOpen] = (0,external_React_namespaceObject.useState)(false);
@@ -17308,6 +17923,116 @@ function SportsWidget_SportsWidget({
   // gate flips and the article appears for the first time). widgetRef is a
   // stable useRef and can't drive re-runs on its own.
   const [liveEl, setLiveEl] = (0,external_React_namespaceObject.useState)(null);
+
+  // End-of-match celebration.
+  const celebrationRef = (0,external_React_namespaceObject.useRef)(null);
+  const {
+    celebrationFrame,
+    celebrationId,
+    completeCelebration,
+    isCelebrating,
+    triggerCelebration
+  } = useWidgetCelebration(celebrationRef);
+  const [celebrationColors, setCelebrationColors] = (0,external_React_namespaceObject.useState)(null);
+  // Seam consumed by the detection layer (Patch 2): a followed-team win passes
+  // that team's colors; any other ended match passes none (generic). Celebrations
+  // are off by default and opt-in via the pref OR trainhopConfig, so they ship
+  // dark and can be enabled remotely without risking the rest of the widget.
+  // Canonical trainhop key is the dedicated trainhopConfig.sportsCelebrations
+  // namespace; the widgets/sports reads remain as fallbacks.
+  /**
+   * @backward-compat { version 153 }
+   * The trainhopConfig namespace migrated from the nested sports.* keys to the
+   * flat widgets.sportsWidget* keys (D303931). This celebration ships via the
+   * newtab XPI (train-hop), so it can run on a Firefox serving either
+   * namespace — read both. Remove the legacy
+   * trainhopConfig.sports.celebrationsEnabled read once 153 reaches Release.
+   */
+  const celebrationsEnabled = prefs[PREF_SPORTS_CELEBRATIONS_ENABLED] || prefs.trainhopConfig?.sportsCelebrations?.enabled || prefs.trainhopConfig?.widgets?.sportsWidgetCelebrationsEnabled || prefs.trainhopConfig?.sports?.celebrationsEnabled;
+  const celebrate = (0,external_React_namespaceObject.useCallback)((kind, colors = null) => {
+    if (!celebrationsEnabled) {
+      return;
+    }
+    setCelebrationColors(kind === "followed" ? colors : null);
+    triggerCelebration();
+  }, [triggerCelebration, celebrationsEnabled]);
+
+  // Celebration trigger: fire once for the match that just ended (the freshest
+  // endedAt within the window, surfaced as the Results highlight above) when
+  // the user is viewing the Results tab with the widget on-screen. Followed
+  // team won/tied -> team colors; no followed team -> generic; followed loss ->
+  // nothing. celebratedRef guards against re-firing within this session;
+  // `celebrations.celebrated` (persisted by the feed) guards across reloads.
+  const celebratedRef = (0,external_React_namespaceObject.useRef)(new Set());
+  const [isPageVisible, setIsPageVisible] = (0,external_React_namespaceObject.useState)(typeof document === "undefined" || document.visibilityState === "visible");
+  (0,external_React_namespaceObject.useEffect)(() => {
+    const onVisibility = () => setIsPageVisible(document.visibilityState === "visible");
+    document.addEventListener("visibilitychange", onVisibility);
+    return () => document.removeEventListener("visibilitychange", onVisibility);
+  }, []);
+  // Whether the widget itself is scrolled into view. Gating consumption on this
+  // (in addition to isPageVisible) prevents an off-screen widget from spending
+  // the one-shot celebration before the user can see it. Starts false so a
+  // never-observed widget can't fire; the observer reports the real state on
+  // attach. (isPageVisible is still needed: a backgrounded tab keeps reporting
+  // the element as intersecting.)
+  const [isWidgetVisible, setIsWidgetVisible] = (0,external_React_namespaceObject.useState)(false);
+  (0,external_React_namespaceObject.useEffect)(() => {
+    // Only observe when celebrations are enabled — there's nothing to gate
+    // otherwise, and it avoids an idle observer on every sports widget.
+    if (!celebrationsEnabled || !liveEl) {
+      return undefined;
+    }
+    const observer = new IntersectionObserver(([entry]) => setIsWidgetVisible(entry.isIntersecting), {
+      threshold: 0.3
+    });
+    observer.observe(liveEl);
+    return () => observer.disconnect();
+  }, [celebrationsEnabled, liveEl]);
+  (0,external_React_namespaceObject.useEffect)(() => {
+    if (!celebrationsEnabled || !isPageVisible || !isWidgetVisible || widgetState !== WIDGET_STATES.MATCHES || activeTab !== MATCHES_TABS.RESULTS || showResultsList) {
+      return;
+    }
+    const match = celebrationMatch;
+    if (!match || celebratedRef.current.has(match.global_event_id)) {
+      return;
+    }
+    const id = match.global_event_id;
+    const winnerKey = getMatchWinnerKey(match);
+    const homeKey = match.home_team.key;
+    const awayKey = match.away_team.key;
+    // Ownership uses the raw saved selections, not selectedTeamsSet (which
+    // drops eliminated teams). A followed team's knockout loss eliminates it,
+    // so selectedTeamsSet would make it look unfollowed and fire the generic
+    // celebration instead of suppressing it.
+    const homeFollowed = selectedTeams.includes(homeKey);
+    const awayFollowed = selectedTeams.includes(awayKey);
+    let followedKey = null;
+    if (homeFollowed && awayFollowed) {
+      // Both followed: celebrate the winner (home on a draw).
+      followedKey = winnerKey || homeKey;
+    } else if (homeFollowed) {
+      followedKey = homeKey;
+    } else if (awayFollowed) {
+      followedKey = awayKey;
+    }
+    // Consume the event up front so it never re-fires (and a suppressed
+    // followed loss can't replay as a generic celebration after an unfollow).
+    celebratedRef.current.add(id);
+    dispatch(actionCreators.AlsoToMain({
+      type: actionTypes.WIDGETS_SPORTS_MARK_CELEBRATED,
+      data: id
+    }));
+    // A followed team that lost gets no animation (ties count as a win).
+    if (followedKey && winnerKey && winnerKey !== followedKey) {
+      return;
+    }
+    if (followedKey) {
+      celebrate("followed", teamColorsByKey.get(followedKey));
+    } else {
+      celebrate("generic");
+    }
+  }, [celebrationsEnabled, isPageVisible, isWidgetVisible, widgetState, activeTab, showResultsList, celebrationMatch, selectedTeams, teamColorsByKey, celebrate, dispatch]);
 
   // Live polling visibility gate. Separate from the one-shot impression
   // observer above (which unobserves after the first intersect) — this one
@@ -17582,13 +18307,28 @@ function SportsWidget_SportsWidget({
   if (!prefs[SportsWidget_PREF_NOVA_ENABLED]) {
     return null;
   }
-  return /*#__PURE__*/external_React_default().createElement("article", SportsWidget_extends({
-    className: `sports widget col-4 ${displaySize}-widget ${widgetState}${followedGradient ? " is-followed-highlight" : ""}`,
-    style: followedGradient ? {
+
+  // A followed-team celebration (team colors passed) gets a 2px linear-gradient
+  // border in the followed team's colors instead of the generic animated
+  // stroke. The gradient feeds --sports-celebration-border-gradient.
+  const isFollowedCelebration = isCelebrating && !!celebrationColors?.length;
+  // `to right` keeps the gradient's midpoint centered (green left -> white
+  // center -> red right), matching the followed-highlight border.
+  const celebrationBorderGradient = celebrationColors?.length ? `linear-gradient(to right, ${celebrationColors.join(", ")})` : null;
+  const widgetStyle = {
+    ...(followedGradient && {
       "--sports-followed-gradient": followedGradient
-    } : undefined,
+    }),
+    ...(celebrationBorderGradient && {
+      "--sports-celebration-border-gradient": celebrationBorderGradient
+    })
+  };
+  return /*#__PURE__*/external_React_default().createElement("article", SportsWidget_extends({
+    className: `sports widget col-4 ${displaySize}-widget ${widgetState}${followedGradient ? " is-followed-highlight" : ""}${isCelebrating ? " is-celebrating" : ""}${isFollowedCelebration ? " is-followed-celebration" : ""}`,
+    style: widgetStyle,
     ref: el => {
       widgetRef.current = [el];
+      celebrationRef.current = el;
       setLiveEl(el);
       // Only attach the error observer when there's something to report —
       // otherwise the first intersect with no fetchError adds the target to
@@ -17601,7 +18341,15 @@ function SportsWidget_SportsWidget({
         playIntroVideo();
       }
     }
-  }, getCarouselArticleAttrs(activeTab === MATCHES_TABS.NOW && (rawLive?.length ?? 0) >= 2)), widgetState === WIDGET_STATES.INTRO && /*#__PURE__*/external_React_default().createElement("video", {
+  }, getCarouselArticleAttrs(activeTab === MATCHES_TABS.NOW && (rawLive?.length ?? 0) >= 2)), isCelebrating && celebrationFrame ? /*#__PURE__*/external_React_default().createElement(WidgetCelebration, {
+    classNamePrefix: "sports-celebration",
+    celebrationFrame: celebrationFrame,
+    celebrationId: celebrationId,
+    confettiColors: celebrationColors ?? undefined,
+    confettiShape: "soccer",
+    illustrationSrc: SPORTS_CELEBRATION_ILLUSTRATION,
+    onComplete: completeCelebration
+  }) : null, widgetState === WIDGET_STATES.INTRO && /*#__PURE__*/external_React_default().createElement("video", {
     ref: introVideoRef,
     className: "sports-intro-video",
     muted: true,
@@ -17728,8 +18476,10 @@ function SportsWidget_SportsWidget({
     current: sortedCurrent,
     next: sortedNext,
     liveIndex: liveIndex,
+    lastLiveUpdated: sportsWidgetData.lastLiveUpdated,
     handleInteraction: handleInteraction,
     selectedTeamsSet: selectedTeamsSet,
+    tbdTeamName: tbdTeamName,
     followedOnly: sportsWidgetData.followedOnly,
     showResultsList: showResultsList,
     setShowResultsList: setShowResultsList,
@@ -17833,6 +18583,25 @@ function SportsWidgetFollowTeams({
     onClick: () => onSave(activeSelectedTeams)
   }));
 }
+
+// Controlled: `isCoolingDown`, `isSpinning` and `onClick` are owned by
+// SportsMatchesView so both the disabled state and the spin persist across the
+// medium and large widget size changes.
+function LiveRefreshButton({
+  isCoolingDown,
+  isSpinning,
+  onClick
+}) {
+  return /*#__PURE__*/external_React_default().createElement("moz-button", {
+    className: `sports-live-refresh-button${isSpinning ? " is-spinning" : ""}`,
+    type: "icon ghost",
+    size: "small",
+    iconSrc: "chrome://browser/skin/sync.svg",
+    "data-l10n-id": "newtab-custom-widget-live-refresh",
+    disabled: isCoolingDown || undefined,
+    onClick: onClick
+  });
+}
 function SportsSectionLabel({
   match,
   withLiveBadge = false
@@ -17873,8 +18642,10 @@ function SportsMatchesView({
   current,
   next,
   liveIndex,
+  lastLiveUpdated,
   handleInteraction,
   selectedTeamsSet,
+  tbdTeamName,
   followedOnly,
   showResultsList,
   setShowResultsList,
@@ -17910,7 +18681,7 @@ function SportsMatchesView({
       }
     }));
   });
-  const filterFollowed = matches => matches.filter(match => selectedTeamsSet.has(match.home_team.key) || selectedTeamsSet.has(match.away_team.key));
+  const filterFollowed = matches => matches.filter(match => selectedTeamsSet.has(match.home_team?.key) || selectedTeamsSet.has(match.away_team?.key));
   // Filtering is only meaningful when the user has followed at least one
   // team — otherwise we'd hide every match.
   const displayedPrevious = hasFollowedTeams && resultsFollowedOnly ? filterFollowed(previous) : previous;
@@ -17934,21 +18705,94 @@ function SportsMatchesView({
       upcomingPanelRef.current?.querySelector(".sports-match-row")?.focus();
     }
   }, [showUpcomingList]);
+
+  // Tracks whether the live-refresh button is in its post-click cooldown
+  // window.
+  // Flipped to true when clicked. While true, the button is disabled.
+  // Flips back to false when LIVE_REFRESH_COOLDOWN_MS finishes, and gets re-enabled again.
+  const [liveRefreshCoolingDown, setLiveRefreshCoolingDown] = (0,external_React_namespaceObject.useState)(false);
+  // Spins the refresh icon while a manual fetch is in flight. Set on click,
+  // cleared when fresh /live data lands (`lastLiveUpdated` changes) — but never
+  // before LIVE_REFRESH_MIN_SPIN_MS — or when the cooldown ends as a safety cap
+  // (e.g. the feed dropped the click as too-soon).
+  const [liveRefreshSpinning, setLiveRefreshSpinning] = (0,external_React_namespaceObject.useState)(false);
+  const liveRefreshTimerRef = (0,external_React_namespaceObject.useRef)(null);
+  // Click timestamp, non-null only while a manual refresh's spin is in flight.
+  // Doubles as the guard that makes the stop-on-update effect ignore its mount
+  // run and any automatic-poll updates that happen while no refresh is pending.
+  const liveRefreshSpinStartRef = (0,external_React_namespaceObject.useRef)(null);
+  const liveRefreshStopTimerRef = (0,external_React_namespaceObject.useRef)(null);
+  const stopLiveRefreshSpin = (0,external_React_namespaceObject.useCallback)(() => {
+    if (liveRefreshStopTimerRef.current) {
+      clearTimeout(liveRefreshStopTimerRef.current);
+      liveRefreshStopTimerRef.current = null;
+    }
+    liveRefreshSpinStartRef.current = null;
+    setLiveRefreshSpinning(false);
+  }, []);
+  (0,external_React_namespaceObject.useEffect)(() => () => {
+    if (liveRefreshTimerRef.current) {
+      clearTimeout(liveRefreshTimerRef.current);
+    }
+    if (liveRefreshStopTimerRef.current) {
+      clearTimeout(liveRefreshStopTimerRef.current);
+    }
+  }, []);
+  // Stop the spin once a new /live response arrives, but hold it for at least
+  // LIVE_REFRESH_MIN_SPIN_MS so a fast response still reads as an action. The
+  // start-ref guard skips the mount run and idle auto-poll updates.
+  (0,external_React_namespaceObject.useEffect)(() => {
+    // Ignore the mount run / idle auto-poll updates, and don't reschedule once
+    // a floor-stop is already pending (the floor is anchored to the click).
+    if (liveRefreshSpinStartRef.current === null || liveRefreshStopTimerRef.current) {
+      return;
+    }
+    const remaining = LIVE_REFRESH_MIN_SPIN_MS - (Date.now() - liveRefreshSpinStartRef.current);
+    if (remaining <= 0) {
+      stopLiveRefreshSpin();
+    } else {
+      liveRefreshStopTimerRef.current = setTimeout(stopLiveRefreshSpin, remaining);
+    }
+  }, [lastLiveUpdated, stopLiveRefreshSpin]);
+  const handleLiveRefreshClick = (0,external_React_namespaceObject.useCallback)(() => {
+    if (liveRefreshCoolingDown) {
+      return;
+    }
+    setLiveRefreshCoolingDown(true);
+    setLiveRefreshSpinning(true);
+    liveRefreshSpinStartRef.current = Date.now();
+    liveRefreshTimerRef.current = setTimeout(() => {
+      liveRefreshTimerRef.current = null;
+      setLiveRefreshCoolingDown(false);
+      stopLiveRefreshSpin();
+    }, LIVE_REFRESH_COOLDOWN_MS);
+    (0,external_ReactRedux_namespaceObject.batch)(() => {
+      dispatch(actionCreators.OnlyToMain({
+        type: actionTypes.WIDGETS_USER_EVENT,
+        data: {
+          widget_name: "sports",
+          widget_source: "now",
+          user_action: SportsWidget_USER_ACTION_TYPES.REFRESH_LIVE,
+          widget_size: widgetSize
+        }
+      }));
+      dispatch(actionCreators.OnlyToMain({
+        type: actionTypes.WIDGETS_SPORTS_LIVE_REFRESH
+      }));
+    });
+    handleInteraction?.();
+  }, [dispatch, handleInteraction, liveRefreshCoolingDown, stopLiveRefreshSpin, widgetSize]);
   return /*#__PURE__*/external_React_default().createElement("div", {
     className: "sports-matches-view"
   }, /*#__PURE__*/external_React_default().createElement("div", {
     className: "sports-matches-tab-panel",
     hidden: matchesTab !== MATCHES_TABS.RESULTS,
     ref: resultsPanelRef
-  }, showResultsList ? /*#__PURE__*/external_React_default().createElement((external_React_default()).Fragment, null, hasFollowedTeams &&
-  /*#__PURE__*/
-  /** @backward-compat { version 150 } React 16 (cached page) uses ontoggle; React 19 uses onToggle. Remove onToggle once Firefox 150 reaches Release. */
-  external_React_default().createElement("moz-toggle", {
+  }, showResultsList ? /*#__PURE__*/external_React_default().createElement((external_React_default()).Fragment, null, hasFollowedTeams && /*#__PURE__*/external_React_default().createElement("moz-toggle", {
     className: "sports-followed-only-toggle",
     pressed: resultsFollowedOnly || null,
     "data-l10n-id": "newtab-sports-widget-followed-only-toggle",
-    ontoggle: e => setFollowedOnly("results", !!e.target.pressed),
-    onToggle: e => setFollowedOnly("results", !!e.target.pressed)
+    ontoggle: e => setFollowedOnly("results", !!e.target.pressed)
   }), /*#__PURE__*/external_React_default().createElement("div", {
     className: "sports-matches-list"
   }, groupMatchesBySection(displayedPrevious).map((section, idx) => /*#__PURE__*/external_React_default().createElement("div", {
@@ -17957,13 +18801,14 @@ function SportsMatchesView({
   }, /*#__PURE__*/external_React_default().createElement(SportsSectionLabel, {
     match: section.matches[0]
   }), /*#__PURE__*/external_React_default().createElement("ul", null, section.matches.map(match => /*#__PURE__*/external_React_default().createElement("li", {
-    key: `${match.home_team.key}-${match.away_team.key}-${match.date}`
+    key: `${match.home_team?.key}-${match.away_team?.key}-${match.date}`
   }, /*#__PURE__*/external_React_default().createElement(SportsMatchRow, {
     match: match,
     variant: "results",
     size: "list",
     handleInteraction: handleInteraction,
-    followedTeams: selectedTeamsSet
+    followedTeams: selectedTeamsSet,
+    tbdTeamName: tbdTeamName
   })))))))) : previous[0] && /*#__PURE__*/external_React_default().createElement((external_React_default()).Fragment, null, size === "large" && /*#__PURE__*/external_React_default().createElement(SportsSectionLabel, {
     match: previous[0]
   }), /*#__PURE__*/external_React_default().createElement("div", {
@@ -17973,8 +18818,10 @@ function SportsMatchesView({
     variant: "results",
     size: size,
     handleInteraction: handleInteraction,
-    followedTeams: selectedTeamsSet
+    followedTeams: selectedTeamsSet,
+    tbdTeamName: tbdTeamName
   }))), !!previous.length && /*#__PURE__*/external_React_default().createElement("moz-button", {
+    className: "sports-view-all",
     type: "secondary",
     size: size === "medium" ? "small" : undefined,
     "data-l10n-id": showResultsList ? "newtab-sports-widget-show-less" : "newtab-sports-widget-view-all",
@@ -17982,10 +18829,16 @@ function SportsMatchesView({
   })), hasLiveGames && /*#__PURE__*/external_React_default().createElement("div", {
     className: "sports-matches-tab-panel",
     hidden: matchesTab !== MATCHES_TABS.NOW
-  }, current[liveIndex] && /*#__PURE__*/external_React_default().createElement((external_React_default()).Fragment, null, size === "large" && /*#__PURE__*/external_React_default().createElement(SportsSectionLabel, {
+  }, current[liveIndex] && /*#__PURE__*/external_React_default().createElement((external_React_default()).Fragment, null, size === "large" && /*#__PURE__*/external_React_default().createElement("div", {
+    className: "sports-now-header"
+  }, /*#__PURE__*/external_React_default().createElement(SportsSectionLabel, {
     match: current[liveIndex],
     withLiveBadge: true
-  }), /*#__PURE__*/external_React_default().createElement("div", SportsWidget_extends({
+  }), /*#__PURE__*/external_React_default().createElement(LiveRefreshButton, {
+    isCoolingDown: liveRefreshCoolingDown,
+    isSpinning: liveRefreshSpinning,
+    onClick: handleLiveRefreshClick
+  })), /*#__PURE__*/external_React_default().createElement("div", SportsWidget_extends({
     className: "match-highlight-view"
   }, hasLivePagination && {
     "aria-live": "polite",
@@ -17995,7 +18848,8 @@ function SportsMatchesView({
     variant: "now",
     size: size,
     handleInteraction: handleInteraction,
-    followedTeams: selectedTeamsSet
+    followedTeams: selectedTeamsSet,
+    tbdTeamName: tbdTeamName
   })), /*#__PURE__*/external_React_default().createElement("moz-button", {
     className: "sports-watch-live-button",
     type: size === "medium" ? "icon" : "default",
@@ -18003,25 +18857,26 @@ function SportsMatchesView({
     iconSrc: "chrome://browser/skin/device-tv.svg",
     "data-l10n-id": size === "medium" ? "newtab-sports-widget-watch-icon" : "newtab-sports-widget-watch",
     onClick: onWatchClick
+  }), size === "medium" && /*#__PURE__*/external_React_default().createElement(LiveRefreshButton, {
+    isCoolingDown: liveRefreshCoolingDown,
+    isSpinning: liveRefreshSpinning,
+    onClick: handleLiveRefreshClick
   }), current.length >= 2 && /*#__PURE__*/external_React_default().createElement(LivePagination, {
     dispatch: dispatch,
     liveIndex: liveIndex,
     liveCount: current.length,
     size: size,
+    widgetSize: widgetSize,
     handleInteraction: handleInteraction
   }))), /*#__PURE__*/external_React_default().createElement("div", {
     className: "sports-matches-tab-panel",
     hidden: matchesTab !== MATCHES_TABS.UPCOMING,
     ref: upcomingPanelRef
-  }, showUpcomingList ? /*#__PURE__*/external_React_default().createElement((external_React_default()).Fragment, null, hasFollowedTeams &&
-  /*#__PURE__*/
-  /** @backward-compat { version 150 } React 16 (cached page) uses ontoggle; React 19 uses onToggle. Remove onToggle once Firefox 150 reaches Release. */
-  external_React_default().createElement("moz-toggle", {
+  }, showUpcomingList ? /*#__PURE__*/external_React_default().createElement((external_React_default()).Fragment, null, hasFollowedTeams && /*#__PURE__*/external_React_default().createElement("moz-toggle", {
     className: "sports-followed-only-toggle",
     pressed: upcomingFollowedOnly || null,
     "data-l10n-id": "newtab-sports-widget-followed-only-toggle",
-    ontoggle: e => setFollowedOnly("upcoming", !!e.target.pressed),
-    onToggle: e => setFollowedOnly("upcoming", !!e.target.pressed)
+    ontoggle: e => setFollowedOnly("upcoming", !!e.target.pressed)
   }), /*#__PURE__*/external_React_default().createElement("div", {
     className: "sports-matches-list"
   }, groupMatchesBySection(displayedNext).map((section, idx) => /*#__PURE__*/external_React_default().createElement("div", {
@@ -18030,14 +18885,16 @@ function SportsMatchesView({
   }, /*#__PURE__*/external_React_default().createElement(SportsSectionLabel, {
     match: section.matches[0]
   }), /*#__PURE__*/external_React_default().createElement("ul", null, section.matches.map(match => /*#__PURE__*/external_React_default().createElement("li", {
-    key: `${match.home_team.key}-${match.away_team.key}-${match.date}`
+    // Fallback is for test fixtures, which omit global_event_id.
+    key: match.global_event_id ?? `${match.home_team?.key}-${match.away_team?.key}-${match.date}`
   }, /*#__PURE__*/external_React_default().createElement(SportsMatchRow, {
     match: match,
     variant: "upcoming",
     size: "list",
     handleInteraction: handleInteraction,
-    followedTeams: selectedTeamsSet
-  })))))))) : next[0] && /*#__PURE__*/external_React_default().createElement((external_React_default()).Fragment, null, size === "large" && /*#__PURE__*/external_React_default().createElement(SportsSectionLabel, {
+    followedTeams: selectedTeamsSet,
+    tbdTeamName: tbdTeamName
+  })))))))) : /*#__PURE__*/external_React_default().createElement((external_React_default()).Fragment, null, next[0] && /*#__PURE__*/external_React_default().createElement((external_React_default()).Fragment, null, size === "large" && /*#__PURE__*/external_React_default().createElement(SportsSectionLabel, {
     match: next[0]
   }), /*#__PURE__*/external_React_default().createElement("div", {
     className: "match-highlight-view"
@@ -18046,8 +18903,14 @@ function SportsMatchesView({
     variant: "upcoming",
     size: size,
     handleInteraction: handleInteraction,
-    followedTeams: selectedTeamsSet
+    followedTeams: selectedTeamsSet,
+    tbdTeamName: tbdTeamName
+  }))), !next[0] && /*#__PURE__*/external_React_default().createElement("div", {
+    className: "match-highlight-view"
+  }, /*#__PURE__*/external_React_default().createElement(UpcomingMatchPlaceholder, {
+    size: size
   }))), !!next.length && /*#__PURE__*/external_React_default().createElement("moz-button", {
+    className: "sports-view-all",
     type: "secondary",
     size: size === "medium" ? "small" : undefined,
     "data-l10n-id": showUpcomingList ? "newtab-sports-widget-show-less" : "newtab-sports-widget-view-all",
@@ -19734,6 +20597,7 @@ function Widgets_extends() { return Widgets_extends = Object.assign ? Object.ass
 
 
 
+
 const CONTAINER_ACTION_TYPES = {
   HIDE_ALL: "hide_all",
   CHANGE_SIZE_ALL: "change_size_all",
@@ -20263,28 +21127,36 @@ function Widgets() {
         key: id,
         className: wrapperClassName,
         "data-widget-id": id
-      }, hiddenAttrs, dragProps), /*#__PURE__*/external_React_default().createElement(Component, {
+      }, hiddenAttrs, dragProps), /*#__PURE__*/external_React_default().createElement(ErrorBoundary, {
+        className: "widget-error-fallback"
+      }, /*#__PURE__*/external_React_default().createElement(Component, {
         dispatch: dispatch,
         handleUserInteraction: handleUserInteraction,
         isMaximized: isMaximized,
         widgetsMayBeMaximized: widgetsMayBeMaximized,
         widgetEnabledMap: widgetEnabledMap
-      }));
+      })));
     }
     // @nova-cleanup: remove below
     return /*#__PURE__*/external_React_default().createElement((external_React_default()).Fragment, {
       key: id
-    }, id === "lists" && listsEnabled && /*#__PURE__*/external_React_default().createElement(Lists, {
+    }, id === "lists" && listsEnabled && /*#__PURE__*/external_React_default().createElement(ErrorBoundary, {
+      className: "widget-error-fallback"
+    }, /*#__PURE__*/external_React_default().createElement(Lists, {
       dispatch: dispatch,
       handleUserInteraction: handleUserInteraction,
       isMaximized: isMaximized,
       widgetsMayBeMaximized: widgetsMayBeMaximized
-    }), id === "focusTimer" && timerEnabled && /*#__PURE__*/external_React_default().createElement(FocusTimer, {
+    })), id === "focusTimer" && timerEnabled && /*#__PURE__*/external_React_default().createElement(ErrorBoundary, {
+      className: "widget-error-fallback"
+    }, /*#__PURE__*/external_React_default().createElement(FocusTimer, {
       dispatch: dispatch,
       handleUserInteraction: handleUserInteraction,
       isMaximized: isMaximized,
       widgetsMayBeMaximized: widgetsMayBeMaximized
-    }), id === "weather" && renderWeather({
+    })), id === "weather" && weatherForecastEnabled && /*#__PURE__*/external_React_default().createElement(ErrorBoundary, {
+      className: "widget-error-fallback"
+    }, renderWeather({
       novaEnabled,
       weatherEnabled,
       weatherForecastEnabled,
@@ -20293,7 +21165,7 @@ function Widgets() {
       handleUserInteraction,
       isMaximized,
       widgetsMayBeMaximized
-    }));
+    })));
   }), novaEnabled && !allWidgetsAdded && /*#__PURE__*/external_React_default().createElement("button", {
     type: "button",
     className: `widgets-add-button col-4 ${addButtonSize}-widget`,
@@ -22014,7 +22886,7 @@ function WidgetsManagementPanel({
   }, /*#__PURE__*/external_React_default().createElement("moz-toggle", {
     id: "weather-toggle",
     pressed: weatherEnabled || null,
-    onToggle: onToggleWidget,
+    ontoggle: onToggleWidget,
     "data-preference": "widgets.weather.enabled",
     "data-event-source": "WEATHER",
     "data-l10n-id": "newtab-custom-widget-weather-toggle"
@@ -22024,7 +22896,7 @@ function WidgetsManagementPanel({
   }, /*#__PURE__*/external_React_default().createElement("moz-toggle", {
     id: "timer-toggle",
     pressed: timerEnabled || null,
-    onToggle: onToggleWidget,
+    ontoggle: onToggleWidget,
     "data-preference": "widgets.focusTimer.enabled",
     "data-event-source": "WIDGET_TIMER",
     "data-l10n-id": "newtab-custom-widget-timer-toggle"
@@ -22034,7 +22906,7 @@ function WidgetsManagementPanel({
   }, /*#__PURE__*/external_React_default().createElement("moz-toggle", {
     id: "lists-toggle",
     pressed: listsEnabled || null,
-    onToggle: onToggleWidget,
+    ontoggle: onToggleWidget,
     "data-preference": "widgets.lists.enabled",
     "data-event-source": "WIDGET_LISTS",
     "data-l10n-id": "newtab-custom-widget-lists-toggle"
@@ -22045,7 +22917,6 @@ function WidgetsManagementPanel({
     id: "sports-widget-toggle",
     pressed: sportsWidgetEnabled || null,
     ontoggle: onToggleWidget,
-    onToggle: onToggleWidget,
     "data-preference": "widgets.sportsWidget.enabled",
     "data-event-source": "WIDGET_SPORTS",
     "data-l10n-id": "newtab-custom-widget-sports-toggle2"
@@ -22056,7 +22927,6 @@ function WidgetsManagementPanel({
     id: "clocks-toggle",
     pressed: clocksEnabled || null,
     ontoggle: onToggleWidget,
-    onToggle: onToggleWidget,
     "data-preference": "widgets.clocks.enabled",
     "data-event-source": "WIDGET_CLOCKS",
     "data-l10n-id": "newtab-custom-widget-clock-toggle"
@@ -22264,7 +23134,7 @@ class ContentSection extends (external_React_default()).PureComponent {
     }, novaEnabled && /*#__PURE__*/external_React_default().createElement("moz-toggle", {
       id: "wallpapers-toggle",
       pressed: wallpapersUserEnabled && !!activeWallpaper || null,
-      onToggle: this.onPreferenceSelect,
+      ontoggle: this.onPreferenceSelect,
       "data-preference": "newtabWallpapers.user.enabled",
       "data-event-source": "WALLPAPERS",
       "data-l10n-id": "newtab-wallpaper-toggle-title"
@@ -22287,7 +23157,7 @@ class ContentSection extends (external_React_default()).PureComponent {
     }, /*#__PURE__*/external_React_default().createElement("moz-toggle", {
       id: "weather-toggle",
       pressed: weatherEnabled || null,
-      onToggle: this.onPreferenceSelect,
+      ontoggle: this.onPreferenceSelect,
       "data-preference": "showWeather",
       "data-event-source": "WEATHER",
       "data-l10n-id": "newtab-custom-widget-weather-toggle"
@@ -22297,7 +23167,7 @@ class ContentSection extends (external_React_default()).PureComponent {
     }, /*#__PURE__*/external_React_default().createElement("moz-toggle", {
       id: "lists-toggle",
       pressed: listsEnabled || null,
-      onToggle: this.onPreferenceSelect,
+      ontoggle: this.onPreferenceSelect,
       "data-preference": "widgets.lists.enabled",
       "data-event-source": "WIDGET_LISTS",
       "data-l10n-id": "newtab-custom-widget-lists-toggle"
@@ -22307,7 +23177,7 @@ class ContentSection extends (external_React_default()).PureComponent {
     }, /*#__PURE__*/external_React_default().createElement("moz-toggle", {
       id: "timer-toggle",
       pressed: timerEnabled || null,
-      onToggle: this.onPreferenceSelect,
+      ontoggle: this.onPreferenceSelect,
       "data-preference": "widgets.focusTimer.enabled",
       "data-event-source": "WIDGET_TIMER",
       "data-l10n-id": "newtab-custom-widget-timer-toggle"
@@ -22318,7 +23188,6 @@ class ContentSection extends (external_React_default()).PureComponent {
       id: "clocks-toggle",
       pressed: !!clocksEnabled,
       ontoggle: this.onPreferenceSelect,
-      onToggle: this.onPreferenceSelect,
       "data-preference": "widgets.clocks.enabled",
       "data-event-source": "WIDGET_CLOCKS",
       "data-l10n-id": "newtab-custom-widget-clock-toggle"
@@ -22332,7 +23201,7 @@ class ContentSection extends (external_React_default()).PureComponent {
     }, /*#__PURE__*/external_React_default().createElement("moz-toggle", {
       id: "weather-toggle",
       pressed: weatherEnabled || null,
-      onToggle: this.onPreferenceSelect,
+      ontoggle: this.onPreferenceSelect,
       "data-preference": novaEnabled ? "widgets.weather.enabled" : "showWeather",
       "data-event-source": "WEATHER",
       "data-l10n-id": "newtab-custom-weather-toggle"
@@ -22345,7 +23214,7 @@ class ContentSection extends (external_React_default()).PureComponent {
     }, /*#__PURE__*/external_React_default().createElement("moz-toggle", {
       id: "shortcuts-toggle",
       pressed: topSitesEnabled || null,
-      onToggle: this.onPreferenceSelect,
+      ontoggle: this.onPreferenceSelect,
       "data-preference": "feeds.topsites",
       "data-event-source": "TOP_SITES",
       "data-l10n-id": novaEnabled ? "newtab-custom-shortcuts-nova" : "newtab-custom-shortcuts-toggle"
@@ -22392,7 +23261,7 @@ class ContentSection extends (external_React_default()).PureComponent {
     }, /*#__PURE__*/external_React_default().createElement("moz-toggle", {
       id: "widgets-system-toggle",
       pressed: widgetsEnabled || null,
-      onToggle: this.onPreferenceSelect,
+      ontoggle: this.onPreferenceSelect,
       "data-preference": "widgets.enabled",
       "data-event-source": "WIDGETS_SYSTEM",
       "data-l10n-id": "newtab-custom-widget-section-toggle"
@@ -22429,7 +23298,7 @@ class ContentSection extends (external_React_default()).PureComponent {
     }, /*#__PURE__*/external_React_default().createElement("moz-toggle", {
       id: "pocket-toggle",
       pressed: pocketEnabled || null,
-      onToggle: this.onPreferenceSelect,
+      ontoggle: this.onPreferenceSelect,
       "data-preference": "feeds.section.topstories",
       "data-event-source": "TOP_STORIES",
       "data-l10n-id": pocketToggleL10nId
@@ -22586,7 +23455,7 @@ class _CustomizeMenu extends (external_React_default()).PureComponent {
     }, /*#__PURE__*/external_React_default().createElement("label", {
       "data-l10n-id": "newtab-customize-panel-icon-button-label"
     }), /*#__PURE__*/external_React_default().createElement("div", null, /*#__PURE__*/external_React_default().createElement("img", {
-      role: "presentation",
+      alt: "",
       src: "chrome://global/skin/icons/edit-outline.svg"
     })))), /*#__PURE__*/external_React_default().createElement(external_ReactTransitionGroup_namespaceObject.CSSTransition, {
       nodeRef: this.dialogRef,
@@ -23769,7 +24638,8 @@ class _Weather extends (external_React_default()).PureComponent {
     this.state = {
       url: "https://example.com",
       impressionSeen: false,
-      errorSeen: false
+      errorSeen: false,
+      isMenuEnabled: false
     };
     this.setImpressionRef = element => {
       this.impressionElement = element;
@@ -23778,7 +24648,13 @@ class _Weather extends (external_React_default()).PureComponent {
       this.errorElement = element;
     };
     this.setPanelRef = element => {
+      if (this.panelElement) {
+        this.panelElement.removeEventListener("toggle", this.handlePanelToggle);
+      }
       this.panelElement = element;
+      if (element) {
+        element.addEventListener("toggle", this.handlePanelToggle);
+      }
     };
     this.setSizeSubmenuRef = element => {
       if (this.sizeSubmenuElement) {
@@ -23793,6 +24669,7 @@ class _Weather extends (external_React_default()).PureComponent {
     this.onProviderClick = this.onProviderClick.bind(this);
     this.onMenuButtonClick = this.onMenuButtonClick.bind(this);
     this.onMenuButtonKeyDown = this.onMenuButtonKeyDown.bind(this);
+    this.handlePanelToggle = this.handlePanelToggle.bind(this);
   }
   onSizeSubmenuClick(e) {
     // The size submenu panel-list is moved into the panel-item's shadow DOM by
@@ -23938,6 +24815,9 @@ class _Weather extends (external_React_default()).PureComponent {
   handleChangeLocation = () => {
     if (this.panelElement) {
       this.panelElement.hide();
+      this.setState({
+        isMenuEnabled: false
+      });
     }
     (0,external_ReactRedux_namespaceObject.batch)(() => {
       this.props.dispatch(actionCreators.BroadcastToContent({
@@ -24169,6 +25049,12 @@ class _Weather extends (external_React_default()).PureComponent {
     const experimentValue = values.trainhopConfig?.weather?.enabled;
     return systemValue || experimentValue;
   }
+  handlePanelToggle(e) {
+    const isOpen = e.newState === "open";
+    this.setState({
+      isMenuEnabled: isOpen
+    });
+  }
   render() {
     // Check if weather should be rendered
     if (!this.isEnabled()) {
@@ -24234,6 +25120,7 @@ class _Weather extends (external_React_default()).PureComponent {
       className: "weatherButtonContextMenuWrapper"
     }, /*#__PURE__*/external_React_default().createElement("button", {
       "aria-haspopup": "true",
+      "aria-expanded": this.state.isMenuEnabled,
       onKeyDown: this.onMenuButtonKeyDown,
       onClick: this.onMenuButtonClick,
       "data-l10n-id": "newtab-menu-section-tooltip",
@@ -25871,25 +26758,21 @@ class BaseContent extends (external_React_default()).PureComponent {
     };
     const pocketRegion = prefs["feeds.system.topstories"];
     const mayHaveInferredPersonalization = prefs[PREF_INFERRED_PERSONALIZATION_SYSTEM];
-    const mayHaveWeather = prefs["system.showWeather"] || prefs.trainhopConfig?.weather?.enabled;
+    // Weather's visibility gate differs from the other widgets (it keys off
+    // system.showWeather / trainhopConfig.weather), so it keeps its own check
+    // plus the additive widgetsSettings.weatherVisible override.
+    const mayHaveWeather = prefs["system.showWeather"] || prefs.trainhopConfig?.weather?.enabled || prefs.trainhopConfig?.widgetsSettings?.weatherVisible;
     const supportUrl = prefs["support.url"];
 
-    // Widgets experiment pref check
-    const nimbusWidgetsEnabled = prefs.widgetsConfig?.enabled;
-    const nimbusListsEnabled = prefs.widgetsConfig?.listsEnabled;
-    const nimbusTimerEnabled = prefs.widgetsConfig?.timerEnabled;
-    const nimbusClocksEnabled = prefs.widgetsConfig?.clocksEnabled;
-    const nimbusWidgetsTrainhopEnabled = prefs.trainhopConfig?.widgets?.enabled;
-    const nimbusListsTrainhopEnabled = prefs.trainhopConfig?.widgets?.listsEnabled;
-    const nimbusTimerTrainhopEnabled = prefs.trainhopConfig?.widgets?.timerEnabled;
-    const nimbusClocksTrainhopEnabled = prefs.trainhopConfig?.widgets?.clocksEnabled;
-    const mayHaveWidgets = prefs["widgets.system.enabled"] || nimbusWidgetsEnabled || nimbusWidgetsTrainhopEnabled;
-    const mayHaveListsWidget = prefs["widgets.system.lists.enabled"] || nimbusListsEnabled || nimbusListsTrainhopEnabled;
-    const mayHaveTimerWidget = prefs["widgets.system.focusTimer.enabled"] || nimbusTimerEnabled || nimbusTimerTrainhopEnabled;
-    const mayHaveClocksWidget = prefs["widgets.system.clocks.enabled"] || nimbusClocksEnabled || nimbusClocksTrainhopEnabled;
-    const nimbusSportsWidgetEnabled = prefs.widgetsConfig?.sportsWidgetEnabled;
-    const nimbusSportsWidgetTrainhopEnabled = prefs.trainhopConfig?.widgets?.sportsWidgetEnabled;
-    const mayHaveSportsWidget = prefs["widgets.system.sportsWidget.enabled"] || nimbusSportsWidgetEnabled || nimbusSportsWidgetTrainhopEnabled;
+    // Widget toggle visibility is resolved by the shared registry helpers, which
+    // are additive across the system pref, the legacy widgetsConfig variable,
+    // trainhopConfig.widgets (addable), and trainhopConfig.widgetsSettings.
+    const widgetVisibleById = id => isWidgetToggleVisible(WIDGET_REGISTRY.find(w => w.id === id), prefs);
+    const mayHaveWidgets = isWidgetsContainerVisible(prefs);
+    const mayHaveListsWidget = widgetVisibleById("lists");
+    const mayHaveTimerWidget = widgetVisibleById("focusTimer");
+    const mayHaveClocksWidget = widgetVisibleById("clocks");
+    const mayHaveSportsWidget = widgetVisibleById("sportsWidget");
 
     // These prefs set the initial values on the Customize panel toggle switches
     const enabledWidgets = {

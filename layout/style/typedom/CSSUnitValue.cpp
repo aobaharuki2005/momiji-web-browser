@@ -61,8 +61,11 @@ already_AddRefed<CSSUnitValue> CSSUnitValue::Constructor(
 
   // Step 1.
 
-  // XXX A type should be created from unit and if that fails, the failure
-  // should be propagated here
+  StyleNumericType numericType;
+  if (!Servo_NumericType_Create(&aUnit, &numericType)) {
+    aRv.ThrowTypeError("Invalid unit: "_ns + aUnit);
+    return nullptr;
+  }
 
   // Step 2.
 

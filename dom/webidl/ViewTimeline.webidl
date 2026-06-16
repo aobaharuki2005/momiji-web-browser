@@ -21,7 +21,7 @@ dictionary ViewTimelineOptions {
   (UTF8String or sequence<(CSSKeywordish or CSSNumericValue)>) inset = "auto";
 };
 
-[Exposed=Window, Pref="layout.css.scroll-driven-animations.viewtimeline.enabled"]
+[Exposed=Window, Pref="layout.css.scroll-driven-animations.enabled"]
 interface ViewTimeline : ScrollTimeline {
   [Throws]
   constructor(optional ViewTimelineOptions options = {});
@@ -30,8 +30,8 @@ interface ViewTimeline : ScrollTimeline {
   // nullable, so we follow others for now.
   // https://github.com/w3c/csswg-drafts/issues/9584
   readonly attribute Element? subject;
-  // FIXME: Bug 2016880 - Use CSSNumericValue, not double.
-  // Also see https://github.com/w3c/csswg-drafts/issues/13844 re nullability.
-  readonly attribute double? startOffset;
-  readonly attribute double? endOffset;
+  [GetterThrows]
+  readonly attribute CSSNumericValue? startOffset;
+  [GetterThrows]
+  readonly attribute CSSNumericValue? endOffset;
 };

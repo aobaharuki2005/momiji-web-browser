@@ -16,7 +16,6 @@ import mozilla.components.support.utils.DefaultDateTimeProvider
 import mozilla.components.support.utils.ext.packageManagerCompatHelper
 import org.mozilla.fenix.Config
 import org.mozilla.fenix.android.DefaultActivityLifecycleCallbacks
-import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.utils.Settings
 import java.text.SimpleDateFormat
 import java.util.Calendar
@@ -53,7 +52,7 @@ internal class DefaultMetricsStorage(
     context: Context,
     private val settings: Settings,
     private val checkDefaultBrowser: () -> Boolean,
-    private val shouldSendGenerally: () -> Boolean = { shouldSendGenerally(context) },
+    private val shouldSendGenerally: () -> Boolean = { shouldSendGenerally(settings) },
     private val getInstalledTime: () -> Long = { getInstalledTime(context) },
     private val dispatcher: CoroutineDispatcher = Dispatchers.IO,
     private val dateTimeProvider: DateTimeProvider = DefaultDateTimeProvider(),
@@ -380,8 +379,8 @@ internal class DefaultMetricsStorage(
          * - user has accepted the marketing onboarding card
          * - this is a release build
          */
-        fun shouldSendGenerally(context: Context): Boolean {
-            return context.settings().isMarketingTelemetryEnabled && Config.channel.isRelease
+        fun shouldSendGenerally(settings: Settings): Boolean {
+            return settings.isMarketingTelemetryEnabled && Config.channel.isRelease
         }
 
         fun getInstalledTime(context: Context): Long = context.packageManagerCompatHelper

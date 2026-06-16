@@ -859,6 +859,12 @@ bool InspectorUtils::IsValidCSSColor(GlobalObject& aGlobalObject,
 }
 
 /* static */
+bool InspectorUtils::IsValidCSSImage(GlobalObject& aGlobalObject,
+                                     const nsACString& aImageString) {
+  return ServoCSSParser::IsValidCSSImage(aImageString);
+}
+
+/* static */
 bool InspectorUtils::SetContentState(GlobalObject& aGlobalObject,
                                      Element& aElement, uint64_t aState,
                                      ErrorResult& aRv) {
@@ -1419,6 +1425,42 @@ void InspectorUtils::GetAnchorNamesFor(GlobalObject& aGlobalObject,
   }
 
   frame->PresShell()->CollectAnchorNames(frame, aResult);
+}
+
+/* static */
+void InspectorUtils::GetComputationStepsSupportedCSSFunctions(
+    GlobalObject& aGlobalObject, nsTArray<nsCString>& aResult) {
+  Servo_GetComputationStepsSupportedCSSFunctions(&aResult);
+}
+
+/* static */
+void InspectorUtils::GetComputationSteps(GlobalObject& aGlobalObject,
+                                         const nsAString& aExpression,
+                                         Element& aElement,
+                                         const nsAString& aPseudo,
+                                         nsTArray<nsString>& aResult) {
+  Document* doc = aElement.GetComposedDoc();
+  if (!doc) {
+    return;
+  }
+
+  auto pseudo = PseudoStyleRequest::Parse(
+      aPseudo, aElement.OwnerDoc()->DefaultStyleAttrURLData());
+  if (!pseudo) {
+    return;
+  }
+
+  RefPtr<const ComputedStyle> computedStyle =
+      GetCleanComputedStyleForElement(&aElement, *pseudo);
+  if (!computedStyle) {
+    // This can fail for elements that are not in the document or
+    // if the document they're in doesn't have a presshell.  Bail out.
+    return;
+  }
+
+  Servo_GetComputationSteps(&aExpression, &aElement, pseudo->mType,
+                            computedStyle, doc->EnsureStyleSet().RawData(),
+                            &aResult);
 }
 
 }  // namespace mozilla::dom

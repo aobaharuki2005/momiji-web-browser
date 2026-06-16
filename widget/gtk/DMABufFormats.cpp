@@ -27,7 +27,8 @@
 #  undef DRM_FORMAT_MOD_INVALID
 #endif
 #include <libdrm/drm_fourcc.h>
-#include "GLContextEGL.h"
+#include "GfxInfo.h"
+#include "mozilla/Components.h"
 
 using namespace mozilla::gfx;
 
@@ -37,37 +38,6 @@ using namespace mozilla::gfx;
 #endif
 
 namespace mozilla::widget {
-
-static void AppendDmaBufModifiersFromEGL(uint32_t aDrmFourcc,
-                                         nsTArray<uint64_t>& aOut) {
-  if (!aOut.IsEmpty()) {
-    return;
-  }
-  nsCString failureId;
-  const auto egl = gl::DefaultEglDisplay(&failureId);
-  if (!egl ||
-      !egl->IsExtensionSupported(
-          mozilla::gl::EGLExtension::EXT_image_dma_buf_import_modifiers)) {
-    return;
-  }
-  EGLint numMods = 0;
-  if (!egl->mLib->fQueryDmaBufModifiersEXT(egl->mDisplay,
-                                           static_cast<EGLint>(aDrmFourcc), 0,
-                                           nullptr, nullptr, &numMods) ||
-      numMods <= 0) {
-    return;
-  }
-  nsTArray<uint64_t> mods;
-  mods.SetLength(numMods);
-  EGLint n = numMods;
-  if (!egl->mLib->fQueryDmaBufModifiersEXT(egl->mDisplay,
-                                           static_cast<EGLint>(aDrmFourcc), n,
-                                           mods.Elements(), nullptr, &n) ||
-      n <= 0) {
-    return;
-  }
-  aOut.AppendElements(mods.Elements(), n);
-}
 
 // Table of all supported DRM formats, every format is stored as
 // FOURCC format + modifier pair and
@@ -442,7 +412,11 @@ bool GlobalDMABufFormats::ConfigureFormat(RefPtr<DMABufFormats> aFormats,
   }
   nsTArray<uint64_t> mods;
   if (!format->UseModifiers()) {
-    AppendDmaBufModifiersFromEGL(aDrmFourcc, mods);
+    const nsCOMPtr<nsIGfxInfo> gfxInfo = components::GfxInfo::Service();
+    if (gfxInfo) {
+      auto* gfx = static_cast<GfxInfo*>(gfxInfo.get());
+      mods.AppendElements(gfx->GetDMABufEGLModifiers(aDrmFourcc));
+    }
     LOGDMABUF(
         ("GlobalDMABufFormats::ConfigureFormat(): Adding %x fourcc format EGL "
          "modifiers num [%d].",

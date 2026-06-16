@@ -190,6 +190,11 @@ void SharedWorkerOp::StartOnMainThread(RefPtr<RemoteWorkerChild>& aOwner) {
     const auto& args = mOpArgs.get_SharedWorkerSetLocaleOverrideOpArgs();
     workerPrivate->UpdateLanguageOverride(args.languageOverride(),
                                           args.languages());
+  } else if (mOpArgs.type() ==
+             SharedWorkerOpArgs::TSharedWorkerUpdateTimezoneOverrideOpArgs) {
+    workerPrivate->UpdateTimezoneOverride(
+        mOpArgs.get_SharedWorkerUpdateTimezoneOverrideOpArgs()
+            .timezoneOverride());
   } else {
     MOZ_CRASH("Unknown SharedWorkerOpArgs type!");
   }

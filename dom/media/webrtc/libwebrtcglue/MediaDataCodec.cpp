@@ -43,12 +43,13 @@ media::EncodeSupportSet MediaDataCodec::SupportsEncoderCodec(
 }
 
 /* static */
-WebrtcVideoEncoder* MediaDataCodec::CreateEncoder(
+std::unique_ptr<WebrtcVideoEncoder> MediaDataCodec::CreateEncoder(
     const webrtc::SdpVideoFormat& aFormat) {
   if (SupportsEncoderCodec(aFormat).isEmpty()) {
     return nullptr;
   }
-  return new WebrtcVideoEncoderProxy(new WebrtcMediaDataEncoder(aFormat));
+  return std::make_unique<WebrtcVideoEncoderProxy>(
+      MakeRefPtr<WebrtcMediaDataEncoder>(aFormat));
 }
 
 static inline nsDependentCString MimeTypeFor(
@@ -83,13 +84,13 @@ media::DecodeSupportSet MediaDataCodec::SupportsDecoderCodec(
   return support;
 }
 
-WebrtcVideoDecoder* MediaDataCodec::CreateDecoder(
+std::unique_ptr<WebrtcVideoDecoder> MediaDataCodec::CreateDecoder(
     webrtc::VideoCodecType aCodecType, TrackingId aTrackingId) {
   if (SupportsDecoderCodec(aCodecType).isEmpty()) {
     return nullptr;
   }
   nsDependentCString codec = MimeTypeFor(aCodecType);
-  return new WebrtcMediaDataDecoder(codec, aTrackingId);
+  return std::make_unique<WebrtcMediaDataDecoder>(codec, aTrackingId);
 }
 
 }  // namespace mozilla

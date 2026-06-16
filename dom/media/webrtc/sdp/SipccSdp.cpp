@@ -27,7 +27,7 @@ SipccSdp::SipccSdp(const SipccSdp& aOrig)
   }
 }
 
-Sdp* SipccSdp::Clone() const { return new SipccSdp(*this); }
+UniquePtr<Sdp> SipccSdp::Clone() const { return MakeUnique<SipccSdp>(*this); }
 
 const SdpOrigin& SipccSdp::GetOrigin() const { return mOrigin; }
 

@@ -946,7 +946,7 @@ const AVAILABLE_SHIMS = [
     ],
     isSmartblockEmbedShim: true,
     onlyIfBlockedByETP: true,
-    unblocksOnOptIn: ["*://*.disqus.com/*", "*://c.disquscdn.com/*"],
+    unblocksOnOptIn: ["*://*.disqus.com/*", "*://*.disquscdn.com/*"],
   },
   {
     id: "FingerpringJSBotd",

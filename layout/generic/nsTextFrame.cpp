@@ -2621,10 +2621,15 @@ already_AddRefed<gfxTextRun> BuildTextRunsScanner::BuildTextRunForFrames(
   bool needsToMaskPassword = NeedsToMaskPassword(firstFrame);
   UniquePtr<nsTransformingTextRunFactory> transformingFactory;
   if (anyTextTransformStyle || needsToMaskPassword) {
+    bool useCapitalEsZett = false;
+    if (StaticPrefs::layout_css_text_transform_uppercase_eszett_enabled()) {
+      RefPtr firstFont = fontGroup->GetFirstValidFont(0xdf);
+      useCapitalEsZett = firstFont && firstFont->HasCharacter(0x1e9e);
+    }
     char16_t maskChar =
         needsToMaskPassword ? 0 : textStyle->TextSecurityMaskChar();
     transformingFactory = MakeUnique<nsCaseTransformTextRunFactory>(
-        std::move(transformingFactory), false, maskChar);
+        std::move(transformingFactory), false, useCapitalEsZett, maskChar);
   }
   if (anyMathMLStyling) {
     transformingFactory = MakeUnique<MathMLTextRunFactory>(
@@ -7158,8 +7163,11 @@ bool nsTextFrame::PaintTextWithSelectionColors(
                 nsSize size = LayoutDeviceRect::ToAppUnits(selectionRect,
                                                            appUnitsPerDevPixel)
                                   .Size();
+
+                const auto& borderRadius = style->StyleBorder()->mBorderRadius;
+                const auto& cornerShape = style->StyleBorder()->mCornerShape;
                 hasRadii = nsIFrame::ComputeBorderRadii(
-                    style->StyleBorder()->mBorderRadius, size, size, {}, radii);
+                    borderRadius, cornerShape, size, size, {}, radii);
               }
             }
 
@@ -11637,8 +11645,9 @@ static void TransformChars(nsTextFrame* aFrame, const nsStyleText* aStyle,
       AutoTArray<bool, 50> deletedCharsArray;
       nsCaseTransformTextRunFactory::TransformString(
           fragString, convertedString, /* aGlobalTransform = */ Nothing(),
-          maskChar, /* aCaseTransformsOnly = */ true, nullptr,
-          charsToMergeArray, deletedCharsArray, transformedTextRun,
+          maskChar, /* aCaseTransformsOnly = */ true,
+          StaticPrefs::layout_css_text_transform_uppercase_eszett_enabled(),
+          nullptr, charsToMergeArray, deletedCharsArray, transformedTextRun,
           aSkippedOffset);
       aOut.Append(convertedString);
     } else {

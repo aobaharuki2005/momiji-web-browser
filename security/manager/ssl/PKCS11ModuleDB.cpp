@@ -82,7 +82,7 @@ already_AddRefed<PKCS11ModuleDB> PKCS11ModuleDB::GetSingleton() {
 
 // Using the NSS serial task queue avoids threading issues in NSS'
 // implementation of module loading and unloading.
-nsresult DispatchToNSSTaskQueue(already_AddRefed<nsIRunnable>&& aRunnable) {
+nsresult DispatchToNSSTaskQueue(already_AddRefed<nsIRunnable> aRunnable) {
   nsCOMPtr<nsIRunnable> runnable(aRunnable);
   nsCOMPtr<nsINSSComponent> nss(do_GetService(PSM_COMPONENT_CONTRACTID));
   if (!nss) {

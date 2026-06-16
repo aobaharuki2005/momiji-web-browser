@@ -1629,6 +1629,15 @@ class TestEmitterBasic(unittest.TestCase):
         ):
             self.read_topsrcdir(reader)
 
+    def test_pp_files_extra_deps_without_pp_files(self):
+        """PP_FILES_EXTRA_DEPS without any preprocessed files is an error."""
+        reader = self.reader("pp-files-extra-deps-no-pp-files")
+        with self.assertRaisesRegex(
+            SandboxValidationError,
+            "PP_FILES_EXTRA_DEPS is set but no preprocessed files",
+        ):
+            self.read_topsrcdir(reader)
+
     def test_localized_files(self):
         """Test that LOCALIZED_FILES works properly."""
         reader = self.reader("localized-files")

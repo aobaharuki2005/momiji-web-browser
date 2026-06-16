@@ -9,7 +9,9 @@
             "default": "color-mix(in srgb, currentColor 7%, transparent)"
           },
           "platform": {
-            "default": "color-mix(in srgb, currentColor 13%, transparent)"
+            "nativeTheme": "color-mix(in srgb, currentColor 13%, transparent)",
+            "light": "rgba(207, 207, 216, 0.33)",
+            "dark": "rgba(0, 0, 0, 0.33)"
           }
         }
       },
@@ -20,7 +22,9 @@
             "default": "color-mix(in srgb, currentColor 14%, transparent)"
           },
           "platform": {
-            "default": "color-mix(in srgb, currentColor 17%, transparent)"
+            "nativeTheme": "color-mix(in srgb, currentColor 17%, transparent)",
+            "light": "rgba(207, 207, 216, 0.66)",
+            "dark": "rgba(207, 207, 216, 0.2)"
           }
         }
       },
@@ -31,7 +35,9 @@
             "default": "color-mix(in srgb, currentColor 21%, transparent)"
           },
           "platform": {
-            "default": "color-mix(in srgb, currentColor 30%, transparent)"
+            "nativeTheme": "color-mix(in srgb, currentColor 30%, transparent)",
+            "light": "rgb(207, 207, 216)",
+            "dark": "rgba(207, 207, 216, 0.4)"
           }
         }
       },
@@ -405,10 +411,12 @@
           "forcedColors": "ButtonText",
           "brand": {
             "light": "{color.gray.100}",
-            "dark": "{color.gray.05}"
+            "dark": "{color.gray.0}"
           },
           "platform": {
-            "default": "currentColor"
+            "nativeTheme": "currentColor",
+            "light": "rgb(21, 20, 26)",
+            "dark": "rgb(251, 251, 254)"
           }
         }
       },
@@ -529,7 +537,9 @@
               "dark": "{color.gray.100}"
             },
             "platform": {
-              "default": "AccentColorText"
+              "nativeTheme": "AccentColorText",
+              "light": "rgb(251, 251, 254)",
+              "dark": "rgb(43, 42, 51)"
             }
           }
         },

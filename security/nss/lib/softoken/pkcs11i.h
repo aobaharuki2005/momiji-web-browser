@@ -782,8 +782,6 @@ extern CK_RV sftk_Attribute2SSecItem(PLArenaPool *arena, SECItem *item,
 extern SFTKModifyType sftk_modifyType(CK_ATTRIBUTE_TYPE type,
                                       CK_OBJECT_CLASS inClass);
 extern PRBool sftk_isSensitive(CK_ATTRIBUTE_TYPE type, CK_OBJECT_CLASS inClass);
-extern char *sftk_getString(SFTKObject *object, CK_ATTRIBUTE_TYPE type);
-extern void sftk_nullAttribute(SFTKObject *object, CK_ATTRIBUTE_TYPE type);
 extern CK_RV sftk_GetULongAttribute(SFTKObject *object, CK_ATTRIBUTE_TYPE type,
                                     CK_ULONG *longData);
 extern CK_RV sftk_ReadAttribute(SFTKObject *object, CK_ATTRIBUTE_TYPE type,

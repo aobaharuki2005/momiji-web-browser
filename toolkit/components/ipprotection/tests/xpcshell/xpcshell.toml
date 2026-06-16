@@ -23,6 +23,8 @@ prefs = [
 
 ["test_IPPGpiAuthProvider.js"]
 
+["test_IPPLifecycleHelper.js"]
+
 ["test_IPPSessionPrefManager.js"]
 
 ["test_IPPStartupCache.js"]

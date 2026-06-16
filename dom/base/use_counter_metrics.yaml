@@ -108,8 +108,8 @@ use.counter:
     send_in_pings:
       - use-counters
 
-# Total of 2565 use counter metrics (excludes denominators).
-# Total of 401 'page' use counters.
+# Total of 2570 use counter metrics (excludes denominators).
+# Total of 403 'page' use counters.
 use.counter.page:
   svgsvgelement_getelementbyid:
     type: counter
@@ -5500,6 +5500,23 @@ use.counter.page:
     send_in_pings:
       - use-counters
 
+  midiaccess_granted:
+    type: counter
+    description: >
+      Whether a page has requestMIDIAccess granted.
+      Compare against `use.counter.top_level_content_documents_destroyed`
+      to calculate the rate.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1852098
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1852098
+    notification_emails:
+      - dom-core@mozilla.com
+      - emilio@mozilla.com
+    expires: never
+    send_in_pings:
+      - use-counters
+
   serial_getports:
     type: counter
     description: >
@@ -6928,7 +6945,24 @@ use.counter.page:
     send_in_pings:
       - use-counters
 
-# Total of 401 'document' use counters.
+  htmlvideoelement_requestpictureinpicture:
+    type: counter
+    description: >
+      Whether a page called called HTMLVideoElement.requestPictureInPicture.
+      Compare against `use.counter.top_level_content_documents_destroyed`
+      to calculate the rate.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1852098
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1852098
+    notification_emails:
+      - dom-core@mozilla.com
+      - emilio@mozilla.com
+    expires: never
+    send_in_pings:
+      - use-counters
+
+# Total of 402 'document' use counters.
 use.counter.doc:
   svgsvgelement_getelementbyid:
     type: counter
@@ -12319,6 +12353,23 @@ use.counter.doc:
     send_in_pings:
       - use-counters
 
+  midiaccess_granted:
+    type: counter
+    description: >
+      Whether a document has requestMIDIAccess granted.
+      Compare against `use.counter.content_documents_destroyed`
+      to calculate the rate.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1852098
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1852098
+    notification_emails:
+      - dom-core@mozilla.com
+      - emilio@mozilla.com
+    expires: never
+    send_in_pings:
+      - use-counters
+
   serial_getports:
     type: counter
     description: >
@@ -13734,6 +13785,23 @@ use.counter.doc:
     type: counter
     description: >
       Whether a document has requested pointer lock with unadjustedMovement.
+      Compare against `use.counter.content_documents_destroyed`
+      to calculate the rate.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1852098
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1852098
+    notification_emails:
+      - dom-core@mozilla.com
+      - emilio@mozilla.com
+    expires: never
+    send_in_pings:
+      - use-counters
+
+  htmlvideoelement_requestpictureinpicture:
+    type: counter
+    description: >
+      Whether a document called called HTMLVideoElement.requestPictureInPicture.
       Compare against `use.counter.content_documents_destroyed`
       to calculate the rate.
     bugs:
@@ -18976,7 +19044,7 @@ use.counter.deprecated_ops.doc:
     send_in_pings:
       - use-counters
 
-# Total of 728 'CSS (page)' use counters.
+# Total of 729 'CSS (page)' use counters.
 use.counter.css.page:
   css_align_items:
     type: counter
@@ -21460,142 +21528,6 @@ use.counter.css.page:
     send_in_pings:
       - use-counters
 
-  css_corner_bottom_left_shape:
-    type: counter
-    description: >
-      Whether a page used the CSS property corner-bottom-left-shape.
-      Compare against `use.counter.top_level_content_documents_destroyed`
-      to calculate the rate.
-    bugs:
-      - https://bugzilla.mozilla.org/show_bug.cgi?id=1852098
-    data_reviews:
-      - https://bugzilla.mozilla.org/show_bug.cgi?id=1852098
-    notification_emails:
-      - dom-core@mozilla.com
-      - emilio@mozilla.com
-    expires: never
-    send_in_pings:
-      - use-counters
-
-  css_corner_bottom_right_shape:
-    type: counter
-    description: >
-      Whether a page used the CSS property corner-bottom-right-shape.
-      Compare against `use.counter.top_level_content_documents_destroyed`
-      to calculate the rate.
-    bugs:
-      - https://bugzilla.mozilla.org/show_bug.cgi?id=1852098
-    data_reviews:
-      - https://bugzilla.mozilla.org/show_bug.cgi?id=1852098
-    notification_emails:
-      - dom-core@mozilla.com
-      - emilio@mozilla.com
-    expires: never
-    send_in_pings:
-      - use-counters
-
-  css_corner_end_end_shape:
-    type: counter
-    description: >
-      Whether a page used the CSS property corner-end-end-shape.
-      Compare against `use.counter.top_level_content_documents_destroyed`
-      to calculate the rate.
-    bugs:
-      - https://bugzilla.mozilla.org/show_bug.cgi?id=1852098
-    data_reviews:
-      - https://bugzilla.mozilla.org/show_bug.cgi?id=1852098
-    notification_emails:
-      - dom-core@mozilla.com
-      - emilio@mozilla.com
-    expires: never
-    send_in_pings:
-      - use-counters
-
-  css_corner_end_start_shape:
-    type: counter
-    description: >
-      Whether a page used the CSS property corner-end-start-shape.
-      Compare against `use.counter.top_level_content_documents_destroyed`
-      to calculate the rate.
-    bugs:
-      - https://bugzilla.mozilla.org/show_bug.cgi?id=1852098
-    data_reviews:
-      - https://bugzilla.mozilla.org/show_bug.cgi?id=1852098
-    notification_emails:
-      - dom-core@mozilla.com
-      - emilio@mozilla.com
-    expires: never
-    send_in_pings:
-      - use-counters
-
-  css_corner_start_end_shape:
-    type: counter
-    description: >
-      Whether a page used the CSS property corner-start-end-shape.
-      Compare against `use.counter.top_level_content_documents_destroyed`
-      to calculate the rate.
-    bugs:
-      - https://bugzilla.mozilla.org/show_bug.cgi?id=1852098
-    data_reviews:
-      - https://bugzilla.mozilla.org/show_bug.cgi?id=1852098
-    notification_emails:
-      - dom-core@mozilla.com
-      - emilio@mozilla.com
-    expires: never
-    send_in_pings:
-      - use-counters
-
-  css_corner_start_start_shape:
-    type: counter
-    description: >
-      Whether a page used the CSS property corner-start-start-shape.
-      Compare against `use.counter.top_level_content_documents_destroyed`
-      to calculate the rate.
-    bugs:
-      - https://bugzilla.mozilla.org/show_bug.cgi?id=1852098
-    data_reviews:
-      - https://bugzilla.mozilla.org/show_bug.cgi?id=1852098
-    notification_emails:
-      - dom-core@mozilla.com
-      - emilio@mozilla.com
-    expires: never
-    send_in_pings:
-      - use-counters
-
-  css_corner_top_left_shape:
-    type: counter
-    description: >
-      Whether a page used the CSS property corner-top-left-shape.
-      Compare against `use.counter.top_level_content_documents_destroyed`
-      to calculate the rate.
-    bugs:
-      - https://bugzilla.mozilla.org/show_bug.cgi?id=1852098
-    data_reviews:
-      - https://bugzilla.mozilla.org/show_bug.cgi?id=1852098
-    notification_emails:
-      - dom-core@mozilla.com
-      - emilio@mozilla.com
-    expires: never
-    send_in_pings:
-      - use-counters
-
-  css_corner_top_right_shape:
-    type: counter
-    description: >
-      Whether a page used the CSS property corner-top-right-shape.
-      Compare against `use.counter.top_level_content_documents_destroyed`
-      to calculate the rate.
-    bugs:
-      - https://bugzilla.mozilla.org/show_bug.cgi?id=1852098
-    data_reviews:
-      - https://bugzilla.mozilla.org/show_bug.cgi?id=1852098
-    notification_emails:
-      - dom-core@mozilla.com
-      - emilio@mozilla.com
-    expires: never
-    send_in_pings:
-      - use-counters
-
   css_border_block_end_style:
     type: counter
     description: >
@@ -22824,10 +22756,12 @@ use.counter.css.page:
     type: counter
     description: >
       Whether a page used the CSS property link-parameters.
+      Compare against `use.counter.top_level_content_documents_destroyed`
+      to calculate the rate.
     bugs:
-      - https://bugzilla.mozilla.org/show_bug.cgi?id=1812163
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1852098
     data_reviews:
-      - https://bugzilla.mozilla.org/show_bug.cgi?id=1812163
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1852098
     notification_emails:
       - dom-core@mozilla.com
       - emilio@mozilla.com
@@ -24845,6 +24779,142 @@ use.counter.css.page:
     type: counter
     description: >
       Whether a page used the CSS property border-top-right-radius.
+      Compare against `use.counter.top_level_content_documents_destroyed`
+      to calculate the rate.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1852098
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1852098
+    notification_emails:
+      - dom-core@mozilla.com
+      - emilio@mozilla.com
+    expires: never
+    send_in_pings:
+      - use-counters
+
+  css_corner_bottom_left_shape:
+    type: counter
+    description: >
+      Whether a page used the CSS property corner-bottom-left-shape.
+      Compare against `use.counter.top_level_content_documents_destroyed`
+      to calculate the rate.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1852098
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1852098
+    notification_emails:
+      - dom-core@mozilla.com
+      - emilio@mozilla.com
+    expires: never
+    send_in_pings:
+      - use-counters
+
+  css_corner_bottom_right_shape:
+    type: counter
+    description: >
+      Whether a page used the CSS property corner-bottom-right-shape.
+      Compare against `use.counter.top_level_content_documents_destroyed`
+      to calculate the rate.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1852098
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1852098
+    notification_emails:
+      - dom-core@mozilla.com
+      - emilio@mozilla.com
+    expires: never
+    send_in_pings:
+      - use-counters
+
+  css_corner_end_end_shape:
+    type: counter
+    description: >
+      Whether a page used the CSS property corner-end-end-shape.
+      Compare against `use.counter.top_level_content_documents_destroyed`
+      to calculate the rate.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1852098
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1852098
+    notification_emails:
+      - dom-core@mozilla.com
+      - emilio@mozilla.com
+    expires: never
+    send_in_pings:
+      - use-counters
+
+  css_corner_end_start_shape:
+    type: counter
+    description: >
+      Whether a page used the CSS property corner-end-start-shape.
+      Compare against `use.counter.top_level_content_documents_destroyed`
+      to calculate the rate.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1852098
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1852098
+    notification_emails:
+      - dom-core@mozilla.com
+      - emilio@mozilla.com
+    expires: never
+    send_in_pings:
+      - use-counters
+
+  css_corner_start_end_shape:
+    type: counter
+    description: >
+      Whether a page used the CSS property corner-start-end-shape.
+      Compare against `use.counter.top_level_content_documents_destroyed`
+      to calculate the rate.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1852098
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1852098
+    notification_emails:
+      - dom-core@mozilla.com
+      - emilio@mozilla.com
+    expires: never
+    send_in_pings:
+      - use-counters
+
+  css_corner_start_start_shape:
+    type: counter
+    description: >
+      Whether a page used the CSS property corner-start-start-shape.
+      Compare against `use.counter.top_level_content_documents_destroyed`
+      to calculate the rate.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1852098
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1852098
+    notification_emails:
+      - dom-core@mozilla.com
+      - emilio@mozilla.com
+    expires: never
+    send_in_pings:
+      - use-counters
+
+  css_corner_top_left_shape:
+    type: counter
+    description: >
+      Whether a page used the CSS property corner-top-left-shape.
+      Compare against `use.counter.top_level_content_documents_destroyed`
+      to calculate the rate.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1852098
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1852098
+    notification_emails:
+      - dom-core@mozilla.com
+      - emilio@mozilla.com
+    expires: never
+    send_in_pings:
+      - use-counters
+
+  css_corner_top_right_shape:
+    type: counter
+    description: >
+      Whether a page used the CSS property corner-top-right-shape.
       Compare against `use.counter.top_level_content_documents_destroyed`
       to calculate the rate.
     bugs:
@@ -31369,7 +31439,7 @@ use.counter.css.page:
     send_in_pings:
       - use-counters
 
-# Total of 728 'CSS (document)' use counters.
+# Total of 729 'CSS (document)' use counters.
 use.counter.css.doc:
   css_align_items:
     type: counter
@@ -33853,142 +33923,6 @@ use.counter.css.doc:
     send_in_pings:
       - use-counters
 
-  css_corner_bottom_left_shape:
-    type: counter
-    description: >
-      Whether a document used the CSS property corner-bottom-left-shape.
-      Compare against `use.counter.content_documents_destroyed`
-      to calculate the rate.
-    bugs:
-      - https://bugzilla.mozilla.org/show_bug.cgi?id=1852098
-    data_reviews:
-      - https://bugzilla.mozilla.org/show_bug.cgi?id=1852098
-    notification_emails:
-      - dom-core@mozilla.com
-      - emilio@mozilla.com
-    expires: never
-    send_in_pings:
-      - use-counters
-
-  css_corner_bottom_right_shape:
-    type: counter
-    description: >
-      Whether a document used the CSS property corner-bottom-right-shape.
-      Compare against `use.counter.content_documents_destroyed`
-      to calculate the rate.
-    bugs:
-      - https://bugzilla.mozilla.org/show_bug.cgi?id=1852098
-    data_reviews:
-      - https://bugzilla.mozilla.org/show_bug.cgi?id=1852098
-    notification_emails:
-      - dom-core@mozilla.com
-      - emilio@mozilla.com
-    expires: never
-    send_in_pings:
-      - use-counters
-
-  css_corner_end_end_shape:
-    type: counter
-    description: >
-      Whether a document used the CSS property corner-end-end-shape.
-      Compare against `use.counter.content_documents_destroyed`
-      to calculate the rate.
-    bugs:
-      - https://bugzilla.mozilla.org/show_bug.cgi?id=1852098
-    data_reviews:
-      - https://bugzilla.mozilla.org/show_bug.cgi?id=1852098
-    notification_emails:
-      - dom-core@mozilla.com
-      - emilio@mozilla.com
-    expires: never
-    send_in_pings:
-      - use-counters
-
-  css_corner_end_start_shape:
-    type: counter
-    description: >
-      Whether a document used the CSS property corner-end-start-shape.
-      Compare against `use.counter.content_documents_destroyed`
-      to calculate the rate.
-    bugs:
-      - https://bugzilla.mozilla.org/show_bug.cgi?id=1852098
-    data_reviews:
-      - https://bugzilla.mozilla.org/show_bug.cgi?id=1852098
-    notification_emails:
-      - dom-core@mozilla.com
-      - emilio@mozilla.com
-    expires: never
-    send_in_pings:
-      - use-counters
-
-  css_corner_start_end_shape:
-    type: counter
-    description: >
-      Whether a document used the CSS property corner-start-end-shape.
-      Compare against `use.counter.content_documents_destroyed`
-      to calculate the rate.
-    bugs:
-      - https://bugzilla.mozilla.org/show_bug.cgi?id=1852098
-    data_reviews:
-      - https://bugzilla.mozilla.org/show_bug.cgi?id=1852098
-    notification_emails:
-      - dom-core@mozilla.com
-      - emilio@mozilla.com
-    expires: never
-    send_in_pings:
-      - use-counters
-
-  css_corner_start_start_shape:
-    type: counter
-    description: >
-      Whether a document used the CSS property corner-start-start-shape.
-      Compare against `use.counter.content_documents_destroyed`
-      to calculate the rate.
-    bugs:
-      - https://bugzilla.mozilla.org/show_bug.cgi?id=1852098
-    data_reviews:
-      - https://bugzilla.mozilla.org/show_bug.cgi?id=1852098
-    notification_emails:
-      - dom-core@mozilla.com
-      - emilio@mozilla.com
-    expires: never
-    send_in_pings:
-      - use-counters
-
-  css_corner_top_left_shape:
-    type: counter
-    description: >
-      Whether a document used the CSS property corner-top-left-shape.
-      Compare against `use.counter.content_documents_destroyed`
-      to calculate the rate.
-    bugs:
-      - https://bugzilla.mozilla.org/show_bug.cgi?id=1852098
-    data_reviews:
-      - https://bugzilla.mozilla.org/show_bug.cgi?id=1852098
-    notification_emails:
-      - dom-core@mozilla.com
-      - emilio@mozilla.com
-    expires: never
-    send_in_pings:
-      - use-counters
-
-  css_corner_top_right_shape:
-    type: counter
-    description: >
-      Whether a document used the CSS property corner-top-right-shape.
-      Compare against `use.counter.content_documents_destroyed`
-      to calculate the rate.
-    bugs:
-      - https://bugzilla.mozilla.org/show_bug.cgi?id=1852098
-    data_reviews:
-      - https://bugzilla.mozilla.org/show_bug.cgi?id=1852098
-    notification_emails:
-      - dom-core@mozilla.com
-      - emilio@mozilla.com
-    expires: never
-    send_in_pings:
-      - use-counters
-
   css_border_block_end_style:
     type: counter
     description: >
@@ -35216,18 +35150,19 @@ use.counter.css.doc:
   css_link_parameters:
     type: counter
     description: >
-      Whether a page used the CSS property link-parameters.
+      Whether a document used the CSS property link-parameters.
+      Compare against `use.counter.content_documents_destroyed`
+      to calculate the rate.
     bugs:
-      - https://bugzilla.mozilla.org/show_bug.cgi?id=1812163
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1852098
     data_reviews:
-      - https://bugzilla.mozilla.org/show_bug.cgi?id=1812163
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1852098
     notification_emails:
       - dom-core@mozilla.com
       - emilio@mozilla.com
     expires: never
     send_in_pings:
       - use-counters
-
 
   css_list_style_type:
     type: counter
@@ -37239,6 +37174,142 @@ use.counter.css.doc:
     type: counter
     description: >
       Whether a document used the CSS property border-top-right-radius.
+      Compare against `use.counter.content_documents_destroyed`
+      to calculate the rate.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1852098
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1852098
+    notification_emails:
+      - dom-core@mozilla.com
+      - emilio@mozilla.com
+    expires: never
+    send_in_pings:
+      - use-counters
+
+  css_corner_bottom_left_shape:
+    type: counter
+    description: >
+      Whether a document used the CSS property corner-bottom-left-shape.
+      Compare against `use.counter.content_documents_destroyed`
+      to calculate the rate.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1852098
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1852098
+    notification_emails:
+      - dom-core@mozilla.com
+      - emilio@mozilla.com
+    expires: never
+    send_in_pings:
+      - use-counters
+
+  css_corner_bottom_right_shape:
+    type: counter
+    description: >
+      Whether a document used the CSS property corner-bottom-right-shape.
+      Compare against `use.counter.content_documents_destroyed`
+      to calculate the rate.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1852098
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1852098
+    notification_emails:
+      - dom-core@mozilla.com
+      - emilio@mozilla.com
+    expires: never
+    send_in_pings:
+      - use-counters
+
+  css_corner_end_end_shape:
+    type: counter
+    description: >
+      Whether a document used the CSS property corner-end-end-shape.
+      Compare against `use.counter.content_documents_destroyed`
+      to calculate the rate.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1852098
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1852098
+    notification_emails:
+      - dom-core@mozilla.com
+      - emilio@mozilla.com
+    expires: never
+    send_in_pings:
+      - use-counters
+
+  css_corner_end_start_shape:
+    type: counter
+    description: >
+      Whether a document used the CSS property corner-end-start-shape.
+      Compare against `use.counter.content_documents_destroyed`
+      to calculate the rate.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1852098
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1852098
+    notification_emails:
+      - dom-core@mozilla.com
+      - emilio@mozilla.com
+    expires: never
+    send_in_pings:
+      - use-counters
+
+  css_corner_start_end_shape:
+    type: counter
+    description: >
+      Whether a document used the CSS property corner-start-end-shape.
+      Compare against `use.counter.content_documents_destroyed`
+      to calculate the rate.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1852098
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1852098
+    notification_emails:
+      - dom-core@mozilla.com
+      - emilio@mozilla.com
+    expires: never
+    send_in_pings:
+      - use-counters
+
+  css_corner_start_start_shape:
+    type: counter
+    description: >
+      Whether a document used the CSS property corner-start-start-shape.
+      Compare against `use.counter.content_documents_destroyed`
+      to calculate the rate.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1852098
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1852098
+    notification_emails:
+      - dom-core@mozilla.com
+      - emilio@mozilla.com
+    expires: never
+    send_in_pings:
+      - use-counters
+
+  css_corner_top_left_shape:
+    type: counter
+    description: >
+      Whether a document used the CSS property corner-top-left-shape.
+      Compare against `use.counter.content_documents_destroyed`
+      to calculate the rate.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1852098
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1852098
+    notification_emails:
+      - dom-core@mozilla.com
+      - emilio@mozilla.com
+    expires: never
+    send_in_pings:
+      - use-counters
+
+  css_corner_top_right_shape:
+    type: counter
+    description: >
+      Whether a document used the CSS property corner-top-right-shape.
       Compare against `use.counter.content_documents_destroyed`
       to calculate the rate.
     bugs:

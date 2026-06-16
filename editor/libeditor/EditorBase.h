@@ -17,7 +17,6 @@
 #include "mozilla/PendingStyles.h"       // for PendingStyle, PendingStyleCache
 #include "mozilla/RangeBoundary.h"       // for RawRangeBoundary, RangeBoundary
 #include "mozilla/SelectionState.h"      // for RangeUpdater, etc.
-#include "mozilla/StyleSheet.h"          // for StyleSheet
 #include "mozilla/TransactionManager.h"  // for TransactionManager
 #include "mozilla/WeakPtr.h"             // for WeakPtr
 #include "mozilla/dom/DataTransfer.h"    // for dom::DataTransfer
@@ -242,6 +241,9 @@ class EditorBase : public nsIEditor,
    * plaintext editors.
    */
   Element* GetExposedRoot() const;
+
+  /** Get EditContext used for this editor. */
+  virtual dom::EditContext* GetEditContext() const { return nullptr; }
 
   /**
    * Set or unset TextInputListener.  If setting non-nullptr when the editor
@@ -2658,8 +2660,6 @@ class EditorBase : public nsIEditor,
   };
   MOZ_CAN_RUN_SCRIPT void NotifyEditorObservers(
       NotificationForEditorObservers aNotification);
-
-  virtual dom::EditContext* GetEditContext() const { return nullptr; }
 
   /**
    * HowToHandleCollapsedRange indicates how collapsed range should be treated.

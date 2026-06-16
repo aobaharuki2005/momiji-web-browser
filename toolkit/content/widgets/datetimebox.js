@@ -377,18 +377,18 @@ this.DateTimeBoxWidget = class {
       field.setAttribute("maxlength", aMaxLength);
       // Set spinbutton ARIA role
       field.setAttribute("role", "spinbutton");
-
-      if (this.mIsRTL) {
-        // Force the direction to be "ltr", so that the field stays in the
-        // same order even when it's empty (with placeholder). By using
-        // "embed", the text inside the element is still displayed based
-        // on its directionality.
-        field.style.unicodeBidi = "embed";
-        field.style.direction = "ltr";
-      }
     } else {
       // Set generic textbox ARIA role
       field.setAttribute("role", "textbox");
+    }
+
+    if (this.mIsRTL) {
+      // Force the direction to be "ltr", so that the field stays in the
+      // same order even when it's empty (with placeholder). By using
+      // "embed", the text inside the element is still displayed based
+      // on its directionality.
+      field.style.unicodeBidi = "embed";
+      field.style.direction = "ltr";
     }
 
     return field;

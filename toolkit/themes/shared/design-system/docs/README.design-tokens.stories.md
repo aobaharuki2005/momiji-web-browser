@@ -269,7 +269,7 @@ We use `platform` and `brand` keys in our JSON to indicate when a token has a su
       "value": {
         "brand": {
           "light": "{color.gray.100}",
-          "dark": "{color.gray.05}"
+          "dark": "{color.gray.0}"
         },
         "platform": {
           "default": "currentColor"
@@ -279,7 +279,7 @@ We use `platform` and `brand` keys in our JSON to indicate when a token has a su
   }
 }
 ```
-communicates that `--text-color` should have the value `currentColor` in `tokens-platform.css` for chrome surfaces, and the value `light-dark(var(--color-gray-100), var(--color-gray-05))` in `tokens-brand.css` for in-content pages. The resulting CSS spans multiple files:
+communicates that `--text-color` should have the value `currentColor` in `tokens-platform.css` for chrome surfaces, and the value `light-dark(var(--color-gray-100), var(--color-gray-0))` in `tokens-brand.css` for in-content pages. The resulting CSS spans multiple files:
 
 ```css
 /* tokens-platform.css */
@@ -298,7 +298,7 @@ communicates that `--text-color` should have the value `currentColor` in `tokens
   :root,
   :host(.anonymous-content-host) {
     /** Text **/
-    --text-color: light-dark(var(--color-gray-100), var(--color-gray-05));
+    --text-color: light-dark(var(--color-gray-100), var(--color-gray-0));
   }
 }
 ```

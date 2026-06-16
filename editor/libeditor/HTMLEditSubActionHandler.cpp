@@ -1033,6 +1033,15 @@ Result<EditActionResult, nsresult> HTMLEditor::HandleInsertText(
   if (RefPtr editContext = GetEditContext()) {
     uint32_t start = editContext->SelectionStart();
     uint32_t end = editContext->SelectionEnd();
+    if (InsertingTextForComposition(aPurpose)) {
+      MOZ_ASSERT(mComposition);
+      if (mComposition->GetContainerTextNode()) {
+        start = mComposition->XPOffsetInTextNode();
+        end = mComposition->XPEndOffsetInTextNode();
+      }
+      mComposition->OnUpdateCompositionInEditor(aInsertionString,
+                                                editContext->TextNode(), start);
+    }
     editContext->UpdateTextAndFireEvent(start, end, aInsertionString);
     if (NS_WARN_IF(Destroyed())) {
       return Err(NS_ERROR_EDITOR_DESTROYED);

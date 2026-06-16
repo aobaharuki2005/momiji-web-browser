@@ -7,8 +7,6 @@ const { AIWindowUI } = ChromeUtils.importESModule(
   "moz-src:///browser/components/aiwindow/ui/modules/AIWindowUI.sys.mjs"
 );
 
-const FIRSTRUN_URL = "chrome://browser/content/aiwindow/firstrun.html";
-
 async function navigateAndWait(win, url) {
   await BrowserTestUtils.loadURIString({
     browser: win.gBrowser.selectedTab.linkedBrowser,

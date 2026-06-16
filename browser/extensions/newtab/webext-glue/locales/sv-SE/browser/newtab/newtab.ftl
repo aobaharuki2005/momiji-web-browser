@@ -31,6 +31,127 @@ newtab-card-dismiss-button =
     .title = Ignorera
     .aria-label = Ignorera
 
+## Strings for "Homepage" and "Firefox Home" sections of about:settings#home.
+## Homepage panel
+
+home-homepage-title =
+    .label = Startsida
+home-homepage-new-windows =
+    .label = Nya fönster
+home-homepage-new-tabs =
+    .label = Nya flikar
+# This option leads to the "Custom Homepage" subpage
+home-homepage-custom-homepage-button =
+    .label = Välj en specifik webbplats
+
+## Custom URLs subpage
+
+# Subheader on the Custom Homepage subpage. Followed by a form to enter URLs and a list of URLs already saved, if any.
+home-custom-homepage-card-header =
+    .label = Webbadress(er)
+home-custom-homepage-address =
+    .placeholder = Ange adress
+home-custom-homepage-address-button =
+    .label = Lägg till adress
+# Shown when no custom websites/URLs to use as a homepage have been added yet
+home-custom-homepage-no-results =
+    .label = Inga webbplatser tillagda ännu.
+home-custom-homepage-delete-address-button =
+    .aria-label = Ta bort adress
+    .title = Ta bort adress
+# Further options to use when setting the home page. Two action buttons are placed in line with this prompt
+# to replace the current home page with a currently open page or bookmark.
+home-custom-homepage-replace-with-prompt =
+    .label = Ersätt med
+# Button that appears in-line after text "Replace with" (home-custom-homepage-replace-with-prompt)
+home-custom-homepage-current-pages-button =
+    .label = För närvarande öppna sidor
+# Button that appears in-line after text "Replace with" (home-custom-homepage-replace-with-prompt)
+home-custom-homepage-bookmarks-button =
+    .label = Bokmärken…
+
+## Firefox Home content
+
+home-prefs-content-header =
+    .label = { -firefox-home-brand-name }
+home-prefs-search-header2 =
+    .label = Sök
+home-prefs-stories-header2 =
+    .label = Berättelser
+    .description = Exceptionellt innehåll kurerat av { -brand-product-name }-familjen
+home-prefs-widgets-header =
+    .label = Widgetar
+# Lists is a widget on New Tab, similar to a to-do widget
+home-prefs-lists-header =
+    .label = Listor
+# Timer is a widget on New Tab, similar to the Pomodoro timer.
+home-prefs-timer-header =
+    .label = Timer
+# Sports is a widget on New Tab showing sports scores and schedules.
+home-prefs-sports-widget-header =
+    .label = Sport
+# Clock is a widget on New Tab that displays time zones around the world.
+home-prefs-clocks-header =
+    .label = Klocka
+home-prefs-mission-message2 =
+    .message = Våra sponsorer stöder vårt uppdrag att bygga en bättre webb.
+home-prefs-manage-topics-link2 =
+    .label = Hantera ämnen
+home-prefs-choose-wallpaper-link2 =
+    .label = Välj en bakgrundsbild
+home-prefs-firefox-logo-header =
+    .label = { -brand-short-name } logotyp
+# Informational message bar that appears in the Firefox Home section when the options are disabled.
+# The user must select Firefox Home as their homepage for either new tabs or new windows to enable
+# the features in settings.
+home-prefs-firefox-home-disabled-notice =
+    .message = För att använda dessa funktioner, ställ in nya flikar eller fönster till { -firefox-home-brand-name }.
+# Variables:
+#   $num (number) - Number of rows displayed
+home-prefs-sections-rows-option-srd =
+    .label =
+        { $num ->
+            [one] { $num } rad
+           *[other] { $num } rader
+        }
+# Dropdown option shown when an extension replaces the contents of new windows or tabs.
+# Variables:
+#   $extension (string) - Name of the extension
+home-prefs-homepage-extension-option =
+    .label = Tillägg ({ $extension })
+home-restore-defaults-srd =
+    .label = Återställ standard
+    .accesskey = t
+home-mode-choice-default-fx-srd =
+    .label = { -firefox-home-brand-name } (Standard)
+home-mode-choice-custom-srd =
+    .label = Anpassade webbadresser...
+home-mode-choice-blank-srd =
+    .label = Tom sida
+home-prefs-shortcuts-header-srd =
+    .label = Genvägar
+home-prefs-shortcuts-select =
+    .aria-label = Genvägar
+home-prefs-shortcuts-by-option-sponsored-srd =
+    .label = Sponsrade genvägar
+home-prefs-recommended-by-option-sponsored-stories-srd =
+    .label = Sponsrade berättelser
+home-prefs-highlights-option-visited-pages-srd =
+    .label = Besökta sidor
+home-prefs-highlights-options-bookmarks-srd =
+    .label = Bokmärken
+home-prefs-highlights-option-most-recent-download-srd =
+    .label = Senaste nedladdning
+home-prefs-recent-activity-header-srd =
+    .label = Senaste aktivitet
+home-prefs-recent-activity-select =
+    .aria-label = Senaste aktivitet
+home-prefs-weather-header-srd =
+    .label = Väder
+home-prefs-support-firefox-header-srd =
+    .label = Stöd { -brand-product-name }
+home-prefs-mission-message-learn-more-link-srd = Ta reda på hur
+
 ## Search box component.
 
 # "Search" is a verb/action
@@ -151,6 +272,8 @@ newtab-menu-section-block = Blockera
 # "Follow", "unfollow", and "following" are social media terms that refer to subscribing to or unsubscribing from a section of stories.
 # e.g. Following the travel section of stories.
 newtab-menu-section-unfollow-topic = Sluta följa
+# Context menu option to open a support page explaining the New Tab personalization features and privacy controls.
+newtab-menu-section-learn-more = Läs mer
 # "Follow", "unfollow", and "following" are social media terms that refer to subscribing to or unsubscribing from a section of stories.
 # e.g. Following the travel section of stories.
 newtab-menu-section-unfollow = Sluta följa ämne
@@ -758,8 +881,6 @@ newtab-widget-lists-button-add-item = Lägg till ett objekt
 newtab-widget-lists-input-add-an-item2 =
     .placeholder = Lägg till ett objekt
     .aria-label = Lägg till ett objekt
-newtab-widget-lists-input-add-an-item =
-    .placeholder = Lägg till ett objekt
 newtab-widget-lists-input-error = Inkludera text för att lägga till ett objekt.
 newtab-widget-lists-input-menu-open-link = Öppna länk
 newtab-widget-lists-input-menu-move-up = Flytta upp
@@ -787,11 +908,6 @@ newtab-widget-lists-name-placeholder-checklist2 =
 newtab-widget-lists-name-placeholder-new2 =
     .placeholder = Ny lista
     .aria-label = Redigera listnamn
-newtab-widget-lists-name-placeholder-checklist =
-    .placeholder = Checklista
-# The placeholder value of the name field for a newly created list
-newtab-widget-lists-name-placeholder-new =
-    .placeholder = Ny lista
 newtab-widget-section-title = Widgetar
 newtab-widget-menu-hide = Dölj widget
 newtab-widget-menu-change-size = Ändra storlek
@@ -1055,6 +1171,28 @@ newtab-sports-widget-match-full-time = Heltid
 newtab-sports-widget-match-halftime = Halvtid
 newtab-sports-widget-match-extra-time = Förlängning
 newtab-sports-widget-match-penalties = Straffar
+# Separator shown between two teams in a placeholder match row when no upcoming
+# match details are available yet.
+newtab-sports-widget-match-vs = mot
+# Note shown in the Upcoming tab when no match details are available yet.
+newtab-sports-widget-no-upcoming-matches = Håll ögonen öppna för detaljer om kommande matcher
+
+## Sports widget live-games pagination. Shown when 2+ matches are live at the same time
+
+# arrow button that goes to the previous page of live matches.
+newtab-sports-widget-pagination-previous =
+    .aria-label = Föregående
+    .title = Föregående
+# arrow button that goes to the next page of live matches.
+newtab-sports-widget-pagination-next =
+    .aria-label = Nästa
+    .title = Nästa
+# Dot indicator that jumps directly to a given live match.
+# $index (number) - 1-based position of this dot in the list.
+# $total (number) - Total number of live matches.
+newtab-sports-widget-pagination-dot =
+    .aria-label = Livematch { $index } av { $total }
+    .title = Livematch { $index } av { $total }
 
 ## Accessible labels for match rows in the sports widget. These are read by
 ## screen readers to announce the match details and status.
@@ -1115,6 +1253,8 @@ newtab-sports-widget-team-name-label-eng =
     .label = Storbritannien
 newtab-sports-widget-team-name-label-sco =
     .label = Skottland
+# Placeholder used in a match row's aria-label for an undecided team (shown visually as "--").
+newtab-sports-widget-team-tbd = Kommer att bestämmas
 
 ## Sports widget OMC messages
 ## Shown as on-screen messages promoting the Sports widget and World Cup wallpapers.

@@ -904,10 +904,9 @@ class ScrollContainerFrame : public nsContainerFrame,
   const ScrollAnchorContainer* Anchor() const { return &mAnchor; }
   ScrollAnchorContainer* Anchor() { return &mAnchor; }
 
-  bool SmoothScrollVisual(
-      const nsPoint& aVisualViewportOffset,
-      layers::FrameMetrics::ScrollOffsetUpdateType aUpdateType,
-      ScrollMode aMode);
+  bool SmoothScrollVisual(const nsPoint& aVisualViewportOffset,
+                          layers::ScrollOffsetUpdateType aUpdateType,
+                          ScrollMode aMode);
 
   /**
    * Returns true if this scroll frame should perform smooth scroll with the
@@ -1549,6 +1548,14 @@ class ScrollContainerFrame : public nsContainerFrame,
   // If true, the scroll frame should always be active because we always build
   // a scrollable layer. Used for asynchronous scrolling.
   bool mWillBuildScrollableLayer : 1;
+
+  // True if, as of the previous paint, this scroll frame was async-inactive
+  // (ie no displayport) but had descendant async-active scroll frames.
+  bool mInactiveWithActiveDescendantScrollFrames : 1;
+
+  // True if this reflow changed our scroll port or scrolled area bounds (the
+  // amount of scrollable space). Set in Reflow and used in ReflowFinished.
+  bool mScrollPortOrScrolledAreaBoundsChanged : 1;
 
   // If true, the scroll frame is an ancestor of other "active" scrolling
   // frames, where "active" means has a non-minimal display port if

@@ -44,10 +44,6 @@
         <item name="mozacSelectCreditCardHeaderTextStyle" tools:ignore="UnusedResources">@style/SelectPromptHeaderTextStyle</item>
         <item name="mozacSelectAddressHeaderTextStyle" tools:ignore="UnusedResources">@style/SelectPromptHeaderTextStyle</item>
 
-        <item name="mozacProtectionsDashboardBackground" tools:ignore="UnusedResources">@color/protections_dashboard_background</item>
-        <item name="mozacProtectionsDashboardTextPrimary" tools:ignore="UnusedResources">@color/protections_dashboard_text_primary</item>
-        <item name="mozacProtectionsDashboardTextSecondary" tools:ignore="UnusedResources">@color/protections_dashboard_text_secondary</item>
-        <item name="mozacProtectionsDashboardTextAccent" tools:ignore="UnusedResources">@color/protections_dashboard_text_accent</item>
         <item name="mozacProtectionsDashboardChipBackground" tools:ignore="UnusedResources">@color/protections_dashboard_chip_background</item>
         <item name="mozacProtectionsDashboardChipText" tools:ignore="UnusedResources">@color/protections_dashboard_chip_text</item>
         <item name="mozacProtectionsDashboardProgressBar" tools:ignore="UnusedResources">@color/protections_dashboard_progress_bar</item>
@@ -81,10 +77,13 @@
         <item name="colorErrorContainer">@color/fx_mobile_error_container</item>
         <item name="colorOnErrorContainer">@color/fx_mobile_on_error_container</item>
         <item name="colorInformation">@color/fx_mobile_information</item>
+        <item name="colorOnInformation">@color/fx_mobile_on_information</item>
         <item name="colorInformationContainer">@color/fx_mobile_information_container</item>
         <item name="colorOnInformationContainer">@color/fx_mobile_on_information_container</item>
         <item name="colorSuccess">@color/fx_mobile_success</item>
+        <item name="colorOnSuccess">@color/fx_mobile_on_success</item>
         <item name="colorWarning">@color/fx_mobile_warning</item>
+        <item name="colorOnWarning">@color/fx_mobile_on_warning</item>
         <item name="colorWarningContainer">@color/fx_mobile_warning_container</item>
         <item name="colorOnWarningContainer">@color/fx_mobile_on_warning_container</item>
         <item name="colorOutline">@color/fx_mobile_outline</item>
@@ -98,6 +97,7 @@
         <item name="colorSurfaceContainerLowest">@color/fx_mobile_surface_container_lowest</item>
         <item name="colorAutofillText">@color/fx_mobile_autofill_text</item>
         <item name="colorSelectedText">@color/fx_mobile_selected_text</item>
+        <item name="scrim">@color/fx_mobile_scrim</item>
 
         <!-- Design system color attributes -->
 
@@ -106,7 +106,6 @@
         <item name="layer2">@color/fx_mobile_layer_color_2</item>
         <!-- Search -->
         <item name="layer3">@color/fx_mobile_layer_color_3</item>
-        <item name="scrim">@color/fx_mobile_layer_color_scrim</item>
 
         <!-- Action -->
         <!-- Primary button in a disabled state -->
@@ -324,10 +323,6 @@
         <item name="mozacSelectCreditCardHeaderTextStyle" tools:ignore="UnusedResources">@style/SelectPromptHeaderTextStyle</item>
         <item name="mozacSelectAddressHeaderTextStyle" tools:ignore="UnusedResources">@style/SelectPromptHeaderTextStyle</item>
 
-        <item name="mozacProtectionsDashboardBackground" tools:ignore="UnusedResources">@color/protections_dashboard_background_private</item>
-        <item name="mozacProtectionsDashboardTextPrimary" tools:ignore="UnusedResources">@color/protections_dashboard_text_primary_private</item>
-        <item name="mozacProtectionsDashboardTextSecondary" tools:ignore="UnusedResources">@color/protections_dashboard_text_secondary_private</item>
-        <item name="mozacProtectionsDashboardTextAccent" tools:ignore="UnusedResources">@color/protections_dashboard_text_accent_private</item>
         <item name="mozacProtectionsDashboardChipBackground" tools:ignore="UnusedResources">@color/protections_dashboard_chip_background_private</item>
         <item name="mozacProtectionsDashboardChipText" tools:ignore="UnusedResources">@color/protections_dashboard_chip_text_private</item>
         <item name="mozacProtectionsDashboardProgressBar" tools:ignore="UnusedResources">@color/protections_dashboard_progress_bar_private</item>
@@ -361,10 +356,13 @@
         <item name="colorErrorContainer">@color/fx_mobile_private_error_container</item>
         <item name="colorOnErrorContainer">@color/fx_mobile_private_on_error_container</item>
         <item name="colorInformation">@color/fx_mobile_private_information</item>
+        <item name="colorOnInformation">@color/fx_mobile_private_on_information</item>
         <item name="colorInformationContainer">@color/fx_mobile_private_information_container</item>
         <item name="colorOnInformationContainer">@color/fx_mobile_private_on_information_container</item>
         <item name="colorSuccess">@color/fx_mobile_private_success</item>
+        <item name="colorOnSuccess">@color/fx_mobile_private_on_success</item>
         <item name="colorWarning">@color/fx_mobile_private_warning</item>
+        <item name="colorOnWarning">@color/fx_mobile_private_on_warning</item>
         <item name="colorWarningContainer">@color/fx_mobile_private_warning_container</item>
         <item name="colorOnWarningContainer">@color/fx_mobile_private_on_warning_container</item>
         <item name="colorOutline">@color/fx_mobile_private_outline</item>
@@ -378,6 +376,7 @@
         <item name="colorSurfaceContainerLowest">@color/fx_mobile_private_surface_container_lowest</item>
         <item name="colorAutofillText">@color/fx_mobile_private_autofill_text</item>
         <item name="colorSelectedText">@color/fx_mobile_private_selected_text</item>
+        <item name="scrim">@color/fx_mobile_private_scrim</item>
 
         <!-- Design system color attributes -->
 
@@ -386,7 +385,6 @@
         <item name="layer2">@color/fx_mobile_private_layer_color_2</item>
         <!-- Search -->
         <item name="layer3">@color/fx_mobile_private_layer_color_3</item>
-        <item name="scrim">@color/fx_mobile_private_layer_color_scrim</item>
 
         <!-- Action -->
         <!-- Primary button in a disabled state -->

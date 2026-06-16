@@ -1244,7 +1244,7 @@ class SdpFmtpAttributeList : public SdpAttribute {
         : codec_type(aCodec) {}
 
     virtual ~Parameters() = default;
-    virtual Parameters* Clone() const = 0;
+    virtual UniquePtr<Parameters> Clone() const = 0;
     virtual bool ShouldSerialize() const { return true; }
     virtual void Serialize(std::ostream& os) const = 0;
     virtual bool CompareEq(const Parameters& other) const = 0;
@@ -1259,8 +1259,8 @@ class SdpFmtpAttributeList : public SdpAttribute {
    public:
     RedParameters() : Parameters(SdpRtpmapAttributeList::kRed) {}
 
-    virtual Parameters* Clone() const override {
-      return new RedParameters(*this);
+    virtual UniquePtr<Parameters> Clone() const override {
+      return MakeUnique<RedParameters>(*this);
     }
 
     virtual void Serialize(std::ostream& os) const override {
@@ -1290,8 +1290,8 @@ class SdpFmtpAttributeList : public SdpAttribute {
 
     virtual ~Av1Parameters() = default;
 
-    virtual Parameters* Clone() const override {
-      return new Av1Parameters(*this);
+    virtual UniquePtr<Parameters> Clone() const override {
+      return MakeUnique<Av1Parameters>(*this);
     }
 
     // Returns the profile parameter if set, or the spec mandated default of 0.
@@ -1343,8 +1343,8 @@ class SdpFmtpAttributeList : public SdpAttribute {
 
     virtual ~RtxParameters() = default;
 
-    virtual Parameters* Clone() const override {
-      return new RtxParameters(*this);
+    virtual UniquePtr<Parameters> Clone() const override {
+      return MakeUnique<RtxParameters>(*this);
     }
 
     virtual void Serialize(std::ostream& os) const override {
@@ -1381,8 +1381,8 @@ class SdpFmtpAttributeList : public SdpAttribute {
       memset(sprop_parameter_sets, 0, sizeof(sprop_parameter_sets));
     }
 
-    virtual Parameters* Clone() const override {
-      return new H264Parameters(*this);
+    virtual UniquePtr<Parameters> Clone() const override {
+      return MakeUnique<H264Parameters>(*this);
     }
 
     virtual void Serialize(std::ostream& os) const override {
@@ -1452,8 +1452,8 @@ class SdpFmtpAttributeList : public SdpAttribute {
     explicit VP8Parameters(const SdpRtpmapAttributeList::CodecType type)
         : Parameters(type), max_fs(0), max_fr(0) {}
 
-    virtual Parameters* Clone() const override {
-      return new VP8Parameters(*this);
+    virtual UniquePtr<Parameters> Clone() const override {
+      return MakeUnique<VP8Parameters>(*this);
     }
 
     virtual void Serialize(std::ostream& os) const override {
@@ -1498,7 +1498,9 @@ class SdpFmtpAttributeList : public SdpAttribute {
           maxFrameSizeMs(kDefaultMaxFrameSize),
           useCbr(kDefaultUseCbr) {}
 
-    Parameters* Clone() const override { return new OpusParameters(*this); }
+    UniquePtr<Parameters> Clone() const override {
+      return MakeUnique<OpusParameters>(*this);
+    }
 
     void Serialize(std::ostream& os) const override {
       os << "maxplaybackrate=" << maxplaybackrate << ";stereo=" << stereo
@@ -1563,8 +1565,8 @@ class SdpFmtpAttributeList : public SdpAttribute {
         : Parameters(SdpRtpmapAttributeList::kTelephoneEvent),
           dtmfTones("0-15") {}
 
-    virtual Parameters* Clone() const override {
-      return new TelephoneEventParameters(*this);
+    virtual UniquePtr<Parameters> Clone() const override {
+      return MakeUnique<TelephoneEventParameters>(*this);
     }
 
     void Serialize(std::ostream& os) const override { os << dtmfTones; }
@@ -1588,7 +1590,7 @@ class SdpFmtpAttributeList : public SdpAttribute {
     Fmtp& operator=(const Fmtp& rhs) {
       if (this != &rhs) {
         format = rhs.format;
-        parameters.reset(rhs.parameters ? rhs.parameters->Clone() : nullptr);
+        parameters = rhs.parameters ? rhs.parameters->Clone() : nullptr;
       }
       return *this;
     }

@@ -4,13 +4,13 @@
 
 package org.mozilla.fenix.tabgroups
 
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -25,6 +25,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.pluralStringResource
@@ -38,7 +39,6 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import mozilla.components.browser.state.state.createTab
-import mozilla.components.compose.base.theme.surfaceDimVariant
 import org.mozilla.fenix.R
 import org.mozilla.fenix.compose.TabThumbnailImageData
 import org.mozilla.fenix.tabstray.TabsTrayTestTag
@@ -60,6 +60,7 @@ private val THUMBNAIL_HEIGHT = 68.dp
  * @param selectionState: The tab selection state.
  * @param trailingContent Optional trailing content.
  * @param trailingContentColor Optional content color for trailing content.
+ * @param shouldClickListen Whether the [TabGroupRow] should respond to click events.
  */
 @Composable
 fun TabGroupRow(
@@ -69,6 +70,7 @@ fun TabGroupRow(
     selectionState: TabsTrayItemSelectionState = TabsTrayItemSelectionState(),
     trailingContent: @Composable (() -> Unit)? = null,
     trailingContentColor: Color? = null,
+    shouldClickListen: Boolean = true,
 ) {
     val tabGroupRowContentDescription = pluralStringResource(
         id = R.plurals.add_to_exiting_tab_group_content_description,
@@ -81,7 +83,7 @@ fun TabGroupRow(
     Row(
         modifier = modifier
             .fillMaxWidth()
-            .clickable(onClick = onClick)
+            .clickable(enabled = shouldClickListen, onClick = onClick)
             .testTag("${TabsTrayTestTag.TAB_GROUP_ROOT}.${tabGroup.id}")
             .padding(
                 if (trailingContent == null) {
@@ -108,13 +110,6 @@ fun TabGroupRow(
     ) {
         TabGroupListThumbnail(
             thumbnails = tabGroup.thumbnails,
-            modifier = Modifier
-                .size(THUMBNAIL_WIDTH, THUMBNAIL_HEIGHT)
-                .border(
-                    width = 1.dp,
-                    color = MaterialTheme.colorScheme.surfaceDimVariant,
-                    shape = MaterialTheme.shapes.extraSmall,
-                ),
         )
 
         TabGroupTextContent(tabGroup = tabGroup, modifier = Modifier.weight(1f))
@@ -173,7 +168,8 @@ private fun TabGroupListThumbnail(
     modifier: Modifier = Modifier,
 ) {
     Card(
-        modifier = modifier,
+        modifier = modifier
+            .size(THUMBNAIL_WIDTH, THUMBNAIL_HEIGHT),
         border = tablistItemThumbnailBorder,
         shape = MaterialTheme.shapes.extraSmall,
         colors = CardDefaults.cardColors(
@@ -182,6 +178,10 @@ private fun TabGroupListThumbnail(
     ) {
         ThumbnailsGridView(
             thumbnails = thumbnails,
+            modifier = Modifier
+                .clip(MaterialTheme.shapes.extraSmall)
+                .padding(tablistItemThumbnailBorder.width) // inset to prevent spillover
+                .fillMaxSize(),
         )
     }
 }

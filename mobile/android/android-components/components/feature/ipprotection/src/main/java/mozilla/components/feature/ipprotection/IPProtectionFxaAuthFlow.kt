@@ -27,7 +27,7 @@ import mozilla.components.service.fxa.manager.SCOPE_SYNC
  *
  * @param accountManager [FxaAccountManager] used to begin the OAuth authentication flow.
  * @param store [IPProtectionStore] whose account state is observed to trigger auth flows.
- * @param entrypointConfig [EntrypointConfig] carrying the [FxAEntryPoint]s for each flow path.
+ * @param entrypoint the [FxAEntryPoint] for the auth flow.
  * @param onAuthRequested Callback invoked with the OAuth URL and a completion callback once the
  * URL is ready. The caller is responsible for presenting the URL to the user (e.g. a Custom Tab)
  * and invoking the completion callback when the flow finishes.
@@ -36,7 +36,7 @@ import mozilla.components.service.fxa.manager.SCOPE_SYNC
 class IPProtectionFxaAuthFlow(
     private val accountManager: FxaAccountManager,
     private val store: IPProtectionStore,
-    private val entrypointConfig: EntrypointConfig,
+    private val entrypoint: FxAEntryPoint,
     private val onAuthRequested: (String, AuthCompletionCallback) -> Unit,
     private val dispatcher: CoroutineDispatcher = Dispatchers.Main,
 ) : AbstractBinding<IPProtectionState>(store, dispatcher) {
@@ -47,7 +47,7 @@ class IPProtectionFxaAuthFlow(
                 if (status == AccountStatus.RequestingAuthorization) {
                     val url = accountManager.beginAuthentication(
                         pairingUrl = null,
-                        entrypoint = entrypointConfig.authorization,
+                        entrypoint = entrypoint,
                         authScopes = setOf(SCOPE_IPPROTECTION, SCOPE_PROFILE),
                         service = "vpn", // This gives us the passwordless authorization flow.
                     )
@@ -68,7 +68,7 @@ class IPProtectionFxaAuthFlow(
                     // After bug 1977876, there should be no distinction between authenticate/authorize.
                     val url = accountManager.beginAuthentication(
                         pairingUrl = null,
-                        entrypoint = entrypointConfig.authentication,
+                        entrypoint = entrypoint,
                         authScopes = setOf(SCOPE_IPPROTECTION, SCOPE_PROFILE, SCOPE_SYNC, SCOPE_SESSION),
                         // We don't get passwordles-login here for authentication,
                         // we send this for FxA consistency.
@@ -89,13 +89,6 @@ class IPProtectionFxaAuthFlow(
     }
 
     companion object {
-        /**
-         * The [mozilla.components.concept.sync.FxAEntryPoint] needed for the different paths.
-         */
-        data class EntrypointConfig(
-            val authorization: FxAEntryPoint,
-            val authentication: FxAEntryPoint,
-        )
 
         /**
          * The scope needed for access to the IP Protection service.

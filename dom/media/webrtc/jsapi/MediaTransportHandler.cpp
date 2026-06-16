@@ -871,10 +871,8 @@ void MediaTransportHandlerSTS::RemoveTransportsExcept(
         for (auto it = mTransports.begin(); it != mTransports.end();) {
           const std::string transportId(it->first);
           if (!aTransportIds.count(transportId)) {
-            if (it->second.mFlow) {
-              OnStateChange(transportId, TransportLayer::TS_NONE);
-              OnRtcpStateChange(transportId, TransportLayer::TS_NONE);
-            }
+            OnStateChange(transportId, TransportLayer::TS_CLOSED, {});
+            OnRtcpStateChange(transportId, TransportLayer::TS_CLOSED);
             // Erase the transport before destroying the ice stream so that
             // the close_notify alerts have a chance to be sent as the
             // TransportFlow destructors execute.
@@ -1017,28 +1015,21 @@ void MediaTransportHandler::OnEncryptedSending(const std::string& aTransportId,
   mEncryptedSending.Notify(aTransportId, std::move(aPacket));
 }
 
-void MediaTransportHandler::OnStateChange(const std::string& aTransportId,
-                                          TransportLayer::State aState) {
+void MediaTransportHandler::OnStateChange(
+    const std::string& aTransportId, TransportLayer::State aState,
+    nsTArray<nsTArray<uint8_t>>&& aRemoteCerts) {
   {
     MutexAutoLock lock(mStateCacheMutex);
-    if (aState == TransportLayer::TS_NONE) {
-      mStateCache.erase(aTransportId);
-    } else {
-      mStateCache[aTransportId] = aState;
-    }
+    mStateCache[aTransportId] = aState;
   }
-  mStateChange.Notify(aTransportId, aState);
+  mStateChange.Notify(aTransportId, aState, std::move(aRemoteCerts));
 }
 
 void MediaTransportHandler::OnRtcpStateChange(const std::string& aTransportId,
                                               TransportLayer::State aState) {
   {
     MutexAutoLock lock(mStateCacheMutex);
-    if (aState == TransportLayer::TS_NONE) {
-      mRtcpStateCache.erase(aTransportId);
-    } else {
-      mRtcpStateCache[aTransportId] = aState;
-    }
+    mRtcpStateCache[aTransportId] = aState;
   }
   mRtcpStateChange.Notify(aTransportId, aState);
 }
@@ -1585,15 +1576,18 @@ void MediaTransportHandlerSTS::OnCandidateError(NrIceMediaStream* aStream,
 
 void MediaTransportHandlerSTS::OnStateChange(TransportLayer* aLayer,
                                              TransportLayer::State aState) {
+  nsTArray<nsTArray<uint8_t>> remoteCerts;
   if (aState == TransportLayer::TS_OPEN) {
     MOZ_ASSERT(aLayer->id() == TransportLayerDtls::ID());
     TransportLayerDtls* dtlsLayer = static_cast<TransportLayerDtls*>(aLayer);
     OnAlpnNegotiated(dtlsLayer->GetNegotiatedAlpn());
+    remoteCerts = dtlsLayer->GetPeerCertChainDer();
   }
 
   // DTLS state indicates the readiness of the transport as a whole, because
   // SRTP uses the keys from the DTLS handshake.
-  MediaTransportHandler::OnStateChange(aLayer->flow_id(), aState);
+  MediaTransportHandler::OnStateChange(aLayer->flow_id(), aState,
+                                       std::move(remoteCerts));
 }
 
 void MediaTransportHandlerSTS::OnRtcpStateChange(TransportLayer* aLayer,

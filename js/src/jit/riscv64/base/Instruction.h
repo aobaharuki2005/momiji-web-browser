@@ -210,6 +210,8 @@ class InstructionBase {
     return (InstructionBits() & kITypeMask) == RO_ADDIW;
   }
 
+  inline bool IsNop() const { return InstructionBits() == kNopByte; }
+
   inline int BaseOpcode() const { return InstructionBits() & kBaseOpcodeMask; }
 
   inline int RvcOpcode() const {
@@ -821,6 +823,9 @@ class Instruction : public InstructionBase {
   // Use the At(pc) function to create references to Instruction.
   static Instruction* At(uint8_t* pc) {
     return reinterpret_cast<Instruction*>(pc);
+  }
+  static const Instruction* At(const uint8_t* pc) {
+    return reinterpret_cast<const Instruction*>(pc);
   }
 
   // We need to prevent the creation of instances of class Instruction.

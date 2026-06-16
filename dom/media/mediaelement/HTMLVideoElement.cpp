@@ -49,12 +49,12 @@
 #include "prlock.h"
 
 extern mozilla::LazyLogModule gMediaElementLog;
-#define LOG(msg, ...)                        \
-  MOZ_LOG(gMediaElementLog, LogLevel::Debug, \
-          ("HTMLVideoElement=%p, " msg, this, ##__VA_ARGS__))
+#define LOG(msg, ...)                                                         \
+  MOZ_LOG_FMT(gMediaElementLog, LogLevel::Debug, "HTMLVideoElement={}, " msg, \
+              fmt::ptr(this), ##__VA_ARGS__)
 
 nsGenericHTMLElement* NS_NewHTMLVideoElement(
-    already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo,
+    already_AddRefed<mozilla::dom::NodeInfo> aNodeInfo,
     mozilla::dom::FromParser aFromParser) {
   RefPtr<mozilla::dom::NodeInfo> nodeInfo(aNodeInfo);
   auto* nim = nodeInfo->NodeInfoManager();
@@ -125,8 +125,8 @@ nsresult HTMLVideoElement::CopyInnerTo(Element* aDest) {
     // output buffers from a decoder while print preview is open.
     RefPtr<gfx::DataSourceSurface> dstSurface(CopyImage(images[0].mImage));
     if (!dstSurface) {
-      MOZ_LOG(gMediaElementLog, LogLevel::Error,
-              ("failed to copy video image"));
+      MOZ_LOG_FMT(gMediaElementLog, LogLevel::Error,
+                  "failed to copy video image");
       return rv;
     }
     RefPtr<layers::SourceSurfaceImage> dstImage =
@@ -162,7 +162,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(HTMLVideoElement,
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mPictureInPictureWindow)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
-HTMLVideoElement::HTMLVideoElement(already_AddRefed<NodeInfo>&& aNodeInfo)
+HTMLVideoElement::HTMLVideoElement(already_AddRefed<NodeInfo> aNodeInfo)
     : HTMLMediaElement(std::move(aNodeInfo)),
       mVideoWatchManager(this, AbstractThread::MainThread()) {
   DecoderDoctorLogger::LogConstruction(this);

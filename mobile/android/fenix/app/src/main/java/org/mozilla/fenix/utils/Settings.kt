@@ -71,6 +71,7 @@ import org.mozilla.fenix.settings.sitepermissions.AUTOPLAY_BLOCK_ALL
 import org.mozilla.fenix.settings.sitepermissions.AUTOPLAY_BLOCK_AUDIBLE
 import org.mozilla.fenix.tabstray.DefaultTabManagementFeatureHelper
 import org.mozilla.fenix.termsofuse.TOU_VERSION
+import org.mozilla.fenix.utils.Settings.Companion.LONGFOX_PEEK_ANIMATION_MAX_SHOWS
 import org.mozilla.fenix.wallpapers.Wallpaper
 import java.security.InvalidParameterException
 import java.util.concurrent.TimeUnit.MILLISECONDS
@@ -101,6 +102,9 @@ class Settings(
         private const val ASK_TO_ALLOW_INT = 1
         private const val ALLOWED_INT = 2
         private const val INACTIVE_TAB_MINIMUM_TO_SHOW_AUTO_CLOSE_DIALOG = 20
+
+        const val LONGFOX_PEEK_ANIMATION_MAX_SHOWS = 5
+        const val LONGFOX_PEEK_ANIMATION_LAUNCH_INTERVAL = 3
 
         const val THIRTY_SECONDS_MS = 30 * 1000L
         const val FOUR_HOURS_MS = 60 * 60 * 4 * 1000L
@@ -453,6 +457,11 @@ class Settings(
 
     var isUserRedditAttributed by booleanPreference(
         appContext.getPreferenceKey(R.string.pref_key_is_user_reddit_attributed),
+        default = false,
+    )
+
+    var isUserXTwitterAttributed by booleanPreference(
+        appContext.getPreferenceKey(R.string.pref_key_is_user_x_twitter_attributed),
         default = false,
     )
 
@@ -1176,11 +1185,6 @@ class Settings(
         default = true,
     )
 
-    var shouldShowTrackingProtectionDashboard by booleanPreference(
-        appContext.getPreferenceKey(R.string.pref_key_tracking_protection_dashboard_status),
-        default = false,
-    )
-
     var shouldEnableGlobalPrivacyControl by booleanPreference(
         appContext.getPreferenceKey(R.string.pref_key_privacy_enable_global_privacy_control),
         false,
@@ -1510,7 +1514,7 @@ class Settings(
 
     var shouldUseExpandedToolbar by booleanPreference(
         key = appContext.getPreferenceKey(R.string.pref_key_toolbar_expanded),
-        default = false,
+        default = { FxNimbus.features.defaultExpandedToolbar.value().enabled },
         persistDefaultIfNotExists = true,
     )
 
@@ -2196,17 +2200,14 @@ class Settings(
     /**
      * Returns whether onboarding should be shown to the user.
      *
-     * @param featureEnabled Boolean to indicate whether the feature is enabled.
      * @param hasUserBeenOnboarded Boolean to indicate whether the user has been onboarded.
-     * @param isLauncherIntent Boolean to indicate whether the app was launched on tapping on the
-     * app icon.
+     * @param featureEnabled Boolean to indicate whether the feature is enabled.
      */
     fun shouldShowOnboarding(
-        featureEnabled: Boolean = onboardingFeatureEnabled,
         hasUserBeenOnboarded: Boolean,
-        isLauncherIntent: Boolean,
+        featureEnabled: Boolean = onboardingFeatureEnabled,
     ): Boolean {
-        val shouldShowByDefaultConditions = featureEnabled && !hasUserBeenOnboarded && isLauncherIntent
+        val shouldShowByDefaultConditions = featureEnabled && !hasUserBeenOnboarded
 
         val shouldShow = shouldShowByDefaultConditions || enablePersistentOnboarding
 
@@ -2507,6 +2508,15 @@ class Settings(
      */
     val forceOneWeekToWorldCup: Boolean
         get() = FxNimbus.features.homepageSportsWidget.value().forceOneWeekToWorldCup
+
+    /**
+     * Nimbus-controlled minimum interval, in seconds, between Sports Widget fetches.
+     * Backed by the `fetch-throttle-seconds` variable (default 60s). Read at construction
+     * time of [org.mozilla.fenix.home.sports.SportsWidgetMiddleware]; Nimbus updates take
+     * effect on the next app launch.
+     */
+    val sportsWidgetFetchThrottleSeconds: Int
+        get() = FxNimbus.features.homepageSportsWidget.value().fetchThrottleSeconds
 
     /**
      * Debug-only: when true, the Homepage Sports Widget calls the GCP-hosted mock World
@@ -3210,8 +3220,36 @@ class Settings(
      */
     var longfoxEnabled by booleanPreference(
         key = appContext.getPreferenceKey(R.string.pref_key_enable_longfox),
-        default = false,
+        default = { FxNimbus.features.longfox.value().enabled },
     )
+
+    /**
+     * Number of times the app has been foregrounded (cold start or returned from background).
+     * Used to gate the longfox peek animation.
+     */
+    var appLaunchCount by intPreference(
+        key = appContext.getPreferenceKey(R.string.pref_key_app_launch_count),
+        default = 0,
+    )
+
+    /**
+     * Number of times the longfox peek animation has been shown on the homepage.
+     * Capped at [LONGFOX_PEEK_ANIMATION_MAX_SHOWS]; once reached the animation is no longer shown.
+     */
+    var longfoxPeekAnimationShownCount by intPreference(
+        key = appContext.getPreferenceKey(R.string.pref_key_longfox_peek_animation_shown_count),
+        default = 0,
+    )
+
+    /**
+     * Returns true when the longfox peek animation should be armed for the current
+     * app foreground: feature enabled, not yet reached the show cap, and on every Nth launch.
+     */
+    fun shouldShowLongfoxPeekAnimationThisTime(): Boolean =
+        longfoxEnabled &&
+            longfoxPeekAnimationShownCount < LONGFOX_PEEK_ANIMATION_MAX_SHOWS &&
+            appLaunchCount > 0 &&
+            appLaunchCount % LONGFOX_PEEK_ANIMATION_LAUNCH_INTERVAL == 0
 
     /**
      * Indicates whether the app should automatically clean up downloaded files.

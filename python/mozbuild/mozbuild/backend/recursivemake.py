@@ -1766,6 +1766,13 @@ class RecursiveMakeBackend(MakeBackend):
         # Note that if this becomes a manifest, OBJDIR_PP_FILES will likely
         # still need to use PP_TARGETS internally because we can't have an
         # install manifest for the root of the objdir.
+        for dep in obj.extra_deps:
+            if isinstance(dep, ObjDirPath):
+                self._post_process_dependencies.append((
+                    backend_file.relobjdir,
+                    "misc",
+                    dep,
+                ))
         for i, (walk_path, walk_files) in enumerate(files.walk()):
             self._no_skip["misc"].add(backend_file.relobjdir)
             var = "%s_%d" % (name, i)
@@ -1778,6 +1785,11 @@ class RecursiveMakeBackend(MakeBackend):
                 % (var, mozpath.join(obj.install_target, walk_path))
             )
             backend_file.write("%s_TARGET := misc\n" % var)
+            if obj.extra_deps:
+                deps = " ".join(
+                    self._pretty_path(d, backend_file) for d in obj.extra_deps
+                )
+                backend_file.write(f"{var}_EXTRA_DEPS := {deps}\n")
             backend_file.write("PP_TARGETS += %s\n" % var)
 
     def _write_localized_files_files(self, files, name, backend_file):
@@ -1822,6 +1834,13 @@ class RecursiveMakeBackend(MakeBackend):
         path = mozpath.basedir(target, ("dist/bin",))
         if not path:
             raise Exception("Cannot install localized files to " + target)
+        for dep in obj.extra_deps:
+            if isinstance(dep, ObjDirPath):
+                self._post_process_dependencies.append((
+                    backend_file.relobjdir,
+                    "misc",
+                    dep,
+                ))
         for i, (path, file_list) in enumerate(files.walk()):
             name = "LOCALIZED_PP_FILES_%d" % i
             self._no_skip["misc"].add(backend_file.relobjdir)
@@ -1836,6 +1855,11 @@ class RecursiveMakeBackend(MakeBackend):
             backend_file.write(
                 "%s_FLAGS := --silence-missing-directive-warnings\n" % name
             )
+            if obj.extra_deps:
+                deps = " ".join(
+                    self._pretty_path(d, backend_file) for d in obj.extra_deps
+                )
+                backend_file.write(f"{name}_EXTRA_DEPS := {deps}\n")
             backend_file.write("PP_TARGETS += %s\n" % name)
 
     def _process_objdir_files(self, obj, files, backend_file):

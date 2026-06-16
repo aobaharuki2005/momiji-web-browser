@@ -22,6 +22,7 @@
 #include "nsISHistoryListener.h"
 #include "nsIURI.h"
 #include "nsIXULRuntime.h"
+#include "nsPIDOMWindowInlines.h"
 #include "nsNetUtil.h"
 #include "nsTHashMap.h"
 #include "SessionHistoryEntry.h"
@@ -37,6 +38,7 @@
 #include "mozilla/dom/Navigation.h"
 #include "mozilla/dom/RemoteWebProgressRequest.h"
 #include "mozilla/dom/WindowGlobalParent.h"
+#include "mozilla/glean/DocshellMetrics.h"
 #include "mozilla/LinkedList.h"
 #include "mozilla/MathAlgorithms.h"
 #include "mozilla/Preferences.h"
@@ -1415,6 +1417,10 @@ static void FinishRestore(CanonicalBrowsingContext* aBrowsingContext,
     // the right focus events are fired.
     frameLoaderOwner->UpdateFocusAndMouseEnterStateAfterFrameLoaderChange();
 
+    glean::bfcache::page_restored
+        .EnumGet(glean::bfcache::PageRestoredLabel::eTrue)
+        .Add();
+
     return;
   }
 
@@ -1422,6 +1428,10 @@ static void FinishRestore(CanonicalBrowsingContext* aBrowsingContext,
 
   // Fall back to do a normal load.
   aBrowsingContext->LoadURI(aLoadState, false);
+
+  glean::bfcache::page_restored
+      .EnumGet(glean::bfcache::PageRestoredLabel::eFalse)
+      .Add();
 }
 
 MOZ_CAN_RUN_SCRIPT
@@ -1501,6 +1511,10 @@ void nsSHistory::LoadURIOrBFCache(const LoadEntryResult& aLoadEntry) {
     if (MaybeLoadBFCache(aLoadEntry)) {
       return;
     }
+
+    glean::bfcache::page_restored
+        .EnumGet(glean::bfcache::PageRestoredLabel::eFalse)
+        .Add();
   }
 
   RefPtr<BrowsingContext> bc = aLoadEntry.mBrowsingContext;

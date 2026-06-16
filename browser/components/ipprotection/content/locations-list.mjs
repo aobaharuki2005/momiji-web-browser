@@ -86,6 +86,7 @@ export default class LocationsList extends MozLitElement {
           <span class="location-label-group">
             ${aLocation.code === LocationsList.defaultLocation
               ? html`<span
+                    id="location-label-recommended"
                     class="location-label"
                     data-l10n-id="ipprotecion-locations-subview-recommended-label"
                   ></span>

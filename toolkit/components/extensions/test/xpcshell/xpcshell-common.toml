@@ -561,6 +561,8 @@ run-if = [
 
 ["test_ext_proxy_containerIsolation.js"]
 
+["test_ext_proxy_documentId.js"]
+
 ["test_ext_proxy_onauthrequired.js"]
 
 ["test_ext_proxy_settings.js"]
@@ -581,6 +583,8 @@ run-sequentially = ["true"] # TCPServerSocket fails otherwise
 
 ["test_ext_proxy_startup.js"]
 
+["test_ext_publicSuffix.js"]
+
 ["test_ext_redirects.js"]
 skip-if = [
   "os == 'android' && debug",
@@ -593,6 +597,8 @@ skip-if = [
 ["test_ext_runtime_getBrowserInfo.js"]
 
 ["test_ext_runtime_getContexts.js"]
+
+["test_ext_runtime_getDocumentId.js"]
 
 ["test_ext_runtime_getPlatformInfo.js"]
 
@@ -814,6 +820,8 @@ skip-if = [
 
 ["test_ext_webRequest_containerIsolation.js"]
 
+["test_ext_webRequest_documentId.js"]
+
 ["test_ext_webRequest_download.js"]
 skip-if = [
   "os == 'android'", # Android: downloads.download goes through the embedder app instead of Gecko.
@@ -871,9 +879,6 @@ skip-if = [
 ]
 
 ["test_ext_webRequest_style_cache.js"]
-skip-if = [
-  "os == 'android'", # bug 1848398 - style cache miss on Android.
-]
 
 ["test_ext_webRequest_suspend.js"]
 

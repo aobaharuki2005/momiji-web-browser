@@ -39,8 +39,7 @@ NS_IMPL_NS_NEW_HTML_ELEMENT_CHECK_PARSER(TextArea)
 namespace mozilla::dom {
 
 HTMLTextAreaElement::HTMLTextAreaElement(
-    already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo,
-    FromParser aFromParser)
+    already_AddRefed<mozilla::dom::NodeInfo> aNodeInfo, FromParser aFromParser)
     : TextControlElement(std::move(aNodeInfo), aFromParser,
                          FormControlType::Textarea),
       mDoneAddingChildren(!aFromParser),

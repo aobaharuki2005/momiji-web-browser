@@ -435,6 +435,14 @@ void BrowserChild::SetTargetAPZC(
   }
 }
 
+void BrowserChild::NotifyApzAwareListenerAdded(
+    ScrollableLayerGuid::ViewID aScrollId) const {
+  if (mApzcTreeManager) {
+    mApzcTreeManager->NotifyApzAwareListenerAdded(
+        ScrollableLayerGuid(mLayersId, 0, aScrollId));
+  }
+}
+
 bool BrowserChild::DoUpdateZoomConstraints(
     const uint32_t& aPresShellId, const ViewID& aViewId,
     const Maybe<ZoomConstraints>& aConstraints) {
@@ -4326,6 +4334,6 @@ BrowserChildMessageManager::GetTabEventTarget() {
 }
 
 nsresult BrowserChildMessageManager::Dispatch(
-    already_AddRefed<nsIRunnable>&& aRunnable) const {
+    already_AddRefed<nsIRunnable> aRunnable) const {
   return SchedulerGroup::Dispatch(std::move(aRunnable));
 }

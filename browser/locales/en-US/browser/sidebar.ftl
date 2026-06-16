@@ -231,6 +231,20 @@ sidebar-opentabs-title = Open tabs
 sidebar-opentabs-pinned-tabs =
   .title = Pinned tabs
 
+# Heading shown above the tab list for the currently focused window
+# in the Open Tabs sidebar panel.
+# Variables:
+#   $winID (Number) - The position of the window in the open windows list.
+sidebar-opentabs-current-window-header =
+  .heading = Window { $winID } (current)
+
+# Heading shown above the tab list for a non-focused window in the
+# Open Tabs sidebar panel.
+# Variables:
+#   $winID (Number) - The position of the window in the open windows list.
+sidebar-opentabs-window-header =
+  .heading = Window { $winID }
+
 ## Context for closing synced tabs when hovering over the items
 
 # Context for hovering over the close tab button that will

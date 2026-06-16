@@ -4,10 +4,12 @@
 
 package org.mozilla.fenix.browser.tabstrip
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
@@ -19,10 +21,10 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import mozilla.components.compose.base.theme.AcornCorners
 import org.mozilla.fenix.theme.FirefoxTheme
 
 internal val defaultTabStripCardElevation = 0.dp
-internal val selectedTabStripCardElevation = 4.dp
 
 /**
  * Card composable used in Tab Strip items.
@@ -30,19 +32,22 @@ internal val selectedTabStripCardElevation = 4.dp
  * @param modifier The modifier to be applied to the card.
  * @param backgroundColor The background color of the card.
  * @param elevation The elevation of the card.
+ * @param border Optional border to draw around the card.
  * @param content The content of the card.
  */
 @Composable
 fun TabStripCard(
     modifier: Modifier = Modifier,
-    backgroundColor: Color = FirefoxTheme.colors.layer3,
+    backgroundColor: Color = MaterialTheme.colorScheme.surface,
     elevation: Dp = defaultTabStripCardElevation,
+    border: BorderStroke? = null,
     content: @Composable () -> Unit,
 ) {
     Card(
-        shape = MaterialTheme.shapes.small,
+        shape = RoundedCornerShape(AcornCorners.full),
         colors = CardDefaults.cardColors(containerColor = backgroundColor),
         elevation = CardDefaults.cardElevation(defaultElevation = elevation),
+        border = border,
         modifier = modifier,
     ) {
         content()

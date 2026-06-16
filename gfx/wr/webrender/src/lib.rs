@@ -100,7 +100,6 @@ mod device;
 mod ellipse;
 mod filterdata;
 mod frame_builder;
-mod frame_snap;
 mod freelist;
 mod glyph_cache;
 mod gpu_types;
@@ -121,6 +120,8 @@ mod render_target;
 mod render_task_graph;
 mod render_task_cache;
 mod render_task;
+#[cfg(feature = "debugger")]
+mod renderdoc;
 mod renderer;
 mod resource_cache;
 pub mod scene;

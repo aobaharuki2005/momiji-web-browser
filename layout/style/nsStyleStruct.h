@@ -217,13 +217,14 @@ struct nsStyleImageLayers {
 
   struct Layer {
     using StyleGeometryBox = mozilla::StyleGeometryBox;
+    using StyleBackgroundClip = mozilla::StyleBackgroundClip;
     using StyleImageLayerAttachment = mozilla::StyleImageLayerAttachment;
     using StyleBackgroundSize = mozilla::StyleBackgroundSize;
 
     mozilla::StyleImage mImage;
     mozilla::Position mPosition;
     StyleBackgroundSize mSize;
-    StyleGeometryBox mClip;
+    StyleBackgroundClip mClip;
     MOZ_INIT_OUTSIDE_CTOR StyleGeometryBox mOrigin;
 
     // This property is used for background layer only.

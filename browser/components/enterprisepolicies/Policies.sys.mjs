@@ -23,9 +23,11 @@ XPCOMUtils.defineLazyServiceGetters(lazy, {
 
 ChromeUtils.defineESModuleGetters(lazy, {
   AddonManager: "resource://gre/modules/AddonManager.sys.mjs",
+  AddonManagerPrivate: "resource://gre/modules/AddonManager.sys.mjs",
   BookmarksPolicies: "resource:///modules/policies/BookmarksPolicies.sys.mjs",
   CustomizableUI:
     "moz-src:///browser/components/customizableui/CustomizableUI.sys.mjs",
+  ExtensionPermissions: "resource://gre/modules/ExtensionPermissions.sys.mjs",
   setEnterpriseGuards: "resource://gre/modules/ExtensionPermissions.sys.mjs",
   FileUtils: "resource://gre/modules/FileUtils.sys.mjs",
   ProxyPolicies: "resource:///modules/policies/ProxyPolicies.sys.mjs",
@@ -1582,7 +1584,10 @@ export var Policies = {
           );
         }
       }
-      let addons = await lazy.AddonManager.getAllAddons();
+      let addons = new Map();
+      for (let a of await lazy.AddonManager.getAllAddons()) {
+        addons.set(a.id, a);
+      }
       let allowedExtensions = [];
       for (let extensionID in extensionSettings) {
         if (extensionID == "*") {
@@ -1602,7 +1607,7 @@ export var Policies = {
             installAddonFromURL(
               extensionSettings[extensionID].install_url,
               extensionID,
-              addons.find(addon => addon.id == extensionID)
+              addons.get(extensionID)
             );
             manager.disallowFeature(`uninstall-extension:${extensionID}`);
             if (
@@ -1619,11 +1624,12 @@ export var Policies = {
           } else if (
             extensionSettings[extensionID].installation_mode == "blocked"
           ) {
-            if (addons.find(addon => addon.id == extensionID)) {
+            if (addons.has(extensionID)) {
               // Can't use the addon from getActiveAddons since it doesn't have uninstall.
               let addon = await lazy.AddonManager.getAddonByID(extensionID);
               try {
                 await addon.uninstall();
+                addons.delete(extensionID);
               } catch (e) {
                 // This can fail for add-ons that can't be uninstalled.
                 lazy.log.debug(
@@ -1636,7 +1642,7 @@ export var Policies = {
       }
       let allowedTypes = extensionSettings["*"]?.allowed_types;
       if (blockAllExtensions || allowedTypes) {
-        for (let addon of addons) {
+        for (let addon of addons.values()) {
           if (
             addon.isSystem ||
             addon.isBuiltin ||
@@ -1644,8 +1650,12 @@ export var Policies = {
           ) {
             continue;
           }
+          // Match Chrome: any per-id ExtensionSettings entry (even empty)
+          // shadows the "*" defaults entirely, so an addon with its own
+          // entry is exempt from blockAllExtensions.
           if (
             !allowedExtensions.includes(addon.id) &&
+            !(blockAllExtensions && addon.id in extensionSettings) &&
             (blockAllExtensions || !allowedTypes.includes(addon.type))
           ) {
             try {
@@ -1654,6 +1664,7 @@ export var Policies = {
                 addon.id
               );
               await addonToUninstall.uninstall();
+              addons.delete(addon.id);
             } catch (e) {
               // This can fail for add-ons that can't be uninstalled.
               lazy.log.debug(
@@ -1663,6 +1674,48 @@ export var Policies = {
           }
         }
       }
+
+      // Revoke any granted optional permissions that are now blocked. The
+      // appDisabled refresh below handles addons whose required permissions
+      // are blocked (via mayInstallAddon -> isUsableAddon).
+      for (let addon of addons.values()) {
+        if (
+          addon.isSystem ||
+          addon.isBuiltin ||
+          !(addon.scope & lazy.AddonManager.SCOPE_PROFILE)
+        ) {
+          continue;
+        }
+        let blockedPerms =
+          Services.policies.getExtensionSettings(addon.id)
+            ?.blocked_permissions ?? [];
+        if (!blockedPerms.length) {
+          continue;
+        }
+        try {
+          let granted = await lazy.ExtensionPermissions.get(addon.id);
+          let toRemove = granted.permissions.filter(perm =>
+            blockedPerms.includes(perm)
+          );
+          if (toRemove.length) {
+            let extension = WebExtensionPolicy.getByID(addon.id)?.extension;
+            await lazy.ExtensionPermissions.remove(
+              addon.id,
+              { permissions: toRemove, origins: [], data_collection: [] },
+              extension
+            );
+          }
+        } catch (e) {
+          lazy.log.debug(
+            `Could not revoke blocked optional permissions for ${addon.id}: ${e}`
+          );
+        }
+      }
+      // Recompute appDisabled across all addons against the new policy. This
+      // catches addons whose required permissions are now blocked (via
+      // mayInstallAddon) without persisting userDisabled, so an update that
+      // drops the blocked permission re-enables the addon automatically.
+      lazy.AddonManagerPrivate.updateAddonAppDisabledStates();
     },
   },
 
@@ -2178,6 +2231,7 @@ export var Policies = {
       if (!param) {
         blockAboutPage(manager, "about:logins", true);
         setAndLockPref("pref.privacy.disable_button.view_passwords", true);
+        setAndLockPref("browser.contextual-password-manager.enabled", false);
       }
       setAndLockPref("signon.rememberSignons", param);
     },

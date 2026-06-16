@@ -407,10 +407,12 @@ HttpTransactionParent* HttpTransactionParent::AsHttpTransactionParent() {
 }
 
 int32_t HttpTransactionParent::GetProxyConnectResponseCode() {
-  return mProxyConnectResponseHead ? mProxyConnectResponseHead->Status() : 0;
+  return mProxyConnectResponseHead ? mProxyConnectResponseHead->Head().Status()
+                                   : 0;
 }
 
-Maybe<nsHttpResponseHead> HttpTransactionParent::GetProxyConnectResponseHead() {
+RefPtr<ProxyConnectResponseHead>
+HttpTransactionParent::GetProxyConnectResponseHead() {
   return mProxyConnectResponseHead;
 }
 
@@ -528,7 +530,10 @@ void HttpTransactionParent::DoOnStartRequest(
   mProxyConnectFailed = aProxyConnectFailed;
   TimingStructArgsToTimingsStruct(aTimings, mTimings);
 
-  mProxyConnectResponseHead = std::move(aProxyConnectResponseHead);
+  mProxyConnectResponseHead = aProxyConnectResponseHead
+                                  ? MakeRefPtr<ProxyConnectResponseHead>(
+                                        std::move(*aProxyConnectResponseHead))
+                                  : nullptr;
   mDataForSniffer = std::move(aDataForSniffer);
   mRestarted = aRestarted;
 

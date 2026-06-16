@@ -31,6 +31,127 @@ newtab-card-dismiss-button =
     .title = Siere
     .aria-label = Siere
 
+## Strings for "Homepage" and "Firefox Home" sections of about:settings#home.
+## Homepage panel
+
+home-homepage-title =
+    .label = Pagjine iniziâl
+home-homepage-new-windows =
+    .label = Gnûfs barcons
+home-homepage-new-tabs =
+    .label = Gnovis schedis
+# This option leads to the "Custom Homepage" subpage
+home-homepage-custom-homepage-button =
+    .label = Sielç un sît specific
+
+## Custom URLs subpage
+
+# Subheader on the Custom Homepage subpage. Followed by a form to enter URLs and a list of URLs already saved, if any.
+home-custom-homepage-card-header =
+    .label = Direzions di sîts web
+home-custom-homepage-address =
+    .placeholder = Inserìs une direzion
+home-custom-homepage-address-button =
+    .label = Zonte direzion
+# Shown when no custom websites/URLs to use as a homepage have been added yet
+home-custom-homepage-no-results =
+    .label = Nol è stât zontât ancjemò nissun sît.
+home-custom-homepage-delete-address-button =
+    .aria-label = Elimine la direzion
+    .title = Elimine la direzion
+# Further options to use when setting the home page. Two action buttons are placed in line with this prompt
+# to replace the current home page with a currently open page or bookmark.
+home-custom-homepage-replace-with-prompt =
+    .label = Sostituìs cun
+# Button that appears in-line after text "Replace with" (home-custom-homepage-replace-with-prompt)
+home-custom-homepage-current-pages-button =
+    .label = Pagjinis viertis in chest moment
+# Button that appears in-line after text "Replace with" (home-custom-homepage-replace-with-prompt)
+home-custom-homepage-bookmarks-button =
+    .label = Segnelibris…
+
+## Firefox Home content
+
+home-prefs-content-header =
+    .label = { -firefox-home-brand-name }
+home-prefs-search-header2 =
+    .label = Ricercje
+home-prefs-stories-header2 =
+    .label = Storiis
+    .description = Contignûts ecezionâi curâts de famee di prodots { -brand-product-name }
+home-prefs-widgets-header =
+    .label = Widgets
+# Lists is a widget on New Tab, similar to a to-do widget
+home-prefs-lists-header =
+    .label = Listis
+# Timer is a widget on New Tab, similar to the Pomodoro timer.
+home-prefs-timer-header =
+    .label = Temporizadôr
+# Sports is a widget on New Tab showing sports scores and schedules.
+home-prefs-sports-widget-header =
+    .label = Sports
+# Clock is a widget on New Tab that displays time zones around the world.
+home-prefs-clocks-header =
+    .label = Orloi
+home-prefs-mission-message2 =
+    .message = I nestris prudeladôrs a sostegnin la nestre mission di fâ sù un web miôr.
+home-prefs-manage-topics-link2 =
+    .label = Gjestìs argoments
+home-prefs-choose-wallpaper-link2 =
+    .label = Sielç un fonts
+home-prefs-firefox-logo-header =
+    .label = Logo di { -brand-short-name }
+# Informational message bar that appears in the Firefox Home section when the options are disabled.
+# The user must select Firefox Home as their homepage for either new tabs or new windows to enable
+# the features in settings.
+home-prefs-firefox-home-disabled-notice =
+    .message = Par doprâ chestis funzions, stabilìs gnovis schedis o gnûfs barcons su { -firefox-home-brand-name }.
+# Variables:
+#   $num (number) - Number of rows displayed
+home-prefs-sections-rows-option-srd =
+    .label =
+        { $num ->
+            [one] { $num } rie
+           *[other] { $num } riis
+        }
+# Dropdown option shown when an extension replaces the contents of new windows or tabs.
+# Variables:
+#   $extension (string) - Name of the extension
+home-prefs-homepage-extension-option =
+    .label = Estension ({ $extension })
+home-restore-defaults-srd =
+    .label = Ripristine predefinîts
+    .accesskey = R
+home-mode-choice-default-fx-srd =
+    .label = { -firefox-home-brand-name } (predefinît)
+home-mode-choice-custom-srd =
+    .label = Direzions web personalizadis…
+home-mode-choice-blank-srd =
+    .label = Pagjine vueide
+home-prefs-shortcuts-header-srd =
+    .label = Scurtis
+home-prefs-shortcuts-select =
+    .aria-label = Scurtis
+home-prefs-shortcuts-by-option-sponsored-srd =
+    .label = Scurtis sponsorizadis
+home-prefs-recommended-by-option-sponsored-stories-srd =
+    .label = Storiis patrocinadis
+home-prefs-highlights-option-visited-pages-srd =
+    .label = Pagjinis visitadis
+home-prefs-highlights-options-bookmarks-srd =
+    .label = Segnelibris
+home-prefs-highlights-option-most-recent-download-srd =
+    .label = Discjariâts plui di resint
+home-prefs-recent-activity-header-srd =
+    .label = Ativitât resinte
+home-prefs-recent-activity-select =
+    .aria-label = Ativitât resinte
+home-prefs-weather-header-srd =
+    .label = Meteo
+home-prefs-support-firefox-header-srd =
+    .label = Prudele { -brand-product-name }
+home-prefs-mission-message-learn-more-link-srd = Scuvierç cemût
+
 ## Search box component.
 
 # "Search" is a verb/action
@@ -151,6 +272,8 @@ newtab-menu-section-block = Bloche
 # "Follow", "unfollow", and "following" are social media terms that refer to subscribing to or unsubscribing from a section of stories.
 # e.g. Following the travel section of stories.
 newtab-menu-section-unfollow-topic = Smet di sta daûr
+# Context menu option to open a support page explaining the New Tab personalization features and privacy controls.
+newtab-menu-section-learn-more = Plui informazions
 # "Follow", "unfollow", and "following" are social media terms that refer to subscribing to or unsubscribing from a section of stories.
 # e.g. Following the travel section of stories.
 newtab-menu-section-unfollow = Smet di sta daûr al argoment
@@ -759,8 +882,6 @@ newtab-widget-lists-button-add-item = Zonte un element
 newtab-widget-lists-input-add-an-item2 =
     .placeholder = Zonte un element
     .aria-label = Zonte un element
-newtab-widget-lists-input-add-an-item =
-    .placeholder = Zonte un element
 newtab-widget-lists-input-error = Inclût test par zontâ un element.
 newtab-widget-lists-input-menu-open-link = Vierç colegament
 newtab-widget-lists-input-menu-move-up = Sposte in sù
@@ -788,11 +909,6 @@ newtab-widget-lists-name-placeholder-checklist2 =
 newtab-widget-lists-name-placeholder-new2 =
     .placeholder = Gnove liste
     .aria-label = Modifiche non liste
-newtab-widget-lists-name-placeholder-checklist =
-    .placeholder = Liste di control
-# The placeholder value of the name field for a newly created list
-newtab-widget-lists-name-placeholder-new =
-    .placeholder = Gnove liste
 newtab-widget-section-title = Widgets
 newtab-widget-menu-hide = Plate widgets
 newtab-widget-menu-change-size = Cambie dimension
@@ -956,8 +1072,44 @@ newtab-sports-widget-search-country =
     .placeholder = Cîr nazion
     .aria-label = Cîr nazion
 newtab-sports-widget-cancel = Anule
+newtab-sports-widget-back-button =
+    .aria-label = Indaûr
 newtab-sports-widget-done-button =
     .label = Fat
+# Shown in the follow-teams list for a team that has been knocked out of the tournament.
+# Variables:
+#   $teamName (string) - the localized team name (e.g. "Canada").
+newtab-sports-widget-team-name-eliminated = { $teamName } (eliminât)
+newtab-sports-widget-view-all =
+    .label = Mostre dut
+newtab-sports-widget-show-less =
+    .label = Mostre di mancul
+# Toggle that filters the list of teams the user follows
+newtab-sports-widget-followed-only-toggle =
+    .label = Dome scuadris che tu stâs daûr
+# Watch is a verb (as in watch matches online).
+newtab-sports-widget-watch =
+    .label = Cjale
+    .title = Cjale direte
+# Watch is a verb (as in watch matches online).
+newtab-sports-widget-watch-icon =
+    .aria-label = Cjale in direte
+    .title = Cjale in direte
+newtab-sports-widget-watch-dialog-close =
+    .aria-label = Siere
+    .title = Siere
+# Tag: user can watch without paying (sign-in may still be required).
+newtab-sports-widget-watch-stream-free = Gratis
+# Tag: user can start watching via a trial; continued access may require payment after it ends.
+newtab-sports-widget-watch-stream-free-trial = Prove gratuite
+# Tag: provider offers both a no-cost or trial path and a paid path.
+newtab-sports-widget-watch-stream-free-paid = Gratis e a paiament
+# Tag: user must pay to watch (subscription, TV provider, premium plan, or add-on).
+newtab-sports-widget-watch-stream-paid = A paiament
+# Note: provider only streams some matches, not the full tournament.
+newtab-sports-widget-watch-stream-select-games-only = Dome cualchi partide
+# Heading for the list of streaming services available in the user’s country/region.
+newtab-sports-widget-watch-available-region = Disponibii te tô regjon
 # Heading for the list of streaming services available outside the user’s country/region.
 newtab-sports-widget-watch-available-other-regions = Altris regjons
 # Button that opens the provider’s stream page in a new tab.
@@ -977,17 +1129,31 @@ newtab-sports-widget-group-i = Grup I
 newtab-sports-widget-group-j = Grup J
 newtab-sports-widget-group-k = Grup K
 newtab-sports-widget-group-l = Grup L
+newtab-sports-widget-round-32 = Diesim sescj di finâl
+newtab-sports-widget-round-16 = Otâfs di finâl
+newtab-sports-widget-quarter-finals = Cuarts di finâl
 # The "LIVE" string is meant to be uppercase in English, but other languages and locales may vary in how they handle this.
 newtab-sports-widget-live = DIRETE
 newtab-custom-widget-live-refresh =
     .title = Inzorne risultâts
     .aria-label = Inzorne risultâts
+# Milestone dates (e.g. group stage, semifinals, etc.). Refers to calendar dates.
+newtab-sports-widget-key-dates = Datis impuartantis
 newtab-sports-widget-upcoming = Daûr a rivâ
+# Used for a match currently ongoing
+newtab-sports-widget-now = In cors
 newtab-sports-widget-results = Risultâts
 newtab-sports-widget-semi-finals = Semifinâls
 newtab-sports-widget-bronze-finals = Finâl pal tierç puest
 # Final is the final match for 1st place.
 newtab-sports-widget-final = Finâl
+# Variables:
+#   $start (Date) - Start date of a tournament stage
+#   $end (Date) - End date of a tournament stage
+newtab-sports-widget-key-date-range = { DATETIME($start, month: "short", day: "numeric") } – { DATETIME($end, month: "short", day: "numeric") }
+# Variables:
+#   $date (Date) - Date of a single tournament event
+newtab-sports-widget-key-date = { DATETIME($date, month: "short", day: "numeric") }
 newtab-sports-widget-delayed = In ritart
 newtab-sports-widget-postponed = Posticipade
 newtab-sports-widget-suspended = Sospindude
@@ -996,6 +1162,8 @@ newtab-sports-widget-information = Informazions su la partide
 newtab-sports-widget-no-live-data = In chest moment i dâts de partide in direte no si stan inzornant
 newtab-sports-widget-view-results-link = Viôt i risultâts
 newtab-sports-widget-third-place = Tierç puest
+# Runner-up is the team in 2nd place.
+newtab-sports-widget-runner-up = Seconts classificâts
 newtab-sports-widget-champions = Campions
 newtab-sports-widget-world-cup-champions = Campions de Cope dal mont 2026
 # Variables:
@@ -1005,6 +1173,28 @@ newtab-sports-widget-match-full-time = Partide finide
 newtab-sports-widget-match-halftime = Interval
 newtab-sports-widget-match-extra-time = Timps suplementârs
 newtab-sports-widget-match-penalties = Rigôrs
+# Separator shown between two teams in a placeholder match row when no upcoming
+# match details are available yet.
+newtab-sports-widget-match-vs = cuintri
+# Note shown in the Upcoming tab when no match details are available yet.
+newtab-sports-widget-no-upcoming-matches = Torne par cognossi i detais des prossimis partidis
+
+## Sports widget live-games pagination. Shown when 2+ matches are live at the same time
+
+# arrow button that goes to the previous page of live matches.
+newtab-sports-widget-pagination-previous =
+    .aria-label = Prime
+    .title = Prime
+# arrow button that goes to the next page of live matches.
+newtab-sports-widget-pagination-next =
+    .aria-label = Prossime
+    .title = Prossime
+# Dot indicator that jumps directly to a given live match.
+# $index (number) - 1-based position of this dot in the list.
+# $total (number) - Total number of live matches.
+newtab-sports-widget-pagination-dot =
+    .aria-label = Partide in direte { $index } di { $total }
+    .title = Partide in direte { $index } di { $total }
 
 ## Accessible labels for match rows in the sports widget. These are read by
 ## screen readers to announce the match details and status.
@@ -1059,6 +1249,27 @@ newtab-sports-widget-team-name-label-bih =
     .label = Bosgne e Erzegovine
 newtab-sports-widget-team-name-label-civ =
     .label = Cueste di Avoli
+newtab-sports-widget-team-name-label-cod =
+    .label = RD Congo
+newtab-sports-widget-team-name-label-eng =
+    .label = Ingletiere
+newtab-sports-widget-team-name-label-sco =
+    .label = Scozie
+# Placeholder used in a match row's aria-label for an undecided team (shown visually as "--").
+newtab-sports-widget-team-tbd = Di definî
+
+## Sports widget OMC messages
+## Shown as on-screen messages promoting the Sports widget and World Cup wallpapers.
+
+newtab-sports-widget-message-wallpapers-title = Scomence i mondiâi cui gnûfs fonts
+newtab-sports-widget-message-wallpapers-body = Puarte un tic di atmosfere di partide tal to navigadôr intant dal torneu.
+newtab-sports-widget-message-wallpapers-cta = Sielç fonts
+newtab-sports-widget-message-add-widgets-cta =
+    .label = Zonte widgets
+newtab-sports-widget-message-day-in-play-title = Rint plui dinamiche la tô zornade cui widgets di { -brand-product-name }
+newtab-sports-widget-message-day-in-play-body = Sta daûr de cope dal mont, reste concentrât, ten di voli de ore ator pal mont e tant altri.
+newtab-sports-widget-message-explore-widgets-cta =
+    .label = Esplore i widgets
 
 ## Strings for activation window message variants. In certain experiment configurations,
 ## the strings from these variants may be displayed in a message below the search input
@@ -1120,6 +1331,19 @@ newtab-clock-widget-button-save = Salve
 newtab-clock-widget-button-remove-clock =
     .title = Gjave orloi
     .aria-label = Gjave orloi
+# Accessible name for a clock row in the "Your clocks" management panel
+# when the row has no user-provided nickname. Read aloud by screen
+# readers when focus lands on the row.
+# Variables:
+#   $city (string) - The city name displayed in the row.
+newtab-clock-widget-edit-item =
+    .aria-label = { $city }
+# Accessible name for a clock row when a user nickname has been set.
+# Variables:
+#   $city (string) - The city name displayed in the row.
+#   $nickname (string) - The user-provided nickname for the row.
+newtab-clock-widget-edit-item-with-nickname =
+    .aria-label = { $city }, sorenon: { $nickname }
 newtab-clock-widget-add-clock-form =
     .aria-label = Zonte orloi
 newtab-clock-widget-edit-clock-form =

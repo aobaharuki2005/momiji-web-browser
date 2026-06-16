@@ -38,6 +38,7 @@ MOZ_SRC_FILES += [
     "IPPChannelFilter.sys.mjs",
     "IPPEarlyStartupFilter.sys.mjs",
     "IPPExceptionsManager.sys.mjs",
+    "IPPLifecycleHelper.sys.mjs",
     "IPPNetworkErrorObserver.sys.mjs",
     "IPPNetworkUtils.sys.mjs",
     "IPPNimbusHelper.sys.mjs",

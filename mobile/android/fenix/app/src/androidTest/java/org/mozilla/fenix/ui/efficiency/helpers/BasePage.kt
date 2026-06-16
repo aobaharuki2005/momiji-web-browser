@@ -286,6 +286,7 @@ abstract class BasePage(
                     if (!element.click()) throw AssertionError("Failed to click UiObject for selector: ${selector.description}")
                 }
                 is SemanticsNodeInteraction -> {
+                    composeRule.waitForIdle()
                     element.assertExists()
                     element.assertIsDisplayed()
                     element.performClick()
@@ -375,7 +376,7 @@ abstract class BasePage(
                     // so stop swiping only once the element clears that bar.
                     is ViewInteraction -> try {
                         element.check(matches(isDisplayingAtLeast(CLICKABLE_VISIBILITY_PERCENT))); true
-                    } catch (_: Exception) {
+                    } catch (_: Throwable) {
                         false
                     }
                     is UiObject -> element.exists()

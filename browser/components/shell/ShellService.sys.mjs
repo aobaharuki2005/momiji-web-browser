@@ -12,6 +12,8 @@ ChromeUtils.defineESModuleGetters(lazy, {
   ASRouter: "resource:///modules/asrouter/ASRouter.sys.mjs",
   ScheduledTask: "resource://gre/modules/ScheduledTask.sys.mjs",
   Subprocess: "resource://gre/modules/Subprocess.sys.mjs",
+  WindowsSetDefaultRedirect:
+    "moz-src:///browser/components/shell/WindowsSetDefaultRedirect.sys.mjs",
   WindowsVersionInfo:
     "resource://gre/modules/components-utils/WindowsVersionInfo.sys.mjs",
 });
@@ -74,6 +76,17 @@ ChromeUtils.defineLazyGetter(lazy, "log", () => {
 
 const MSIX_PREVIOUSLY_PINNED_PREF =
   "browser.startMenu.msixPinnedWhenLastChecked";
+
+// URLs handed to launchSetDefaultAppPicker (as the openWithArg) when setting a
+// protocol default, keyed by scheme. setAsDefaultProtocolHandler passes one of
+// these to the OS picker; on the round-trip WindowsSetDefaultAppCmdHandler
+// matches it via the stashed redirect.
+export const DEFAULT_PROTOCOL_URLS = {
+  http: "http://www.firefox.com/?utm_medium=platform&utm_source=windows&utm_campaign=owl",
+  https:
+    "https://www.firefox.com/?utm_medium=platform&utm_source=windows&utm_campaign=owl",
+  mailto: "mailto:owl@firefox.com",
+};
 
 /**
  * Internal functionality to save and restore the docShell.allow* properties.
@@ -422,7 +435,36 @@ let ShellServiceInternal = {
     );
   },
 
-  async setAsDefaultPDFHandler(onlyIfKnownBrowser = false) {
+  /**
+   * Returns the on-disk nsIFile for a PDF bundled under the browser directory
+   * in NS_GRE_DIR.
+   *
+   * @param {string} aLeafName - The bundled PDF's file name, e.g.
+   * "confused_fox.pdf".
+   * @returns {nsIFile} The bundled file (which may not exist on disk).
+   */
+  getBundledPdfFile(aLeafName) {
+    const file = Services.dirsvc.get("GreD", Ci.nsIFile);
+    file.append("browser");
+    file.append(aLeafName);
+    return file;
+  },
+
+  /**
+   * Set Firefox as the Windows default PDF handler.
+   *
+   * @param {boolean} [onlyIfKnownBrowser] - When true, only proceed if the
+   * current default PDF handler is a known browser.
+   * @param {boolean} [openInFirefox] - Only meaningful on the "Open with"
+   * picker code path. After the user picks Firefox, the OS relaunches Firefox
+   * with the bundled stub PDF; this flag decides whether we then open a PDF in
+   * a new tab (true), to land the user in Firefox, or silently absorb that
+   * relaunch (false).
+   */
+  async setAsDefaultPDFHandler(
+    onlyIfKnownBrowser = false,
+    openInFirefox = false
+  ) {
     if (AppConstants.platform != "win") {
       throw new Error("Windows-only");
     }
@@ -453,10 +495,6 @@ let ShellServiceInternal = {
       );
     }
 
-    const winShell = this.shellService.QueryInterface(
-      Ci.nsIWindowsShellService
-    );
-
     // Optional second attempt via the undocumented IOpenWithLauncher API,
     // which surfaces the OS "Open with" picker so the user can pick Firefox
     // themselves. Gated by a pref so it can be remotely disabled if it
@@ -469,10 +507,27 @@ let ShellServiceInternal = {
       )
     ) {
       method = "open_with";
+      const openWithArg = this.getBundledPdfFile("confused_fox.pdf").path;
+      // Arm the round-trip: the OS hands `openWithArg` back to Firefox if the user
+      // selects us. We redirect that launch to the bundled PDF); otherwise overrideUri
+      // is null and the launch is suppressed.
+      const overrideUri = openInFirefox
+        ? Services.io.newFileURI(this.getBundledPdfFile("blank.pdf")).spec
+        : null;
+      lazy.WindowsSetDefaultRedirect.arm(
+        openWithArg,
+        overrideUri,
+        lazy.WindowsSetDefaultRedirect.TYPE.FILE
+      );
+
       try {
-        winShell.launchOpenWithDefaultPickerForFileType(".pdf");
+        const flags = this._isWindows11()
+          ? Ci.nsIWindowsShellService.OPEN_WITH_SET_HANDLER
+          : Ci.nsIWindowsShellService.OPEN_WITH_SET_HANDLER_WIN10;
+        this.shellService.launchSetDefaultAppPicker(openWithArg, flags);
         success = true;
       } catch (e) {
+        lazy.WindowsSetDefaultRedirect.clear();
         // The picker API itself failed (e.g. COM error). Fall through to the
         // modern settings dialog rather than leaving the user without any
         // default-handler UI.
@@ -487,7 +542,7 @@ let ShellServiceInternal = {
     if (!success && this._isWindows11()) {
       method = "settings";
       try {
-        winShell.launchModernSettingsDialogDefaultApps();
+        this.shellService.launchModernSettingsDialogDefaultApps();
         Glean.browser.setDefaultPdfHandlerModernSettingsResult.Success.add(1);
         success = true;
       } catch (e) {
@@ -517,6 +572,101 @@ let ShellServiceInternal = {
   },
 
   /**
+   * Set Firefox as the Windows default handler for a protocol (scheme).
+   *
+   * @param {string} protocol - The scheme to claim, e.g. "https" or "mailto".
+   * Selects the default URL and is the telemetry / isDefaultHandlerFor key.
+   * @param {string} [url] - The URL handed to the OS picker (the openWithArg).
+   * Defaults to the DEFAULT_PROTOCOL_URLS entry for protocol.
+   * @param {boolean} [openInFirefox] - After the user picks Firefox, the OS
+   * relaunches Firefox with that URL; this flag decides whether we then open
+   * the protocol's default URL in a new tab (true) or suppress that relaunch
+   * (false).
+   */
+  async setAsDefaultProtocolHandler(
+    protocol,
+    url = DEFAULT_PROTOCOL_URLS[protocol],
+    openInFirefox = false
+  ) {
+    if (AppConstants.platform != "win") {
+      throw new Error("Windows-only");
+    }
+
+    if (!url) {
+      throw new Error(
+        `No URL provided and no DEFAULT_PROTOCOL_URLS fallback for protocol: ${protocol}`
+      );
+    }
+
+    // Arm the round-trip for once the user picks a default: the OS hands `url`
+    // back when Firefox becomes the handler. When opening in Firefox we then
+    // open the protocol's default URL; otherwise the relaunch is suppressed.
+    lazy.WindowsSetDefaultRedirect.arm(
+      url,
+      openInFirefox ? DEFAULT_PROTOCOL_URLS[protocol] : null,
+      lazy.WindowsSetDefaultRedirect.TYPE.PROTOCOL
+    );
+
+    // Tracks the last method attempted and whether its API call succeeded.
+    // These feed into the consolidated set_default_protocol_handler_attempt
+    // event recorded at the bottom of this function.
+    let method = "open_with";
+    let success = false;
+    const flags =
+      (this._isWindows11()
+        ? Ci.nsIWindowsShellService.OPEN_WITH_SET_HANDLER
+        : Ci.nsIWindowsShellService.OPEN_WITH_SET_HANDLER_WIN10) |
+      Ci.nsIWindowsShellService.OPEN_WITH_PROTOCOL_MESSAGING;
+    try {
+      this.shellService.launchSetDefaultAppPicker(url, flags);
+      success = true;
+    } catch (e) {
+      lazy.WindowsSetDefaultRedirect.clear();
+      lazy.log.debug(
+        "Setting default protocol handler by open with launcher failed, " +
+          "falling through to modern settings",
+        e
+      );
+    }
+
+    if (!success) {
+      method = "settings";
+      try {
+        this.shellService.launchModernSettingsDialogDefaultApps();
+        Glean.browser.setDefaultProtocolHandlerModernSettingsResult.Success.add(
+          1
+        );
+        success = true;
+      } catch (e) {
+        Glean.browser.setDefaultProtocolHandlerModernSettingsResult.Failure.add(
+          1
+        );
+        lazy.log.debug(
+          "Last attempt to set as default protocol handler failed through " +
+            "modern settings",
+          e
+        );
+      }
+    }
+
+    // Record the consolidated attempt event after a delay so the user has
+    // time to interact with the launched picker or settings dialog before we
+    // sample isDefaultHandlerFor.
+    const waitTimeMs = Services.prefs.getIntPref(
+      "browser.shell.setDefaultProtocolHandler.attemptWaitTimeMs",
+      30000
+    );
+    new lazy.ScheduledTask(() => {
+      Glean.browser.setDefaultProtocolHandlerAttempt.record({
+        method,
+        success,
+        protocol,
+        result_is_default: this.isDefaultHandlerFor(protocol),
+      });
+    }, Date.now() + waitTimeMs).arm();
+  },
+
+  /**
    * Determine if we're the default handler for the given file extension (like
    * ".pdf") or protocol (like "https").  Windows-only for now.
    *
@@ -524,9 +674,7 @@ let ShellServiceInternal = {
    */
   isDefaultHandlerFor(aFileExtensionOrProtocol) {
     if (AppConstants.platform == "win") {
-      return this.shellService
-        .QueryInterface(Ci.nsIWindowsShellService)
-        .isDefaultHandlerFor(aFileExtensionOrProtocol);
+      return this.shellService.isDefaultHandlerFor(aFileExtensionOrProtocol);
     }
     return false;
   },

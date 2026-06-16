@@ -42,6 +42,11 @@ sealed class IPProtectionAction : Action {
      * Reports that the proxy-active status has been shown to the user.
      */
     data object ProxyActiveShown : IPProtectionAction()
+
+    /**
+     * Reports that the most recent activate or deactivate request failed.
+     */
+    object ToggleFailed : IPProtectionAction()
 }
 
 /**

@@ -71,6 +71,13 @@ void SharedWorkerChild::SendSetLocaleOverride(
   }
 }
 
+void SharedWorkerChild::SendUpdateTimezoneOverride(
+    const nsAString& aTimezoneOverride) {
+  if (mActive) {
+    PSharedWorkerChild::SendUpdateTimezoneOverride(nsString(aTimezoneOverride));
+  }
+}
+
 IPCResult SharedWorkerChild::RecvError(const ErrorValue& aValue) {
   if (!mParent) {
     return IPC_OK();

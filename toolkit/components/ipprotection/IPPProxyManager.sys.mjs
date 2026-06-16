@@ -237,6 +237,7 @@ class IPPProxyManagerSingleton extends EventTarget {
   get hasValidProxyPass() {
     return !!this.#pass?.isValid();
   }
+
   /**
    * Gets the current usage info.
    * This will be updated on every new ProxyPass fetch,
@@ -418,7 +419,7 @@ class IPPProxyManagerSingleton extends EventTarget {
 
     lazy.logConsole.debug("Server:", server?.hostname);
 
-    this.#connection.initialize(this.#pass.asBearerToken(), server);
+    this.#connection.initialize(this.#pass, server);
 
     this.networkErrorObserver.start();
     this.networkErrorObserver.addIsolationKey(this.#connection.isolationKey);
@@ -515,7 +516,7 @@ class IPPProxyManagerSingleton extends EventTarget {
     lazy.logConsole.debug("Switching to server:", server?.hostname);
 
     this.#connection.suspend();
-    this.#connection.initialize(this.#pass.asBearerToken(), server);
+    this.#connection.initialize(this.#pass, server);
 
     this.networkErrorObserver.addIsolationKey(this.#connection.isolationKey);
 
@@ -573,9 +574,12 @@ class IPPProxyManagerSingleton extends EventTarget {
     this.#setState(IPPProxyStates.PAUSED);
   }
 
-  async #handleEvent(_event) {
-    if (lazy.IPProtectionService.state !== lazy.IPProtectionStates.READY) {
+  async #handleEvent(event) {
+    const { state, prevState } = event.detail;
+    if (state !== lazy.IPProtectionStates.READY) {
       await this.reset();
+    } else if (prevState !== lazy.IPProtectionStates.READY) {
+      this.refreshUsage();
     }
     this.updateState();
   }
@@ -699,7 +703,7 @@ class IPPProxyManagerSingleton extends EventTarget {
     }
     // Inject the new token in the current connection
     if (this.#connection?.active) {
-      this.#connection.replaceAuthTokenAndResume(pass.asBearerToken());
+      this.#connection.replaceAuthTokenAndResume(pass);
       this.networkErrorObserver.addIsolationKey(this.#connection.isolationKey);
       resumed = true;
     }

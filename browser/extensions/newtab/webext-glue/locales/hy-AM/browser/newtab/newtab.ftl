@@ -31,6 +31,119 @@ newtab-card-dismiss-button =
     .title = Բաց թողնել
     .aria-label = Բաց թողնել
 
+## Strings for "Homepage" and "Firefox Home" sections of about:settings#home.
+## Homepage panel
+
+home-homepage-title =
+    .label = Տնային էջ
+home-homepage-new-windows =
+    .label = Նոր պատուհաններ
+home-homepage-new-tabs =
+    .label = Նոր ներդիրներ
+# This option leads to the "Custom Homepage" subpage
+home-homepage-custom-homepage-button =
+    .label = Ընտրեք որոշակի կայք
+
+## Custom URLs subpage
+
+# Subheader on the Custom Homepage subpage. Followed by a form to enter URLs and a list of URLs already saved, if any.
+home-custom-homepage-card-header =
+    .label = Վեբ-կայքի հասցե(ներ)
+home-custom-homepage-address =
+    .placeholder = Մուտքագրեք հասցե
+home-custom-homepage-address-button =
+    .label = Ավելացնել հասցե
+# Shown when no custom websites/URLs to use as a homepage have been added yet
+home-custom-homepage-no-results =
+    .label = Դեռևս կայքեր չեն ավելացվել։
+home-custom-homepage-delete-address-button =
+    .aria-label = Ջնջել հասցեն
+    .title = Ջնջել հասցեն
+# Further options to use when setting the home page. Two action buttons are placed in line with this prompt
+# to replace the current home page with a currently open page or bookmark.
+home-custom-homepage-replace-with-prompt =
+    .label = Փոխարինել՝
+# Button that appears in-line after text "Replace with" (home-custom-homepage-replace-with-prompt)
+home-custom-homepage-current-pages-button =
+    .label = Բացված էջեր
+# Button that appears in-line after text "Replace with" (home-custom-homepage-replace-with-prompt)
+home-custom-homepage-bookmarks-button =
+    .label = Էջանիշներ…
+
+## Firefox Home content
+
+home-prefs-content-header =
+    .label = { -firefox-home-brand-name }
+home-prefs-search-header2 =
+    .label = Որոնում
+home-prefs-widgets-header =
+    .label = Վիջեթներ
+# Lists is a widget on New Tab, similar to a to-do widget
+home-prefs-lists-header =
+    .label = Ցանկեր
+# Timer is a widget on New Tab, similar to the Pomodoro timer.
+home-prefs-timer-header =
+    .label = Ժամաչափ
+# Sports is a widget on New Tab showing sports scores and schedules.
+home-prefs-sports-widget-header =
+    .label = Սպորտ
+# Clock is a widget on New Tab that displays time zones around the world.
+home-prefs-clocks-header =
+    .label = Ժամացույց
+home-prefs-mission-message2 =
+    .message = Մեր հովանավորները աջակցում են մեր առաքելությանը՝ ստեղծել ավելի լավ կայք։
+home-prefs-manage-topics-link2 =
+    .label = Կառավարել թեմաները
+home-prefs-choose-wallpaper-link2 =
+    .label = Ընտրեք պաստառ
+home-prefs-firefox-logo-header =
+    .label = { -brand-short-name }-ի լոգո
+# Variables:
+#   $num (number) - Number of rows displayed
+home-prefs-sections-rows-option-srd =
+    .label =
+        { $num ->
+            [one] { $num } տող
+           *[other] { $num } տողեր
+        }
+# Dropdown option shown when an extension replaces the contents of new windows or tabs.
+# Variables:
+#   $extension (string) - Name of the extension
+home-prefs-homepage-extension-option =
+    .label = Ընդլայնում ({ $extension })
+home-restore-defaults-srd =
+    .label = Վերականգնել սկզբնադիրը
+    .accesskey = R
+home-mode-choice-default-fx-srd =
+    .label = { -firefox-home-brand-name } (սկզբնադիր)
+home-mode-choice-custom-srd =
+    .label = Հարմարեցված URL-ներ...
+home-mode-choice-blank-srd =
+    .label = Դատարկ էջ
+home-prefs-shortcuts-header-srd =
+    .label = Դյուրանցումներ
+home-prefs-shortcuts-select =
+    .aria-label = Դյուրանցումներ
+home-prefs-shortcuts-by-option-sponsored-srd =
+    .label = Հովանավորված դյուրանցումներ
+home-prefs-recommended-by-option-sponsored-stories-srd =
+    .label = Հովանավորված կայքեր
+home-prefs-highlights-option-visited-pages-srd =
+    .label = Այցելած էջեր
+home-prefs-highlights-options-bookmarks-srd =
+    .label = Էջանիշեր
+home-prefs-highlights-option-most-recent-download-srd =
+    .label = Ամենավերջին ներբեռնումը
+home-prefs-recent-activity-header-srd =
+    .label = Վերջին ակտիվություն
+home-prefs-recent-activity-select =
+    .aria-label = Վերջին ակտիվություն
+home-prefs-weather-header-srd =
+    .label = Եղանակ
+home-prefs-support-firefox-header-srd =
+    .label = { -brand-product-name }-ի աջակցում
+home-prefs-mission-message-learn-more-link-srd = Իմացեք, թե ինչպես
+
 ## Search box component.
 
 # "Search" is a verb/action
@@ -151,6 +264,8 @@ newtab-menu-section-block = Արգելափակել
 # "Follow", "unfollow", and "following" are social media terms that refer to subscribing to or unsubscribing from a section of stories.
 # e.g. Following the travel section of stories.
 newtab-menu-section-unfollow-topic = Չհետևել
+# Context menu option to open a support page explaining the New Tab personalization features and privacy controls.
+newtab-menu-section-learn-more = Իմանալ ավելին
 # "Follow", "unfollow", and "following" are social media terms that refer to subscribing to or unsubscribing from a section of stories.
 # e.g. Following the travel section of stories.
 newtab-menu-section-unfollow = Չհետևել թեմային
@@ -703,8 +818,6 @@ newtab-widget-lists-button-add-item = Ավելացնել միույթ
 newtab-widget-lists-input-add-an-item2 =
     .placeholder = Ավելացնել միույթ
     .aria-label = Ավելացնել միույթ
-newtab-widget-lists-input-add-an-item =
-    .placeholder = Ավելացնել միույթ
 newtab-widget-lists-input-error = Խնդրում ենք ներառել տեքստ՝ տարր ավելացնելու համար։
 newtab-widget-lists-input-menu-open-link = Բացել հղումը
 newtab-widget-lists-input-menu-move-up = Շարժել վերև
@@ -729,11 +842,6 @@ newtab-widget-lists-name-placeholder-checklist2 =
 newtab-widget-lists-name-placeholder-new2 =
     .placeholder = Նոր ցանկ
     .aria-label = Խմբագրել ցանկի անունը
-newtab-widget-lists-name-placeholder-checklist =
-    .placeholder = Ստուգաթերթիկ
-# The placeholder value of the name field for a newly created list
-newtab-widget-lists-name-placeholder-new =
-    .placeholder = Նոր ցանկ
 newtab-widget-section-title = Վիջեթներ
 newtab-widget-menu-hide = Թաքցնել վիջեթը
 newtab-widget-menu-change-size = Փոխել չափը

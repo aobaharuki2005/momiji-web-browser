@@ -43,6 +43,7 @@
 #include "nsIStructuredCloneContainer.h"
 #include "nsIXULRuntime.h"
 #include "nsNetUtil.h"
+#include "nsPIDOMWindowInlines.h"
 #include "nsTHashtable.h"
 
 mozilla::LazyLogModule gNavigationAPILog("NavigationAPI");
@@ -551,7 +552,7 @@ struct NavigationWaitForAllScope final : public nsISupports,
         mEvent(aEvent),
         mDestination(aDestination),
         mLoadState(aLoadState) {}
-  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
+  NS_DECL_CYCLE_COLLECTING_ISUPPORTS_FINAL
   NS_DECL_CYCLE_COLLECTION_CLASS(NavigationWaitForAllScope)
   RefPtr<Navigation> mNavigation;
   RefPtr<NavigationAPIMethodTracker> mAPIMethodTracker;

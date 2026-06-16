@@ -12,6 +12,7 @@
 #include "mozilla/StaticPrefs_security.h"
 #include "mozilla/dom/PWindowGlobalParent.h"
 #include "mozilla/dom/WindowGlobalParent.h"
+#include "nsComponentManagerUtils.h"
 #include "nsIWebAuthnRelatedOriginFetcher.h"
 #include "nsThreadUtils.h"
 

@@ -333,6 +333,8 @@ class _ConfigurationModule extends RootBiDiModule {
    * @param {bool} options.async
    * @param {string} options.category
    * @param {Array<string>|null} options.contextIds
+   * @param {string} [options.moduleName="_configuration"]
+   *     The module name to use when writing session data.
    * @param {boolean} options.supportsGlobalConfiguration
    * @param {*} options.resetValue
    * @param {Array<string>|null} options.userContextIds
@@ -343,6 +345,7 @@ class _ConfigurationModule extends RootBiDiModule {
       async: isAsync,
       category,
       contextIds = NULL,
+      moduleName = "_configuration",
       resetValue,
       supportsGlobalConfiguration,
       userContextIds = NULL,
@@ -370,6 +373,7 @@ class _ConfigurationModule extends RootBiDiModule {
       category,
       hasContextConfiguration,
       hasGlobalConfiguration,
+      moduleName,
       navigables,
       resetValue,
       userContexts,
@@ -534,6 +538,7 @@ class _ConfigurationModule extends RootBiDiModule {
       hasContextConfiguration,
       hasGlobalConfiguration,
       hasUserContextConfiguration,
+      moduleName,
       navigables,
       resetValue,
       userContexts,
@@ -546,7 +551,7 @@ class _ConfigurationModule extends RootBiDiModule {
       for (const userContext of userContexts) {
         sessionDataItems.push(
           ...this.messageHandler.sessionData.generateSessionDataItemUpdate(
-            "_configuration",
+            moduleName,
             category,
             {
               type: lazy.ContextDescriptorType.UserContext,
@@ -561,7 +566,7 @@ class _ConfigurationModule extends RootBiDiModule {
       for (const navigable of navigables) {
         sessionDataItems.push(
           ...this.messageHandler.sessionData.generateSessionDataItemUpdate(
-            "_configuration",
+            moduleName,
             category,
             {
               type: lazy.ContextDescriptorType.TopBrowsingContext,
@@ -575,7 +580,7 @@ class _ConfigurationModule extends RootBiDiModule {
     } else if (hasGlobalConfiguration) {
       sessionDataItems.push(
         ...this.messageHandler.sessionData.generateSessionDataItemUpdate(
-          "_configuration",
+          moduleName,
           category,
           {
             type: lazy.ContextDescriptorType.All,

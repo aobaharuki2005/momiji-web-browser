@@ -34,7 +34,7 @@ class SessionHistoryInfo;
 
 // https://html.spec.whatwg.org/#navigation-api-method-tracker
 struct NavigationAPIMethodTracker final : public nsISupports {
-  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
+  NS_DECL_CYCLE_COLLECTING_ISUPPORTS_FINAL
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(NavigationAPIMethodTracker)
 
   NavigationAPIMethodTracker(Navigation* aNavigationObject,

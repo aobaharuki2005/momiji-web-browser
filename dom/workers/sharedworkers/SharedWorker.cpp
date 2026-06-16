@@ -267,7 +267,7 @@ already_AddRefed<SharedWorker> SharedWorker::Constructor(
       OriginTrials::FromWindow(nsGlobalWindowInner::Cast(window)),
       void_t() /* OptionalServiceWorkerData */, agentClusterId,
       DEFAULT_REMOTE_TYPE /* ignored */, loadInfo.mLanguageOverrideLocale,
-      loadInfo.mLanguageOverride.Clone());
+      loadInfo.mLanguageOverride.Clone(), loadInfo.mTimezoneOverride);
 
   PSharedWorkerChild* pActor = actorChild->SendPSharedWorkerConstructor(
       remoteWorkerData, loadInfo.mWindowID, portIdentifier.release());
@@ -389,6 +389,14 @@ void SharedWorker::UpdateLanguageOverride(
 
   if (mActor) {
     mActor->SendSetLocaleOverride(aLanguageOverride, aLanguages);
+  }
+}
+
+void SharedWorker::UpdateTimezoneOverride(const nsAString& aTimezoneOverride) {
+  AssertIsOnMainThread();
+
+  if (mActor) {
+    mActor->SendUpdateTimezoneOverride(aTimezoneOverride);
   }
 }
 

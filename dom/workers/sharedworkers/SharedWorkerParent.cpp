@@ -138,6 +138,18 @@ IPCResult SharedWorkerParent::RecvSetLocaleOverride(
   return IPC_OK();
 }
 
+IPCResult SharedWorkerParent::RecvUpdateTimezoneOverride(
+    const nsString& aTimezoneOverride) {
+  AssertIsOnBackgroundThread();
+
+  if (mStatus == eActive) {
+    MOZ_ASSERT(mWorkerManagerWrapper);
+    mWorkerManagerWrapper->Manager()->UpdateTimezoneOverride(aTimezoneOverride);
+  }
+
+  return IPC_OK();
+}
+
 void SharedWorkerParent::ManagerCreated(
     already_AddRefed<SharedWorkerManagerWrapper> aWorkerManagerWrapper) {
   AssertIsOnBackgroundThread();

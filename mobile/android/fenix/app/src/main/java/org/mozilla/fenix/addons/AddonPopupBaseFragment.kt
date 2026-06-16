@@ -48,7 +48,6 @@ import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.getPreferenceKey
 import org.mozilla.fenix.ext.pixelSizeFor
 import org.mozilla.fenix.ext.requireComponents
-import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.nimbus.FxNimbus
 import org.mozilla.fenix.settings.downloads.DownloadLocationManager
 import org.mozilla.fenix.theme.ThemeManager
@@ -99,8 +98,8 @@ abstract class AddonPopupBaseFragment :
                     onNeedToRequestPermissions = { permissions ->
                         requestPermissions(permissions, REQUEST_CODE_PROMPT_PERMISSIONS)
                     },
-                    isEmailMaskFeatureEnabled = { requireContext().settings().isEmailMaskFeatureEnabled },
-                    isSuggestEmailMaskEnabled = { requireContext().settings().isEmailMaskSuggestionEnabled },
+                    isEmailMaskFeatureEnabled = { requireComponents.settings.isEmailMaskFeatureEnabled },
+                    isSuggestEmailMaskEnabled = { requireComponents.settings.isEmailMaskSuggestionEnabled },
                     tabsUseCases = requireComponents.useCases.tabsUseCases,
                     androidPhotoPicker = AndroidPhotoPicker(
                         requireContext(),
@@ -114,7 +113,10 @@ abstract class AddonPopupBaseFragment :
             val downloadFileUtils: DownloadFileUtils = DefaultDownloadFileUtils(
                 context = requireContext(),
                 downloadLocation = {
-                    DownloadLocationManager(requireContext()).defaultLocation
+                    DownloadLocationManager(
+                        requireComponents.settings,
+                        requireContext().contentResolver,
+                    ).defaultLocation
                 },
             )
             val downloadFeature = DownloadsFeature(
@@ -236,7 +238,10 @@ abstract class AddonPopupBaseFragment :
                 0,
                 Status.INITIATED,
                 userAgent,
-                directoryPath = DownloadLocationManager(requireContext()).defaultLocation,
+                directoryPath = DownloadLocationManager(
+                    requireComponents.settings,
+                    requireContext().contentResolver,
+                ).defaultLocation,
                 private = isPrivate,
                 skipConfirmation = skipConfirmation,
                 openInApp = openInApp,

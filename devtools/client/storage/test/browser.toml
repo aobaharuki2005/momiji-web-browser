@@ -220,3 +220,5 @@ fail-if = [
 ]
 
 ["browser_storage_webext_storage_local.js"]
+
+["browser_storage_webext_storage_sync.js"]

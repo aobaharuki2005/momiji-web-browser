@@ -230,6 +230,10 @@ export const INITIAL_STATE = {
     lastLiveUpdated: null,
     // Index into the live matches list for the Now tab's single-card pager.
     liveIndex: 0,
+    // End-of-match celebration bookkeeping (set by the feed): `endedAt` maps a
+    // just-ended match's global_event_id to the ms timestamp it left /live;
+    // `celebrated` lists ids that have already triggered a celebration.
+    celebrations: { endedAt: {}, celebrated: [] },
   },
 };
 
@@ -1255,6 +1259,8 @@ function SportsWidget(prevState = INITIAL_STATE.SportsWidget, action) {
     }
     case at.WIDGETS_SPORTS_SET_LIVE_INDEX:
       return { ...prevState, liveIndex: action.data };
+    case at.WIDGETS_SPORTS_SET_CELEBRATIONS:
+      return { ...prevState, celebrations: action.data };
     default:
       return prevState;
   }

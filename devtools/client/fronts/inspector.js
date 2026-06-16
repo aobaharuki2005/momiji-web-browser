@@ -150,13 +150,11 @@ class InspectorFront extends FrontClassWithSpec(inspectorSpec) {
       return;
     }
 
-    if (this._highlighters.has(type)) {
-      const highlighter = this._highlighters.get(type);
-      if (!highlighter.isDestroyed()) {
-        highlighter.finalize();
-      }
-      this._highlighters.delete(type);
+    const highlighter = this._highlighters.get(type);
+    if (!highlighter.isDestroyed()) {
+      highlighter.finalize();
     }
+    this._highlighters.delete(type);
   }
 
   async getHighlighterByType(typeName) {

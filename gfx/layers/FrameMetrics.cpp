@@ -19,7 +19,7 @@ std::ostream& operator<<(std::ostream& aStream, const FrameMetrics& aMetrics) {
   aStream << "{ [cb=" << aMetrics.GetCompositionBounds()
           << "] [sr=" << aMetrics.GetScrollableRect()
           << "] [s=" << aMetrics.GetVisualScrollOffset();
-  if (aMetrics.GetVisualScrollUpdateType() != FrameMetrics::eNone) {
+  if (aMetrics.GetVisualScrollUpdateType() != ScrollOffsetUpdateType::None) {
     aStream << "] [vd=" << aMetrics.GetVisualDestination();
   }
   if (aMetrics.IsScrollInfoLayer()) {

@@ -5,6 +5,8 @@
 #ifndef MEDIA_DATA_CODEC_H_
 #define MEDIA_DATA_CODEC_H_
 
+#include <memory>
+
 #include "MediaCodecsSupport.h"
 #include "PerformanceRecorder.h"
 #include "api/video/video_codec_type.h"
@@ -34,7 +36,7 @@ class MediaDataCodec {
    * Create encoder object for codec format |aFormat|. Return |nullptr| when
    * failed.
    */
-  static WebrtcVideoEncoder* CreateEncoder(
+  static std::unique_ptr<WebrtcVideoEncoder> CreateEncoder(
       const webrtc::SdpVideoFormat& aFormat);
 
   /**
@@ -48,8 +50,8 @@ class MediaDataCodec {
    * Create decoder object for codec type |aCodecType|. Return |nullptr| when
    * failed.
    */
-  static WebrtcVideoDecoder* CreateDecoder(webrtc::VideoCodecType aCodecType,
-                                           TrackingId aTrackingId);
+  static std::unique_ptr<WebrtcVideoDecoder> CreateDecoder(
+      webrtc::VideoCodecType aCodecType, TrackingId aTrackingId);
 };
 }  // namespace mozilla
 

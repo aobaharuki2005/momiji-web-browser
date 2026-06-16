@@ -95,7 +95,9 @@ impl Metrics {
             i.alpn_http_versions
                 .contains(&happy_eyeballs::HttpVersion::H3)
         });
-        self.https_rr_ech |= infos.iter().any(|i| i.ech_config.is_some());
+        self.https_rr_ech |= infos
+            .iter()
+            .any(|i| i.ech_config.as_ref().is_some_and(|e| !e.as_ref().is_empty()));
         self.https_rr_ipv4hint |= infos.iter().any(|i| !i.ipv4_hints.is_empty());
         self.https_rr_ipv6hint |= infos.iter().any(|i| !i.ipv6_hints.is_empty());
         self.dns_response(id);
@@ -146,14 +148,21 @@ impl Drop for Metrics {
             return;
         };
 
+        let outcome_label = match outcome {
+            Outcome::Succeeded { .. } => "succeeded",
+            Outcome::Failed { .. } => "failed",
+        };
+
         let elapsed = match outcome {
             Outcome::Succeeded { elapsed, .. } | Outcome::Failed { elapsed } => *elapsed,
         };
         let elapsed_ms = elapsed.as_millis() as i64;
         glean::happy_eyeballs_connection_establishment_time
+            .get(outcome_label)
             .accumulate_single_sample_signed(elapsed_ms);
 
         glean::happy_eyeballs_connection_attempt_count
+            .get(outcome_label)
             .accumulate_single_sample_signed(self.attempt_count.into());
 
         glean::happy_eyeballs_cancelled_attempt_count

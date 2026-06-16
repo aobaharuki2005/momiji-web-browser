@@ -70,7 +70,7 @@ static bool IsPreviousSibling(const nsINode* aSubject, const nsINode* aNode) {
 namespace mozilla::dom {
 
 HTMLImageElement::HTMLImageElement(
-    already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo)
+    already_AddRefed<mozilla::dom::NodeInfo> aNodeInfo)
     : nsGenericHTMLElement(std::move(aNodeInfo)) {
   // We start out broken
   AddStatesSilently(ElementState::BROKEN);

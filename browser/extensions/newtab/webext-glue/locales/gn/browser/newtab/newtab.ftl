@@ -31,6 +31,127 @@ newtab-card-dismiss-button =
     .title = Mboyke
     .aria-label = Mboyke
 
+## Strings for "Homepage" and "Firefox Home" sections of about:settings#home.
+## Homepage panel
+
+home-homepage-title =
+    .label = Kuatiarogue ñepyrũha
+home-homepage-new-windows =
+    .label = Ovetã pyahu
+home-homepage-new-tabs =
+    .label = tendayke pyahu
+# This option leads to the "Custom Homepage" subpage
+home-homepage-custom-homepage-button =
+    .label = Eiporavo peteĩ tendaite
+
+## Custom URLs subpage
+
+# Subheader on the Custom Homepage subpage. Followed by a form to enter URLs and a list of URLs already saved, if any.
+home-custom-homepage-card-header =
+    .label = Ñanduti kundaharape(ita)
+home-custom-homepage-address =
+    .placeholder = Ehai kundaharape
+home-custom-homepage-address-button =
+    .label = Embojuaju kundaharape
+# Shown when no custom websites/URLs to use as a homepage have been added yet
+home-custom-homepage-no-results =
+    .label = Ndaipóri ñanduti rogue mbojuajupyre.
+home-custom-homepage-delete-address-button =
+    .aria-label = Embogue kundaharape
+    .title = Embogue kundaharape
+# Further options to use when setting the home page. Two action buttons are placed in line with this prompt
+# to replace the current home page with a currently open page or bookmark.
+home-custom-homepage-replace-with-prompt =
+    .label = Emyengovia kóvandi
+# Button that appears in-line after text "Replace with" (home-custom-homepage-replace-with-prompt)
+home-custom-homepage-current-pages-button =
+    .label = Kuatiarogue ijurujavahína
+# Button that appears in-line after text "Replace with" (home-custom-homepage-replace-with-prompt)
+home-custom-homepage-bookmarks-button =
+    .label = Techaukahaita…
+
+## Firefox Home content
+
+home-prefs-content-header =
+    .label = { -firefox-home-brand-name }
+home-prefs-search-header2 =
+    .label = Heka
+home-prefs-stories-header2 =
+    .label = Tembiasakue
+    .description = Tetepy oiporavóva { -brand-product-name } reheguáva
+home-prefs-widgets-header =
+    .label = Widgets
+# Lists is a widget on New Tab, similar to a to-do widget
+home-prefs-lists-header =
+    .label = Tysyieta
+# Timer is a widget on New Tab, similar to the Pomodoro timer.
+home-prefs-timer-header =
+    .label = Aravojere
+# Sports is a widget on New Tab showing sports scores and schedules.
+home-prefs-sports-widget-header =
+    .label = Jehugarã
+# Clock is a widget on New Tab that displays time zones around the world.
+home-prefs-clocks-header =
+    .label = Aravopapaha
+home-prefs-mission-message2 =
+    .message = Ore ykekohára oipytyvõ romombareteve hag̃ua ñanduti rogue.
+home-prefs-manage-topics-link2 =
+    .label = Eñangareko témare
+home-prefs-choose-wallpaper-link2 =
+    .label = Eiporavo mba’erechaha rugua
+home-prefs-firefox-logo-header =
+    .label = { -brand-short-name } ra’ãnga’i
+# Informational message bar that appears in the Firefox Home section when the options are disabled.
+# The user must select Firefox Home as their homepage for either new tabs or new windows to enable
+# the features in settings.
+home-prefs-firefox-home-disabled-notice =
+    .message = Eiporu hag̃ua ko’ã tembiapoite, emboheko tendayke térã ovetã pyahu { -firefox-home-brand-name } ndive.
+# Variables:
+#   $num (number) - Number of rows displayed
+home-prefs-sections-rows-option-srd =
+    .label =
+        { $num ->
+            [one] { $num } rysýi
+           *[other] { $num } rysýi
+        }
+# Dropdown option shown when an extension replaces the contents of new windows or tabs.
+# Variables:
+#   $extension (string) - Name of the extension
+home-prefs-homepage-extension-option =
+    .label = Jepysokue ({ $extension })
+home-restore-defaults-srd =
+    .label = mbopyahujey techa mboyvegua
+    .accesskey = m
+home-mode-choice-default-fx-srd =
+    .label = { -firefox-home-brand-name } (Ijypykue)
+home-mode-choice-custom-srd =
+    .label = URLs ñemomba’e…
+home-mode-choice-blank-srd =
+    .label = Kuatiarogue morotĩva
+home-prefs-shortcuts-header-srd =
+    .label = Jeike pya’eha
+home-prefs-shortcuts-select =
+    .aria-label = Jeike pya’eha
+home-prefs-shortcuts-by-option-sponsored-srd =
+    .label = Jeike pya’eha jehepyme’ẽpyre
+home-prefs-recommended-by-option-sponsored-stories-srd =
+    .label = Tembiasakue jehepyme’ẽguáva
+home-prefs-highlights-option-visited-pages-srd =
+    .label = Tenda jeikepyre
+home-prefs-highlights-options-bookmarks-srd =
+    .label = Techaukaha
+home-prefs-highlights-option-most-recent-download-srd =
+    .label = Oñemboguejy ramovéva
+home-prefs-recent-activity-header-srd =
+    .label = Tembiapo ramovegua
+home-prefs-recent-activity-select =
+    .aria-label = Tembiapo ramovegua
+home-prefs-weather-header-srd =
+    .label = Arapytu
+home-prefs-support-firefox-header-srd =
+    .label = Eipytyvõ { -brand-product-name }
+home-prefs-mission-message-learn-more-link-srd = Eikuaa mba’éichapa
+
 ## Search box component.
 
 # "Search" is a verb/action
@@ -151,6 +272,8 @@ newtab-menu-section-block = Joko
 # "Follow", "unfollow", and "following" are social media terms that refer to subscribing to or unsubscribing from a section of stories.
 # e.g. Following the travel section of stories.
 newtab-menu-section-unfollow-topic = Ndahapykuehovéima
+# Context menu option to open a support page explaining the New Tab personalization features and privacy controls.
+newtab-menu-section-learn-more = Eikuaave
 # "Follow", "unfollow", and "following" are social media terms that refer to subscribing to or unsubscribing from a section of stories.
 # e.g. Following the travel section of stories.
 newtab-menu-section-unfollow = Anive ehapykueho téma
@@ -757,8 +880,6 @@ newtab-widget-lists-button-add-item = Embojuaju jehaipy
 newtab-widget-lists-input-add-an-item2 =
     .placeholder = Embojuaju jehaipy
     .aria-label = Embojuaju jehaipy
-newtab-widget-lists-input-add-an-item =
-    .placeholder = Embojuaju jehaipy
 newtab-widget-lists-input-error = Emoinge moñe’ẽrã embojuaju hag̃ua mba’eporurã.
 newtab-widget-lists-input-menu-open-link = Joajuha ijurujáva
 newtab-widget-lists-input-menu-move-up = Jehupi
@@ -786,11 +907,6 @@ newtab-widget-lists-name-placeholder-checklist2 =
 newtab-widget-lists-name-placeholder-new2 =
     .placeholder = Tysýi pyahu
     .aria-label = Embosako’i tysýi réra
-newtab-widget-lists-name-placeholder-checklist =
-    .placeholder = Tysýi hechajeyha
-# The placeholder value of the name field for a newly created list
-newtab-widget-lists-name-placeholder-new =
-    .placeholder = Tysýi pyahu
 newtab-widget-section-title = Widgets
 newtab-widget-menu-hide = Eñomi widget
 newtab-widget-menu-change-size = Emoambue tuichakue

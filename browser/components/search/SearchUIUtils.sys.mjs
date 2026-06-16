@@ -409,6 +409,11 @@ export var SearchUIUtils = {
    *   `SearchUtils.URL_TYPE.SEARCH`, which will perform a usual web search.
    * @param {keyof typeof lazy.BrowserSearchTelemetry.KNOWN_SEARCH_SOURCES} options.sapSource
    *   The search access point source.
+   * @param {boolean} [options.avoidBrowserFocus]
+   *   When loading into the current tab, skip focusing the target browser
+   *   element so keyboard focus stays where it was. Used by callers (e.g.
+   *   the Smart Window assistant) that drive a search without user keyboard
+   *   intent and need focus to remain with the initiating UI.
    */
   async loadSearch({
     window,
@@ -422,6 +427,7 @@ export var SearchUIUtils = {
     tab,
     searchUrlType,
     sapSource,
+    avoidBrowserFocus = false,
   }) {
     if (!triggeringPrincipal) {
       throw new Error(
@@ -453,6 +459,7 @@ export var SearchUIUtils = {
       triggeringPrincipal,
       policyContainer,
       targetBrowser: tab?.linkedBrowser,
+      avoidBrowserFocus,
       globalHistoryOptions: {
         triggeringSearchEngine: engine.name,
       },

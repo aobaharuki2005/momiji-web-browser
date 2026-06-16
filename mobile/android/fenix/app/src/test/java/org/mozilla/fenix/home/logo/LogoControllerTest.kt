@@ -8,6 +8,7 @@ package org.mozilla.fenix.home.logo
 
 import android.view.ViewGroup
 import mozilla.components.support.test.fakes.android.FakeContext
+import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -17,10 +18,13 @@ class LogoControllerTest {
 
     class FakeLongFoxFeature : LongFoxFeatureApi {
         var started = false
+        var entryPointShownCount = 0
         override fun start(container: ViewGroup) {
             started = true
         }
-        override fun onEntryPointShown() { }
+        override fun onEntryPointShown() {
+            entryPointShownCount++
+        }
     }
 
     class FakeViewGroup : ViewGroup(FakeContext()) {
@@ -60,5 +64,16 @@ class LogoControllerTest {
         )
         logoController.handleLongfoxEntryPointClicked()
         assertTrue(fakeLongFoxFeature.started)
+    }
+
+    @Test
+    fun `record telemetry when entry point shown`() {
+        val logoController = LogoController(
+            longFoxFeature = fakeLongFoxFeature,
+            container = FakeViewGroup(),
+            longFoxEnabled = true,
+        )
+        logoController.handleLongfoxEntryPointShown()
+        assertEquals(1, fakeLongFoxFeature.entryPointShownCount)
     }
 }

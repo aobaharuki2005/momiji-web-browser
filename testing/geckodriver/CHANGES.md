@@ -62,6 +62,19 @@ All notable changes to this program are documented in this file.
 
 ### Removed
 
+- Linux 32-bit builds have been discontinued.
+
+  Starting with Firefox 145, Mozilla no longer ships binaries for
+  32-bit (x86) Linux. As a result, geckodriver binaries for that
+  platform are no longer provided either.
+
+  If you still need a 32-bit Linux build of geckodriver, you can
+  install it via `cargo install` or cross-compile it yourself:
+
+  ```shell
+  % cargo build --target i686-unknown-linux-gnu
+  ```
+
 - Removed FTP proxy support from WebDriver capabilities, as FTP
   proxying is no longer supported by modern browsers.
 

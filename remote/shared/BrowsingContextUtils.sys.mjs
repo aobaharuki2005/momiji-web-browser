@@ -5,9 +5,15 @@
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
+  E10SUtils: "resource://gre/modules/E10SUtils.sys.mjs",
+
   error: "chrome://remote/content/shared/messagehandler/Errors.sys.mjs",
   PollPromise: "chrome://remote/content/shared/Sync.sys.mjs",
 });
+
+// Schemes that WebDriver can always load without restrictions when
+// system access is not enabled.
+const webdriverSafeSchemes = ["blob", "file", "http", "https"];
 
 /**
  * @typedef {object} BrowsingContextDetails
@@ -78,6 +84,65 @@ export function isParentProcess(browsingContext) {
 
   // If `browsingContext` is not a `CanonicalBrowsingContext`, then we are
   // necessarily in a content process page.
+  return false;
+}
+
+/**
+ * Check if the browsing context is running in a web content process,
+ * ie. a process that exclusively hosts regular web pages (http, https,
+ * etc.). This excludes the parent process, extension processes,
+ * privileged about: content processes, and file content processes.
+ *
+ * @param {BrowsingContext} browsingContext
+ *     Browsing context to check.
+ *
+ * @returns {boolean}
+ *     True if the browsing context is in a web content process.
+ */
+export function isWebContentProcess(browsingContext) {
+  if (CanonicalBrowsingContext.isInstance(browsingContext)) {
+    const remoteType = browsingContext.currentWindowGlobal?.remoteType;
+    return remoteType !== null && lazy.E10SUtils.isWebRemoteType(remoteType);
+  }
+
+  // If `browsingContext` is not a `CanonicalBrowsingContext`, then we are
+  // necessarily in a content process page.
+  return true;
+}
+
+/**
+ * Check if the given URL is allowed to be loaded in the specified
+ * browsing context when system access is not allowed.
+ *
+ * @param {nsIURI} uri
+ *     URI to check.
+ * @param {BrowsingContext} browsingContext
+ *     Target browsing context for the navigation.
+ *
+ * @returns {boolean}
+ *     True if the URL is web safe, false otherwise.
+ */
+export function isWebdriverSafeNavigationURL(uri, browsingContext) {
+  if (
+    webdriverSafeSchemes.includes(uri.scheme) ||
+    (uri.scheme === "about" && uri.filePath === "blank")
+  ) {
+    return true;
+  }
+
+  // For other protocols, check for the URI_INHERITS_SECURITY_CONTEXT flag.
+  // Protocols like "data:" and "javascript:" inherit the loading document’s
+  // security context and are only safe when the browsing context is in a
+  // web content process and the current document does not have the system
+  // principal.
+  const flags = Services.io.getDynamicProtocolFlags(uri);
+  if (flags & Ci.nsIProtocolHandler.URI_INHERITS_SECURITY_CONTEXT) {
+    const principal = browsingContext.currentWindowGlobal?.documentPrincipal;
+    return (
+      isWebContentProcess(browsingContext) && !principal?.isSystemPrincipal
+    );
+  }
+
   return false;
 }
 

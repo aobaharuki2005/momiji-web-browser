@@ -67,7 +67,7 @@ let features = {
     test: () => WebAssembly.Component !== undefined
   },
   "jsPromiseIntegration": {
-    status: NIGHTLY,
+    status: RELEASED,
     test: () => WebAssembly.promising !== undefined
   },
   "wideArithmetic": {

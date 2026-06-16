@@ -1544,6 +1544,8 @@ export class TelemetryFeed {
       // Intentional fall-through
       case at.CARD_SECTION_IMPRESSION:
       // Intentional fall-through
+      case at.CLICK_SECTION_LEARN_MORE:
+      // Intentional fall-through
       case at.FOLLOW_SECTION:
       // Intentional fall-through
       case at.UNBLOCK_SECTION:
@@ -1954,6 +1956,11 @@ export class TelemetryFeed {
               gleanDataForPrivatePing
             );
           }
+          break;
+        case "CLICK_SECTION_LEARN_MORE":
+          Glean.newtab.sectionsLearnMore.record({
+            newtab_visit_id: session.session_id,
+          });
           break;
         default:
           break;

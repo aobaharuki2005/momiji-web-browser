@@ -641,8 +641,7 @@ already_AddRefed<CacheEntryHandle> CacheEntry::ReopenTruncated(
   // reference counter and doesn't revert entry state back when write
   // fails and also doesn't update the entry frecency.  Not updating
   // frecency causes entries to not be purged from our memory pools.
-  RefPtr<CacheEntryHandle> writeHandle = newEntry->NewWriteHandle();
-  return writeHandle.forget();
+  return newEntry->NewWriteHandle();
 }
 
 void CacheEntry::TransferCallbacks(CacheEntry& aFromEntry) {
@@ -1006,16 +1005,21 @@ void CacheEntry::OnFetched(Callback const& aCallback) {
   }
 }
 
-CacheEntryHandle* CacheEntry::NewHandle() { return new CacheEntryHandle(this); }
+already_AddRefed<CacheEntryHandle> CacheEntry::NewHandle() {
+  return MakeAndAddRef<CacheEntryHandle>(this);
+}
 
-CacheEntryHandle* CacheEntry::NewWriteHandle() {
+already_AddRefed<CacheEntryHandle> CacheEntry::NewWriteHandle() {
   mozilla::MutexAutoLock lock(mLock);
 
   // Ignore the OPEN_SECRETLY flag on purpose here, which should actually be
   // used only along with OPEN_READONLY, but there is no need to enforce that.
   BackgroundOp(Ops::FRECENCYUPDATE);
 
-  return (mWriter = NewHandle());
+  RefPtr<CacheEntryHandle> handle = NewHandle();
+  // mWriter is a weak reference; the returned handle holds the strong ref.
+  mWriter = handle;
+  return handle.forget();
 }
 
 void CacheEntry::OnHandleClosed(CacheEntryHandle const* aHandle) {

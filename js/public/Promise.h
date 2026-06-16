@@ -485,7 +485,7 @@ extern JS_PUBLIC_API bool RejectPromise(JSContext* cx,
  * user-code-running portion of resolution does not execute on the caller's
  * stack.
  *
- * This corresponds to the MaybeDeferredPromiseResolve abstract operation from
+ * This corresponds to the SafePromiseResolve abstract operation from
  * the thenable-curtailment proposal
  * (https://tc39.es/proposal-thenable-curtailment/).
  *

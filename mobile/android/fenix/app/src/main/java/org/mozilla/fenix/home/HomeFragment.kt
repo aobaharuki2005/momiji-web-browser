@@ -36,7 +36,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.ComposeView
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.core.content.getSystemService
 import androidx.fragment.app.Fragment
@@ -60,6 +59,7 @@ import mozilla.components.concept.sync.AccountObserver
 import mozilla.components.concept.sync.AuthType
 import mozilla.components.concept.sync.OAuthAccount
 import mozilla.components.feature.accounts.push.SendTabUseCases
+import mozilla.components.feature.ipprotection.IPProtectionWarningBinding
 import mozilla.components.feature.tab.collections.TabCollection
 import mozilla.components.feature.top.sites.presenter.DefaultTopSitesPresenter
 import mozilla.components.lib.state.ext.flow
@@ -109,7 +109,6 @@ import org.mozilla.fenix.ext.isOnline
 import org.mozilla.fenix.ext.nav
 import org.mozilla.fenix.ext.recordEventInNimbus
 import org.mozilla.fenix.ext.requireComponents
-import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.ext.tabClosedUndoMessage
 import org.mozilla.fenix.home.bookmarks.BookmarksFeature
 import org.mozilla.fenix.home.bookmarks.controller.DefaultBookmarksController
@@ -145,6 +144,7 @@ import org.mozilla.fenix.home.topsites.controller.DefaultTopSiteController
 import org.mozilla.fenix.home.topsites.getTopSitesConfig
 import org.mozilla.fenix.home.ui.Homepage
 import org.mozilla.fenix.home.ui.WallpaperBackground
+import org.mozilla.fenix.ipprotection.store.IPProtectionOnboardingPrompt
 import org.mozilla.fenix.messaging.DefaultMessageController
 import org.mozilla.fenix.messaging.FenixMessageSurfaceId
 import org.mozilla.fenix.messaging.MessagingFeature
@@ -260,6 +260,8 @@ class HomeFragment : Fragment() {
     private val showReviewPromptBinding = ViewBoundFeatureWrapper<ShowReviewPromptBinding>()
     private val topSitesBinding = ViewBoundFeatureWrapper<TopSitesBinding>()
     private val trackersBlockedFeature = ViewBoundFeatureWrapper<TrackersBlockedFeature>()
+    private val ipProtectionWarningBinding = ViewBoundFeatureWrapper<IPProtectionWarningBinding>()
+    private val ipProtectionOnboardingPrompt = ViewBoundFeatureWrapper<IPProtectionOnboardingPrompt>()
 
     private val homepageEdgeToEdgeFeature = ViewBoundFeatureWrapper<HomepageEdgeToEdgeFeature>()
     private var qrScanFenixFeature: ViewBoundFeatureWrapper<QrScanFenixFeature>? =
@@ -301,7 +303,7 @@ class HomeFragment : Fragment() {
             with(requireContext()) {
                 maybeNavigateToSystemSetToDefaultAction(
                     resultCode = result.resultCode,
-                    settings = settings(),
+                    settings = components.settings,
                     dateTimeProvider = dateTimeProvider,
                     isChecklistTask = true,
                 ) {
@@ -333,7 +335,7 @@ class HomeFragment : Fragment() {
     }
 
     private val continuousOnboardingFeature by lazy {
-        val settings = requireContext().settings()
+        val settings = requireComponents.settings
         ContinuousOnboardingFeatureDefault(
             settings = settings,
             telemetryRecorder = telemetryRecorder,
@@ -405,7 +407,7 @@ class HomeFragment : Fragment() {
                 feature = HomepageEdgeToEdgeFeature(
                     appStore = requireComponents.appStore,
                     activity = activity,
-                    settings = activity.settings(),
+                    settings = activity.components.settings,
                     browsingModeManager = browsingModeManager,
                     toolbarStore = toolbarStore,
                 ),
@@ -416,7 +418,7 @@ class HomeFragment : Fragment() {
 
         homeNavigationBar = HomeNavigationBar(
             toolbarStore = toolbarStore,
-            settings = activity.settings(),
+            settings = activity.components.settings,
             hideWhenKeyboardShown = true,
         )
 
@@ -427,7 +429,7 @@ class HomeFragment : Fragment() {
             appStore = activity.components.appStore,
             browserStore = activity.components.core.store,
             browsingModeManager = activity.browsingModeManager,
-            settings = activity.settings(),
+            settings = activity.components.settings,
             directToSearchConfig = DirectToSearchConfig(
                 startSearch = bundleArgs.getBoolean(FOCUS_ON_ADDRESS_BAR) ||
                         FxNimbus.features.oneClickSearch.value().enabled,
@@ -455,7 +457,7 @@ class HomeFragment : Fragment() {
     )
 
     private fun initMessagingFeature(view: View) {
-        if (requireContext().settings().isExperimentationEnabled) {
+        if (requireComponents.settings.isExperimentationEnabled) {
             messagingFeatureHomescreen.set(
                 feature = MessagingFeature(
                     appStore = requireComponents.appStore,
@@ -466,7 +468,7 @@ class HomeFragment : Fragment() {
                 view = view,
             )
 
-            initializeMicrosurveyFeature(requireContext().settings().microsurveyFeatureEnabled, view)
+            initializeMicrosurveyFeature(requireComponents.settings.microsurveyFeatureEnabled, view)
         }
     }
 
@@ -499,7 +501,7 @@ class HomeFragment : Fragment() {
             )
         }
 
-        toolbarView.build(requireContext().settings().enableHomepageSearchBar)
+        toolbarView.build(requireComponents.settings.enableHomepageSearchBar)
 
         requireComponents.appStore.state.wasLastTabClosedPrivate?.also {
             showUndoSnackbar(requireContext().tabClosedUndoMessage(it))
@@ -521,6 +523,7 @@ class HomeFragment : Fragment() {
         initReviewPromptBinding(view = view)
         initTabsCleanupFeature(view = view)
         initSnackbarBinding(view = view)
+        initIpProtectionBindings(view = view)
 
         privacyNoticeBannerStore = PrivacyNoticeBannerStore(
             initialState = PrivacyNoticeBannerState(
@@ -557,7 +560,7 @@ class HomeFragment : Fragment() {
     ) {
         view.setContent {
             FirefoxTheme {
-                val settings = LocalContext.current.settings()
+                val settings = components.settings
                 val appState = with(components.appStore) {
                     remember {
                         // Ignore AppState changes where only the browsing mode differs.
@@ -650,7 +653,7 @@ class HomeFragment : Fragment() {
                     wallpaper = appState.wallpaperState.currentWallpaper,
                     loadBitmap = components.useCases.wallpaperUseCases.loadBitmap::invoke,
                     onLoadFailed = {
-                        requireContext().settings().currentWallpaperTextColor = 0L
+                        requireComponents.settings.currentWallpaperTextColor = 0L
                         showComposeSnackbar(
                             SnackbarState(
                                 message = resources.getString(
@@ -751,7 +754,7 @@ class HomeFragment : Fragment() {
     private fun TabStrip(toolbarStore: BrowserToolbarStore? = null) {
         // Tabs will not be shown as selected on the homepage when Homepage as a New Tab is not
         // enabled.
-        val isSelectDisabled = !requireContext().settings().enableHomepageAsNewTab
+        val isSelectDisabled = !requireComponents.settings.enableHomepageAsNewTab
         val toolbarState: BrowserToolbarState? = toolbarStore?.observeAsComposableState { it }?.value
 
         FirefoxTheme {
@@ -761,10 +764,10 @@ class HomeFragment : Fragment() {
                 tabStripColors = TabStripColors.build(
                     toolbarState = toolbarState,
                     browsingModeManager = (requireActivity() as HomeActivity).browsingModeManager,
-                    settings = requireContext().settings(),
+                    settings = requireComponents.settings,
                 ),
                 onAddTabClick = {
-                    if (requireContext().settings().enableHomepageAsNewTab) {
+                    if (requireComponents.settings.enableHomepageAsNewTab) {
                         requireComponents.useCases.fenixBrowserUseCases.addNewHomepageTab(
                             private = (requireActivity() as HomeActivity).browsingModeManager.mode.isPrivate,
                         )
@@ -798,7 +801,7 @@ class HomeFragment : Fragment() {
                 )
             },
             operation = {},
-            undoDelay = requireContext().getUndoDelay(),
+            undoDelay = requireComponents.settings.getUndoDelay(),
         )
     }
 
@@ -832,7 +835,7 @@ class HomeFragment : Fragment() {
     override fun onStart() {
         super.onStart()
 
-        val settings = requireContext().settings()
+        val settings = requireComponents.settings
         if (settings.privateModeAndStoriesEntryPointEnabled) {
             settings.incrementNewsButtonForegroundCount()
         }
@@ -876,10 +879,6 @@ class HomeFragment : Fragment() {
             findNavController().navigate(
                 BrowserFragmentDirections.actionGlobalTermsOfUseDialog(Surface.HOMEPAGE_NEW_TAB),
             )
-        } else if (requireComponents.ipProtectionManager.shouldShowIPProtectionPrompt()) {
-            findNavController().navigate(
-                BrowserFragmentDirections.actionGlobalIpProtectionDialog(IPProtectionSurface.HOMEPAGE),
-            )
         }
     }
 
@@ -892,7 +891,7 @@ class HomeFragment : Fragment() {
 
     private fun initStoriesState() {
         lifecycleScope.launch(IO) {
-            val settings = requireContext().settings()
+            val settings = requireComponents.settings
 
             val showStories =
                 settings.showPocketRecommendationsFeature ||
@@ -1024,7 +1023,7 @@ class HomeFragment : Fragment() {
     }
 
     internal fun isEdgeToEdgeBackgroundEnabled(): Boolean {
-        val settings = requireContext().settings()
+        val settings = requireComponents.settings
         return settings.enableHomepageEdgeToEdgeBackgroundFeature &&
                 settings.currentWallpaperName == Wallpaper.EDGE_TO_EDGE
     }
@@ -1051,7 +1050,7 @@ class HomeFragment : Fragment() {
     }
 
     private fun initTopSitesBinding(view: View) {
-        if (requireContext().settings().showTopSitesFeature) {
+        if (requireComponents.settings.showTopSitesFeature) {
             topSitesBinding.set(
                 feature = TopSitesBinding(
                     browserStore = requireComponents.core.store,
@@ -1074,7 +1073,7 @@ class HomeFragment : Fragment() {
     }
 
     private fun initRecentTabsListFeature(view: View) {
-        if (requireContext().settings().showRecentTabsFeature) {
+        if (requireComponents.settings.showRecentTabsFeature) {
             recentTabsListFeature.set(
                 feature = RecentTabsListFeature(
                     browserStore = requireComponents.core.store,
@@ -1101,12 +1100,13 @@ class HomeFragment : Fragment() {
     }
 
     private fun initPrivacyReportFeature(view: View) {
-        if (requireContext().settings().showPrivacyReportFeature) {
+        if (requireComponents.settings.showPrivacyReportFeature) {
             trackersBlockedFeature.set(
                 feature = TrackersBlockedFeature(
+                    browserStore = requireComponents.core.store,
                     appStore = requireComponents.appStore,
-                    fetchTotalTrackersBlocked = requireComponents.useCases
-                        .trackingProtectionUseCases.fetchTotalTrackersBlocked,
+                    currentSessionId = requireComponents.core.store.state.selectedTabId,
+                    trackingProtectionUseCases = requireComponents.useCases.trackingProtectionUseCases,
                 ),
                 owner = viewLifecycleOwner,
                 view = view,
@@ -1115,7 +1115,7 @@ class HomeFragment : Fragment() {
     }
 
     private fun initBookmarksFeature(view: View) {
-        if (requireContext().settings().showBookmarksHomeFeature) {
+        if (requireComponents.settings.showBookmarksHomeFeature) {
             bookmarksFeature.set(
                 feature = BookmarksFeature(
                     appStore = requireComponents.appStore,
@@ -1131,7 +1131,7 @@ class HomeFragment : Fragment() {
     }
 
     private fun initHistoryMetadataFeature(view: View) {
-        if (requireContext().settings().historyMetadataUIFeature) {
+        if (requireComponents.settings.historyMetadataUIFeature) {
             historyMetadataFeature.set(
                 feature = RecentVisitsFeature(
                     appStore = requireComponents.appStore,
@@ -1206,6 +1206,37 @@ class HomeFragment : Fragment() {
                 tabsUseCases = requireComponents.useCases.tabsUseCases,
                 sendTabUseCases = SendTabUseCases(requireComponents.backgroundServices.accountManager),
                 customTabSessionId = null,
+                viewHasFocus = { view.hasWindowFocus() },
+            ),
+            owner = this,
+            view = view,
+        )
+    }
+
+    private fun initIpProtectionBindings(view: View) {
+        ipProtectionWarningBinding.set(
+            feature = IPProtectionWarningBinding(
+                store = requireComponents.ipProtection.store,
+                proxyUnavailable = {
+                    findNavController().navigate(
+                        HomeFragmentDirections.actionGlobalIpProtectionUnavailableDialog(),
+                    )
+                },
+            ),
+            owner = this,
+            view = view,
+        )
+
+        ipProtectionOnboardingPrompt.set(
+            feature = IPProtectionOnboardingPrompt(
+                repository = requireComponents.ipProtectionPromptRepository,
+                timeProvider = DefaultDateTimeProvider(),
+                store = requireComponents.ipProtection.store,
+                onShowOnboarding = {
+                    findNavController().navigate(
+                        HomeFragmentDirections.actionGlobalIpProtectionDialog(IPProtectionSurface.HOMEPAGE),
+                    )
+                },
             ),
             owner = this,
             view = view,
@@ -1273,10 +1304,12 @@ class HomeFragment : Fragment() {
             ),
             trackingProtectionController = TrackingProtectionController(
                 navController = findNavController(),
+                currentSessionId = requireComponents.core.store.state.selectedTabId,
             ),
             logoController = LogoController(
                 longFoxFeature = requireComponents.core.longFoxFeature,
                 container = requireActivity().getRootView() as? ViewGroup,
+                longFoxEnabled = requireComponents.settings.longfoxEnabled,
             ),
             sportsController = DefaultSportsController(
                 appStore = requireComponents.appStore,
@@ -1284,6 +1317,9 @@ class HomeFragment : Fragment() {
                 navController = findNavController(),
                 fenixBrowserUseCases = requireComponents.useCases.fenixBrowserUseCases,
                 browserStore = requireComponents.core.store,
+                shareUseCases = requireComponents.useCases.shareUseCases,
+                worldCupLabel = getString(R.string.customize_toggle_world_cup),
+                shareCardTitle = getString(R.string.sports_widget_card_title),
                 connectivityManager = requireContext().getSystemService<ConnectivityManager>(),
             ),
         )
@@ -1357,7 +1393,7 @@ class HomeFragment : Fragment() {
         HomeScreen.homeScreenDisplayed.record(NoExtras())
 
         with(requireContext()) {
-            if (settings().isExperimentationEnabled) {
+            if (components.settings.isExperimentationEnabled) {
                 recordEventInNimbus("home_screen_displayed")
             }
         }
@@ -1378,7 +1414,7 @@ class HomeFragment : Fragment() {
      */
     @VisibleForTesting
     internal fun updateLastHomeActivity() {
-        requireContext().settings().lastHomeActivity = System.currentTimeMillis()
+        requireComponents.settings.lastHomeActivity = System.currentTimeMillis()
     }
 
     companion object {

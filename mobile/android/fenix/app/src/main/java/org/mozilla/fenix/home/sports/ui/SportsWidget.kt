@@ -27,8 +27,8 @@ import org.mozilla.fenix.home.sports.SportCardErrorState
 import org.mozilla.fenix.home.sports.SportsCardImpressionSource
 import org.mozilla.fenix.home.sports.SportsCardType
 import org.mozilla.fenix.home.sports.Team
-import org.mozilla.fenix.home.sports.WORLD_CUP_KICKOFF_UTC
 import org.mozilla.fenix.home.sports.regionGrouping
+import org.mozilla.fenix.home.sports.worldCupKickoffCountdownTarget
 import org.mozilla.fenix.home.ui.horizontalMargin
 import org.mozilla.fenix.theme.FirefoxTheme
 import org.mozilla.fenix.home.sports.MatchCard as MatchCardState
@@ -48,6 +48,7 @@ private val SportsWidgetTopSpacing = 44.dp
  * @param onFollowTeam Invoked when a team is followed.
  * @param onSkip Invoked when the user dismisses the "Follow team" card.
  * @param onGetCustomWallpaper Invoked when the user clicks on the "Get custom wallpaper" menu item.
+ * @param onShare Invoked when the user clicks on the "Share" menu item.
  * @param onRefresh Used to refresh the scores for live matches.
  * @param onMatchClicked Used to handle match click actions.
  * @param onCardShown Invoked once per widget mount for the first visible card (impression) and on
@@ -64,6 +65,7 @@ fun SportsWidget(
     onFollowTeam: (CountrySelectorSource) -> Unit,
     onSkip: () -> Unit,
     onGetCustomWallpaper: () -> Unit,
+    onShare: () -> Unit,
     onRefresh: (LiveMatchRefreshSource) -> Unit,
     onMatchClicked: (String?, String?, String?) -> Unit,
     onCardShown: (SportsCardType, SportsCardImpressionSource) -> Unit,
@@ -100,7 +102,7 @@ fun SportsWidget(
                 )
             } else {
                 CountdownPromoCard(
-                    dateInUtc = WORLD_CUP_KICKOFF_UTC,
+                    dateInUtc = worldCupKickoffCountdownTarget(),
                     actionButtonLabelResId = R.string.sports_widget_view_schedule,
                     onClick = onViewSchedule,
                     onDismiss = onCountdownWidgetDismiss,
@@ -114,6 +116,7 @@ fun SportsWidget(
                 sportsWidgetState = sportsWidgetState,
                 onFollowTeam = onFollowTeam,
                 onGetCustomWallpaper = onGetCustomWallpaper,
+                onShare = onShare,
                 onDismiss = onDismiss,
                 onRefresh = onRefresh,
                 onMatchClicked = onMatchClicked,
@@ -130,6 +133,7 @@ private fun SportsCardPagerSection(
     sportsWidgetState: SportsWidgetState,
     onFollowTeam: (CountrySelectorSource) -> Unit,
     onGetCustomWallpaper: () -> Unit,
+    onShare: () -> Unit,
     onDismiss: () -> Unit,
     onRefresh: (LiveMatchRefreshSource) -> Unit,
     onMatchClicked: (String?, String?, String?) -> Unit,
@@ -152,6 +156,7 @@ private fun SportsCardPagerSection(
         sportsWidgetState.errorState,
         onFollowTeam,
         onGetCustomWallpaper,
+        onShare,
         onDismiss,
         onRefresh,
         onMatchClicked,
@@ -164,6 +169,7 @@ private fun SportsCardPagerSection(
             errorState = sportsWidgetState.errorState,
             onFollowTeam = onFollowTeam,
             onGetCustomWallpaper = onGetCustomWallpaper,
+            onShare = onShare,
             onRemove = onDismiss,
             onRefresh = onRefresh,
             onMatchClicked = onMatchClicked,
@@ -175,6 +181,7 @@ private fun SportsCardPagerSection(
         pages = pagesResult.pages,
         onChangeTeam = onFollowTeam,
         onGetCustomWallpaper = onGetCustomWallpaper,
+        onShare = onShare,
         onRemove = onDismiss,
         onCardShown = onCardShown,
         modifier = modifier,
@@ -198,6 +205,7 @@ internal fun sportsCardPages(
     errorState: SportCardErrorState?,
     onFollowTeam: (CountrySelectorSource) -> Unit,
     onGetCustomWallpaper: () -> Unit,
+    onShare: () -> Unit,
     onRemove: () -> Unit,
     onRefresh: (LiveMatchRefreshSource) -> Unit,
     onMatchClicked: (String?, String?, String?) -> Unit,
@@ -220,7 +228,7 @@ internal fun sportsCardPages(
         matchCardStates.forEach { matchCardState ->
             if (shouldDisplayChampionsCard(matchCardState.viewerOutcome)) {
                 championsPageIndices.add(size)
-                add(championsCardPage(matchCardState, onMatchClicked, onGetCustomWallpaper, onRemove))
+                add(championsCardPage(matchCardState, onMatchClicked, onGetCustomWallpaper, onShare, onRemove))
             } else {
                 add(matchCardPage(matchCardState, errorState, selectedTeam != null, onRefresh, onMatchClicked))
             }
@@ -298,7 +306,7 @@ private fun countdownFollowTeamPage(
     onFollowTeam: (CountrySelectorSource) -> Unit,
 ): SportsPage = SportsPage(type = SportsCardType.COUNTDOWN_PROMO) { pageNumber, pageCount ->
     CountdownPromoCard(
-        dateInUtc = WORLD_CUP_KICKOFF_UTC,
+        dateInUtc = worldCupKickoffCountdownTarget(),
         actionButtonLabelResId = R.string.sports_widget_country_selector_title,
         onClick = { onFollowTeam(CountrySelectorSource.COUNTDOWN_CARD_FOLLOW_TEAM_BUTTON) },
         onDismiss = null,
@@ -331,6 +339,7 @@ private fun championsCardPage(
     state: MatchCardState,
     onMatchClicked: (String?, String?, String?) -> Unit,
     onGetCustomWallpaper: () -> Unit,
+    onShare: () -> Unit,
     onRemove: () -> Unit,
 ): SportsPage {
     val type = when (state.viewerOutcome) {
@@ -342,6 +351,7 @@ private fun championsCardPage(
             state = state,
             onMatchClicked = onMatchClicked,
             onGetCustomWallpaper = onGetCustomWallpaper,
+            onShare = onShare,
             onRemove = onRemove,
             pageNumber = pageNumber,
             pageCount = pageCount,

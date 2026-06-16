@@ -465,8 +465,13 @@ HttpTransactionChild::OnStartRequest(nsIRequest* aRequest) {
     }
   }
 
-  Maybe<nsHttpResponseHead> proxyConnectResponseHead =
+  // The head is shared in-process by RefPtr, but it has to be serialized to
+  // reach the parent process. This copy only happens when the socket process
+  // is enabled. See bug 2045419.
+  RefPtr<ProxyConnectResponseHead> connectHead =
       mTransaction->GetProxyConnectResponseHead();
+  Maybe<nsHttpResponseHead> proxyConnectResponseHead =
+      connectHead ? Some(connectHead->Head()) : Nothing();
 
   nsIRequest::TRRMode mode = nsIRequest::TRR_DEFAULT_MODE;
   TRRSkippedReason reason = nsITRRSkipReason::TRR_UNSET;

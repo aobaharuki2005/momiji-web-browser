@@ -548,6 +548,9 @@ void nsHttpTransaction::SetConnection(nsAHttpConnection* conn) {
         mEchConfigUsed = mConnection->GetEchConfigUsed();
       }
 
+      // On a reused HTTP/1.1 CONNECT tunnel OnProxyConnectComplete is not
+      // called again, so pick up the head the connection captured during
+      // tunnel setup. This is just a RefPtr addref, not a copy.
       if (mConnInfo && mConnInfo->UsingConnect()) {
         RefPtr<HttpConnectionBase> httpConn = mConnection->HttpConnection();
         if (httpConn) {
@@ -3462,19 +3465,21 @@ bool nsHttpTransaction::IsWebsocketUpgrade() {
 }
 
 void nsHttpTransaction::OnProxyConnectComplete(
-    const nsHttpResponseHead& aResponseHead) {
+    ProxyConnectResponseHead* aResponseHead) {
   MOZ_ASSERT(OnSocketThread(), "not on socket thread");
   MOZ_ASSERT(mConnInfo->UsingConnect());
+  MOZ_ASSERT(aResponseHead);
 
+  int32_t status = aResponseHead->Head().Status();
   LOG(("nsHttpTransaction::OnProxyConnectComplete %p aResponseCode=%d", this,
-       aResponseHead.Status()));
+       status));
 
   {
     MutexAutoLock lock(mLock);
-    mProxyConnectResponseHead = Some(aResponseHead);
+    mProxyConnectResponseHead = aResponseHead;
   }
 
-  if (mConnInfo->IsHttp3() && aResponseHead.Status() == 200 &&
+  if (mConnInfo->IsHttp3() && status == 200 &&
       !mHttp3TunnelFallbackTimerCreated) {
     mHttp3TunnelFallbackTimerCreated = true;
     CreateAndStartTimer(mHttp3TunnelFallbackTimer, this,
@@ -3484,10 +3489,12 @@ void nsHttpTransaction::OnProxyConnectComplete(
 
 int32_t nsHttpTransaction::GetProxyConnectResponseCode() {
   MutexAutoLock lock(mLock);
-  return mProxyConnectResponseHead ? mProxyConnectResponseHead->Status() : 0;
+  return mProxyConnectResponseHead ? mProxyConnectResponseHead->Head().Status()
+                                   : 0;
 }
 
-Maybe<nsHttpResponseHead> nsHttpTransaction::GetProxyConnectResponseHead() {
+RefPtr<ProxyConnectResponseHead>
+nsHttpTransaction::GetProxyConnectResponseHead() {
   MutexAutoLock lock(mLock);
   return mProxyConnectResponseHead;
 }

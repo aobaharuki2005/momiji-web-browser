@@ -553,6 +553,13 @@ export class IPProtectionPanel {
 
     this.#updateSiteData();
 
+    if (this.state.paused) {
+      this.setState({ isEnrolling: true });
+      lazy.IPPProxyManager.refreshUsage().finally(() => {
+        this.setState({ isEnrolling: false });
+      });
+    }
+
     this.setState({
       isSiteExceptionsEnabled: this.isExceptionsFeatureEnabled,
       bandwidthWarning: this.#shouldShowBandwidthWarning(),
@@ -1176,16 +1183,19 @@ export class IPProtectionPanel {
       }
       this.setState({ bandwidthWarning: false });
     } else if (event.type == "IPPProxyManager:UsageChanged") {
-      if (!lazy.BANDWIDTH_USAGE_ENABLED) {
+      const usage = event.detail.usage;
+      if (!usage) {
         return;
       }
-      const usage = event.detail.usage;
-      if (
-        !usage ||
-        usage.max == null ||
-        usage.remaining == null ||
-        !usage.reset
-      ) {
+
+      if (usage.unlimited) {
+        Services.prefs.clearUserPref(BANDWIDTH_THRESHOLD_PREF);
+        Services.prefs.clearUserPref(BANDWIDTH_RESET_DATE_PREF);
+        this.setState({ bandwidthUsage: null, bandwidthWarning: false });
+        return;
+      }
+
+      if (usage.max == null || usage.remaining == null || !usage.reset) {
         return;
       }
 

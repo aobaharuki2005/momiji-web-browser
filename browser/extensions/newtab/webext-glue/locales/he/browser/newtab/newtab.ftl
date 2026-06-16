@@ -31,6 +31,127 @@ newtab-card-dismiss-button =
     .title = סגירה
     .aria-label = סגירה
 
+## Strings for "Homepage" and "Firefox Home" sections of about:settings#home.
+## Homepage panel
+
+home-homepage-title =
+    .label = דף הבית
+home-homepage-new-windows =
+    .label = חלונות חדשים
+home-homepage-new-tabs =
+    .label = לשוניות חדשות
+# This option leads to the "Custom Homepage" subpage
+home-homepage-custom-homepage-button =
+    .label = בחירה באתר מסוים
+
+## Custom URLs subpage
+
+# Subheader on the Custom Homepage subpage. Followed by a form to enter URLs and a list of URLs already saved, if any.
+home-custom-homepage-card-header =
+    .label = כתובות אתרי אינטרנט
+home-custom-homepage-address =
+    .placeholder = נא להכניס כתובת
+home-custom-homepage-address-button =
+    .label = הוספת כתובת
+# Shown when no custom websites/URLs to use as a homepage have been added yet
+home-custom-homepage-no-results =
+    .label = עדיין לא נוספו אתרים.
+home-custom-homepage-delete-address-button =
+    .aria-label = מחיקת כתובת
+    .title = מחיקת כתובת
+# Further options to use when setting the home page. Two action buttons are placed in line with this prompt
+# to replace the current home page with a currently open page or bookmark.
+home-custom-homepage-replace-with-prompt =
+    .label = החלפה עם
+# Button that appears in-line after text "Replace with" (home-custom-homepage-replace-with-prompt)
+home-custom-homepage-current-pages-button =
+    .label = הדפים הפתוחים הנוכחיים
+# Button that appears in-line after text "Replace with" (home-custom-homepage-replace-with-prompt)
+home-custom-homepage-bookmarks-button =
+    .label = סימניות…
+
+## Firefox Home content
+
+home-prefs-content-header =
+    .label = { -firefox-home-brand-name }
+home-prefs-search-header2 =
+    .label = חיפוש
+home-prefs-stories-header2 =
+    .label = סיפורים
+    .description = תוכן יוצא דופן שנבחר בקפידה על־ידי משפחת { -brand-product-name }
+home-prefs-widgets-header =
+    .label = ווידג’טים
+# Lists is a widget on New Tab, similar to a to-do widget
+home-prefs-lists-header =
+    .label = רשימות
+# Timer is a widget on New Tab, similar to the Pomodoro timer.
+home-prefs-timer-header =
+    .label = שעון עצר
+# Sports is a widget on New Tab showing sports scores and schedules.
+home-prefs-sports-widget-header =
+    .label = ספורט
+# Clock is a widget on New Tab that displays time zones around the world.
+home-prefs-clocks-header =
+    .label = שעון
+home-prefs-mission-message2 =
+    .message = נותני החסות שלנו תומכים במשימה שלנו לבנות אינטרנט טוב יותר.
+home-prefs-manage-topics-link2 =
+    .label = ניהול נושאים
+home-prefs-choose-wallpaper-link2 =
+    .label = בחירת תמונת רקע
+home-prefs-firefox-logo-header =
+    .label = הסמל של { -brand-short-name }
+# Informational message bar that appears in the Firefox Home section when the options are disabled.
+# The user must select Firefox Home as their homepage for either new tabs or new windows to enable
+# the features in settings.
+home-prefs-firefox-home-disabled-notice =
+    .message = כדי להשתמש באפשרויות אלה, יש להגדיר את הלשונית החדשה או חלונות חדשים כ{ -firefox-home-brand-name }.
+# Variables:
+#   $num (number) - Number of rows displayed
+home-prefs-sections-rows-option-srd =
+    .label =
+        { $num ->
+            [one] שורה אחת
+           *[other] { $num } שורות
+        }
+# Dropdown option shown when an extension replaces the contents of new windows or tabs.
+# Variables:
+#   $extension (string) - Name of the extension
+home-prefs-homepage-extension-option =
+    .label = הרחבה ({ $extension })
+home-restore-defaults-srd =
+    .label = שחזור ברירות מחדל
+    .accesskey = ש
+home-mode-choice-default-fx-srd =
+    .label = { -firefox-home-brand-name } (ברירת מחדל)
+home-mode-choice-custom-srd =
+    .label = כתובות מותאמות אישית…
+home-mode-choice-blank-srd =
+    .label = דף ריק
+home-prefs-shortcuts-header-srd =
+    .label = קיצורי דרך
+home-prefs-shortcuts-select =
+    .aria-label = קיצורי דרך
+home-prefs-shortcuts-by-option-sponsored-srd =
+    .label = קיצורי דרך ממומנים
+home-prefs-recommended-by-option-sponsored-stories-srd =
+    .label = סיפורים ממומנים
+home-prefs-highlights-option-visited-pages-srd =
+    .label = עמודים בהם ביקרת
+home-prefs-highlights-options-bookmarks-srd =
+    .label = סימניות
+home-prefs-highlights-option-most-recent-download-srd =
+    .label = ההורדות האחרונות
+home-prefs-recent-activity-header-srd =
+    .label = פעילות אחרונה
+home-prefs-recent-activity-select =
+    .aria-label = פעילות אחרונה
+home-prefs-weather-header-srd =
+    .label = מזג אוויר
+home-prefs-support-firefox-header-srd =
+    .label = תמיכה ב־{ -brand-product-name }
+home-prefs-mission-message-learn-more-link-srd = כיצד?
+
 ## Search box component.
 
 # "Search" is a verb/action
@@ -150,6 +271,8 @@ newtab-menu-section-block = חסימה
 # "Follow", "unfollow", and "following" are social media terms that refer to subscribing to or unsubscribing from a section of stories.
 # e.g. Following the travel section of stories.
 newtab-menu-section-unfollow-topic = ביטול המעקב
+# Context menu option to open a support page explaining the New Tab personalization features and privacy controls.
+newtab-menu-section-learn-more = מידע נוסף
 # "Follow", "unfollow", and "following" are social media terms that refer to subscribing to or unsubscribing from a section of stories.
 # e.g. Following the travel section of stories.
 newtab-menu-section-unfollow = ביטול המעקב אחרי הנושא
@@ -752,8 +875,6 @@ newtab-widget-lists-button-add-item = הוספת פריט
 newtab-widget-lists-input-add-an-item2 =
     .placeholder = הוספת פריט
     .aria-label = הוספת פריט
-newtab-widget-lists-input-add-an-item =
-    .placeholder = הוספת פריט
 newtab-widget-lists-input-error = נא לכלול טקסט כדי להוסיף פריט.
 newtab-widget-lists-input-menu-open-link = פתיחת קישור
 newtab-widget-lists-input-menu-move-up = להזיז מעלה
@@ -781,11 +902,6 @@ newtab-widget-lists-name-placeholder-checklist2 =
 newtab-widget-lists-name-placeholder-new2 =
     .placeholder = רשימה חדשה
     .aria-label = עריכת שם הרשימה
-newtab-widget-lists-name-placeholder-checklist =
-    .placeholder = רשימת תיוג
-# The placeholder value of the name field for a newly created list
-newtab-widget-lists-name-placeholder-new =
-    .placeholder = רשימה חדשה
 newtab-widget-section-title = ווידג’טים
 newtab-widget-menu-hide = הסתרת הווידג׳ט
 newtab-widget-menu-change-size = שינוי גודל
@@ -1054,6 +1170,28 @@ newtab-sports-widget-match-full-time = המשחק הסתיים
 newtab-sports-widget-match-halftime = מחצית
 newtab-sports-widget-match-extra-time = הארכה
 newtab-sports-widget-match-penalties = פנדלים
+# Separator shown between two teams in a placeholder match row when no upcoming
+# match details are available yet.
+newtab-sports-widget-match-vs = נגד
+# Note shown in the Upcoming tab when no match details are available yet.
+newtab-sports-widget-no-upcoming-matches = הישארו מעודכנים לפרטים על המשחקים הקרובים
+
+## Sports widget live-games pagination. Shown when 2+ matches are live at the same time
+
+# arrow button that goes to the previous page of live matches.
+newtab-sports-widget-pagination-previous =
+    .aria-label = הקודם
+    .title = הקודם
+# arrow button that goes to the next page of live matches.
+newtab-sports-widget-pagination-next =
+    .aria-label = הבא
+    .title = הבא
+# Dot indicator that jumps directly to a given live match.
+# $index (number) - 1-based position of this dot in the list.
+# $total (number) - Total number of live matches.
+newtab-sports-widget-pagination-dot =
+    .aria-label = משחק חי { $index } מתוך { $total }
+    .title = משחק חי { $index } מתוך { $total }
 
 ## Accessible labels for match rows in the sports widget. These are read by
 ## screen readers to announce the match details and status.
@@ -1114,6 +1252,8 @@ newtab-sports-widget-team-name-label-eng =
     .label = אנגליה
 newtab-sports-widget-team-name-label-sco =
     .label = סקוטלנד
+# Placeholder used in a match row's aria-label for an undecided team (shown visually as "--").
+newtab-sports-widget-team-tbd = טרם נקבע
 
 ## Sports widget OMC messages
 ## Shown as on-screen messages promoting the Sports widget and World Cup wallpapers.

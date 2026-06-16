@@ -504,10 +504,8 @@ BEGIN_TEST(testAssemblerBuffer_AssemblerBufferWithConstantPools) {
   // Each slice holds 5 instructions. Trigger a constant pool inside the slice.
   uint32_t poolLoad[] = {Instr::PoolLoadUninit(0)};
   uint32_t poolData[] = {0xdddd0000, 0xdddd0001, 0xdddd0002, 0xdddd0003};
-  AsmBufWithPool::PoolEntry pe;
   BufferOffset load =
-      ab.allocEntry(1, 1, (uint8_t*)poolLoad, (uint8_t*)poolData, &pe);
-  CHECK_EQUAL(pe.index(), 0u);
+      ab.allocEntry(1, 1, (uint8_t*)poolLoad, (uint8_t*)poolData);
   CHECK_EQUAL(load.getOffset(), 0);
 
   // Pool hasn't been emitted yet. Load has been patched by
@@ -540,8 +538,7 @@ BEGIN_TEST(testAssemblerBuffer_AssemblerBufferWithConstantPools) {
   poolLoad[0] = Instr::PoolLoadUninit(0);
 
   // Now try with load and pool data on separate slices.
-  load = ab.allocEntry(1, 1, (uint8_t*)poolLoad, (uint8_t*)poolData, &pe);
-  CHECK_EQUAL(pe.index(), 1u);  // Global pool entry index.
+  load = ab.allocEntry(1, 1, (uint8_t*)poolLoad, (uint8_t*)poolData);
   CHECK_EQUAL(load.getOffset(), 24);
   CHECK_EQUAL(*ab.getInst(load),
               Instr::PoolLoadIndex(0));  // Index into current pool.
@@ -556,15 +553,13 @@ BEGIN_TEST(testAssemblerBuffer_AssemblerBufferWithConstantPools) {
 
   // Two adjacent loads to the same pool.
   poolLoad[0] = Instr::PoolLoadUninit(0);
-  load = ab.allocEntry(1, 1, (uint8_t*)poolLoad, (uint8_t*)poolData, &pe);
-  CHECK_EQUAL(pe.index(), 2u);  // Global pool entry index.
+  load = ab.allocEntry(1, 1, (uint8_t*)poolLoad, (uint8_t*)poolData);
   CHECK_EQUAL(load.getOffset(), 48);
   CHECK_EQUAL(*ab.getInst(load),
               Instr::PoolLoadIndex(0));  // Index into current pool.
 
   poolLoad[0] = Instr::PoolLoadUninit(0);
-  load = ab.allocEntry(1, 1, (uint8_t*)poolLoad, (uint8_t*)(poolData + 1), &pe);
-  CHECK_EQUAL(pe.index(), 3u);  // Global pool entry index.
+  load = ab.allocEntry(1, 1, (uint8_t*)poolLoad, (uint8_t*)(poolData + 1));
   CHECK_EQUAL(load.getOffset(), 52);
   CHECK_EQUAL(*ab.getInst(load),
               Instr::PoolLoadIndex(1));  // Index into current pool.
@@ -587,16 +582,13 @@ BEGIN_TEST(testAssemblerBuffer_AssemblerBufferWithConstantPools) {
   // second load wouldn't be able to reach its data. This must produce two
   // pools.
   poolLoad[0] = Instr::PoolLoadUninit(0);
-  load = ab.allocEntry(1, 2, (uint8_t*)poolLoad, (uint8_t*)(poolData + 2), &pe);
-  CHECK_EQUAL(pe.index(), 4u);  // Global pool entry index.
+  load = ab.allocEntry(1, 2, (uint8_t*)poolLoad, (uint8_t*)(poolData + 2));
   CHECK_EQUAL(load.getOffset(), 76);
   CHECK_EQUAL(*ab.getInst(load),
               Instr::PoolLoadIndex(0));  // Index into current pool.
 
   poolLoad[0] = Instr::PoolLoadUninit(0);
-  load = ab.allocEntry(1, 1, (uint8_t*)poolLoad, (uint8_t*)poolData, &pe);
-  CHECK_EQUAL(pe.index(),
-              6u);  // Global pool entry index. (Prev one is two indexes).
+  load = ab.allocEntry(1, 1, (uint8_t*)poolLoad, (uint8_t*)poolData);
   CHECK_EQUAL(load.getOffset(), 96);
   CHECK_EQUAL(*ab.getInst(load),
               Instr::PoolLoadIndex(0));  // Index into current pool.

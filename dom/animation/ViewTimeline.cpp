@@ -9,6 +9,7 @@
 #include "mozilla/ServoCSSParser.h"
 #include "mozilla/ServoStyleSet.h"
 #include "mozilla/dom/Animation.h"
+#include "mozilla/dom/CSSUnitValue.h"
 #include "mozilla/dom/Document.h"
 #include "mozilla/dom/DocumentInlines.h"
 #include "mozilla/dom/ElementInlines.h"
@@ -52,10 +53,6 @@ already_AddRefed<ViewTimeline> ViewTimeline::MakeAnonymous(
 
 JSObject* ViewTimeline::WrapObject(JSContext* aCx,
                                    JS::Handle<JSObject*> aGivenProto) {
-  if (!StaticPrefs::
-          layout_css_scroll_driven_animations_viewtimeline_enabled()) {
-    return ScrollTimeline::WrapObject(aCx, aGivenProto);
-  }
   return ViewTimeline_Binding::Wrap(aCx, this, aGivenProto);
 }
 
@@ -155,24 +152,47 @@ already_AddRefed<ViewTimeline> ViewTimeline::Constructor(
       subject ? ScrollerInfo::Type::Nearest : ScrollerInfo::Type::Provided,
       subject, PseudoStyleRequest::NotPseudo());
 
-  return MakeAndAddRef<ViewTimeline>(doc, scroller, axis, subject,
-                                     PseudoStyleType::NotPseudo, inset);
+  RefPtr<ViewTimeline> result = MakeAndAddRef<ViewTimeline>(
+      doc, scroller, axis, subject, PseudoStyleType::NotPseudo, inset);
+  if (subject) {
+    // Maybe our nearested scroller already exists, try to compute the current
+    // time.
+    result->UpdateCachedCurrentTime();
+  }
+
+  return result.forget();
 }
 
-Nullable<double> ViewTimeline::GetStartOffset() const {
+already_AddRefed<CSSNumericValue> ViewTimeline::GetStartOffset(
+    ErrorResult& aRv) const {
   auto data = ComputeTimelineData();
   if (!data) {
     return nullptr;
   }
-  return nsPresContext::AppUnitsToFloatCSSPixels(data->mStart);
+
+  if (!StaticPrefs::layout_css_typed_om_enabled()) {
+    aRv.Throw(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
+    return nullptr;
+  }
+  return MakeAndAddRef<CSSUnitValue>(
+      GetParentObject(), nsPresContext::AppUnitsToDoubleCSSPixels(data->mStart),
+      "px"_ns);
 }
 
-Nullable<double> ViewTimeline::GetEndOffset() const {
+already_AddRefed<CSSNumericValue> ViewTimeline::GetEndOffset(
+    ErrorResult& aRv) const {
   auto data = ComputeTimelineData();
   if (!data) {
     return nullptr;
   }
-  return nsPresContext::AppUnitsToFloatCSSPixels(data->mEnd);
+
+  if (!StaticPrefs::layout_css_typed_om_enabled()) {
+    aRv.Throw(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
+    return nullptr;
+  }
+  return MakeAndAddRef<CSSUnitValue>(
+      GetParentObject(), nsPresContext::AppUnitsToDoubleCSSPixels(data->mEnd),
+      "px"_ns);
 }
 
 void ViewTimeline::ReplacePropertiesWith(
@@ -190,7 +210,8 @@ void ViewTimeline::ReplacePropertiesWith(
     MOZ_ASSERT(anim->GetTimeline() == this);
     MOZ_ASSERT(anim->GetTimelineName() == aName);
     // Set this so we just PostUpdate() for this animation.
-    anim->SetTimeline(this, aName);
+    // FIXME(dshin, bug 1737927): Mutation observer may need to be notified.
+    anim->SetTimeline(this, aName, Animation::FromJS::No);
   }
 }
 

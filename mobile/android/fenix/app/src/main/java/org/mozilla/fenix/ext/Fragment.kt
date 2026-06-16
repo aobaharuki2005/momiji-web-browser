@@ -198,7 +198,7 @@ fun Fragment.breadcrumb(
  * When user preference allowScreenCaptureInSecureScreens is true, this function is a no-op
  */
 fun Fragment.secure() {
-    if (context?.settings()?.allowScreenCaptureInSecureScreens != true) {
+    if (!requireComponents.settings.allowScreenCaptureInSecureScreens) {
         this.activity?.window?.addFlags(
             WindowManager.LayoutParams.FLAG_SECURE,
         )

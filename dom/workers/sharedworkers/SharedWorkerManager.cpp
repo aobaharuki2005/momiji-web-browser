@@ -245,6 +245,15 @@ void SharedWorkerManager::SetLocaleOverride(
   }
 }
 
+void SharedWorkerManager::UpdateTimezoneOverride(
+    const nsAString& aTimezoneOverride) {
+  ::mozilla::ipc::AssertIsOnBackgroundThread();
+
+  if (mRemoteWorkerController) {
+    mRemoteWorkerController->UpdateTimezoneOverride(aTimezoneOverride);
+  }
+}
+
 bool SharedWorkerManager::IsSecureContext() const { return mIsSecureContext; }
 
 void SharedWorkerManager::CreationFailed() {

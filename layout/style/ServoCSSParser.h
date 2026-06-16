@@ -67,6 +67,12 @@ class ServoCSSParser {
   static bool IsValidCSSColor(const nsACString& aValue);
 
   /**
+   * Returns whether the specified string can be parsed as a valid CSS
+   * <image> value.
+   */
+  static bool IsValidCSSImage(const nsACString& aValue);
+
+  /**
    * Computes an nscolor from the given CSS <color> value.
    *
    * @param aStyleData The style data to compute system colors and other special

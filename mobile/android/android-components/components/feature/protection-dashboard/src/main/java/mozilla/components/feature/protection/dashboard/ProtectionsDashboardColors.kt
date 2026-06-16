@@ -27,10 +27,6 @@ import androidx.compose.ui.platform.LocalContext
  * @param gradientEnd The end color of the header gradient.
  */
 internal data class ProtectionsDashboardColors(
-    val background: Color,
-    val textPrimary: Color,
-    val textSecondary: Color,
-    val textAccent: Color,
     val chipBackground: Color,
     val chipText: Color,
     val progressBar: Color,
@@ -47,22 +43,6 @@ internal fun rememberProtectionsDashboardColors(): ProtectionsDashboardColors {
         context.obtainStyledAttributes(R.styleable.ProtectionsDashboard).let { attrs ->
             try {
                 ProtectionsDashboardColors(
-                    background = attrs.getRequiredColor(
-                        R.styleable.ProtectionsDashboard_mozacProtectionsDashboardBackground,
-                        "mozacProtectionsDashboardBackground",
-                    ),
-                    textPrimary = attrs.getRequiredColor(
-                        R.styleable.ProtectionsDashboard_mozacProtectionsDashboardTextPrimary,
-                        "mozacProtectionsDashboardTextPrimary",
-                    ),
-                    textSecondary = attrs.getRequiredColor(
-                        R.styleable.ProtectionsDashboard_mozacProtectionsDashboardTextSecondary,
-                        "mozacProtectionsDashboardTextSecondary",
-                    ),
-                    textAccent = attrs.getRequiredColor(
-                        R.styleable.ProtectionsDashboard_mozacProtectionsDashboardTextAccent,
-                        "mozacProtectionsDashboardTextAccent",
-                    ),
                     chipBackground = attrs.getRequiredColor(
                         R.styleable.ProtectionsDashboard_mozacProtectionsDashboardChipBackground,
                         "mozacProtectionsDashboardChipBackground",

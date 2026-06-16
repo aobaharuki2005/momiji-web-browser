@@ -982,12 +982,14 @@ void IMEContentObserver::CharacterDataChanged(
                                                         aInfo.mChangeStart);
     }
   } else {
-    nsresult rv = ContentEventHandler::GetFlatTextLengthInRange(
-        RawNodePosition::BeforeFirstContentOf(*mRootElement),
-        RawNodePosition(aContent, aInfo.mChangeStart), mRootElement, &offset);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
+    Result<uint32_t, nsresult> offsetOrError =
+        ContentEventHandler::GetFlatTextLengthInRange(
+            RawNodePosition::BeforeFirstContentOf(*mRootElement),
+            RawNodePosition(aContent, aInfo.mChangeStart), mRootElement);
+    if (NS_WARN_IF(offsetOrError.isErr())) {
       return;
     }
+    offset = offsetOrError.unwrap();
   }
 
   uint32_t newLength = ContentEventHandler::GetNativeTextLength(
@@ -1217,8 +1219,7 @@ void IMEContentObserver::ContentWillBeRemoved(nsIContent* aChild,
   }
 
   const Result<uint32_t, nsresult> textLengthOrError =
-      FlatTextCache::ComputeTextLengthOfContent(*aChild, mRootElement,
-                                                ForRemoval::Yes);
+      FlatTextCache::ComputeTextLengthOfContent(*aChild, mRootElement);
   if (NS_WARN_IF(textLengthOrError.isErr())) {
     mEndOfAddedTextCache.Clear(__FUNCTION__);
     mStartOfRemovingTextRangeCache.Clear(__FUNCTION__);
@@ -1243,7 +1244,7 @@ void IMEContentObserver::ContentWillBeRemoved(nsIContent* aChild,
 
   Maybe<uint32_t> offset =
       mStartOfRemovingTextRangeCache.GetFlatTextLengthBeforeContent(
-          *aChild, mRootElement, ForRemoval::Yes);
+          *aChild, mRootElement);
   nsIContent* const prevSibling = aChild->GetPreviousSibling();
   if (offset.isSome()) {
     // Update the cache because next remove may be the previous or the next
@@ -2379,17 +2380,17 @@ nsresult IMEContentObserver::FlatTextCache::
   MOZ_ASSERT(aRootElement);
   MOZ_ASSERT(aContent.GetParentNode());
 
-  uint32_t length = 0;
-  nsresult rv = ContentEventHandler::GetFlatTextLengthInRange(
-      RawNodePosition::BeforeFirstContentOf(*aRootElement),
-      RawNodePosition::After(aContent), aRootElement, &length);
-  if (NS_FAILED(rv)) {
+  Result<uint32_t, nsresult> lengthOrError =
+      ContentEventHandler::GetFlatTextLengthInRange(
+          RawNodePosition::BeforeFirstContentOf(*aRootElement),
+          RawNodePosition::After(aContent), aRootElement);
+  if (lengthOrError.isErr()) [[unlikely]] {
     Clear(aCallerName);
-    return rv;
+    return lengthOrError.unwrapErr();
   }
 
-  CacheFlatTextLengthBeforeEndOfContent(aCallerName, aContent, length,
-                                        aRootElement);
+  CacheFlatTextLengthBeforeEndOfContent(aCallerName, aContent,
+                                        lengthOrError.inspect(), aRootElement);
   return NS_OK;
 }
 
@@ -2444,8 +2445,7 @@ void IMEContentObserver::FlatTextCache::CacheFlatTextLengthBeforeFirstContent(
 
 Maybe<uint32_t>
 IMEContentObserver::FlatTextCache::GetFlatTextLengthBeforeContent(
-    const nsIContent& aContent, const dom::Element* aRootElement,
-    ForRemoval aForRemoval) const {
+    const nsIContent& aContent, const dom::Element* aRootElement) const {
   MOZ_ASSERT(aRootElement);
   if (!mContainerNode) {
     return Nothing();
@@ -2480,8 +2480,7 @@ IMEContentObserver::FlatTextCache::GetFlatTextLengthBeforeContent(
   // content.
   if (mContent == &aContent) {
     const Result<uint32_t, nsresult> textLength =
-        FlatTextCache::ComputeTextLengthOfContent(aContent, aRootElement,
-                                                  aForRemoval);
+        FlatTextCache::ComputeTextLengthOfContent(aContent, aRootElement);
     if (NS_WARN_IF(textLength.isErr()) ||
         NS_WARN_IF(mFlatTextLength < textLength.inspect())) {
       return Nothing();
@@ -2554,34 +2553,11 @@ Maybe<uint32_t> IMEContentObserver::FlatTextCache::GetFlatTextOffsetOnInsertion(
 /* static */
 Result<uint32_t, nsresult>
 IMEContentObserver::FlatTextCache::ComputeTextLengthOfContent(
-    const nsIContent& aContent, const dom::Element* aRootElement,
-    ForRemoval aForRemoval) {
+    const nsIContent& aContent, const dom::Element* aRootElement) {
   MOZ_ASSERT(aRootElement);
 
   if (const Text* textNode = Text::FromNode(aContent)) {
     return ContentEventHandler::GetNativeTextLength(*textNode);
-  }
-
-  if (aForRemoval == ForRemoval::Yes) {
-    // When we compute the text length of the removing content node, we need to
-    // select all children in the removing node because of the same reason
-    // above.  Therefore, if a <div> is being removed, we want to compute
-    // `{<div>...}</div>`.  In this case, we want to include the open tag of
-    // aRemovingContent if it's an element to add the line break if it's caused
-    // by the open tag.  However, we have no way to specify it with
-    // RawNodePosition, but ContentEventHandler::GetFlatTextLengthInRange()
-    // treats the range as the start container is selected.  Therefore, we
-    // should use a RawNodePosition setting its container to the removed node.
-    uint32_t textLength = 0;
-    RawNodePosition start(const_cast<nsIContent*>(&aContent), 0u);
-    start.mAfterOpenTag = false;
-    nsresult rv = ContentEventHandler::GetFlatTextLengthInRange(
-        start, RawNodePosition::AtEndOf(aContent), aRootElement, &textLength,
-        /* aIsRemovingNode = */ true);
-    if (NS_FAILED(rv)) {
-      return Err(rv);
-    }
-    return textLength;
   }
 
   return ComputeTextLengthStartOfContentToEndOfContent(aContent, aContent,
@@ -2592,15 +2568,9 @@ IMEContentObserver::FlatTextCache::ComputeTextLengthOfContent(
 Result<uint32_t, nsresult>
 IMEContentObserver::FlatTextCache::ComputeTextLengthBeforeContent(
     const nsIContent& aContent, const dom::Element* aRootElement) {
-  uint32_t textLengthBeforeContent = 0;
-  nsresult rv = ContentEventHandler::GetFlatTextLengthInRange(
+  return ContentEventHandler::GetFlatTextLengthInRange(
       RawNodePosition::BeforeFirstContentOf(*aRootElement),
-      RawNodePosition::Before(aContent), aRootElement,
-      &textLengthBeforeContent);
-  if (NS_FAILED(rv)) {
-    return Err(rv);
-  }
-  return textLengthBeforeContent;
+      RawNodePosition::Before(aContent), aRootElement);
 }
 
 /* static */
@@ -2608,31 +2578,21 @@ Result<uint32_t, nsresult> IMEContentObserver::FlatTextCache::
     ComputeTextLengthStartOfContentToEndOfContent(
         const nsIContent& aStartContent, const nsIContent& aEndContent,
         const dom::Element* aRootElement) {
-  uint32_t textLength = 0;
-  nsresult rv = ContentEventHandler::GetFlatTextLengthInRange(
+  return ContentEventHandler::GetFlatTextLengthInRange(
       RawNodePosition::Before(aStartContent),
-      RawNodePosition::After(aEndContent), aRootElement, &textLength);
-  if (NS_FAILED(rv)) {
-    return Err(rv);
-  }
-  return textLength;
+      RawNodePosition::After(aEndContent), aRootElement);
 }
 
 /* static */
 Result<uint32_t, nsresult>
 IMEContentObserver::FlatTextCache::ComputeTextLengthBeforeFirstContentOf(
     const nsINode& aContainer, const dom::Element* aRootElement) {
-  uint32_t lengthIncludingLineBreakCausedByOpenTagOfContent = 0;
-  nsresult rv = ContentEventHandler::GetFlatTextLengthInRange(
+  return ContentEventHandler::GetFlatTextLengthInRange(
       RawNodePosition::BeforeFirstContentOf(*aRootElement),
       // Include the line break caused by open tag of aContainer if it's an
       // element when we cache text length before first content of aContainer.
-      RawNodePosition(const_cast<nsINode*>(&aContainer), nullptr), aRootElement,
-      &lengthIncludingLineBreakCausedByOpenTagOfContent);
-  if (NS_FAILED(rv)) {
-    return Err(rv);
-  }
-  return lengthIncludingLineBreakCausedByOpenTagOfContent;
+      RawNodePosition(const_cast<nsINode*>(&aContainer), nullptr),
+      aRootElement);
 }
 
 void IMEContentObserver::FlatTextCache::AssertValidCache(
@@ -2761,7 +2721,7 @@ void IMEContentObserver::FlatTextCache::ContentAdded(
       return false;  // If it's better to check here strictly, please do that.
     }
     Result<uint32_t, nsresult> lengthOrError =
-        ComputeTextLengthOfContent(aFirstContent, aRootElement, ForRemoval::No);
+        ComputeTextLengthOfContent(aFirstContent, aRootElement);
     return lengthOrError.isOk() && !lengthOrError.unwrap();
   }();
   if (addingEmptyNode) {

@@ -37,8 +37,6 @@
     <string name="secret_settings_category_features_title" translatable="false">Features</string>
     <string name="secret_settings_category_debug_title" translatable="false">Debug</string>
 
-    <!-- Label for the secret settings preference -->
-    <string name="preferences_debug_info" translatable="false">Secret Debug Info</string>
     <!-- Label for remote settings server preference -->
     <string name="preferences_debug_settings_remote_settings_server_label" translatable="false">Remote Settings Server (requires restart)</string>
     <!-- Label for Production server option -->
@@ -143,8 +141,6 @@
     <string name="preferences_debug_settings_enable_persistent_onboarding" translatable="false">Show onboarding on each app cold open</string>
     <!-- Label for enabling Homepage Sports Widget -->
     <string name="preferences_debug_settings_homepage_sports_widget" translatable="false">Enable Homepage Sports Widget</string>
-    <!-- Label for enabling using Gecko's tracking protection database -->
-    <string name="preferences_settings_show_tracking_protection_dashboard" translatable="false">Show the tracking protection dashboard</string>
 
     <!-- Search Optimization Secret Settings -->
     <string name="preferences_debug_settings_search_optimization" translatable="false">Search Optimization Feature</string>
@@ -186,6 +182,8 @@
     <string name="lens_camera_mode_lens">Lens</string>
     <!-- Content description for the QR scanner half of the camera mode toggle -->
     <string name="lens_camera_mode_qr">QR scanner</string>
+    <!-- Toast shown when the user picks an image from the gallery in QR mode but no QR code is found in it -->
+    <string name="lens_camera_qr_no_code_found">No QR code found in image</string>
 
     <!--  Voice Search in Display Mode toolbar strings  -->
     <!-- Label for toggling voice search visibility in the display-mode toolbar -->
@@ -226,13 +224,6 @@
 
     <!-- Content description (not visible, for screen readers etc.) used to announce [LinkTextView]. -->
     <string name="link_text_view_type_announcement" translatable="false">link</string>
-
-    <!-- Secret debug info strings -->
-    <string name="debug_info_region_home" translatable="false">Home region</string>
-    <string name="debug_info_region_current" translatable="false">Current region</string>
-    <string name="debug_info_distribution_id" translatable="false">Distribution ID</string>
-    <string name="debug_info_play_referrer" translatable="false">Play install referrer</string>
-    <string name="debug_info_run_query_provider_test" translatable="false">Run query provider test</string>
 
     <!-- Profiler settings -->
     <string name="preferences_start_profiler">Start Profiler</string>
@@ -277,6 +268,12 @@
     <string name="debug_drawer_sports_widget_tool_use_mock_server">Use mock World Cup server</string>
     <string name="debug_drawer_sports_widget_tool_mock_server_session">Mock server session</string>
     <string name="debug_drawer_sports_widget_tool_apply_session">Apply</string>
+
+    <!-- Debug drawer Distribution tools -->
+    <string name="debug_drawer_distribution_tools_title">Distribution Tools</string>
+    <string name="debug_drawer_distribution_id" translatable="false">Distribution ID</string>
+    <string name="debug_drawer_play_referrer" translatable="false">Play install referrer</string>
+    <string name="debug_drawer_run_query_provider_test" translatable="false">Run query provider test</string>
 
     <!-- Debug drawer "contextual feature recommendation" (CFR) tools -->
     <!-- The description of the reset CFR section in CFR Tools -->

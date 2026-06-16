@@ -1306,8 +1306,7 @@ ArenaPurgeResult arena_t::Purge(
     const Maybe<std::function<bool()>>& aKeepGoing) {
   arena_chunk_t* chunk = nullptr;
 
-  // The first critical section will find a chunk and mark dirty pages in it as
-  // busy.
+  // The first critical section will find a chunk with dirty pages.
   {
     MaybeMutexAutoLock lock(mLock);
 

@@ -14,7 +14,7 @@ namespace mozilla::dom {
 class HTMLHeadingElement final : public nsGenericHTMLElement {
  public:
   explicit HTMLHeadingElement(
-      already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo)
+      already_AddRefed<mozilla::dom::NodeInfo> aNodeInfo)
       : nsGenericHTMLElement(std::move(aNodeInfo)) {
     MOZ_ASSERT(IsHTMLHeadingElement());
     UpdateLevel(false);

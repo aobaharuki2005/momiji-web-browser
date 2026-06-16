@@ -27,6 +27,7 @@
 #include "mozilla/dom/ChildProcessChannelListener.h"
 #include "mozilla/dom/ClientChannelHelper.h"
 #include "mozilla/dom/ContentParent.h"
+#include "mozilla/dom/ParentProcessChannelHandle.h"
 #include "mozilla/dom/ContentProcessManager.h"
 #include "mozilla/dom/ProcessIsolation.h"
 #include "mozilla/dom/SessionHistoryEntry.h"
@@ -1759,6 +1760,8 @@ void DocumentLoadListener::SerializeRedirectData(
   if (mLoadingSessionHistoryInfo) {
     aArgs.loadingSessionHistoryInfo().emplace(*mLoadingSessionHistoryInfo);
   }
+
+  aArgs.channelHandle() = mParentProcessChannelHandle;
 }
 
 static bool IsFirstLoadInWindow(nsIChannel* aChannel) {
@@ -2494,6 +2497,25 @@ void DocumentLoadListener::TriggerRedirectToRealChannel(
     aDestinationBrowsingContext->Group()->SetUseOriginAgentClusterFromNetwork(
         unsandboxedPrincipal, hasOriginAgentCluster);
   }
+
+  // We should always expect to be loaded within aDestinationBrowsingContext
+  // unless this is an object/embed load.
+  ParentProcessChannelHandle::ExpectedContext expectedContext =
+      AsVariant(ParentProcessChannelHandle::ExpectLoadedWithin{
+          .mBrowsingContextId = aDestinationBrowsingContext->Id()});
+
+  // If this is an object/embed load, and we have not re-targeted
+  // aDestinationBrowsingContext to a different BC than the parent
+  // WindowContext, record the embedding Window ID instead.
+  if (!mIsDocumentLoad && GetParentWindowContext() &&
+      GetParentWindowContext()->BrowsingContext() ==
+          aDestinationBrowsingContext) {
+    expectedContext = AsVariant(ParentProcessChannelHandle::ExpectChildOf{
+        .mParentWindowId = GetParentWindowContext()->InnerWindowId()});
+  }
+
+  mParentProcessChannelHandle =
+      MakeRefPtr<ParentProcessChannelHandle>(expectedContext, mChannel);
 
   // If we didn't have any redirects, then we pass the REDIRECT_INTERNAL flag
   // for this channel switch so that it isn't recorded in session history etc.

@@ -8281,20 +8281,23 @@ void LIRGenerator::visitLocalTimeToUTC(MLocalTimeToUTC* ins) {
 }
 
 void LIRGenerator::visitYearFromTime(MYearFromTime* ins) {
-  auto* lir = new (alloc()) LYearFromTime(useRegisterAtStart(ins->utcTime()),
-                                          tempFixed(CallTempReg0));
+  auto* lir = new (alloc())
+      LYearFromTime(useRegisterAtStart(ins->utcTime()), tempFixed(CallTempReg0),
+                    tempFixed(CallTempReg1));
   defineReturn(lir, ins);
 }
 
 void LIRGenerator::visitMonthFromTime(MMonthFromTime* ins) {
-  auto* lir = new (alloc()) LMonthFromTime(useRegisterAtStart(ins->utcTime()),
-                                           tempFixed(CallTempReg0));
+  auto* lir = new (alloc())
+      LMonthFromTime(useRegisterAtStart(ins->utcTime()),
+                     tempFixed(CallTempReg0), tempFixed(CallTempReg1));
   defineReturn(lir, ins);
 }
 
 void LIRGenerator::visitDateFromTime(MDateFromTime* ins) {
-  auto* lir = new (alloc()) LDateFromTime(useRegisterAtStart(ins->utcTime()),
-                                          tempFixed(CallTempReg0));
+  auto* lir = new (alloc())
+      LDateFromTime(useRegisterAtStart(ins->utcTime()), tempFixed(CallTempReg0),
+                    tempFixed(CallTempReg1));
   defineReturn(lir, ins);
 }
 
@@ -8932,23 +8935,13 @@ void LIRGenerator::visitWasmAddSubI128HI64(MWasmAddSubI128HI64* ins) {
 void LIRGenerator::visitWasmMulI64WideHI64(MWasmMulI64WideHI64* ins) {
 #if defined(JS_CODEGEN_X64)
   // X86_64 only
-  // What this tells the register allocator is:
-  //   - lhs must be in RAX, and RAX will be trashed after it is read
-  //   - rhs must be in some register
-  //   - the result will be in RAX
-  //   - RDX will be trashed
-  // Hence the RA must produce an allocation in which:
-  //   - lhs is in RAX
-  //   - rhs is in a reg which is neither RAX nor RDX
-  //   - the result is in RAX
-  //   - both RDX and RAX are trashed.  RAX both because it holds the
-  //     result, and because we specify `useFixed` and not `useFixedAtStart`.
-  //     RDX is trashed because we said it is a temp.
-  // This is loosely based on the scheme for x86-shared DivI.
+  // The intention here is to get LHS into RAX, the RHS into RDX, and provide
+  // two more temporary registers, and a register for the output.  5 registers
+  // in total, and they must all be different.
   LWasmMulI64WideHI64* lir = new (alloc())
-      LWasmMulI64WideHI64(useFixed(ins->lhs(), rax), useRegister(ins->rhs()),
-                          tempFixed(rdx), ins->isSigned());
-  defineFixed(lir, ins, LAllocation(AnyRegister(rax)));
+      LWasmMulI64WideHI64(useFixed(ins->lhs(), rax), useFixed(ins->rhs(), rdx),
+                          temp(), temp(), ins->isSigned());
+  define(lir, ins);
 #elif defined(JS_64BIT)
   // All other 64-bit targets
   LWasmMulI64WideHI64* lir = new (alloc()) LWasmMulI64WideHI64(

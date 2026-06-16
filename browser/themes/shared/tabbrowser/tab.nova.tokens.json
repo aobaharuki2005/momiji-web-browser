@@ -28,12 +28,6 @@
           "dark": "color-mix(in lch, var(--color-violet-desaturated-30) 40%, transparent)",
           "nativeTheme": "color-mix(in srgb, currentColor 11%, transparent);"
         }
-      },
-      "selected": {
-        "value": {
-          "default": "var(--background-color-box)",
-          "nativeTheme": "var(--toolbar-background-color)"
-        }
       }
     }
   },

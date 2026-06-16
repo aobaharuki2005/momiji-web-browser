@@ -198,13 +198,13 @@ addonsManager:
           - site_warning, site_blocked, install_disabled_warning
           - download_started, download_completed, download_failed
     notification_emails: ["addons-dev-internal@mozilla.com"]
-    expiry_version: "154"
+    expiry_version: "161"
     products:
       - "firefox"
       - "fennec"
       - "thunderbird"
     record_in_processes: ["main"]
-    bug_numbers: [1433335, 1515697, 1523641, 1549770, 1590736, 1630596, 1672570, 1714251, 1749878, 1781974, 1817100, 1861295, 1912166, 1958151, 1994595]
+    bug_numbers: [1433335, 1515697, 1523641, 1549770, 1590736, 1630596, 1672570, 1714251, 1749878, 1781974, 1817100, 1861295, 1912166, 1958151, 1994595, 2041166]
     release_channel_collection: opt-out
   install_stats:
     description: >
@@ -273,13 +273,13 @@ addonsManager:
         The add-on blocklistState (0 not-blocked, 1 soft-blocked, 2
         hard-blocked) at the time the manage event was being collected.
     notification_emails: ["addons-dev-internal@mozilla.com"]
-    expiry_version: "154"
+    expiry_version: "161"
     products:
       - "firefox"
       - "fennec"
       - "thunderbird"
     record_in_processes: ["main"]
-    bug_numbers: [1433335, 1515697, 1523641, 1549770, 1590736, 1630596, 1672570, 1714251, 1749878, 1781974, 1817100, 1861295, 1912166, 1917859, 1958149, 1994595]
+    bug_numbers: [1433335, 1515697, 1523641, 1549770, 1590736, 1630596, 1672570, 1714251, 1749878, 1781974, 1817100, 1861295, 1912166, 1917859, 1958149, 1994595, 2041166]
     release_channel_collection: opt-out
 addonsSearchDetection:
   etld_change:
@@ -521,7 +521,7 @@ normandy:
     bug_numbers: [1443560, 1843126, 1896718, 1907649]
     notification_emails:
       - "normandy-notifications@mozilla.com"
-      - "nimbus-team@mozilla.com"
+      - "project-nimbus@mozilla.com"
     products:
       - "firefox"
       - "fennec"

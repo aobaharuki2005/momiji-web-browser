@@ -8,6 +8,7 @@ support-files = [
   "doc_network-observer.html",
   "doc_network-observer.html^headers^",
   "gzipped.sjs",
+  "local-mode/*",
   "override.html",
   "override.js",
   "override_script_src_self.html",
@@ -38,6 +39,8 @@ skip-if = [
 ]
 
 ["browser_networkobserver_invalid_constructor.js"]
+
+["browser_networkobserver_localMode.js"]
 
 ["browser_networkobserver_override.js"]
 

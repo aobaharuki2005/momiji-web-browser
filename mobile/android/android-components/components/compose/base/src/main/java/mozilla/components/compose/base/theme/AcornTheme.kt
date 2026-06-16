@@ -24,16 +24,19 @@ import mozilla.components.compose.base.theme.layout.AcornWindowSize
  *
  * @param colors The [AcornColors] theme to use.
  * @param colorScheme The [ColorScheme] to use.
+ * @param gradients The [AcornGradientScheme] palette to use.
  * @param content The children composables to be laid out.
  */
 @Composable
 fun AcornTheme(
     colors: AcornColors = getAcornColors(),
     colorScheme: ColorScheme = getAcornColorScheme(),
+    gradients: AcornGradientScheme = getAcornGradients(),
     content: @Composable () -> Unit,
 ) {
     ProvideAcornTokens(
         colors = colors,
+        gradients = gradients,
     ) {
         MaterialTheme(
             colorScheme = colorScheme,
@@ -74,6 +77,14 @@ private fun getAcornColorScheme(): ColorScheme = if (isSystemInDarkTheme()) {
     acornLightColorScheme()
 }
 
+@Composable
+@ReadOnlyComposable
+private fun getAcornGradients(): AcornGradientScheme = if (isSystemInDarkTheme()) {
+    darkAcornGradientScheme
+} else {
+    lightAcornGradientScheme
+}
+
 /**
  * Provides access to the Acorn design system tokens.
  */
@@ -95,16 +106,22 @@ object AcornTheme {
         @Composable
         @ReadOnlyComposable
         get() = localWindowSize.current
+
+    val gradients: AcornGradientScheme
+        @Composable
+        @ReadOnlyComposable
+        get() = localAcornGradients.current
 }
 
 /**
  * This function is used to set the current value of [localWindowSize],
- * [localLayout], and [localAcornColors].
+ * [localLayout], [localAcornColors], and [localAcornGradients].
  */
 @Composable
 private fun ProvideAcornTokens(
     windowSize: AcornWindowSize = AcornWindowSize.getWindowSize(),
     colors: AcornColors,
+    gradients: AcornGradientScheme,
     content: @Composable () -> Unit,
 ) {
     val layout = remember(windowSize) {
@@ -121,6 +138,7 @@ private fun ProvideAcornTokens(
         localWindowSize provides windowSize,
         localLayout provides layout,
         localAcornColors provides colorPalette,
+        localAcornGradients provides gradients,
         content = content,
     )
 }

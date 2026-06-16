@@ -10,9 +10,9 @@
 #include "mozilla/SVGImageContext.h"
 #include "nsString.h"
 
-nsresult NS_NewSVGSVGElement(
-    nsIContent** aResult, already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo,
-    mozilla::dom::FromParser aFromParser);
+nsresult NS_NewSVGSVGElement(nsIContent** aResult,
+                             already_AddRefed<mozilla::dom::NodeInfo> aNodeInfo,
+                             mozilla::dom::FromParser aFromParser);
 
 // {4b83982c-e5e9-4ca1-abd4-14d27e8b3531}
 #define MOZILLA_SVGSVGELEMENT_IID \
@@ -53,14 +53,13 @@ class SVGSVGElement final : public SVGSVGElementBase {
   friend class mozilla::dom::SVGView;
 
  protected:
-  SVGSVGElement(already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo,
+  SVGSVGElement(already_AddRefed<mozilla::dom::NodeInfo> aNodeInfo,
                 FromParser aFromParser);
   JSObject* WrapNode(JSContext* aCx,
                      JS::Handle<JSObject*> aGivenProto) override;
 
   friend nsresult(::NS_NewSVGSVGElement(
-      nsIContent** aResult,
-      already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo,
+      nsIContent** aResult, already_AddRefed<mozilla::dom::NodeInfo> aNodeInfo,
       mozilla::dom::FromParser aFromParser));
 
   ~SVGSVGElement() = default;
@@ -139,9 +138,9 @@ class SVGSVGElement final : public SVGSVGElementBase {
 
   // public helpers:
 
-  const SVGPoint& GetCurrentTranslate() const { return mCurrentTranslate; }
+  const gfx::Point& GetCurrentTranslate() const { return mCurrentTranslate; }
   bool IsScaledOrTranslated() const {
-    return mCurrentTranslate != SVGPoint() || mCurrentScale != 1.0f;
+    return mCurrentTranslate != gfx::Point() || mCurrentScale != 1.0f;
   }
 
   LengthPercentage GetIntrinsicWidth();
@@ -208,7 +207,7 @@ class SVGSVGElement final : public SVGSVGElementBase {
   nsString mCurrentViewID = VoidString();
   std::unique_ptr<SVGView> mSVGView;
 
-  SVGPoint mCurrentTranslate;
+  gfx::Point mCurrentTranslate;
   float mCurrentScale = 1.0f;
 
   enum { ZOOMANDPAN };

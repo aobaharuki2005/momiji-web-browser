@@ -9,14 +9,17 @@ package org.mozilla.fenix.longfox
 import androidx.activity.compose.LocalOnBackPressedDispatcherOwner
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.gestures.detectDragGestures
-import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.gestures.awaitEachGesture
+import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.statusBars
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
@@ -35,6 +38,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.input.pointer.positionChange
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
@@ -89,8 +93,8 @@ fun LongFoxGameScreen() {
                 Offset(offset.x - canvasOffsetXPx, offset.y - canvasOffsetYPx),
             )
         }
-        val onSwipe by rememberUpdatedState { direction: Direction ->
-            gameState = gameState.onSwipe(direction)
+        val onSwipe by rememberUpdatedState { dx: Float, dy: Float, minDistance: Float ->
+            gameState = gameState.onSwipeGesture(dx, dy, minDistance)
         }
         val context = LocalContext.current
         val coroutineScope = rememberCoroutineScope()
@@ -135,31 +139,29 @@ fun LongFoxGameScreen() {
             coroutineScope.launch { longFoxDataStore.saveIfHiscore(gameState.score) }
         }
 
-        val minSwipeDistance = 50f
         Box(
             modifier = Modifier
                 .fillMaxSize()
                 .pointerInput(Unit) {
-                    detectTapGestures(onTap = { onTap(it) })
-                    var totalDrag = Offset.Zero
-                    detectDragGestures(
-                        onDrag = { change, dragAmount ->
-                            change.consume()
-                            totalDrag += dragAmount
-                        },
-                        onDragEnd = {
-                            val (dx, dy) = totalDrag
-                            if (maxOf(kotlin.math.abs(dx), kotlin.math.abs(dy)) >= minSwipeDistance) {
-                                val direction = if (kotlin.math.abs(dx) > kotlin.math.abs(dy)) {
-                                    if (dx > 0) Direction.RIGHT else Direction.LEFT
-                                } else {
-                                    if (dy > 0) Direction.DOWN else Direction.UP
-                                }
-                                onSwipe(direction)
+                    val touchSlop = viewConfiguration.touchSlop
+                    awaitEachGesture {
+                        val down = awaitFirstDown()
+                        var totalDrag = Offset.Zero
+                        var lifted = false
+                        while (!lifted) {
+                            val event = awaitPointerEvent()
+                            event.changes.forEach { change ->
+                                totalDrag += change.positionChange()
+                                if (!change.pressed) lifted = true
+                                change.consume()
                             }
-                            totalDrag = Offset.Zero
-                        },
-                    )
+                        }
+                        if (totalDrag.getDistance() < touchSlop) {
+                            onTap(down.position)
+                        } else {
+                            onSwipe(totalDrag.x, totalDrag.y, touchSlop)
+                        }
+                    }
                 },
             contentAlignment = Alignment.Center,
         ) {
@@ -185,6 +187,7 @@ fun LongFoxGameScreen() {
             )
         }
         Row(modifier = Modifier
+            .windowInsetsPadding(WindowInsets.statusBars)
             .padding(12.dp)
             .fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,

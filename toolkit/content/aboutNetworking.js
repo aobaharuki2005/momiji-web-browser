@@ -7,6 +7,9 @@
 const FileUtils = ChromeUtils.importESModule(
   "resource://gre/modules/FileUtils.sys.mjs"
 ).FileUtils;
+const { PrivateBrowsingUtils } = ChromeUtils.importESModule(
+  "resource://gre/modules/PrivateBrowsingUtils.sys.mjs"
+);
 const gDashboard = Cc["@mozilla.org/network/dashboard;1"].getService(
   Ci.nsIDashboard
 );
@@ -38,6 +41,14 @@ const gDashboardCallbacks = {
 
 const REFRESH_INTERVAL_MS = 3000;
 
+const gIsPrivateBrowsing = PrivateBrowsingUtils.isWindowPrivate(window);
+
+function isPrivateBrowsingEntry(originAttributesSuffix) {
+  return !!ChromeUtils.CreateOriginAttributesFromOriginSuffix(
+    originAttributesSuffix
+  ).privateBrowsingId;
+}
+
 function col(element) {
   let col = document.createElement("td");
   let content = document.createTextNode(element);
@@ -52,6 +63,12 @@ function displayHttp(data) {
   new_cont.setAttribute("id", "http_content");
 
   for (let i = 0; i < data.connections.length; i++) {
+    if (
+      !gIsPrivateBrowsing &&
+      isPrivateBrowsingEntry(data.connections[i].originAttributesSuffix)
+    ) {
+      continue;
+    }
     let row = document.createElement("tr");
     row.appendChild(col(data.connections[i].host));
     row.appendChild(col(data.connections[i].port));
@@ -73,6 +90,12 @@ function displaySockets(data) {
   new_cont.setAttribute("id", "sockets_content");
 
   for (let i = 0; i < data.sockets.length; i++) {
+    if (
+      !gIsPrivateBrowsing &&
+      isPrivateBrowsingEntry(data.sockets[i].originAttributesSuffix)
+    ) {
+      continue;
+    }
     let row = document.createElement("tr");
     row.appendChild(col(data.sockets[i].host));
     row.appendChild(col(data.sockets[i].port));
@@ -120,6 +143,12 @@ function displayDns(data) {
   for (let i = 0; i < data.entries.length; i++) {
     // TODO: Will be supported in bug 1889387.
     if (data.entries[i].type != Ci.nsIDNSService.RESOLVE_TYPE_DEFAULT) {
+      continue;
+    }
+    if (
+      !gIsPrivateBrowsing &&
+      isPrivateBrowsingEntry(data.entries[i].originAttributesSuffix)
+    ) {
       continue;
     }
 
@@ -196,6 +225,12 @@ function displayAltSvc(data) {
 
   for (let i = 0; i < data.entries.length; i++) {
     let entry = data.entries[i];
+    if (
+      !gIsPrivateBrowsing &&
+      isPrivateBrowsingEntry(entry.originAttributesSuffix)
+    ) {
+      continue;
+    }
     let row = document.createElement("tr");
     let scheme = entry.https ? "https" : "http";
     row.appendChild(col(`${scheme}://${entry.originHost}:${entry.originPort}`));

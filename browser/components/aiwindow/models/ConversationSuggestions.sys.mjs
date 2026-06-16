@@ -219,9 +219,9 @@ export async function generateConversationStartersSidebar(
       MODEL_FEATURES.CONVERSATION_SUGGESTIONS_SIDEBAR_STARTER
     );
     const [
-      conversationStarterSystemPrompt,
-      conversationStarterPrompt,
-      assistantLimitations,
+      { prompt: conversationStarterSystemPrompt },
+      { prompt: conversationStarterPrompt },
+      { prompt: assistantLimitations },
     ] = await Promise.all([
       lazy.loadPrompt(MODEL_FEATURES.CONVERSATION_STARTERS_SIDEBAR_SYSTEM),
       lazy.loadPrompt(MODEL_FEATURES.CONVERSATION_SUGGESTIONS_SIDEBAR_STARTER),
@@ -249,7 +249,7 @@ export async function generateConversationStartersSidebar(
 
     let filled = base;
     if (useMemories) {
-      const conversationMemoriesPrompt = await lazy.loadPrompt(
+      const { prompt: conversationMemoriesPrompt } = await lazy.loadPrompt(
         MODEL_FEATURES.CONVERSATION_SUGGESTIONS_MEMORIES
       );
       filled = await addMemoriesToPrompt(base, conversationMemoriesPrompt);
@@ -328,13 +328,15 @@ export async function generateFollowupPrompts(
     const callContext = await lazy.loadCallContext(
       MODEL_FEATURES.CONVERSATION_SUGGESTIONS_FOLLOWUP
     );
-    const [conversationFollowupPrompt, assistantLimitationsFollowup] =
-      await Promise.all([
-        lazy.loadPrompt(MODEL_FEATURES.CONVERSATION_SUGGESTIONS_FOLLOWUP),
-        lazy.loadPrompt(
-          MODEL_FEATURES.CONVERSATION_SUGGESTIONS_ASSISTANT_LIMITATIONS
-        ),
-      ]);
+    const [
+      { prompt: conversationFollowupPrompt },
+      { prompt: assistantLimitationsFollowup },
+    ] = await Promise.all([
+      lazy.loadPrompt(MODEL_FEATURES.CONVERSATION_SUGGESTIONS_FOLLOWUP),
+      lazy.loadPrompt(
+        MODEL_FEATURES.CONVERSATION_SUGGESTIONS_ASSISTANT_LIMITATIONS
+      ),
+    ]);
     const engineInstance = await openAIEngine.build({
       model: callContext.model,
       serviceType: callContext.serviceType,
@@ -354,7 +356,7 @@ export async function generateFollowupPrompts(
 
     let filled = base;
     if (useMemories) {
-      const conversationMemoriesPrompt = await lazy.loadPrompt(
+      const { prompt: conversationMemoriesPrompt } = await lazy.loadPrompt(
         MODEL_FEATURES.CONVERSATION_SUGGESTIONS_MEMORIES
       );
       filled = await addMemoriesToPrompt(base, conversationMemoriesPrompt);

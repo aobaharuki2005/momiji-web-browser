@@ -207,6 +207,23 @@ export const AIWindowUI = {
     return null;
   },
 
+  async focusSidebar(win, aiBrowser = null) {
+    aiBrowser ??= win.document.getElementById(this.BROWSER_ID);
+    if (!aiBrowser || !this.isSidebarOpen(win)) {
+      return false;
+    }
+
+    aiBrowser.focus();
+
+    const aiWindowElement = await this.getAiWindowElement(win, aiBrowser);
+    if (!aiWindowElement || !this.isSidebarOpen(win)) {
+      return false;
+    }
+
+    aiWindowElement.focusSmartbar?.();
+    return true;
+  },
+
   /**
    * Close the AI Window sidebar.
    *
@@ -337,10 +354,15 @@ export const AIWindowUI = {
         await AIWindow.chatStore.findConversationById(conversationId);
     }
 
-    this.openSidebar(win, conversation);
+    await this.openSidebar(win, conversation);
 
     const nodes = this._getSidebarElements(win);
-    return nodes ? nodes.chromeDoc.getElementById(this.BROWSER_ID) : null;
+    if (!nodes) {
+      return null;
+    }
+    const aiBrowser = nodes.chromeDoc.getElementById(this.BROWSER_ID);
+    await this.focusSidebar(win, aiBrowser);
+    return aiBrowser;
   },
 
   /**

@@ -101,6 +101,8 @@ skip-if = [
   "os == 'mac' && os_version == '15.30' && arch == 'aarch64'", # Bug 1775931
 ]
 
+["browser_bfcache_page_restored_telemetry.js"]
+
 ["browser_browsingContext-01.js"]
 https_first_disabled = true
 

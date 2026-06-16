@@ -19,6 +19,8 @@ ChromeUtils.defineESModuleGetters(lazy, {
   getTimeoutMultiplier: "chrome://remote/content/shared/AppInfo.sys.mjs",
   getWebDriverSessionById:
     "chrome://remote/content/shared/webdriver/Session.sys.mjs",
+  isWebdriverSafeNavigationURL:
+    "chrome://remote/content/shared/BrowsingContextUtils.sys.mjs",
   Log: "chrome://remote/content/shared/Log.sys.mjs",
   modal: "chrome://remote/content/shared/Prompt.sys.mjs",
   registerNavigationId:
@@ -40,6 +42,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
   setDefaultAndAssertSerializationOptions:
     "chrome://remote/content/webdriver-bidi/RemoteValue.sys.mjs",
   TabManager: "chrome://remote/content/shared/TabManager.sys.mjs",
+  truncate: "chrome://remote/content/shared/Format.sys.mjs",
   UserContextManager:
     "chrome://remote/content/shared/UserContextManager.sys.mjs",
   waitForInitialNavigationCompleted:
@@ -1368,7 +1371,7 @@ class BrowsingContextModule extends RootBiDiModule {
     // immediately before doing any asynchronous call.
     const webProgress = context.webProgress;
 
-    const base = await this.messageHandler.handleCommand({
+    const baseURL = await this.messageHandler.handleCommand({
       moduleName: "browsingContext",
       commandName: "_getBaseURL",
       destination: {
@@ -1380,11 +1383,22 @@ class BrowsingContextModule extends RootBiDiModule {
 
     let targetURI;
     try {
-      const baseURI = Services.io.newURI(base);
+      const baseURI = Services.io.newURI(baseURL);
       targetURI = Services.io.newURI(url, null, baseURI);
     } catch (e) {
       throw new lazy.error.InvalidArgumentError(
         `Expected "url" to be a valid URL (${e.message})`
+      );
+    }
+
+    // Disallow navigations to unsafe URLs unless
+    // system access is explicitly allowed.
+    if (
+      !lazy.RemoteAgent.allowSystemAccess &&
+      !lazy.isWebdriverSafeNavigationURL(targetURI, context)
+    ) {
+      throw new lazy.error.UnsupportedOperationError(
+        lazy.truncate`Navigation to "${targetURI.spec}" is not allowed in this context`
       );
     }
 
@@ -1890,7 +1904,7 @@ class BrowsingContextModule extends RootBiDiModule {
    * @param {Function} startNavigationFn
    *     A callback that starts a navigation.
    * @param {object} options
-   * @param {string=} options.targetURI
+   * @param {nsIURI=} options.targetURI
    *     The target URI for the navigation.
    * @param {WaitCondition} options.wait
    *     The WaitCondition to use to wait for the navigation.

@@ -34,7 +34,7 @@ SVGElement::NumberInfo SVGGeometryElement::sNumberInfo = {nsGkAtoms::pathLength,
 // Implementation
 
 SVGGeometryElement::SVGGeometryElement(
-    already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo)
+    already_AddRefed<mozilla::dom::NodeInfo> aNodeInfo)
     : SVGGeometryElementBase(std::move(aNodeInfo)) {}
 
 SVGElement::NumberAttributesInfo SVGGeometryElement::GetNumberInfo() {

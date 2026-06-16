@@ -298,6 +298,29 @@ class BrowserToolbarSearchMiddlewareTest {
     }
 
     @Test
+    fun `GIVEN a search was started from a tab WHEN the search engine is changed THEN keep the source tab so the search loads in it`() {
+        val captorMiddleware = CaptureActionsMiddleware<AppState, AppAction>()
+        val appStore = AppStore(
+            initialState = AppState(
+                searchState = AppSearchState.EMPTY.copy(
+                    isSearchActive = true,
+                    sourceTabId = "test",
+                ),
+            ),
+            middlewares = listOf(captorMiddleware),
+        )
+        val (_, store) = buildMiddlewareAndAddToStore(appStore = appStore)
+        val newEngineSelection = fakeSearchState().searchEngineShortcuts.last()
+
+        store.dispatch(SearchSelectorItemClicked(newEngineSelection))
+
+        assertEquals("test", appStore.state.searchState.sourceTabId)
+        captorMiddleware.assertLastAction(SearchStarted::class) { action ->
+            assertEquals("test", action.tabId)
+        }
+    }
+
+    @Test
     fun `GIVEN the search selector menu is open while in display mode WHEN a menu item is clicked THEN enter edit mode`() {
         val (_, store) = buildMiddlewareAndAddToStore()
         val newEngineSelection = fakeSearchState().searchEngineShortcuts.last()

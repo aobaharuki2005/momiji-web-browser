@@ -20,9 +20,10 @@ const val BYTES_PER_GB = 1024 * 1024 * 1024f
  * @property proxyStatus The proxy state.
  * @property serviceStatus The state of the IPProtection service.
  * @property remainingDataBytes Remaining monthly data allowance in bytes, or -1 if unavailable.
- * @property maxDataBytes Maximum monthly data allowance in bytes, or -1 if unavailable.
+ * @property maxDataBytes Maximum monthly data allowance in bytes, -1 if unavailable, or otherwise 0 if unlimited.
  * @property resetDate ISO 8601 string for when the monthly allowance resets, or null if unavailable.
  * @property accountState The state of the authenticator being used.
+ * @property lastError The last error received from the IPProtection service.
  * @property proxyActiveShown Whether the proxy-active status has been shown to the user.
  * @property activate To turn protection on or off.
  */
@@ -34,6 +35,7 @@ data class IPProtectionState(
     val maxDataBytes: Long = -1L,
     val resetDate: String? = null,
     val accountState: AccountState = AccountState(),
+    val lastError: String? = null,
     val proxyActiveShown: Boolean = false,
     val activate: Boolean? = null,
 ) : State
@@ -44,9 +46,22 @@ data class IPProtectionState(
 val IPProtectionState.isEligible
     get() = eligibilityStatus == EligibilityStatus.Eligible
 
+/**
+ *  If we have negative values, then we haven't received new usage data yet.
+ *
+ *  N.B: If we get -1, and we try to render that then the values are obviously incorrect,
+ *  but we let the consumer handle this for now.
+ */
 val IPProtectionState.remainingDataGb: Float
     get() = remainingDataBytes / BYTES_PER_GB
 
+/**
+ *  If we have negative values, then we haven't received new usage data yet.
+ *  A value of zero means that we have unlimited data.
+ *
+ *  N.B: If we get -1, and we try to render that then the values are obviously incorrect,
+ *  but we let the consumer handle this for now.
+ */
 val IPProtectionState.maxDataGb: Float
     get() = maxDataBytes / BYTES_PER_GB
 

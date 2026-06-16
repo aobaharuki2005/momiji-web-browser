@@ -21,8 +21,8 @@
  */
 
 /**
- * pdfjsVersion = 6.0.243
- * pdfjsBuild = b43ef1c74
+ * pdfjsVersion = 6.0.346
+ * pdfjsBuild = e75a7cfd6
  */
 
 ;// ./src/shared/util.js
@@ -921,11 +921,8 @@ class Dict {
         continue;
       }
       for (const [key, value] of dict.getRawEntries()) {
-        let property = properties.get(key);
-        if (property === undefined) {
-          property = [];
-          properties.set(key, property);
-        } else if (!mergeSubDicts || !(value instanceof Dict)) {
+        const property = properties.getOrInsertComputed(key, makeArr);
+        if (property.length && !(mergeSubDicts && value instanceof Dict)) {
           continue;
         }
         property.push(value);
@@ -2805,19 +2802,10 @@ class Stream extends BaseStream {
     return this.bytes[this.pos++];
   }
   getBytes(length) {
-    const bytes = this.bytes;
     const pos = this.pos;
-    const strEnd = this.end;
-    if (!length) {
-      this.pos = strEnd;
-      return bytes.subarray(pos, strEnd);
-    }
-    let end = pos + length;
-    if (end > strEnd) {
-      end = strEnd;
-    }
-    this.pos = end;
-    return bytes.subarray(pos, end);
+    const endPos = !length ? this.end : Math.min(pos + length, this.end);
+    this.pos = endPos;
+    return this.bytes.subarray(pos, endPos);
   }
   getByteRange(begin, end) {
     if (begin < 0) {
@@ -2967,25 +2955,13 @@ class ChunkedStream extends Stream {
     return this.bytes[this.pos++];
   }
   getBytes(length) {
-    const bytes = this.bytes;
     const pos = this.pos;
-    const strEnd = this.end;
-    if (!length) {
-      if (strEnd > this.progressiveDataLength) {
-        this.ensureRange(pos, strEnd);
-      }
-      this.pos = strEnd;
-      return bytes.subarray(pos, strEnd);
+    const endPos = !length ? this.end : Math.min(pos + length, this.end);
+    if (endPos > this.progressiveDataLength) {
+      this.ensureRange(pos, endPos);
     }
-    let end = pos + length;
-    if (end > strEnd) {
-      end = strEnd;
-    }
-    if (end > this.progressiveDataLength) {
-      this.ensureRange(pos, end);
-    }
-    this.pos = end;
-    return bytes.subarray(pos, end);
+    this.pos = endPos;
+    return this.bytes.subarray(pos, endPos);
   }
   getByteRange(begin, end) {
     if (begin < 0) {
@@ -3041,10 +3017,10 @@ class ChunkedStream extends Stream {
   }
 }
 class ChunkedStreamManager {
-  aborted = false;
+  #aborted = false;
   currRequestId = 0;
   _chunksNeededByRequest = new Map();
-  _loadedStreamCapability = Promise.withResolvers();
+  #loadedStreamCapability = Promise.withResolvers();
   _promisesByRequest = new Map();
   _requestsByChunk = new Map();
   constructor(pdfStream, args) {
@@ -3063,7 +3039,7 @@ class ChunkedStreamManager {
         value,
         done
       } = await rangeReader.read();
-      if (this.aborted) {
+      if (this.#aborted) {
         chunks = null;
         return;
       }
@@ -3087,7 +3063,7 @@ class ChunkedStreamManager {
       const missingChunks = this.stream.getMissingChunks();
       this._requestChunks(missingChunks);
     }
-    return this._loadedStreamCapability.promise;
+    return this.#loadedStreamCapability.promise;
   }
   _requestChunks(chunks) {
     const requestId = this.currRequestId++;
@@ -3105,12 +3081,10 @@ class ChunkedStreamManager {
     this._promisesByRequest.set(requestId, capability);
     const chunksToRequest = [];
     for (const chunk of chunksNeeded) {
-      let requestIds = this._requestsByChunk.get(chunk);
-      if (!requestIds) {
-        requestIds = [];
-        this._requestsByChunk.set(chunk, requestIds);
+      const requestIds = this._requestsByChunk.getOrInsertComputed(chunk, () => {
         chunksToRequest.push(chunk);
-      }
+        return [];
+      });
       requestIds.push(requestId);
     }
     if (chunksToRequest.length > 0) {
@@ -3122,7 +3096,7 @@ class ChunkedStreamManager {
       }
     }
     return capability.promise.catch(reason => {
-      if (this.aborted) {
+      if (this.#aborted) {
         return;
       }
       throw reason;
@@ -3199,7 +3173,7 @@ class ChunkedStreamManager {
       stream.onReceiveData(begin, chunk);
     }
     if (stream.isDataLoaded) {
-      this._loadedStreamCapability.resolve(stream);
+      this.#loadedStreamCapability.resolve(stream);
     }
     const loadedRequests = [];
     for (let curChunk = beginChunk; curChunk < endChunk; ++curChunk) {
@@ -3243,9 +3217,6 @@ class ChunkedStreamManager {
       total: length
     });
   }
-  onError(err) {
-    this._loadedStreamCapability.reject(err);
-  }
   getBeginChunk(begin) {
     return Math.floor(begin / this.chunkSize);
   }
@@ -3253,11 +3224,12 @@ class ChunkedStreamManager {
     return Math.floor((end - 1) / this.chunkSize) + 1;
   }
   abort(reason) {
-    this.aborted = true;
+    this.#aborted = true;
     this.pdfStream?.cancelAllRequests(reason);
     for (const capability of this._promisesByRequest.values()) {
       capability.reject(reason);
     }
+    this.#loadedStreamCapability.reject(reason);
   }
 }
 
@@ -5118,7 +5090,7 @@ class JpegImage {
     this.numComponents = this.components.length;
     return undefined;
   }
-  _getLinearizedBlockData(width, height, isSourcePDF = false) {
+  #getLinearizedBlockData(width, height, isSourcePDF) {
     const scaleX = this.width / width,
       scaleY = this.height / height;
     let component, componentScaleX, componentScaleY, blocksPerScanline;
@@ -5156,9 +5128,6 @@ class JpegImage {
       }
     }
     let transform = this._decodeTransform;
-    if (!isSourcePDF && numComponents === 4 && !transform) {
-      transform = new Int32Array([-256, 255, -256, 255, -256, 255, -256, 255]);
-    }
     if (transform) {
       for (i = 0; i < dataLength;) {
         for (j = 0, k = 0; j < numComponents; j++, i++, k += 2) {
@@ -5187,7 +5156,7 @@ class JpegImage {
   }
   _convertYccToRgb(data) {
     let Y, Cb, Cr;
-    for (let i = 0, length = data.length; i < length; i += 3) {
+    for (let i = 0, ii = data.length; i < ii; i += 3) {
       Y = data[i];
       Cb = data[i + 1];
       Cr = data[i + 2];
@@ -5198,7 +5167,7 @@ class JpegImage {
     return data;
   }
   _convertYccToRgba(data, out) {
-    for (let i = 0, j = 0, length = data.length; i < length; i += 3, j += 4) {
+    for (let i = 0, j = 0, ii = data.length; i < ii; i += 3, j += 4) {
       const Y = data[i];
       const Cb = data[i + 1];
       const Cr = data[i + 2];
@@ -5219,7 +5188,7 @@ class JpegImage {
   }
   _convertYcckToCmyk(data) {
     let Y, Cb, Cr;
-    for (let i = 0, length = data.length; i < length; i += 4) {
+    for (let i = 0, ii = data.length; i < ii; i += 4) {
       Y = data[i];
       Cb = data[i + 1];
       Cr = data[i + 2];
@@ -5248,12 +5217,12 @@ class JpegImage {
     height,
     forceRGBA = false,
     forceRGB = false,
-    isSourcePDF = false
+    isSourcePDF = true
   }) {
     if (this.numComponents > 4) {
       throw new JpegError("Unsupported color mode");
     }
-    const data = this._getLinearizedBlockData(width, height, isSourcePDF);
+    const data = this.#getLinearizedBlockData(width, height, isSourcePDF);
     if (this.numComponents === 1 && (forceRGBA || forceRGB)) {
       const len = data.length * (forceRGBA ? 4 : 3);
       const rgbaData = new Uint8ClampedArray(len);
@@ -5375,8 +5344,7 @@ class JpegStream extends DecodeStream {
       width: this.drawWidth,
       height: this.drawHeight,
       forceRGBA: this.forceRGBA,
-      forceRGB: this.forceRGB,
-      isSourcePDF: true
+      forceRGB: this.forceRGB
     });
     this.buffer = data;
     this.bufferLength = data.length;
@@ -10142,16 +10110,23 @@ class Jbig2Stream extends DecodeStream {
   get isImageStream() {
     return true;
   }
+  static stripFileHeader(bytes) {
+    if (bytes.length >= 9 && bytes[0] === 0x97 && bytes[1] === 0x4a && bytes[2] === 0x42 && bytes[3] === 0x32 && bytes[4] === 0x0d && bytes[5] === 0x0a && bytes[6] === 0x1a && bytes[7] === 0x0a) {
+      const headerLength = (bytes[8] & 2) === 0 ? 13 : 9;
+      return bytes.subarray(headerLength);
+    }
+    return bytes;
+  }
   async decodeImage(bytes, length, _decoderOptions) {
     if (this.eof) {
       return this.buffer;
     }
-    bytes ||= this.bytes;
+    bytes = Jbig2Stream.stripFileHeader(bytes || this.bytes);
     let globals = null;
     if (this.params instanceof Dict) {
       const globalsStream = this.params.get("JBIG2Globals");
       if (globalsStream instanceof BaseStream) {
-        globals = globalsStream.getBytes();
+        globals = Jbig2Stream.stripFileHeader(globalsStream.getBytes());
       }
     }
     this.buffer = await JBig2CCITTFaxImage.instance.decode(bytes, this.dict.get("Width"), this.dict.get("Height"), globals);
@@ -34270,7 +34245,8 @@ class PartialEvaluator {
         smask,
         isolated: false,
         knockout: false,
-        needsIsolation: false
+        needsIsolation: false,
+        isGray: false
       };
       const groupSubtype = group.get("S");
       let colorSpace = null;
@@ -34282,6 +34258,7 @@ class PartialEvaluator {
           colorSpace = cs instanceof ColorSpace ? cs : await this._handleColorSpace(cs);
         }
       }
+      groupOptions.isGray = colorSpace?.numComps === 1;
       if (smask?.backdrop) {
         colorSpace ||= ColorSpaceUtils.rgb;
         smask.backdrop = colorSpace.getRgbHex(smask.backdrop, 0);
@@ -34720,9 +34697,15 @@ class PartialEvaluator {
           }
           break;
         case "TR":
-          const transferMaps = this.handleTransferFunction(value);
-          gStateObj.push([key, transferMaps]);
-          break;
+        case "TR2":
+          {
+            if (key === "TR" && gState.has("TR2")) {
+              break;
+            }
+            const transferMaps = this.handleTransferFunction(value);
+            gStateObj.push(["TR", transferMaps]);
+            break;
+          }
         case "OP":
         case "op":
         case "OPM":
@@ -34730,7 +34713,6 @@ class PartialEvaluator {
         case "BG2":
         case "UCR":
         case "UCR2":
-        case "TR2":
         case "HT":
         case "SM":
         case "SA":
@@ -38546,7 +38528,7 @@ class NameOrNumberTree {
         continue;
       }
       for (let i = 0, ii = entries.length; i < ii; i += 2) {
-        map.set(xref.fetchIfRef(entries[i]), isRaw ? entries[i + 1] : xref.fetchIfRef(entries[i + 1]));
+        map.set(isRaw ? entries[i] : xref.fetchIfRef(entries[i]), isRaw ? entries[i + 1] : xref.fetchIfRef(entries[i + 1]));
       }
     }
     return map;
@@ -38649,8 +38631,7 @@ function pickPlatformItem(dict) {
   return null;
 }
 class FileSpec {
-  #contentAvailable = false;
-  constructor(root, skipContent = false) {
+  constructor(root) {
     if (!(root instanceof Dict)) {
       return;
     }
@@ -38661,13 +38642,6 @@ class FileSpec {
     if (root.has("RF")) {
       warn("Related file specifications are not supported");
     }
-    if (!skipContent) {
-      if (root.has("EF")) {
-        this.#contentAvailable = true;
-      } else {
-        warn("Non-embedded file specifications are not supported");
-      }
-    }
   }
   get filename() {
     const item = pickPlatformItem(this.root);
@@ -38675,17 +38649,6 @@ class FileSpec {
       return stringToPDFString(item, true).replaceAll("\\\\", "\\").replaceAll("\\/", "/").replaceAll("\\", "/");
     }
     return "";
-  }
-  get content() {
-    if (!this.#contentAvailable) {
-      return null;
-    }
-    const ef = pickPlatformItem(this.root?.get("EF"));
-    if (ef instanceof BaseStream) {
-      return ef.getBytes();
-    }
-    warn("Embedded file specification points to non-existing/invalid content");
-    return null;
   }
   get description() {
     const desc = this.root?.get("Desc");
@@ -38697,15 +38660,28 @@ class FileSpec {
   get serializable() {
     const {
       filename,
-      content,
       description
     } = this;
     return {
       rawFilename: filename,
       filename: stripPath(filename) || "unnamed",
-      content,
       description
     };
+  }
+  static readContent(dict) {
+    if (!(dict instanceof Dict)) {
+      return null;
+    }
+    const ef = pickPlatformItem(dict.get("EF"));
+    if (!(ef instanceof BaseStream)) {
+      warn("Embedded file specification points to non-existing/invalid content");
+      return null;
+    }
+    const encrypt = dict.xref?.encrypt;
+    if (encrypt?.encryptionKey === null) {
+      throw new PasswordException("No password given", PasswordResponses.NEED_PASSWORD);
+    }
+    return ef.getBytes();
   }
 }
 
@@ -39739,10 +39715,7 @@ class StructElementNode {
     }
     for (let af of AFs) {
       af = this.xref.fetchIfRef(af);
-      if (!(af instanceof Dict)) {
-        continue;
-      }
-      if (!isName(af.get("Type"), "Filespec")) {
+      if (!isDict(af, "Filespec")) {
         continue;
       }
       if (!isName(af.get("AFRelationship"), "Supplement")) {
@@ -40106,7 +40079,9 @@ function fetchRemoteDest(action) {
 }
 class Catalog {
   #actualNumPages = null;
+  #attachmentIdByRef = null;
   #catDict = null;
+  attachmentDictById = new Map();
   builtInCMapCache = new Map();
   fontCache = new RefSetCache();
   globalColorSpaceCache = new GlobalColorSpaceCache();
@@ -40125,6 +40100,19 @@ class Catalog {
       throw new FormatError("Catalog object is not a dictionary.");
     }
     this.toplevelPagesDict;
+  }
+  get attachmentIdByRef() {
+    if (this.#attachmentIdByRef) {
+      return this.#attachmentIdByRef;
+    }
+    const attachmentIdByRef = new RefSetCache();
+    for (const [name, ref] of this.rawEmbeddedFiles || []) {
+      if (!(ref instanceof Ref)) {
+        continue;
+      }
+      attachmentIdByRef.put(ref, stringToPDFString(name, true));
+    }
+    return this.#attachmentIdByRef = attachmentIdByRef;
   }
   cloneDict() {
     return this.#catDict.clone();
@@ -40331,6 +40319,7 @@ class Catalog {
       }
       const outlineItem = {
         action: data.action,
+        attachmentId: data.attachmentId,
         attachment: data.attachment,
         dest: data.dest,
         url: data.url,
@@ -40943,12 +40932,26 @@ class Catalog {
     if (obj instanceof Dict && obj.has("EmbeddedFiles")) {
       const nameTree = new NameTree(obj.getRaw("EmbeddedFiles"), this.xref);
       for (const [key, value] of nameTree.getAll()) {
-        const fs = new FileSpec(value);
-        attachments ??= Object.create(null);
-        attachments[stringToPDFString(key, true)] = fs.serializable;
+        (attachments ??= new Map()).set(stringToPDFString(key, true), new FileSpec(value).serializable);
       }
     }
     return shadow(this, "attachments", attachments);
+  }
+  attachmentContent(id) {
+    const dict = this.attachmentDictById.get(id);
+    if (dict) {
+      return FileSpec.readContent(dict);
+    }
+    const obj = this.#catDict.get("Names");
+    if (obj instanceof Dict && obj.has("EmbeddedFiles")) {
+      const nameTree = new NameTree(obj.getRaw("EmbeddedFiles"), this.xref);
+      for (const [key, value] of nameTree.getAll()) {
+        if (stringToPDFString(key, true) === id) {
+          return FileSpec.readContent(value);
+        }
+      }
+    }
+    return null;
   }
   get rawEmbeddedFiles() {
     const obj = this.#catDict.get("Names");
@@ -41022,6 +41025,9 @@ class Catalog {
   }
   async cleanup(manuallyTriggered = false) {
     clearGlobalCaches();
+    this.#attachmentIdByRef?.clear();
+    this.#attachmentIdByRef = null;
+    this.attachmentDictById.clear();
     this.globalColorSpaceCache.clear();
     this.globalImageCache.clear(manuallyTriggered);
     this.pageKidsCountCache.clear();
@@ -41181,6 +41187,19 @@ class Catalog {
         }
       }
       if (!Array.isArray(kids)) {
+        let type = currentNode.getRaw("Type");
+        if (type instanceof Ref) {
+          try {
+            type = await xref.fetchAsync(type);
+          } catch (ex) {
+            addPageError(ex);
+            break;
+          }
+        }
+        if (isName(type, "Page") || !currentNode.has("Kids")) {
+          addPageDict(currentNode, null);
+          break;
+        }
         addPageError(new FormatError("Page dictionary kids object is not an array."));
         break;
       }
@@ -41456,10 +41475,7 @@ class Catalog {
         case "GoToR":
           const urlDict = action.get("F");
           if (urlDict instanceof Dict) {
-            const fs = new FileSpec(urlDict, true);
-            ({
-              rawFilename: url
-            } = fs.serializable);
+            url = new FileSpec(urlDict).filename;
           } else if (typeof urlDict === "string") {
             url = urlDict;
           } else {
@@ -41476,16 +41492,17 @@ class Catalog {
           break;
         case "GoToE":
           const target = action.get("T");
-          let attachment;
-          if (docAttachments && target instanceof Dict) {
+          let id = null;
+          if (target instanceof Dict) {
             const relationship = target.get("R");
             const name = target.get("N");
             if (isName(relationship, "C") && typeof name === "string") {
-              attachment = docAttachments[stringToPDFString(name, true)];
+              id = stringToPDFString(name, true);
             }
           }
-          if (attachment) {
-            resultObj.attachment = attachment;
+          if (docAttachments && id) {
+            resultObj.attachmentId = id;
+            resultObj.attachment = docAttachments.get(id);
             const attachmentDest = fetchRemoteDest(action);
             if (attachmentDest) {
               resultObj.attachmentDest = attachmentDest;
@@ -53002,6 +53019,13 @@ class Annotation {
     this._fallbackFontDict = null;
     this._needAppearances = false;
   }
+  _getOperatorListNoAppearance() {
+    return {
+      opList: new OperatorList(),
+      separateForm: false,
+      separateCanvas: false
+    };
+  }
   _hasFlag(flags, flag) {
     return !!(flags & flag);
   }
@@ -53212,6 +53236,9 @@ class Annotation {
     }
     return resources;
   }
+  get _ownCanvasRequiresForms() {
+    return false;
+  }
   async getOperatorList(evaluator, task, intent, annotationStorage) {
     const {
       hasOwnCanvas,
@@ -53219,28 +53246,20 @@ class Annotation {
       rect
     } = this.data;
     let appearance = this.appearance;
-    const isUsingOwnCanvas = !!(hasOwnCanvas && intent & RenderingIntentFlag.DISPLAY);
+    const isUsingOwnCanvas = !!(hasOwnCanvas && intent & RenderingIntentFlag.DISPLAY && (!this._ownCanvasRequiresForms || intent & RenderingIntentFlag.ANNOTATIONS_FORMS));
     if (isUsingOwnCanvas && (this.width === 0 || this.height === 0)) {
       this.data.hasOwnCanvas = false;
-      return {
-        opList: new OperatorList(),
-        separateForm: false,
-        separateCanvas: false
-      };
+      return this._getOperatorListNoAppearance();
     }
     if (!appearance) {
       if (!isUsingOwnCanvas) {
-        return {
-          opList: new OperatorList(),
-          separateForm: false,
-          separateCanvas: false
-        };
+        return this._getOperatorListNoAppearance();
       }
       appearance = new StringStream("", new Dict());
     }
     const appearanceDict = appearance.dict;
     const resources = await this.loadResources(RESOURCES_KEYS_OPERATOR_LIST, appearance);
-    const bbox = lookupRect(appearanceDict.getArray("BBox"), [0, 0, 1, 1]);
+    const bbox = lookupRect(appearanceDict.getArray("BBox"), [0, 0, this.width, this.height]);
     const matrix = lookupMatrix(appearanceDict.getArray("Matrix"), IDENTITY_MATRIX);
     const transform = getTransformMatrix(rect, bbox, matrix);
     const opList = new OperatorList();
@@ -53774,11 +53793,9 @@ class WidgetAnnotation extends Annotation {
   }
   async getOperatorList(evaluator, task, intent, annotationStorage) {
     if (intent & RenderingIntentFlag.ANNOTATIONS_FORMS && !(this instanceof SignatureWidgetAnnotation) && !this.data.noHTML && !this.data.hasOwnCanvas) {
-      return {
-        opList: new OperatorList(),
-        separateForm: true,
-        separateCanvas: false
-      };
+      const list = this._getOperatorListNoAppearance();
+      list.separateForm = true;
+      return list;
     }
     if (!this._hasText) {
       return super.getOperatorList(evaluator, task, intent, annotationStorage);
@@ -54057,7 +54074,7 @@ class WidgetAnnotation extends Annotation {
       return this._getMultilineAppearance(defaultAppearance, encodedLines, font, fontSize, totalWidth, totalHeight, alignment, defaultHPadding, defaultVPadding, descent, lineHeight, annotationStorage);
     }
     if (this.data.comb) {
-      return this._getCombAppearance(defaultAppearance, font, encodedLines[0], fontSize, totalWidth, totalHeight, defaultHPadding, defaultVPadding, descent, lineHeight, alignment, bidi(lines[0]).dir === "rtl", annotationStorage);
+      return this._getCombAppearance(defaultAppearance, font, encodedLines[0], fontSize, totalWidth, totalHeight, defaultVPadding, descent, lineHeight, alignment, bidi(lines[0]).dir === "rtl", annotationStorage);
     }
     const bottomPadding = defaultVPadding + descent;
     if (alignment === 0 || alignment > 2) {
@@ -54291,25 +54308,38 @@ class TextWidgetAnnotation extends WidgetAnnotation {
   get hasTextContent() {
     return !!this.appearance && !this._needAppearances;
   }
-  _getCombAppearance(defaultAppearance, font, text, fontSize, width, height, hPadding, vPadding, descent, lineHeight, alignment, isRTL, annotationStorage) {
+  _getCombAppearance(defaultAppearance, font, text, fontSize, width, height, vPadding, descent, lineHeight, alignment, isRTL, annotationStorage) {
     const combWidth = width / this.data.maxLen;
     const colors = this.getBorderAndBackgroundAppearances(annotationStorage);
-    const buf = [];
-    const positions = font.getCharPositions(text);
-    for (const [start, end] of positions) {
-      buf.push(`(${escapeString(text.substring(start, end))}) Tj`);
-    }
+    const cells = font.getCharPositions(text).map(([start, end]) => {
+      const glyph = text.substring(start, end);
+      return {
+        glyph,
+        width: this._getTextWidth(glyph, font) * fontSize
+      };
+    });
     if (isRTL) {
-      buf.reverse();
+      cells.reverse();
     }
-    const textWidth = combWidth * positions.length;
-    let hShift = hPadding;
+    const textWidth = combWidth * cells.length;
+    let hShift = 0;
     if (alignment === 1) {
       hShift += Math.floor((width - textWidth) / (2 * combWidth)) * combWidth;
     } else if (alignment === 2) {
       hShift += width - textWidth;
     }
-    const renderedComb = buf.join(` ${numberToString(combWidth)} 0 Td `);
+    const buf = [];
+    let previousWidth = 0;
+    for (let i = 0, ii = cells.length; i < ii; i++) {
+      const {
+        glyph,
+        width: glyphWidth
+      } = cells[i];
+      const shift = i === 0 ? (combWidth - glyphWidth) / 2 : combWidth + (previousWidth - glyphWidth) / 2;
+      buf.push(`${numberToString(shift)} 0 Td (${escapeString(glyph)}) Tj`);
+      previousWidth = glyphWidth;
+    }
+    const renderedComb = buf.join(" ");
     return `/Tx BMC q ${colors}BT ` + defaultAppearance + ` 1 0 0 1 ${numberToString(hShift)} ${numberToString(vPadding + descent)} Tm ${renderedComb}` + " ET Q EMC";
   }
   _getMultilineAppearance(defaultAppearance, lines, font, fontSize, width, height, alignment, hPadding, vPadding, descent, lineHeight, annotationStorage) {
@@ -54433,21 +54463,55 @@ class ButtonWidgetAnnotation extends WidgetAnnotation {
     this.data.radioButton = isRadio && !isPushButton;
     this.data.pushButton = isPushButton;
     this.data.isTooltipOnly = false;
+    this.data.hasOwnCanvas = true;
+    this.data.noHTML = false;
     if (this.data.checkBox) {
       this._processCheckBox(params);
     } else if (this.data.radioButton) {
       this._processRadioButton(params);
     } else if (this.data.pushButton) {
-      this.data.hasOwnCanvas = true;
-      this.data.noHTML = false;
       this._processPushButton(params);
     } else {
       warn("Invalid field flags for button widget annotation");
     }
   }
+  get _ownCanvasRequiresForms() {
+    return this.data.checkBox || this.data.radioButton;
+  }
+  #getOperatorListForAppearance(evaluator, task, intent, annotationStorage, rotation, appearance) {
+    if (!appearance) {
+      return this._getOperatorListNoAppearance();
+    }
+    const savedAppearance = this.appearance;
+    const savedMatrix = lookupMatrix(appearance.dict.getArray("Matrix"), IDENTITY_MATRIX);
+    if (rotation) {
+      appearance.dict.set("Matrix", this.getRotationMatrix(annotationStorage));
+    }
+    this.appearance = appearance;
+    const operatorList = super.getOperatorList(evaluator, task, intent, annotationStorage);
+    this.appearance = savedAppearance;
+    appearance.dict.set("Matrix", savedMatrix);
+    return operatorList;
+  }
   async getOperatorList(evaluator, task, intent, annotationStorage) {
     if (this.data.pushButton) {
       return super.getOperatorList(evaluator, task, intent, false, annotationStorage);
+    }
+    if (intent & RenderingIntentFlag.DISPLAY && intent & RenderingIntentFlag.ANNOTATIONS_FORMS && (this.data.checkBox || this.data.radioButton)) {
+      const setCanvasName = (operatorList, name) => {
+        const index = operatorList.fnArray.indexOf(OPS.beginAnnotation);
+        if (index !== -1) {
+          operatorList.argsArray[index].push(name);
+        }
+      };
+      const checked = await this.#getOperatorListForAppearance(evaluator, task, intent, annotationStorage, null, this.checkedAppearance);
+      setCanvasName(checked.opList, "checked");
+      const unchecked = await this.#getOperatorListForAppearance(evaluator, task, intent, annotationStorage, null, this.uncheckedAppearance);
+      setCanvasName(unchecked.opList, "unchecked");
+      checked.opList.addOpList(unchecked.opList);
+      checked.separateForm ||= unchecked.separateForm;
+      checked.separateCanvas ||= unchecked.separateCanvas;
+      return checked;
     }
     let value = null;
     let rotation = null;
@@ -54462,24 +54526,7 @@ class ButtonWidgetAnnotation extends WidgetAnnotation {
     if (value === null || value === undefined) {
       value = this.data.checkBox ? this.data.fieldValue === this.data.exportValue : this.data.fieldValue === this.data.buttonValue;
     }
-    const appearance = value ? this.checkedAppearance : this.uncheckedAppearance;
-    if (appearance) {
-      const savedAppearance = this.appearance;
-      const savedMatrix = lookupMatrix(appearance.dict.getArray("Matrix"), IDENTITY_MATRIX);
-      if (rotation) {
-        appearance.dict.set("Matrix", this.getRotationMatrix(annotationStorage));
-      }
-      this.appearance = appearance;
-      const operatorList = super.getOperatorList(evaluator, task, intent, annotationStorage);
-      this.appearance = savedAppearance;
-      appearance.dict.set("Matrix", savedMatrix);
-      return operatorList;
-    }
-    return {
-      opList: new OperatorList(),
-      separateForm: false,
-      separateCanvas: false
-    };
+    return this.#getOperatorListForAppearance(evaluator, task, intent, annotationStorage, rotation, value ? this.checkedAppearance : this.uncheckedAppearance);
   }
   async save(evaluator, task, annotationStorage, changes) {
     if (this.data.checkBox) {
@@ -54634,19 +54681,16 @@ class ButtonWidgetAnnotation extends WidgetAnnotation {
   }
   _processCheckBox(params) {
     const customAppearance = params.dict.get("AP");
-    if (!(customAppearance instanceof Dict)) {
-      return;
-    }
-    const normalAppearance = customAppearance.get("N");
+    let normalAppearance = customAppearance instanceof Dict ? customAppearance.get("N") : null;
     if (!(normalAppearance instanceof Dict)) {
-      return;
+      normalAppearance = null;
     }
     const asValue = this._decodeFormValue(params.dict.get("AS"));
     if (typeof asValue === "string") {
       this.data.fieldValue = asValue;
     }
     const yes = this.data.fieldValue !== null && this.data.fieldValue !== "Off" ? this.data.fieldValue : "Yes";
-    const exportValues = [...normalAppearance.getKeys()];
+    const exportValues = normalAppearance ? [...normalAppearance.getKeys()] : [];
     if (exportValues.length === 0) {
       exportValues.push("Off", yes);
     } else if (exportValues.length === 1) {
@@ -54667,9 +54711,9 @@ class ButtonWidgetAnnotation extends WidgetAnnotation {
       this.data.fieldValue = "Off";
     }
     this.data.exportValue = exportValues[1];
-    const checkedAppearance = normalAppearance.get(this.data.exportValue);
+    const checkedAppearance = normalAppearance?.get(this.data.exportValue);
     this.checkedAppearance = checkedAppearance instanceof BaseStream ? checkedAppearance : null;
-    const uncheckedAppearance = normalAppearance.get("Off");
+    const uncheckedAppearance = normalAppearance?.get("Off");
     this.uncheckedAppearance = uncheckedAppearance instanceof BaseStream ? uncheckedAppearance : null;
     if (this.checkedAppearance) {
       this._streams.push(this.checkedAppearance);
@@ -56022,11 +56066,28 @@ class FileAttachmentAnnotation extends MarkupAnnotation {
   constructor(params) {
     super(params);
     const {
+      annotationGlobals,
       dict
     } = params;
-    const file = new FileSpec(dict.get("FS"));
+    const fileSpecRef = dict.getRaw("FS");
+    const fsDict = dict.get("FS");
+    const file = new FileSpec(fsDict);
+    const {
+      catalog
+    } = annotationGlobals.pdfManager.pdfDocument;
+    let fileId = fileSpecRef instanceof Ref ? catalog?.attachmentIdByRef.get(fileSpecRef) : undefined;
+    if (catalog && fsDict instanceof Dict && typeof fileId !== "string") {
+      const baseFileId = `annotation:${this.data.id}`;
+      fileId = baseFileId;
+      let i = 1;
+      while (catalog.attachmentDictById.has(fileId)) {
+        fileId = `${baseFileId}-${i++}`;
+      }
+      catalog.attachmentDictById.set(fileId, fsDict);
+    }
     this.data.hasOwnCanvas = this.data.noRotate;
     this.data.noHTML = false;
+    this.data.fileId = fileId;
     this.data.file = file.serializable;
     const name = dict.get("Name");
     this.data.name = name instanceof Name ? stringToPDFString(name.name) : "PushPin";
@@ -57199,6 +57260,7 @@ class PDF20 extends PDFBase {
 }
 class CipherTransform {
   #cipherCache = new Map();
+  embeddedFilterName = null;
   constructor(resolveCipher, stringFilterName = null, streamFilterName = null) {
     this.resolveCipher = resolveCipher;
     this.streamFilterName = streamFilterName;
@@ -57209,7 +57271,8 @@ class CipherTransform {
     return this.#cipherCache.getOrInsertComputed(key, () => this.resolveCipher(filterName));
   }
   createStream(stream, length, cryptFilterName = null) {
-    const Cipher = this.#getCipher(cryptFilterName || this.streamFilterName);
+    const defaultFilterName = this.embeddedFilterName && isDict(stream.dict, "EmbeddedFile") ? this.embeddedFilterName : this.streamFilterName;
+    const Cipher = this.#getCipher(cryptFilterName || defaultFilterName);
     const cipher = new Cipher();
     return new DecryptStream(stream, length, function cipherTransformDecryptStream(data, finalize) {
       return cipher.decryptBlock(data, finalize);
@@ -57244,6 +57307,7 @@ class CipherTransform {
   }
 }
 class CipherTransformFactory {
+  #fileId;
   static get _defaultPasswordBytes() {
     return shadow(this, "_defaultPasswordBytes", new Uint8Array([0x28, 0xbf, 0x4e, 0x5e, 0x4e, 0x75, 0x8a, 0x41, 0x64, 0x00, 0x4e, 0x56, 0xff, 0xfa, 0x01, 0x08, 0x2e, 0x2e, 0x00, 0xb6, 0xd0, 0x68, 0x3e, 0x80, 0x2f, 0x0c, 0xa9, 0xfe, 0x64, 0x53, 0x69, 0x7a]));
   }
@@ -57383,6 +57447,7 @@ class CipherTransformFactory {
     }
     this.filterName = filter.name;
     this.dict = dict;
+    this.#fileId = fileId;
     const algorithm = dict.get("V");
     if (!Number.isInteger(algorithm) || algorithm !== 1 && algorithm !== 2 && algorithm !== 4 && algorithm !== 5) {
       throw new FormatError("unsupported encryption algorithm");
@@ -57408,6 +57473,23 @@ class CipherTransformFactory {
     if (!Number.isInteger(keyLength) || keyLength < 40 || keyLength % 8 !== 0) {
       throw new FormatError("invalid key length");
     }
+    let cf = null;
+    let stmf = Name.get("Identity");
+    let strf = Name.get("Identity");
+    let eff = stmf;
+    if (algorithm >= 4) {
+      cf = dict.get("CF");
+      if (cf instanceof Dict) {
+        cf.suppressEncryption = true;
+      }
+      stmf = dict.get("StmF") || Name.get("Identity");
+      strf = dict.get("StrF") || Name.get("Identity");
+      eff = dict.get("EFF") || stmf;
+    }
+    this.cf = cf;
+    this.stmf = stmf;
+    this.strf = strf;
+    this.eff = eff;
     const ownerBytes = stringToBytes(dict.get("O")),
       userBytes = stringToBytes(dict.get("U"));
     const ownerPassword = ownerBytes.subarray(0, 32);
@@ -57444,6 +57526,14 @@ class CipherTransformFactory {
     }
     if (!encryptionKey) {
       if (!password) {
+        if (this.algorithm >= 4 && isName(this.stmf, "Identity") && isName(this.strf, "Identity")) {
+          const effCF = this.cf?.get(this.eff.name);
+          const authEvent = effCF?.get("AuthEvent");
+          if (isName(authEvent, "EFOpen")) {
+            this.encryptionKey = null;
+            return;
+          }
+        }
         throw new PasswordException("No password given", PasswordResponses.NEED_PASSWORD);
       }
       const decodedPassword = this.#decodeUserPassword(passwordBytes, ownerPassword, revision, keyLength);
@@ -57458,16 +57548,10 @@ class CipherTransformFactory {
     } else {
       this.encryptionKey = encryptionKey;
     }
-    if (algorithm >= 4) {
-      const cf = dict.get("CF");
-      if (cf instanceof Dict) {
-        cf.suppressEncryption = true;
-      }
-      this.cf = cf;
-      this.stmf = dict.get("StmF") || Name.get("Identity");
-      this.strf = dict.get("StrF") || Name.get("Identity");
-      this.eff = dict.get("EFF") || this.stmf;
-    }
+  }
+  setPassword(password) {
+    const transform = new CipherTransformFactory(this.dict, this.#fileId, password);
+    this.encryptionKey = transform.encryptionKey;
   }
   createCipherTransform(num, gen) {
     if (this.algorithm === 4 || this.algorithm === 5) {
@@ -57480,6 +57564,9 @@ class CipherTransformFactory {
         if (!cfm || cfm.name === "None") {
           return NullCipher;
         }
+        if (!this.encryptionKey) {
+          throw new PasswordException("No password given", PasswordResponses.NEED_PASSWORD);
+        }
         if (cfm.name === "V2") {
           return ARCFourCipher.bind(null, this.#buildObjectKey(num, gen, this.encryptionKey, false));
         }
@@ -57491,7 +57578,9 @@ class CipherTransformFactory {
         }
         throw new FormatError("Unknown crypto method");
       };
-      return new CipherTransform(resolveCipher, this.strf, this.stmf);
+      const transform = new CipherTransform(resolveCipher, this.strf, this.stmf);
+      transform.embeddedFilterName = this.eff;
+      return transform;
     }
     const resolveCipher = () => ARCFourCipher.bind(null, this.#buildObjectKey(num, gen, this.encryptionKey, false));
     return new CipherTransform(resolveCipher);
@@ -59774,6 +59863,7 @@ class BasePdfManager {
   }
   updatePassword(password) {
     this._password = password;
+    this.pdfDocument.xref.encrypt?.setPassword(password);
   }
   terminate(reason) {
     unreachable("Abstract method `terminate` called");
@@ -60282,8 +60372,9 @@ async function writeStream(stream, buffer, transform) {
   const filterZero = Array.isArray(filter) ? await dict.xref.fetchIfRefAsync(filter[0]) : filter;
   const isFilterZeroFlateDecode = isName(filterZero, "FlateDecode");
   const isFilterZeroImageDecode = isName(filterZero, "DCTDecode") || isName(filterZero, "JPXDecode") || isName(filterZero, "JBIG2Decode") || isName(filterZero, "CCITTFaxDecode") || isName(filterZero, "LZWDecode");
+  const isFilterZeroCompressedObject = isFilterZeroFlateDecode || isFilterZeroImageDecode || isName(filterZero, "BrotliDecode");
   const MIN_LENGTH_FOR_COMPRESSING = 256;
-  if (!isFilterZeroFlateDecode && !isFilterZeroImageDecode && bytes.length >= MIN_LENGTH_FOR_COMPRESSING) {
+  if (!isFilterZeroCompressedObject && bytes.length >= MIN_LENGTH_FOR_COMPRESSING) {
     try {
       const cs = new CompressionStream("deflate");
       const writer = cs.writable.getWriter();
@@ -60668,6 +60759,7 @@ async function incrementalUpdate({
 
 
 
+
 const MAX_LEAVES_PER_PAGES_NODE = 16;
 const MAX_IN_NAME_TREE_NODE = 64;
 class PageData {
@@ -60689,6 +60781,7 @@ class DocumentData {
     this.dedupNamedDestinations = new Map();
     this.usedNamedDestinations = new Set();
     this.postponedRefCopies = new RefSetCache();
+    this.resourceStreamPromises = new Map();
     this.usedStructParents = new Set();
     this.oldStructParentMapping = new Map();
     this.structTreeRoot = null;
@@ -60737,6 +60830,7 @@ class PDFEditor {
   isSingleFile = false;
   #newAnnotationsParams = null;
   #primaryDocument = null;
+  #resourceStreamCache = new Map();
   currentDocument = null;
   oldPages = [];
   newPages = [];
@@ -60795,25 +60889,28 @@ class PDFEditor {
     newDict.xref = this.xrefWrapper;
     return newDict;
   }
-  async #collectDependencies(obj, mustClone, xref) {
+  async #collectDependencies(obj, mustClone, xref, resourceStreamPath = new RefSet()) {
     if (obj instanceof Ref) {
       const {
         currentDocument: {
           oldRefMapping
         }
       } = this;
-      let newRef = oldRefMapping.get(obj);
-      if (newRef) {
-        return newRef;
+      const existingRef = oldRefMapping.get(obj);
+      if (existingRef) {
+        return existingRef;
       }
       const oldRef = obj;
       obj = await xref.fetchAsync(oldRef);
       if (typeof obj === "number") {
         return obj;
       }
-      newRef = this.newRef;
+      if (obj instanceof BaseStream && this.#isResourceStream(obj.dict)) {
+        return this.#collectResourceStream(oldRef, obj, xref, resourceStreamPath);
+      }
+      const newRef = this.newRef;
       oldRefMapping.put(oldRef, newRef);
-      this.xref[newRef.num] = await this.#collectDependencies(obj, true, xref);
+      this.xref[newRef.num] = await this.#collectDependencies(obj, true, xref, resourceStreamPath);
       return newRef;
     }
     const promises = [];
@@ -60832,7 +60929,7 @@ class PDFEditor {
           postponedActions.push(ref => obj[i] = ref);
           continue;
         }
-        promises.push(this.#collectDependencies(obj[i], true, xref).then(newObj => obj[i] = newObj));
+        promises.push(this.#collectDependencies(obj[i], true, xref, resourceStreamPath).then(newObj => obj[i] = newObj));
       }
       await Promise.all(promises);
       return obj;
@@ -60857,11 +60954,106 @@ class PDFEditor {
           postponedActions.push(ref => dict.set(key, ref));
           continue;
         }
-        promises.push(this.#collectDependencies(rawObj, true, xref).then(newObj => dict.set(key, newObj)));
+        promises.push(this.#collectDependencies(rawObj, true, xref, resourceStreamPath).then(newObj => dict.set(key, newObj)));
       }
       await Promise.all(promises);
     }
     return obj;
+  }
+  #isResourceStream(dict) {
+    const subtype = dict.get("Subtype");
+    return isName(subtype, "Image") || dict.has("Length1") || isName(subtype, "Type1C") || isName(subtype, "CIDFontType0C") || isName(subtype, "OpenType");
+  }
+  #rawStreamBytes(stream) {
+    const original = stream.getOriginalStream();
+    original.reset();
+    return original.getBytes();
+  }
+  async #serializeDict(dict) {
+    const buffer = [];
+    await writeValue(dict, buffer, null);
+    return buffer.join("");
+  }
+  #resourceStreamKey(dictStr, bytes) {
+    const SAMPLE_SIZE = 256;
+    const SAMPLE_COUNT = 4;
+    const {
+      length
+    } = bytes;
+    const hash = new MurmurHash3_64();
+    hash.update(dictStr);
+    hash.update(`#${length}`);
+    if (length <= SAMPLE_SIZE * SAMPLE_COUNT) {
+      hash.update(bytes);
+    } else {
+      const step = Math.floor((length - SAMPLE_SIZE) / (SAMPLE_COUNT - 1));
+      for (let i = 0; i < SAMPLE_COUNT; i++) {
+        const start = Math.min(i * step, length - SAMPLE_SIZE);
+        hash.update(bytes.subarray(start, start + SAMPLE_SIZE));
+      }
+    }
+    return hash.hexdigest();
+  }
+  async #collectResourceStream(oldRef, stream, xref, resourceStreamPath) {
+    const {
+      currentDocument: {
+        oldRefMapping,
+        resourceStreamPromises
+      }
+    } = this;
+    if (resourceStreamPath.has(oldRef)) {
+      let ref = oldRefMapping.get(oldRef);
+      if (!ref) {
+        ref = this.newRef;
+        oldRefMapping.put(oldRef, ref);
+      }
+      return ref;
+    }
+    const key = oldRef.toString();
+    const pending = resourceStreamPromises.get(key);
+    if (pending) {
+      return pending;
+    }
+    const childPath = new RefSet(resourceStreamPath);
+    childPath.put(oldRef);
+    const promise = Promise.resolve().then(async () => {
+      const collected = await this.#collectDependencies(stream, true, xref, childPath);
+      const cycleRef = oldRefMapping.get(oldRef);
+      if (cycleRef) {
+        this.xref[cycleRef.num] = collected;
+        return cycleRef;
+      }
+      const ref = await this.#dedupResourceStream(collected);
+      oldRefMapping.put(oldRef, ref);
+      return ref;
+    });
+    resourceStreamPromises.set(key, promise);
+    try {
+      return await promise;
+    } finally {
+      if (resourceStreamPromises.get(key) === promise) {
+        resourceStreamPromises.delete(key);
+      }
+    }
+  }
+  async #dedupResourceStream(stream) {
+    const dictStr = await this.#serializeDict(stream.dict);
+    const bytes = this.#rawStreamBytes(stream);
+    const key = this.#resourceStreamKey(dictStr, bytes);
+    const bucket = this.#resourceStreamCache.getOrInsertComputed(key, makeArr);
+    for (const entry of bucket) {
+      if (entry.dictStr === dictStr && isArrayEqual(this.#rawStreamBytes(entry.stream), bytes)) {
+        return entry.ref;
+      }
+    }
+    const ref = this.newRef;
+    this.xref[ref.num] = stream;
+    bucket.push({
+      ref,
+      dictStr,
+      stream
+    });
+    return ref;
   }
   async #cloneStructTreeNode(parentStructRef, node, xref, removedStructElements, dedupIDs, dedupClasses, dedupRoles, visited = new RefSet()) {
     const {
@@ -63146,7 +63338,7 @@ class WorkerMessageHandler {
       docId,
       apiVersion
     } = docParams;
-    const workerVersion = "6.0.243";
+    const workerVersion = "6.0.346";
     if (apiVersion !== workerVersion) {
       throw new Error(`The API version "${apiVersion}" does not match ` + `the Worker version "${workerVersion}".`);
     }
@@ -63278,6 +63470,18 @@ class WorkerMessageHandler {
       });
       return promise;
     }
+    async function getPassword(ex) {
+      const task = new WorkerTask(`PasswordException: response ${ex.code}`);
+      startWorkerTask(task);
+      try {
+        const res = await handler.sendWithPromise("PasswordRequest", ex);
+        return res.password;
+      } finally {
+        Promise.resolve().then(() => {
+          finishWorkerTask(task);
+        });
+      }
+    }
     function setupDoc(data) {
       function onSuccess(doc) {
         ensureNotTerminated();
@@ -63290,16 +63494,10 @@ class WorkerMessageHandler {
           return;
         }
         if (ex instanceof PasswordException) {
-          const task = new WorkerTask(`PasswordException: response ${ex.code}`);
-          startWorkerTask(task);
-          handler.sendWithPromise("PasswordRequest", ex).then(function ({
-            password
-          }) {
-            finishWorkerTask(task);
+          getPassword(ex).then(password => {
             pdfManager.updatePassword(password);
             pdfManagerReady();
-          }).catch(function () {
-            finishWorkerTask(task);
+          }).catch(() => {
             handler.send("DocException", ex);
           });
         } else {
@@ -63317,7 +63515,7 @@ class WorkerMessageHandler {
           pdfManager.requestLoadedStream().then(function () {
             ensureNotTerminated();
             loadDocument(true).then(onSuccess, onFailure);
-          });
+          }, onFailure);
         });
       }
       ensureNotTerminated();
@@ -63331,7 +63529,7 @@ class WorkerMessageHandler {
           handler.send("DataLoaded", {
             length: stream.bytes.byteLength
           });
-        });
+        }, () => {});
       }).then(pdfManagerReady, onFailure);
     }
     handler.on("GetPage", function (data) {
@@ -63374,6 +63572,24 @@ class WorkerMessageHandler {
     });
     handler.on("GetAttachments", function (data) {
       return pdfManager.ensureCatalog("attachments");
+    });
+    handler.on("GetAttachmentContent", async function (id) {
+      let passwordEx;
+      while (true) {
+        const password = passwordEx ? await getPassword(passwordEx) : null;
+        try {
+          if (password) {
+            pdfManager.updatePassword(password);
+          }
+          return await pdfManager.ensureCatalog("attachmentContent", [id]);
+        } catch (ex) {
+          if (ex instanceof PasswordException) {
+            passwordEx = ex;
+            continue;
+          }
+          throw ex;
+        }
+      }
     });
     handler.on("GetDocJSActions", function (data) {
       return pdfManager.ensureCatalog("jsActions");
@@ -63507,18 +63723,12 @@ class WorkerMessageHandler {
                   warn("extractPages: XRefParseException.");
                 }
               } else if (e instanceof PasswordException) {
-                const task = new WorkerTask(`PasswordException: response ${e.code}`);
-                startWorkerTask(task);
                 try {
-                  const {
-                    password
-                  } = await handler.sendWithPromise("PasswordRequest", e);
+                  const password = await getPassword(e);
                   manager.updatePassword(password);
                 } catch {
                   isValid = false;
                   warn("extractPages: invalid password.");
-                } finally {
-                  finishWorkerTask(task);
                 }
               } else {
                 isValid = false;

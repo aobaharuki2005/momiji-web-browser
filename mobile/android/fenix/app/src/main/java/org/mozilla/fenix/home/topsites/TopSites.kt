@@ -63,6 +63,7 @@ import org.mozilla.fenix.compose.MenuItem
 import org.mozilla.fenix.home.fake.FakeHomepagePreview
 import org.mozilla.fenix.home.topsites.TopSitesTestTag.TOP_SITE_CARD_FAVICON
 import org.mozilla.fenix.home.topsites.interactor.TopSiteInteractor
+import org.mozilla.fenix.home.topsites.ui.AddShortcutItem
 import org.mozilla.fenix.theme.FirefoxTheme
 import org.mozilla.fenix.theme.PreviewThemeProvider
 import org.mozilla.fenix.theme.Theme
@@ -87,7 +88,9 @@ internal const val TOP_SITES_FAVICON_SIZE = 36
  * @param topSiteColors The color set defined by [TopSiteColors] used to style a top site.
  * @param interactor The interactor which handles user actions with the widget.
  * @param onTopSitesItemBound Invoked during the composition of a top site item.
+ * @param onAddShortcutClicked Invoked when the user clicks on the "Add shortcut" tile.
  * @param isPager Whether the top sites should be rendered as a horizontally pageable pager.
+ * @param showAddShortcut Whether to display the "Add shortcut" tile after the top sites.
  */
 @Composable
 fun TopSites(
@@ -95,7 +98,9 @@ fun TopSites(
     topSiteColors: TopSiteColors = TopSiteColors.colors(),
     interactor: TopSiteInteractor,
     onTopSitesItemBound: () -> Unit,
+    onAddShortcutClicked: () -> Unit,
     isPager: Boolean = false,
+    showAddShortcut: Boolean = false,
 ) {
     TopSites(
         topSites = topSites,
@@ -114,7 +119,9 @@ fun TopSites(
         onSettingsClicked = interactor::onSettingsClicked,
         onSponsorPrivacyClicked = interactor::onSponsorPrivacyClicked,
         onTopSitesItemBound = onTopSitesItemBound,
+        onAddShortcutClicked = onAddShortcutClicked,
         isPager = isPager,
+        showAddShortcut = showAddShortcut,
     )
 }
 
@@ -134,7 +141,9 @@ fun TopSites(
  * @param onSponsorPrivacyClicked Invoked when the user clicks on the "Our sponsors & your privacy"
  * menu item.
  * @param onTopSitesItemBound Invoked during the composition of a top site item.
+ * @param onAddShortcutClicked Invoked when the user clicks on the "Add shortcut" tile.
  * @param isPager Whether the top sites should be rendered as a horizontally pageable pager.
+ * @param showAddShortcut Whether to display the "Add shortcut" tile after the top sites.
  */
 @Composable
 @Suppress("LongParameterList")
@@ -150,7 +159,9 @@ fun TopSites(
     onSettingsClicked: () -> Unit,
     onSponsorPrivacyClicked: () -> Unit,
     onTopSitesItemBound: () -> Unit,
+    onAddShortcutClicked: () -> Unit,
     isPager: Boolean = false,
+    showAddShortcut: Boolean = false,
 ) {
     Column(
         modifier = Modifier
@@ -176,45 +187,134 @@ fun TopSites(
                 onTopSitesItemBound = onTopSitesItemBound,
             )
         } else {
-            val topSiteRows = topSites.take(TOP_SITES_TO_SHOW).chunked(TOP_SITES_PER_ROW)
+            TopSitesGrid(
+                topSites = topSites,
+                topSiteColors = topSiteColors,
+                showAddShortcut = showAddShortcut,
+                onTopSiteClick = onTopSiteClick,
+                onTopSiteLongClick = onTopSiteLongClick,
+                onTopSiteImpression = onTopSiteImpression,
+                onOpenInPrivateTabClicked = onOpenInPrivateTabClicked,
+                onEditTopSiteClicked = onEditTopSiteClicked,
+                onRemoveTopSiteClicked = onRemoveTopSiteClicked,
+                onSettingsClicked = onSettingsClicked,
+                onSponsorPrivacyClicked = onSponsorPrivacyClicked,
+                onTopSitesItemBound = onTopSitesItemBound,
+                onAddShortcutClicked = onAddShortcutClicked,
+            )
+        }
+    }
+}
 
-            Box(
-                modifier = Modifier.fillMaxWidth(),
-                contentAlignment = Alignment.Center,
-            ) {
-                Column(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                ) {
-                    for (items in topSiteRows) {
-                        Row(modifier = Modifier.defaultMinSize(minWidth = TOP_SITES_ROW_WIDTH.dp)) {
-                            items.forEachIndexed { position, topSite ->
-                                TopSiteItem(
-                                    topSite = topSite,
-                                    menuItems = getMenuItems(
-                                        topSite = topSite,
-                                        onOpenInPrivateTabClicked = onOpenInPrivateTabClicked,
-                                        onEditTopSiteClicked = onEditTopSiteClicked,
-                                        onRemoveTopSiteClicked = onRemoveTopSiteClicked,
-                                        onSettingsClicked = onSettingsClicked,
-                                        onSponsorPrivacyClicked = onSponsorPrivacyClicked,
-                                    ),
-                                    position = position,
-                                    topSiteColors = topSiteColors,
-                                    onTopSiteClick = onTopSiteClick,
-                                    onTopSiteLongClick = onTopSiteLongClick,
-                                    onTopSiteImpression = onTopSiteImpression,
-                                    onTopSitesItemBound = onTopSitesItemBound,
-                                )
-                            }
-                        }
+@Suppress("LongParameterList")
+@Composable
+private fun TopSitesGrid(
+    topSites: List<TopSite>,
+    topSiteColors: TopSiteColors,
+    showAddShortcut: Boolean,
+    onTopSiteClick: (TopSite) -> Unit,
+    onTopSiteLongClick: (TopSite) -> Unit,
+    onTopSiteImpression: (TopSite.Provided, Int) -> Unit,
+    onOpenInPrivateTabClicked: (TopSite) -> Unit,
+    onEditTopSiteClicked: (TopSite) -> Unit,
+    onRemoveTopSiteClicked: (TopSite) -> Unit,
+    onSettingsClicked: () -> Unit,
+    onSponsorPrivacyClicked: () -> Unit,
+    onTopSitesItemBound: () -> Unit,
+    onAddShortcutClicked: () -> Unit,
+) {
+    val topSiteRows = topSites.take(TOP_SITES_TO_SHOW).chunked(TOP_SITES_PER_ROW)
+    val addShortcutInCurrentRow = showAddShortcut &&
+        topSiteRows.isNotEmpty() && topSiteRows.last().size < TOP_SITES_PER_ROW
+    val addShortcutInNewRow = showAddShortcut && !addShortcutInCurrentRow
 
-                        if (items != topSiteRows.last()) {
-                            Spacer(modifier = Modifier.height(12.dp))
-                        }
-                    }
+    Box(
+        modifier = Modifier.fillMaxWidth(),
+        contentAlignment = Alignment.Center,
+    ) {
+        Column(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalAlignment = Alignment.CenterHorizontally,
+        ) {
+            topSiteRows.forEachIndexed { rowIndex, items ->
+                val isLastRow = rowIndex == topSiteRows.lastIndex
+
+                TopSiteGridRow(
+                    items = items,
+                    topSiteColors = topSiteColors,
+                    showAddShortcut = isLastRow && addShortcutInCurrentRow,
+                    onTopSiteClick = onTopSiteClick,
+                    onTopSiteLongClick = onTopSiteLongClick,
+                    onTopSiteImpression = onTopSiteImpression,
+                    onOpenInPrivateTabClicked = onOpenInPrivateTabClicked,
+                    onEditTopSiteClicked = onEditTopSiteClicked,
+                    onRemoveTopSiteClicked = onRemoveTopSiteClicked,
+                    onSettingsClicked = onSettingsClicked,
+                    onSponsorPrivacyClicked = onSponsorPrivacyClicked,
+                    onTopSitesItemBound = onTopSitesItemBound,
+                    onAddShortcutClicked = onAddShortcutClicked,
+                )
+
+                if (!isLastRow || addShortcutInNewRow) {
+                    Spacer(modifier = Modifier.height(12.dp))
                 }
             }
+
+            if (addShortcutInNewRow) {
+                Row(modifier = Modifier.defaultMinSize(minWidth = TOP_SITES_ROW_WIDTH.dp)) {
+                    AddShortcutItem(
+                        topSiteColors = topSiteColors,
+                        onClick = onAddShortcutClicked,
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Suppress("LongParameterList")
+@Composable
+private fun TopSiteGridRow(
+    items: List<TopSite>,
+    topSiteColors: TopSiteColors,
+    showAddShortcut: Boolean,
+    onTopSiteClick: (TopSite) -> Unit,
+    onTopSiteLongClick: (TopSite) -> Unit,
+    onTopSiteImpression: (TopSite.Provided, Int) -> Unit,
+    onOpenInPrivateTabClicked: (TopSite) -> Unit,
+    onEditTopSiteClicked: (TopSite) -> Unit,
+    onRemoveTopSiteClicked: (TopSite) -> Unit,
+    onSettingsClicked: () -> Unit,
+    onSponsorPrivacyClicked: () -> Unit,
+    onTopSitesItemBound: () -> Unit,
+    onAddShortcutClicked: () -> Unit,
+) {
+    Row(modifier = Modifier.defaultMinSize(minWidth = TOP_SITES_ROW_WIDTH.dp)) {
+        items.forEachIndexed { position, topSite ->
+            TopSiteItem(
+                topSite = topSite,
+                menuItems = getMenuItems(
+                    topSite = topSite,
+                    onOpenInPrivateTabClicked = onOpenInPrivateTabClicked,
+                    onEditTopSiteClicked = onEditTopSiteClicked,
+                    onRemoveTopSiteClicked = onRemoveTopSiteClicked,
+                    onSettingsClicked = onSettingsClicked,
+                    onSponsorPrivacyClicked = onSponsorPrivacyClicked,
+                ),
+                position = position,
+                topSiteColors = topSiteColors,
+                onTopSiteClick = onTopSiteClick,
+                onTopSiteLongClick = onTopSiteLongClick,
+                onTopSiteImpression = onTopSiteImpression,
+                onTopSitesItemBound = onTopSitesItemBound,
+            )
+        }
+
+        if (showAddShortcut) {
+            AddShortcutItem(
+                topSiteColors = topSiteColors,
+                onClick = onAddShortcutClicked,
+            )
         }
     }
 }
@@ -628,6 +728,7 @@ private fun TopSitesPreview(
                     onSettingsClicked = {},
                     onSponsorPrivacyClicked = {},
                     onTopSitesItemBound = {},
+                    onAddShortcutClicked = {},
                 )
             }
         }

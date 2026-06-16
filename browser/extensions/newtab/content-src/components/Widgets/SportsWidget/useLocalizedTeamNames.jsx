@@ -85,3 +85,17 @@ export function useLocalizedTeamNames(teams) {
   // Only expose names that match the current `teams` reference.
   return resolved.teams === teams ? resolved.names : null;
 }
+
+/**
+ * Resolves the localized "To be determined" placeholder name used in a match
+ * row's aria-label for an undecided team. Returns "" until resolved.
+ */
+export function useTbdTeamName() {
+  const [tbdName, setTbdName] = useState("");
+  useEffect(() => {
+    document.l10n
+      ?.formatValues?.([{ id: "newtab-sports-widget-team-tbd" }])
+      ?.then(([value]) => value && setTbdName(value));
+  }, []);
+  return tbdName;
+}

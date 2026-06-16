@@ -48,6 +48,7 @@ bool ColorFunction::DependsOnCurrentColor() const {
     case Tag::Color:
       return OptionalDependsOnCurrentColor(AsColor()._0);
   }
+  MOZ_MAKE_COMPILER_ASSUME_IS_UNREACHABLE("Unknown color function type");
 }
 
 using ColorMix = StyleGenericColorMix<StyleColor, StylePercentage>;
@@ -76,6 +77,7 @@ bool StyleColor::DependsOnCurrentColor() const {
     case Tag::ContrastColor:
       return AsContrastColor()->DependsOnCurrentColor();
   }
+  MOZ_MAKE_COMPILER_ASSUME_IS_UNREACHABLE("Unknown color type");
 }
 
 template <>

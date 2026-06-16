@@ -278,7 +278,6 @@
     <string name="pref_key_tracking_protection_redirect_trackers" translatable="false">pref_key_tracking_protection_redirect_trackers</string>
     <string name="pref_key_tracking_protection_suspected_fingerprinters" translatable="false">pref_key_tracking_protection_suspected_fingerprinters</string>
     <string name="pref_key_tracking_protection_suspected_fingerprinters_select" translatable="false">pref_key_tracking_protection_suspected_fingerprinters_select</string>
-    <string name="pref_key_tracking_protection_dashboard_status" translatable="false">pref_key_tracking_protection_dashboard_status</string>
 
     <!-- Logins Settings -->
     <string name="pref_key_save_logins_settings" translatable="false">pref_key_save_logins_settings</string>
@@ -352,6 +351,7 @@
     <string name="pref_key_is_user_meta_attributed" translatable="false">pref_key_is_user_meta_attributed</string>
     <string name="pref_key_is_user_tiktok_attributed" translatable="false">pref_key_is_user_tiktok_attributed</string>
     <string name="pref_key_is_user_reddit_attributed" translatable="false">pref_key_is_user_reddit_attributed</string>
+    <string name="pref_key_is_user_x_twitter_attributed" translatable="false">pref_key_is_user_x_twitter_attributed</string>
 
     <!-- Return to AMO - addon to install at the first app launch -->
     <string name="pref_key_rtamo_addon_download_url" translatable="false">pref_key_rtamo_addon_download_url</string>
@@ -460,7 +460,6 @@
     <string name="pref_key_pocket_sponsored_stories" translatable="false">pref_key_pocket_sponsored_stories</string>
 
     <!-- Secret Info Setting Keys -->
-    <string name="pref_key_secret_debug_info" translatable="false">pref_key_secret_debug_info</string>
     <string name="pref_key_start_profiler" translatable="false">pref_key_start_profiler</string>
 
     <!-- Secret Settings -->
@@ -609,6 +608,8 @@
 
     <!-- Longfox -->
     <string name="pref_key_enable_longfox" translatable="false">pref_key_enable_longfox</string>
+    <string name="pref_key_app_launch_count" translatable="false">pref_key_app_launch_count</string>
+    <string name="pref_key_longfox_peek_animation_shown_count" translatable="false">pref_key_longfox_peek_animation_shown_count</string>
 
     <!-- Sports Widget -->
     <string name="pref_key_sports_selected_countries" translatable="false">pref_key_sports_selected_countries</string>

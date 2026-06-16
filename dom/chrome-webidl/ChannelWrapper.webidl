@@ -339,6 +339,22 @@ interface ChannelWrapper : EventTarget {
   readonly attribute long long parentFrameId;
 
   /**
+   * The innerWindowId of the document associated with this request, or 0 for
+   * navigation requests (where the document is not yet committed) or requests
+   * not associated with a document.
+   */
+  [Cached, Constant]
+  readonly attribute unsigned long long documentInnerWindowId;
+
+  /**
+   * The innerWindowId of the document embedding the frame this request belongs
+   * to, or 0 for top-level requests or requests not associated with a
+   * browsing context.
+   */
+  [Cached, Constant]
+  readonly attribute unsigned long long parentDocumentInnerWindowId;
+
+  /**
    * For cross-process requests, the <browser> or <iframe> element to which the
    * content loading this request belongs. For requests that don't originate
    * from a remote browser, this is null.

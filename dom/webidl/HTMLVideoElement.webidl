@@ -96,7 +96,7 @@ partial interface HTMLVideoElement {
 
 // https://w3c.github.io/picture-in-picture/#htmlvideoelement-extensions
 partial interface HTMLVideoElement {
-  [Pref="dom.media-pip.enabled", NewObject, Throws] Promise<PictureInPictureWindow> requestPictureInPicture();
+  [Pref="dom.media-pip.enabled", NewObject, Throws, UseCounter] Promise<PictureInPictureWindow> requestPictureInPicture();
 
   [Pref="dom.media-pip.enabled"] attribute EventHandler onenterpictureinpicture;
   [Pref="dom.media-pip.enabled"] attribute EventHandler onleavepictureinpicture;

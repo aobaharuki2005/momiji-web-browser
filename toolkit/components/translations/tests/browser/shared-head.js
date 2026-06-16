@@ -306,6 +306,7 @@ async function openAboutTranslations({
       ["browser.translations.mostRecentTargetLanguages", ""],
       ["dom.events.testing.asyncClipboard", true],
       [USE_LEXICAL_SHORTLIST_PREF, false],
+      ["layout.css.text-transform.uppercase-eszett.enabled", false],
       ...(prefs ?? []),
     ],
   });

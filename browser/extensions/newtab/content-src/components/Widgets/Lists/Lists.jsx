@@ -11,11 +11,12 @@ import React, {
 } from "react";
 import { useSelector, batch } from "react-redux";
 import { actionCreators as ac, actionTypes as at } from "common/Actions.mjs";
-import { useIntersectionObserver, useSizeSubmenu } from "../../../lib/utils";
+import { useSizeSubmenu } from "../../../lib/utils";
 import { WIDGET_REGISTRY, resolveWidgetSize } from "common/WidgetsRegistry.mjs";
 import { WidgetCelebration } from "../WidgetCelebration";
 import { useWidgetCelebration } from "../useWidgetCelebration";
 import { MoveSubmenu } from "../MoveSubmenu";
+import { useWidgetTelemetry } from "../useWidgetTelemetry";
 
 const TASK_TYPE = {
   IN_PROGRESS: "tasks",
@@ -198,7 +199,6 @@ function Lists({
   const inputRef = useRef(null);
   const reorderListRef = useRef(null);
   const widgetRef = useRef(null);
-  const impressionFired = useRef(false);
   const {
     celebrationFrame,
     celebrationId,
@@ -206,6 +206,19 @@ function Lists({
     isCelebrating,
     triggerCelebration,
   } = useWidgetCelebration(widgetRef);
+
+  // Pre-hook code reported widget_size as "medium" when the widgets row is
+  // not maximizable, regardless of the resolved widgetSize. Preserve that.
+  const telemetrySize = widgetsMayBeMaximized ? widgetSize : "medium";
+  const { impressionRef, recordUserAction, recordEnabled } = useWidgetTelemetry(
+    {
+      dispatch,
+      widget: listsWidget,
+      widgetSize: telemetrySize,
+      legacyImpressionTypes: [at.WIDGETS_LISTS_USER_IMPRESSION],
+      legacyUserEventType: at.WIDGETS_LISTS_USER_EVENT,
+    }
+  );
 
   const handleListInteraction = useCallback(
     () => handleUserInteraction("lists"),
@@ -227,35 +240,8 @@ function Lists({
     [dispatch, handleListInteraction]
   );
 
-  // store selectedList with useMemo so it isnt re-calculated on every re-render
+  // store selectedList with useMemo so it isn't re-calculated on every re-render
   const isValidUrl = useCallback(str => URL.canParse(str), []);
-
-  const handleIntersection = useCallback(() => {
-    if (impressionFired.current) {
-      return;
-    }
-    impressionFired.current = true;
-
-    batch(() => {
-      dispatch(
-        ac.AlsoToMain({
-          type: at.WIDGETS_LISTS_USER_IMPRESSION,
-        })
-      );
-      const telemetryData = {
-        widget_name: "lists",
-        widget_size: widgetsMayBeMaximized ? widgetSize : "medium",
-      };
-      dispatch(
-        ac.AlsoToMain({
-          type: at.WIDGETS_IMPRESSION,
-          data: telemetryData,
-        })
-      );
-    });
-  }, [dispatch, widgetsMayBeMaximized, widgetSize]);
-
-  const listsRef = useIntersectionObserver(handleIntersection);
 
   const reorderLists = useCallback(
     (draggedElement, targetElement, before = false) => {
@@ -380,24 +366,10 @@ function Lists({
             data: { lists: updatedLists },
           })
         );
-        dispatch(
-          ac.OnlyToMain({
-            type: at.WIDGETS_LISTS_USER_EVENT,
-            data: { userAction: USER_ACTION_TYPES.TASK_CREATE },
-          })
-        );
-        const telemetryData = {
-          widget_name: "lists",
-          widget_source: "widget",
-          user_action: USER_ACTION_TYPES.TASK_CREATE,
-          widget_size: widgetsMayBeMaximized ? widgetSize : "medium",
-        };
-        dispatch(
-          ac.OnlyToMain({
-            type: at.WIDGETS_USER_EVENT,
-            data: telemetryData,
-          })
-        );
+        recordUserAction(USER_ACTION_TYPES.TASK_CREATE, {
+          source: "widget",
+          legacy: true,
+        });
       });
       setNewTask("");
     }
@@ -465,24 +437,11 @@ function Lists({
         })
       );
       if (userAction) {
-        dispatch(
-          ac.AlsoToMain({
-            type: at.WIDGETS_LISTS_USER_EVENT,
-            data: { userAction },
-          })
-        );
-        const telemetryData = {
-          widget_name: "lists",
-          widget_source: "widget",
-          user_action: userAction,
-          widget_size: widgetsMayBeMaximized ? widgetSize : "medium",
-        };
-        dispatch(
-          ac.AlsoToMain({
-            type: at.WIDGETS_USER_EVENT,
-            data: telemetryData,
-          })
-        );
+        recordUserAction(userAction, {
+          source: "widget",
+          legacy: true,
+          alsoToMain: true,
+        });
       }
     });
     handleListInteraction();
@@ -506,24 +465,10 @@ function Lists({
           data: { lists: updatedLists },
         })
       );
-      dispatch(
-        ac.OnlyToMain({
-          type: at.WIDGETS_LISTS_USER_EVENT,
-          data: { userAction: USER_ACTION_TYPES.TASK_DELETE },
-        })
-      );
-      const telemetryData = {
-        widget_name: "lists",
-        widget_source: "widget",
-        user_action: USER_ACTION_TYPES.TASK_DELETE,
-        widget_size: widgetsMayBeMaximized ? widgetSize : "medium",
-      };
-      dispatch(
-        ac.OnlyToMain({
-          type: at.WIDGETS_USER_EVENT,
-          data: telemetryData,
-        })
-      );
+      recordUserAction(USER_ACTION_TYPES.TASK_DELETE, {
+        source: "widget",
+        legacy: true,
+      });
     });
     handleListInteraction();
   }
@@ -580,24 +525,10 @@ function Lists({
             data: id,
           })
         );
-        dispatch(
-          ac.OnlyToMain({
-            type: at.WIDGETS_LISTS_USER_EVENT,
-            data: { userAction: USER_ACTION_TYPES.LIST_CREATE },
-          })
-        );
-        const telemetryData = {
-          widget_name: "lists",
-          widget_source: "widget",
-          user_action: USER_ACTION_TYPES.LIST_CREATE,
-          widget_size: widgetsMayBeMaximized ? widgetSize : "medium",
-        };
-        dispatch(
-          ac.OnlyToMain({
-            type: at.WIDGETS_USER_EVENT,
-            data: telemetryData,
-          })
-        );
+        recordUserAction(USER_ACTION_TYPES.LIST_CREATE, {
+          source: "widget",
+          legacy: true,
+        });
       });
       handleListInteraction();
       return;
@@ -618,24 +549,10 @@ function Lists({
             data: { lists: updatedLists },
           })
         );
-        dispatch(
-          ac.OnlyToMain({
-            type: at.WIDGETS_LISTS_USER_EVENT,
-            data: { userAction: USER_ACTION_TYPES.LIST_EDIT },
-          })
-        );
-        const telemetryData = {
-          widget_name: "lists",
-          widget_source: "widget",
-          user_action: USER_ACTION_TYPES.LIST_EDIT,
-          widget_size: widgetsMayBeMaximized ? widgetSize : "medium",
-        };
-        dispatch(
-          ac.OnlyToMain({
-            type: at.WIDGETS_USER_EVENT,
-            data: telemetryData,
-          })
-        );
+        recordUserAction(USER_ACTION_TYPES.LIST_EDIT, {
+          source: "widget",
+          legacy: true,
+        });
       });
       setIsEditing(false);
       handleListInteraction();
@@ -686,24 +603,10 @@ function Lists({
             data: key,
           })
         );
-        dispatch(
-          ac.OnlyToMain({
-            type: at.WIDGETS_LISTS_USER_EVENT,
-            data: { userAction: USER_ACTION_TYPES.LIST_DELETE },
-          })
-        );
-        const telemetryData = {
-          widget_name: "lists",
-          widget_source: "widget",
-          user_action: USER_ACTION_TYPES.LIST_DELETE,
-          widget_size: widgetsMayBeMaximized ? widgetSize : "medium",
-        };
-        dispatch(
-          ac.OnlyToMain({
-            type: at.WIDGETS_USER_EVENT,
-            data: telemetryData,
-          })
-        );
+        recordUserAction(USER_ACTION_TYPES.LIST_DELETE, {
+          source: "widget",
+          legacy: true,
+        });
       });
     }
     handleListInteraction();
@@ -720,18 +623,7 @@ function Lists({
           },
         })
       );
-      const telemetryData = {
-        widget_name: "lists",
-        widget_source: "context_menu",
-        enabled: false,
-        widget_size: widgetsMayBeMaximized ? widgetSize : "medium",
-      };
-      dispatch(
-        ac.OnlyToMain({
-          type: at.WIDGETS_ENABLED,
-          data: telemetryData,
-        })
-      );
+      recordEnabled(false, { source: "context_menu" });
     });
   }
 
@@ -762,25 +654,9 @@ function Lists({
       console.error("Copy failed", err);
     }
 
-    batch(() => {
-      dispatch(
-        ac.OnlyToMain({
-          type: at.WIDGETS_LISTS_USER_EVENT,
-          data: { userAction: USER_ACTION_TYPES.LIST_COPY },
-        })
-      );
-      const telemetryData = {
-        widget_name: "lists",
-        widget_source: "widget",
-        user_action: USER_ACTION_TYPES.LIST_COPY,
-        widget_size: widgetsMayBeMaximized ? widgetSize : "medium",
-      };
-      dispatch(
-        ac.OnlyToMain({
-          type: at.WIDGETS_USER_EVENT,
-          data: telemetryData,
-        })
-      );
+    recordUserAction(USER_ACTION_TYPES.LIST_COPY, {
+      source: "widget",
+      legacy: true,
     });
     handleListInteraction();
   }
@@ -807,21 +683,14 @@ function Lists({
             data: { name: PREF_WIDGETS_LISTS_SIZE, value: size },
           })
         );
-        dispatch(
-          ac.OnlyToMain({
-            type: at.WIDGETS_USER_EVENT,
-            data: {
-              widget_name: "lists",
-              widget_source: "context_menu",
-              user_action: USER_ACTION_TYPES.CHANGE_SIZE,
-              action_value: size,
-              widget_size: size,
-            },
-          })
-        );
+        recordUserAction(USER_ACTION_TYPES.CHANGE_SIZE, {
+          source: "context_menu",
+          value: size,
+          size,
+        });
       });
     },
-    [dispatch]
+    [dispatch, recordUserAction]
   );
 
   const sizeSubmenuRef = useSizeSubmenu(handleChangeSize);
@@ -925,7 +794,7 @@ function Lists({
       className={`lists widget ${novaEnabled ? "col-4" : ""} ${listsSizeClass} ${isMaximized ? "is-maximized" : ""}${showEmptyState ? " is-empty" : ""}${hasVisibleTasks ? " has-visible-tasks" : ""}${isAddingTask ? " is-adding-task" : ""}${isCelebrating ? " is-celebrating" : ""}`}
       ref={el => {
         widgetRef.current = el;
-        listsRef.current = [el];
+        impressionRef(el);
       }}
     >
       {isCelebrating && celebrationFrame ? (

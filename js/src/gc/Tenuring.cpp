@@ -363,15 +363,20 @@ class MOZ_RAII TenuringTracer::AutoPromotedAnyToNursery {
 
 class MOZ_RAII TenuringTracer::AutoSetSourceHeap {
  public:
-  AutoSetSourceHeap(TenuringTracer& trc, Cell* cell) : trc_(trc) {
+  AutoSetSourceHeap(TenuringTracer& trc, Cell* cell)
+      : trc_(trc), prev_(std::move(trc_.sourceIsInNursery)) {
     trc_.sourceIsInNursery.emplace(IsInsideNursery(cell));
   }
-  ~AutoSetSourceHeap() { trc_.sourceIsInNursery.reset(); }
+  ~AutoSetSourceHeap() {
+    trc_.sourceIsInNursery = std::move(prev_);
+    ;
+  }
 
   explicit operator bool() const { return trc_.promotedToNursery; }
 
  private:
   TenuringTracer& trc_;
+  mozilla::Maybe<bool> prev_;
 };
 
 template <typename T>

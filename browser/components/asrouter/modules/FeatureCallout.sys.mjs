@@ -561,25 +561,56 @@ export class FeatureCallout {
    * | "rightcenter"
    * | "topcenter"
    * | "bottomcenter"
+   * | "north"
+   * | "south"
+   * | "west"
+   * | "east"
+   * | "northwest"
+   * | "northeast"
+   * | "southwest"
+   * | "southeast"
    * } PopupAttachmentPoint
-   *
-   * @see nsMenuPopupFrame
    *
    * Each attachment point corresponds to an attachment point on the edge of a
    * frame. For example, "topleft" corresponds to the frame's top left corner,
    * and "rightcenter" corresponds to the center of the right edge of the frame.
+   *
+   * @see nsMenuPopupFrame for the canonical alignment points. We also add some
+   * aliases based on cardinal directions (like on a compass) to make it easier
+   * to reason about. So north is equivalent to topcenter, southwest is
+   * equivalent to bottomleft, etc.
    */
 
   /**
    * @typedef {object} PanelPosition Specifies how the callout panel should be
    *   positioned relative to the anchor element, by providing which point on
    *   the callout should be aligned with which point on the anchor element.
+   *   Note that the arrow position depends on the *combination* of both
+   *   anchor_attachment and callout_attachment. For example, if the
+   *   anchor_attachment is bottomcenter and the callout_attachment is topright,
+   *   the arrow will be attached to the top edge of the callout, but towards
+   *   the right side of that edge. But if anchor_attachment is changed to
+   *   leftcenter, then the same callout_attachment of topright would put the
+   *   arrow on the right edge of the callout, towards the top. It's easy to
+   *   make a mistake, so you should always test your anchors. Note that
+   *   horizontal attachment points are reversed in RTL mode (right-to-left
+   *   scripts like Arabic). "leftcenter rightcenter" would put the callout to
+   *   the left of the anchor in LTR, but to the right of the anchor in RTL.
+   *   "bottomcenter topright" would put the callout under the anchor and
+   *   flowing to the left in LTR, but under the anchor and flowing to the right
+   *   in RTL.
    * @property {PopupAttachmentPoint} anchor_attachment
    * @property {PopupAttachmentPoint} callout_attachment
    * @property {string} [panel_position_string] The attachments joined into a
    *   string, e.g. "bottomleft topright". Passed to XULPopupElement::openPopup.
    *   This is not provided by JSON, but generated from anchor_attachment and
    *   callout_attachment.
+   * @property {string} [flip] The flip behavior to apply to the panel when it
+   *   would overflow the screen. "slide" makes the panel slide in the direction
+   *   it's overflowing, to keep it on screen. If it overflows in the same
+   *   direction it's aligned relative to the anchor, it will flip in that
+   *   direction. This is the default behavior. "none" just allows the panel to
+   *   bleed out of bounds, without flipping or sliding.
    * @property {number} [offset_x] Offset in pixels to apply to the callout
    *   position in the horizontal direction.
    * @property {number} [offset_y] The same in the vertical direction.
@@ -921,16 +952,37 @@ export class FeatureCallout {
   }
 
   /** @see PopupAttachmentPoint */
-  _popupAttachmentPoints = [
-    "topleft",
-    "topright",
-    "bottomleft",
-    "bottomright",
-    "leftcenter",
-    "rightcenter",
-    "topcenter",
-    "bottomcenter",
-  ];
+  _convertPopupAttachmentPoint(point) {
+    switch (point) {
+      case "topleft":
+      case "topright":
+      case "bottomleft":
+      case "bottomright":
+      case "leftcenter":
+      case "rightcenter":
+      case "topcenter":
+      case "bottomcenter":
+        return point;
+      case "north":
+        return "topcenter";
+      case "south":
+        return "bottomcenter";
+      case "west":
+        return "leftcenter";
+      case "east":
+        return "rightcenter";
+      case "northwest":
+        return "topleft";
+      case "northeast":
+        return "topright";
+      case "southwest":
+        return "bottomleft";
+      case "southeast":
+        return "bottomright";
+      default:
+        return null;
+    }
+  }
 
   /**
    * Return a string representing the position of the panel relative to the
@@ -942,11 +994,10 @@ export class FeatureCallout {
    *   the panelPosition object is invalid.
    */
   _getPanelPositionString(panelPosition) {
-    const { anchor_attachment, callout_attachment } = panelPosition;
-    if (
-      !this._popupAttachmentPoints.includes(anchor_attachment) ||
-      !this._popupAttachmentPoints.includes(callout_attachment)
-    ) {
+    let { anchor_attachment, callout_attachment } = panelPosition;
+    anchor_attachment = this._convertPopupAttachmentPoint(anchor_attachment);
+    callout_attachment = this._convertPopupAttachmentPoint(callout_attachment);
+    if (!anchor_attachment || !callout_attachment) {
       return null;
     }
     let positionString = `${anchor_attachment} ${callout_attachment}`;
@@ -1052,7 +1103,7 @@ export class FeatureCallout {
             class="panel-no-padding"
             orient="vertical"
             noautofocus="true"
-            flip="slide"
+            flip='${panel_position.flip ?? "slide"}'
             type="arrow"
             consumeoutsideclicks="never"
             norolluponanchor="true"

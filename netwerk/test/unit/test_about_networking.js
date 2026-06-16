@@ -17,6 +17,38 @@ const gServerSocket = Cc["@mozilla.org/network/server-socket;1"].createInstance(
 );
 const gHttpServer = new HttpServer();
 
+registerCleanupFunction(
+  () => new Promise(resolve => gHttpServer.stop(resolve))
+);
+
+add_setup(function () {
+  Services.prefs.setBoolPref(
+    "network.cookieJarSettings.unblocked_for_testing",
+    true
+  );
+
+  // We always resolve localhost as it's hardcoded without the following pref:
+  Services.prefs.setBoolPref("network.proxy.allow_hijacking_localhost", true);
+  Services.prefs.setBoolPref(
+    "network.proxy.testing_localhost_is_secure_when_hijacked",
+    false
+  );
+
+  gHttpServer.start(-1);
+
+  let uri = Services.io.newURI(
+    "http://localhost:" + gHttpServer.identity.primaryPort
+  );
+  let channel = NetUtil.newChannel({ uri, loadUsingSystemPrincipal: true });
+  channel.open();
+
+  gServerSocket.init(-1, true, -1);
+  Services.prefs.clearUserPref("network.proxy.allow_hijacking_localhost");
+  Services.prefs.clearUserPref(
+    "network.proxy.testing_localhost_is_secure_when_hijacked"
+  );
+});
+
 add_test(function test_http() {
   gDashboard.requestHttpConnections(function (data) {
     let found = false;
@@ -80,9 +112,6 @@ add_test(function test_dns() {
       }
     }
     Assert.equal(found, true);
-
-    do_test_pending();
-    gHttpServer.stop(do_test_finished);
 
     run_next_test();
   });
@@ -201,33 +230,78 @@ add_test(function test_sockets_origin_attributes() {
   transport.openOutputStream(Ci.nsITransport.OPEN_BLOCKING, 0, 0);
 });
 
-function run_test() {
-  Services.prefs.setBoolPref(
-    "network.cookieJarSettings.unblocked_for_testing",
-    true
-  );
-
-  // We always resolve localhost as it's hardcoded without the following pref:
-  Services.prefs.setBoolPref("network.proxy.allow_hijacking_localhost", true);
-  Services.prefs.setBoolPref(
-    "network.proxy.testing_localhost_is_secure_when_hijacked",
-    false
-  );
-
-  gHttpServer.start(-1);
-
+add_test(function test_http_private_browsing() {
   let uri = Services.io.newURI(
     "http://localhost:" + gHttpServer.identity.primaryPort
   );
   let channel = NetUtil.newChannel({ uri, loadUsingSystemPrincipal: true });
-
+  channel.loadInfo.originAttributes = { privateBrowsingId: 1 };
   channel.open();
 
-  gServerSocket.init(-1, true, -1);
-  Services.prefs.clearUserPref("network.proxy.allow_hijacking_localhost");
-  Services.prefs.clearUserPref(
-    "network.proxy.testing_localhost_is_secure_when_hijacked"
-  );
+  gDashboard.requestHttpConnections(function (data) {
+    let found = false;
+    for (let conn of data.connections) {
+      if (
+        conn.host == "localhost" &&
+        conn.originAttributesSuffix == "^privateBrowsingId=1"
+      ) {
+        found = true;
+        break;
+      }
+    }
+    Assert.ok(found, "Private browsing HTTP connection entry found");
+    run_next_test();
+  });
+});
 
-  run_next_test();
-}
+add_test(function test_sockets_private_browsing() {
+  // TODO: enable this test in bug 1581892.
+  if (mozinfo.socketprocess_networking) {
+    info("skip test_sockets_private_browsing");
+    run_next_test();
+    return;
+  }
+
+  let sts = Cc["@mozilla.org/network/socket-transport-service;1"].getService(
+    Ci.nsISocketTransportService
+  );
+  let threadManager = Cc["@mozilla.org/thread-manager;1"].getService();
+
+  let serverSocket = Cc["@mozilla.org/network/server-socket;1"].createInstance(
+    Ci.nsIServerSocket
+  );
+  serverSocket.init(-1, true, -1);
+
+  let transport = sts.createTransport(
+    [],
+    "127.0.0.1",
+    serverSocket.port,
+    null,
+    null
+  );
+  transport.originAttributes = { privateBrowsingId: 1 };
+
+  let listener = {
+    onTransportStatus(aTransport, aStatus) {
+      if (aStatus == Ci.nsISocketTransport.STATUS_CONNECTED_TO) {
+        gDashboard.requestSockets(function (data) {
+          serverSocket.close();
+          let found = false;
+          for (let socket of data.sockets) {
+            if (
+              socket.host == "127.0.0.1" &&
+              socket.originAttributesSuffix == "^privateBrowsingId=1"
+            ) {
+              found = true;
+              break;
+            }
+          }
+          Assert.ok(found, "Private browsing socket entry found");
+          run_next_test();
+        });
+      }
+    },
+  };
+  transport.setEventSink(listener, threadManager.currentThread);
+  transport.openOutputStream(Ci.nsITransport.OPEN_BLOCKING, 0, 0);
+});

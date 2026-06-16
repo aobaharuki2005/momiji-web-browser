@@ -29,7 +29,7 @@ const PREF_SEMANTIC_HISTORY_SMARTWINDOW_FEATURE_GATE =
 const lazy = {};
 ChromeUtils.defineESModuleGetters(lazy, {
   getAllModelsData:
-    "moz-src:///browser/components/aiwindow/ui/modules/AIWindowConstants.sys.mjs",
+    "moz-src:///browser/components/aiwindow/models/Utils.sys.mjs",
   AIWindowTabStatesManager:
     "moz-src:///browser/components/aiwindow/ui/modules/AIWindowTabStatesManager.sys.mjs",
   AIWindowAccountAuth:
@@ -91,7 +91,6 @@ export const AIWindow = {
     if (!this._windowStates.has(win)) {
       this._windowStates.set(win, {});
       this.initializeAITabsToolbar(win);
-      this._updateToolbarButtonPositions(win);
       this._initializeAskButtonOnToolbox(win);
       const windowArgs = win?.arguments?.[1];
       if (
@@ -283,32 +282,47 @@ export const AIWindow = {
     if (modeSwitcherButton) {
       modeSwitcherButton.hidden = !this.isAIWindowEnabled() || isPrivateWindow;
     }
+    if (!isPrivateWindow) {
+      this._updateToolbarButtonPositions(win);
+    }
   },
 
   _onTabstripOrientationChange() {
-    this._forEachWindow(win => this._updateToolbarButtonPositions(win));
+    this._forEachWindow(win => {
+      if (!lazy.PrivateBrowsingUtils.isWindowPrivate(win)) {
+        this._updateToolbarButtonPositions(win);
+      }
+    });
   },
 
-  _updateToolbarButtonPositions(win, { isToggling = false } = {}) {
+  _updateToolbarButtonPositions(win) {
     const modeSwitcherButton = win.document.getElementById("ai-window-toggle");
     const hamburgerMenu = win.document.getElementById("PanelUI-button");
-
+    const hamburgerMenuShouldBeAdjacent =
+      this.isAIWindowEnabled() || this.verticalTabsEnabled;
     const targetToolbar = win.document.getElementById(
       this.verticalTabsEnabled ? "nav-bar" : "TabsToolbar"
     );
     const titlebarContainer = targetToolbar.querySelector(
       ".titlebar-buttonbox-container"
     );
+    const postTabsSpacer = win.document
+      .getElementById("nav-bar")
+      .querySelector('.titlebar-spacer[type="post-tabs"]');
 
-    titlebarContainer.after(modeSwitcherButton);
+    if (modeSwitcherButton.previousElementSibling !== titlebarContainer) {
+      titlebarContainer.after(modeSwitcherButton);
+    }
 
-    if (this.isAIWindowActive(win) || this.verticalTabsEnabled) {
+    if (
+      hamburgerMenuShouldBeAdjacent &&
+      modeSwitcherButton.nextElementSibling !== hamburgerMenu
+    ) {
       modeSwitcherButton.after(hamburgerMenu);
-    } else if (isToggling) {
-      // Restore hamburger menu to its original position in nav-bar.
-      const postTabsSpacer = win.document
-        .getElementById("nav-bar")
-        .querySelector('.titlebar-spacer[type="post-tabs"]');
+    } else if (
+      !hamburgerMenuShouldBeAdjacent &&
+      hamburgerMenu.nextElementSibling !== postTabsSpacer
+    ) {
       postTabsSpacer.before(hamburgerMenu);
     }
   },
@@ -332,6 +346,16 @@ export const AIWindow = {
     );
   },
 
+  shouldOpenAsSmartWindow() {
+    if (
+      !this.isDefaultWindow ||
+      lazy.PrivateBrowsingUtils.permanentPrivateBrowsing
+    ) {
+      return false;
+    }
+    return true;
+  },
+
   /**
    * Registered under the `browser-first-window-ready` category, so it runs
    * exactly once per session after the first browser window finishes loading.
@@ -342,14 +366,23 @@ export const AIWindow = {
    */
   async onFirstWindowReady(win) {
     if (
-      !this.isDefaultWindow ||
+      !this.shouldOpenAsSmartWindow() ||
       lazy.PrivateBrowsingUtils.isWindowPrivate(win) ||
-      this.isAIWindowActive(win) ||
       lazy.SessionStartup.willRestore()
     ) {
       return;
     }
-
+    if (this.isAIWindowActive(win)) {
+      // Window already opened as Smart via the BrowserContentHandler
+      // startup gate, which uses ToS consentTime as a synchronous proxy for
+      // "previously signed in". Verify the actual FxA state now and prompt
+      // sign-in if the user has since logged out — without this, signed-out
+      // users would get a Smart Window with broken auth-gated features.
+      await lazy.AIWindowAccountAuth.ensureAIWindowAccess(
+        win.gBrowser.selectedBrowser
+      );
+      return;
+    }
     await this._authorizeAndToggleWindow(win, "startup");
   },
 
@@ -393,10 +426,17 @@ export const AIWindow = {
         Ci.nsISupportsString
       );
       if (!restoreSessionURL) {
-        initialURL = lazy.hasFirstrunCompleted ? AIWINDOW_URL : FIRSTRUN_URL;
+        initialURL = this.initialStartupURL;
       }
       aiWindowURI.data = initialURL;
       args.appendElement(aiWindowURI);
+    } else if (!restoreSessionURL) {
+      // args was already populated by the caller (e.g. BrowserContentHandler
+      // at startup). Extract the URL so willOpenImmersive can match it.
+      try {
+        const firstArg = args.queryElementAt(0, Ci.nsISupportsString);
+        initialURL = firstArg.data.split("|")[0] ?? "";
+      } catch (e) {}
     }
 
     let propBag;
@@ -577,6 +617,17 @@ export const AIWindow = {
   },
 
   /**
+   * The URL to load when opening an AI Window from scratch — either the
+   * firstrun page (if the user hasn't been through it yet) or the regular
+   * Smart Window new tab.
+   *
+   * @returns {string}
+   */
+  get initialStartupURL() {
+    return lazy.hasFirstrunCompleted ? AIWINDOW_URL : FIRSTRUN_URL;
+  },
+
+  /**
    * Performs a search in the default search engine with
    * passed query in the current tab.
    *
@@ -604,7 +655,9 @@ export const AIWindow = {
       engine,
       searchUrlType: null,
       sapSource: "smartwindow_assistant",
+      avoidBrowserFocus: true,
     });
+    await lazy.AIWindowUI.focusSidebar(window);
   },
 
   /**
@@ -618,6 +671,10 @@ export const AIWindow = {
     return lazy.AIWindowUI.moveFullPageToSidebar(win, tab);
   },
 
+  focusSidebar(win) {
+    return lazy.AIWindowUI.focusSidebar(win);
+  },
+
   /**
    * Opens the sidebar with the given conversation and continues streaming
    * the model response after a tool result.
@@ -627,6 +684,7 @@ export const AIWindow = {
    */
   openSidebarAndContinue(win, conversation) {
     lazy.AIWindowUI.openSidebar(win, conversation);
+    lazy.AIWindowUI.focusSidebar(win);
 
     try {
       const sidebar = win.document.getElementById("ai-window-box");
@@ -693,7 +751,6 @@ export const AIWindow = {
       win.document.documentElement.toggleAttribute("ai-window");
 
       this._reconcileNewTabPages(win, newTabPref, homePagePref);
-      this._updateToolbarButtonPositions(win, { isToggling: true });
       this._initializeAskButtonOnToolbox(win);
       Services.obs.notifyObservers(
         win,
@@ -784,11 +841,21 @@ export const AIWindow = {
 
     this.toggleAIWindow(win, true, trigger);
 
+    const triggeringPrincipal =
+      Services.scriptSecurityManager.getSystemPrincipal();
+
     if (!lazy.hasFirstrunCompleted) {
-      win.gBrowser.loadURI(FIRSTRUN_URI, {
-        triggeringPrincipal:
-          Services.scriptSecurityManager.getSystemPrincipal(),
-      });
+      win.gBrowser.loadURI(FIRSTRUN_URI, { triggeringPrincipal });
+    } else if (trigger === "startup") {
+      // Startup navigation to about:newtab may still be pending when
+      // _reconcileNewTabPages runs. Redirect any affected tabs to the
+      // AI window URL to ensure they open as Smart Windows.
+      const aiWindowURI = Services.io.newURI(AIWINDOW_URL);
+      for (const tab of win.gBrowser.tabs) {
+        if (tab.linkedBrowser?.currentURI?.spec === "about:blank") {
+          tab.linkedBrowser.loadURI(aiWindowURI, { triggeringPrincipal });
+        }
+      }
     }
 
     return true;

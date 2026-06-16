@@ -26,14 +26,14 @@ namespace mozilla {
 extern LazyLogModule sPEMLog;
 
 #undef LOG
-#define LOG(msg, ...)               \
-  MOZ_LOG(sPEMLog, LogLevel::Debug, \
-          ("WebrtcMediaDataEncoder=%p, " msg, this, ##__VA_ARGS__))
+#define LOG(msg, ...)                                                      \
+  MOZ_LOG_FMT(sPEMLog, LogLevel::Debug, "WebrtcMediaDataEncoder={}, " msg, \
+              fmt::ptr(this), ##__VA_ARGS__)
 
 #undef LOG_V
-#define LOG_V(msg, ...)               \
-  MOZ_LOG(sPEMLog, LogLevel::Verbose, \
-          ("WebrtcMediaDataEncoder=%p, " msg, this, ##__VA_ARGS__))
+#define LOG_V(msg, ...)                                                      \
+  MOZ_LOG_FMT(sPEMLog, LogLevel::Verbose, "WebrtcMediaDataEncoder={}, " msg, \
+              fmt::ptr(this), ##__VA_ARGS__)
 
 using namespace media;
 using namespace layers;
@@ -252,7 +252,7 @@ int32_t WebrtcMediaDataEncoder::InitEncode(
   }
 
   InitCodecSpecficInfo(mCodecSpecific, aCodecSettings, mFormatParams);
-  LOG("Init encode, mimeType %s, mode %s", mInfo.mMimeType.get(),
+  LOG("Init encode, mimeType {}, mode {}", mInfo.mMimeType.get(),
       PacketModeStr(mCodecSpecific));
   if (!media::Await(do_AddRef(mTaskQueue), encoder->Init()).IsResolve()) {
     LOG("Fail to init encoder. Falling back to SW");
@@ -278,7 +278,7 @@ already_AddRefed<MediaDataEncoder> WebrtcMediaDataEncoder::CreateEncoder(
   if (!SetupConfig(aCodecSettings)) {
     return nullptr;
   }
-  LOG("Request platform encoder for %s, bitRate=%u bps, frameRate=%u",
+  LOG("Request platform encoder for {}, bitRate={} bps, frameRate={}",
       mInfo.mMimeType.get(), mBitrateAdjuster.GetTargetBitrateBps(),
       aCodecSettings->maxFramerate);
 
@@ -492,7 +492,7 @@ int32_t WebrtcMediaDataEncoder::Encode(
     }
   }
 
-  LOG_V("Encode frame, type %d size %u", static_cast<int>((*aFrameTypes)[0]),
+  LOG_V("Encode frame, type {} size {}", static_cast<int>((*aFrameTypes)[0]),
         aInputFrame.size());
   MOZ_ASSERT(aInputFrame.video_frame_buffer()->type() ==
              webrtc::VideoFrameBuffer::Type::kI420);
@@ -533,7 +533,7 @@ int32_t WebrtcMediaDataEncoder::Encode(
       mTaskQueue, __func__,
       [self = RefPtr(this), this,
        displaySize](MediaDataEncoder::EncodedData aFrames) {
-        LOG_V("Received encoded frame, nums %zu width %d height %d",
+        LOG_V("Received encoded frame, nums {} width {} height {}",
               aFrames.Length(), displaySize.width, displaySize.height);
         for (auto& frame : aFrames) {
           const TimeUnit& frameTime = frame->mTime;
@@ -624,7 +624,7 @@ int32_t WebrtcMediaDataEncoder::Encode(
 int32_t WebrtcMediaDataEncoder::SetRates(
     const webrtc::VideoEncoder::RateControlParameters& aParameters) {
   if (!aParameters.bitrate.HasBitrate(0, 0)) {
-    LOG("%s: no bitrate value to set.", __func__);
+    LOG("{}: no bitrate value to set.", __func__);
     return WEBRTC_VIDEO_CODEC_ERR_PARAMETER;
   }
   MOZ_ASSERT(aParameters.bitrate.IsSpatialLayerUsed(0));
@@ -633,7 +633,7 @@ int32_t WebrtcMediaDataEncoder::SetRates(
 
   const uint32_t newBitrateBps = aParameters.bitrate.GetBitrate(0, 0);
   if (newBitrateBps < mMinBitrateBps || newBitrateBps > mMaxBitrateBps) {
-    LOG("%s: bitrate value out of range.", __func__);
+    LOG("{}: bitrate value out of range.", __func__);
     return WEBRTC_VIDEO_CODEC_ERR_PARAMETER;
   }
 
@@ -652,7 +652,7 @@ int32_t WebrtcMediaDataEncoder::SetRates(
     }
   }
   mBitrateAdjuster.SetTargetBitrateBps(newBitrateBps);
-  LOG("Set bitrate %u bps, minBitrate %u bps, maxBitrate %u bps", newBitrateBps,
+  LOG("Set bitrate {} bps, minBitrate {} bps, maxBitrate {} bps", newBitrateBps,
       mMinBitrateBps, mMaxBitrateBps);
   auto rv =
       media::Await(do_AddRef(mTaskQueue), mEncoder->SetBitrate(newBitrateBps));

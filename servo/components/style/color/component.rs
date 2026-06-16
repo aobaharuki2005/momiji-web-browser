@@ -17,12 +17,12 @@ use crate::{
         animated::ToAnimatedValue,
         computed,
         generics::calc::CalcUnits,
-        specified::calc::{AllowParse, CalcNode, Leaf},
+        specified::calc::{CalcNode, CalcParseFlags, Leaf},
         specified::NoCalcNumber,
     },
 };
 use cssparser::{color::OPAQUE, Parser, Token};
-use style_traits::{ParseError, ToCss, StyleParseErrorKind};
+use style_traits::{ParseError, StyleParseErrorKind, ToCss};
 
 /// A single color component.
 #[derive(Clone, Debug, MallocSizeOf, PartialEq, ToShmem)]
@@ -74,7 +74,7 @@ impl<ValueType: ColorComponentType> ColorComponent<ValueType> {
         context: &ParserContext,
         input: &mut Parser<'i, 't>,
         allow_none: bool,
-        allow_channel_keyword: bool,
+        allowed_channel_keywords: ChannelKeyword,
     ) -> Result<Self, ParseError<'i>> {
         let location = input.current_source_location();
 
@@ -82,17 +82,21 @@ impl<ValueType: ColorComponentType> ColorComponent<ValueType> {
             Token::Ident(ref value) if allow_none && value.eq_ignore_ascii_case("none") => {
                 Ok(ColorComponent::None)
             },
-            ref t @ Token::Ident(ref ident) if allow_channel_keyword => {
-                let Ok(channel_keyword) = ChannelKeyword::from_ident(ident) else {
-                    return Err(location.new_unexpected_token_error(t.clone()));
-                };
-                Ok(ColorComponent::ChannelKeyword(channel_keyword))
-            },
+            ref t @ Token::Ident(ref ident) => Ok(match ChannelKeyword::from_ident(ident) {
+                Ok(channel_keyword) if allowed_channel_keywords.contains(channel_keyword) => {
+                    ColorComponent::ChannelKeyword(channel_keyword)
+                },
+                _ => return Err(location.new_unexpected_token_error(t.clone())),
+            }),
             Token::Function(ref name) => {
                 let function = CalcNode::math_function(context, name, location)?;
-                let mut allow = AllowParse::new(ValueType::units());
-                allow.color_components = rcs_enabled() && allow_channel_keyword;
-                let mut node = CalcNode::parse(context, input, function, allow)?;
+                let mut flags = CalcParseFlags::new(ValueType::units());
+                flags.color_components = if rcs_enabled() {
+                    allowed_channel_keywords
+                } else {
+                    ChannelKeyword::empty()
+                };
+                let mut node = CalcNode::parse(context, input, function, flags)?;
                 node.simplify_and_sort();
                 if node.unit().is_err() {
                     return Err(location.new_custom_error(StyleParseErrorKind::UnspecifiedError));

@@ -1519,7 +1519,8 @@ ${
 
     if (
       result.providerName == lazy.UrlbarProviderGlobalActions.name &&
-      this.#providesSearchMode(result)
+      this.#providesSearchMode(result) &&
+      !this.view.selectedElement?.dataset.immediateSearch
     ) {
       this.maybeConfirmSearchModeFromResult({
         result,
@@ -1536,7 +1537,8 @@ ${
     // engineering effort. See review discussion at bug 1667766.
     if (
       (this.searchMode?.isPreview &&
-        result.providerName == lazy.UrlbarProviderGlobalActions.name) ||
+        result.providerName == lazy.UrlbarProviderGlobalActions.name &&
+        !this.view.selectedElement?.dataset.immediateSearch) ||
       (result.heuristic &&
         this.searchMode?.isPreview &&
         this.view.oneOffSearchButtons?.selectedButton)
@@ -1610,23 +1612,24 @@ ${
         }
       }
 
-      if (
-        where == "tab" &&
-        Services.prefs.getBoolPref("browser.tabs.loadInBackground")
-      ) {
-        openParams.avoidBrowserFocus = true;
-        openParams.keepView = true;
-        openParams.inBackground = true;
-      }
+      openParams.forceForeground = false;
     } else {
       where = this._whereToOpen(event);
       if (resultUrl && where == "current") {
         // Open help links in a new tab.
         where = "tab";
       }
+
+      openParams.forceForeground = true;
     }
 
-    if (!this.#providesSearchMode(result)) {
+    let keepViewOpen = lazy.BrowserUtils.willLoadInBackground(
+      where,
+      openParams
+    );
+    openParams.avoidBrowserFocus = keepViewOpen;
+
+    if (!this.#providesSearchMode(result) && !keepViewOpen) {
       this.view.close({ elementPicked: true });
     }
 
@@ -2080,7 +2083,8 @@ ${
         type: result.type,
         searchTerm: result.payload.suggestion ?? result.payload.query,
       },
-      browser
+      browser,
+      keepViewOpen
     );
   }
 
@@ -2768,6 +2772,7 @@ ${
         }
       }
     }
+    Services.obs.notifyObservers(null, "urlbar-searchmodechanged");
   }
 
   /**
@@ -2905,8 +2910,6 @@ ${
 
   set searchMode(searchMode) {
     this.setSearchMode(searchMode, this.window.gBrowser.selectedBrowser);
-    this.searchModeSwitcher?.onSearchModeChanged();
-    lazy.UrlbarSearchTermsPersistence.onSearchModeChanged(this.window);
   }
 
   getBrowserState(browser) {
@@ -2951,9 +2954,8 @@ ${
       return;
     }
 
-    this.#updateTextboxPosition();
-
     this.toggleAttribute("breakout-extend", true);
+    this.#updateTextboxPosition();
 
     // Enable the animation only after the first extend call to ensure it
     // doesn't run when opening a new window.
@@ -2988,7 +2990,7 @@ ${
 
   updateLayoutExtend() {
     if (!Services.prefs.getBoolPref("browser.nova.enabled", false)) {
-      if (this.view.isOpen && this.view.visibleRowCount) {
+      if (this.view.isOpen) {
         this.startLayoutExtend();
       } else {
         this.endLayoutExtend();
@@ -2996,7 +2998,7 @@ ${
       return;
     }
 
-    if (this.focused || (this.view.isOpen && this.view.visibleRowCount)) {
+    if (this.focused || this.view.isOpen) {
       this.startLayoutExtend();
     } else {
       this.endLayoutExtend();
@@ -3301,10 +3303,7 @@ ${
   }
 
   #updateTextboxPosition() {
-    if (
-      !this.view.isOpen &&
-      !Services.prefs.getBoolPref("browser.nova.enabled", false)
-    ) {
+    if (!this.hasAttribute("breakout-extend")) {
       this.style.top = "";
       return;
     }
@@ -4282,6 +4281,8 @@ ${
    * @param {Values<typeof lazy.UrlbarUtils.RESULT_SOURCE>} [resultDetails.source]
    *   Details of the result source, if any.
    * @param {object} browser [optional] the browser to use for the load.
+   * @param {boolean} keepViewOpen [optional]
+   *   Whether the view should remain open.
    */
   _loadURL(
     url,
@@ -4289,7 +4290,8 @@ ${
     openUILinkWhere,
     params,
     resultDetails = null,
-    browser = this.window.gBrowser.selectedBrowser
+    browser = this.window.gBrowser.selectedBrowser,
+    keepViewOpen = false
   ) {
     if (this.#isAddressbar) {
       this.#prepareAddressbarLoad(
@@ -4361,9 +4363,11 @@ ${
       }
     }
 
-    // If we show the focus border after closing the view, it would appear to
-    // flash since this._on_blur would remove it immediately after.
-    this.view.close({ showFocusBorder: false });
+    if (!keepViewOpen) {
+      // If we show the focus border after closing the view, it would appear to
+      // flash since this._on_blur would remove it immediately after.
+      this.view.close({ showFocusBorder: false });
+    }
   }
 
   /**
@@ -4881,7 +4885,7 @@ ${
       this.setPageProxyState("invalid", true);
     }
 
-    this.searchModeSwitcher?.onSearchModeChanged();
+    Services.obs.notifyObservers(null, "urlbar-searchmodechanged");
   }
 
   /**
@@ -5059,8 +5063,9 @@ ${
    * @param {boolean} available If true Unified Search Button will be available.
    */
   setUnifiedSearchButtonAvailability(available) {
-    this.toggleAttribute("unifiedsearchbutton-available", available);
+    available ||= lazy.UrlbarPrefs.get("unifiedSearchButton.always");
     const switcher = this.querySelector(".searchmode-switcher");
+    switcher.toggleAttribute("offscreen", !available);
     if (available) {
       switcher.removeAttribute("aria-hidden");
     } else {
@@ -5299,6 +5304,12 @@ ${
 
   _on_auxclick(event) {
     switch (event.target) {
+      case this.inputField:
+      case this._inputContainer:
+        this.#maybeSelectAll();
+        this.#maybeUntrimUrl();
+        break;
+
       case this.goButton:
         this.handleCommand(event);
         break;

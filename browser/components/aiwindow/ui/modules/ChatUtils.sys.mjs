@@ -114,13 +114,9 @@ export function parseMessageRows(rows) {
  */
 export function parseChatHistoryViewRows(rows) {
   return rows.map(row => {
-    const urlsString = row.getResultByName("urls");
-    const urls = urlsString
-      ? urlsString
-          .split(",")
-          .filter(url => url && url.trim())
-          .map(url => new URL(url.trim()))
-      : [];
+    const urls = (parseJSONOrNull(row.getResultByName("urls")) ?? [])
+      .filter(url => url && url.trim())
+      .map(url => new URL(url.trim()));
 
     return new ChatHistoryResult({
       convId: row.getResultByName("conv_id"),

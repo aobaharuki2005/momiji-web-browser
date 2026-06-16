@@ -7,6 +7,7 @@ prefs = [
 ]
 support-files = [
   "head.js",
+  "head_history_thumbnails.js",
   "test_ai_action_result_page.html",
   "test_ai_action_result.mjs",
   "test_assistant_message_footer_page.html",
@@ -93,6 +94,8 @@ skip-if = [
 
 ["browser_aiwindow_smartbar_ask.js"]
 
+["browser_aiwindow_smartbar_chat_active_navigate.js"]
+
 ["browser_aiwindow_smartbar_context_chips.js"]
 
 ["browser_aiwindow_smartbar_focus.js"]
@@ -148,6 +151,8 @@ skip-if = [
 
 ["browser_sidebar_aiwindow.js"]
 
+["browser_smartwindow_abort_on_tab_close.js"]
+
 ["browser_smartwindow_assistant_ui_errors.js"]
 
 ["browser_smartwindow_beta_badge.js"]
@@ -164,6 +169,8 @@ skip-if = [
 
 ["browser_smartwindow_conversation_state.js"]
 
+["browser_smartwindow_default_cmd_n.js"]
+
 ["browser_smartwindow_default_startup.js"]
 
 ["browser_smartwindow_disclaimer.js"]
@@ -171,6 +178,10 @@ skip-if = [
 ["browser_smartwindow_footer.js"]
 
 ["browser_smartwindow_history_commands.js"]
+
+["browser_smartwindow_history_thumbnails.js"]
+
+["browser_smartwindow_history_thumbnails_telemetry.js"]
 
 ["browser_smartwindow_init.js"]
 
@@ -207,6 +218,8 @@ skip-if = [
 ["browser_smartwindow_sidebar.js"]
 
 ["browser_smartwindow_sidebar_auto_open_pref_prompt.js"]
+
+["browser_smartwindow_smartbar_glow.js"]
 
 ["browser_smartwindow_smartbar_model_select.js"]
 

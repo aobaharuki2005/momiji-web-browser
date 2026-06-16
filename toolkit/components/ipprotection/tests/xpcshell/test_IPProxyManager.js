@@ -1724,6 +1724,40 @@ add_task(async function test_IPPProxyManager_switch_recommended() {
   sandbox.restore();
 });
 
+/**
+ * Tests that IPPProxyManager refreshes usage info automatically when
+ * IPProtectionService transitions into READY, and does not re-trigger the
+ * refresh when the state remains READY across subsequent updateState() calls.
+ */
+add_task(
+  async function test_IPPProxyManager_refreshes_usage_on_transition_into_ready() {
+    await IPPProxyManager.reset();
+    let sandbox = sinon.createSandbox();
+    setupStubs(sandbox);
+
+    // Stub refreshUsage before the state transitions to READY so we can
+    // observe the listener-driven call.
+    const refreshUsageStub = sandbox.stub(IPPProxyManager, "refreshUsage");
+
+    const readyEvent = waitForEvent(
+      IPProtectionService,
+      "IPProtectionService:StateChanged",
+      () => IPProtectionService.state === IPProtectionStates.READY
+    );
+
+    IPProtectionService.init();
+    await readyEvent;
+
+    Assert.ok(
+      refreshUsageStub.calledOnce,
+      "refreshUsage should be called when IPProtectionService transitions into READY"
+    );
+
+    IPProtectionService.uninit();
+    sandbox.restore();
+  }
+);
+
 add_task(async function test_IPPProxyManager_switch_no_server_found() {
   await IPPProxyManager.reset();
   await putServerInRemoteSettings();

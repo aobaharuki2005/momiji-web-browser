@@ -82,6 +82,28 @@ var BrowserCommands = {
     return true;
   },
 
+  addTabSplitView() {
+    if (
+      !gBrowser.selectedTab ||
+      gBrowser.selectedTab.hidden ||
+      gBrowser.selectedTab.pinned ||
+      gBrowser.selectedTab.splitview
+    ) {
+      return;
+    }
+
+    let newTab = gBrowser.addTrustedTab("about:opentabs");
+    gBrowser.addTabSplitView([gBrowser.selectedTab, newTab], {
+      insertBefore: gBrowser.selectedTab,
+      trigger: "keyboard_shortcut",
+    });
+    gBrowser.selectedTab = newTab;
+  },
+
+  separateTabSplitView() {
+    gBrowser.selectedTab?.splitview?.unsplitTabs("keyboard_shortcut");
+  },
+
   duplicateTab() {
     duplicateTabIn(gBrowser.selectedTab, "tab");
   },

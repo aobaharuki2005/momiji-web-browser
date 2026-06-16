@@ -8,6 +8,8 @@ import { UrlbarView } from "chrome://browser/content/urlbar/UrlbarView.mjs";
 import { createEditor } from "chrome://browser/content/urlbar/SmartbarInputUtils.mjs";
 import { UrlbarShared } from "chrome://browser/content/urlbar/UrlbarShared.mjs";
 // eslint-disable-next-line import/no-unassigned-import
+import "chrome://browser/content/aiwindow/components/smartwindow-smartbar-glow.mjs";
+// eslint-disable-next-line import/no-unassigned-import
 import "chrome://browser/content/aiwindow/components/ai-website-chip.mjs";
 // eslint-disable-next-line import/no-unassigned-import
 import "chrome://browser/content/aiwindow/components/input-cta.mjs";
@@ -36,6 +38,7 @@ const { AppConstants } = ChromeUtils.importESModule(
  * @import { SmartbarAction } from "moz-src:///browser/components/aiwindow/ui/components/input-cta/input-cta.mjs"
  * @import { WebsiteChipContainer } from "chrome://browser/content/aiwindow/components/website-chip-container.mjs"
  * @import { AIWindow } from "moz-src:///browser/components/aiwindow/ui/components/ai-window/ai-window.mjs"
+ * @import { SmartwindowSmartbarGlow } from "moz-src:///browser/components/aiwindow/ui/components/smartwindow-smartbar-glow/smartwindow-smartbar-glow.mjs"
  * @import { WindowMode } from "moz-src:///browser/components/urlbar/content/UrlbarInput.mjs"
  */
 
@@ -70,6 +73,8 @@ const lazy = XPCOMUtils.declareLazy({
     "moz-src:///browser/components/urlbar/UrlbarUtils.sys.mjs",
   UrlbarProviderGlobalActions:
     "moz-src:///browser/components/urlbar/UrlbarProviderGlobalActions.sys.mjs",
+  UrlbarProviderHeuristicFallback:
+    "moz-src:///browser/components/urlbar/UrlbarProviderHeuristicFallback.sys.mjs",
   UrlbarProviderOpenTabs:
     "moz-src:///browser/components/urlbar/UrlbarProviderOpenTabs.sys.mjs",
   UrlbarSearchUtils:
@@ -129,7 +134,8 @@ const MAX_CONTEXT_WEBSITES = 5;
 export class SmartbarInput extends HTMLElement {
   static get #markup() {
     return `
-      <html:div class="urlbar-background"/>
+      <html:smartwindow-smartbar-glow class="smartbar-glow"></html:smartwindow-smartbar-glow>
+      <html:div class="urlbar-background"></html:div>
       <html:website-chip-container class="smartbar-context-chips-header" hidden="true"></html:website-chip-container>
       <html:div class="urlbar-input-container"
             pageproxystate="invalid">
@@ -276,9 +282,6 @@ ${
   #scrollAnimationId = null;
   #smartbarAction = "";
   #smartbarActionPending = false;
-  // Stores the smartbar action in effect before generation started, so it can
-  // be restored when generation ends or is stopped.
-  #smartbarActionSaved = "";
   #detectedIntent = "";
   #smartbarAssistantIsGenerating = false;
   #smartbarEditor = null;
@@ -432,6 +435,11 @@ ${
       this.#updateContextChips();
     }
     this._inputContainer = this.querySelector(".urlbar-input-container");
+
+    const smartbarGlow = /** @type {SmartwindowSmartbarGlow} */ (
+      this.querySelector(".smartbar-glow")
+    );
+    smartbarGlow.referenceElement = this.querySelector(".urlbar-background");
 
     this.controller = new lazy.UrlbarController({ input: this });
     this.controller.addListener(this);
@@ -791,11 +799,9 @@ ${
     }
     this.#smartbarAssistantIsGenerating = value;
     if (value) {
-      this.#smartbarActionSaved = this.#smartbarAction;
       this._inputCta.setAttribute("action", "stop");
     } else {
-      this._inputCta.setAttribute("action", this.#smartbarActionSaved || "");
-      this.#smartbarActionSaved = "";
+      this._inputCta.setAttribute("action", this.smartbarAction);
     }
   }
 
@@ -1438,15 +1444,17 @@ ${
    *
    * @param {Event} event - The event that triggered the action.
    * @param {string} value - The value to commit.
+   * @param {SmartbarAction} [action] - The action to commit. Defaults to the
+   *   current smartbar action.
    */
-  #dispatchSmartbarCommitEvent(event, value) {
+  #dispatchSmartbarCommitEvent(event, value, action = this.smartbarAction) {
     this.dispatchEvent(
       new CustomEvent("smartbar-commit", {
         bubbles: true,
         composed: true,
         detail: {
           value,
-          action: this.smartbarAction,
+          action,
           contextMentions: this.getResolvedContextWebsites(),
           contextPageUrl: this.getContextPageUrl(),
           detectedIntent: this.detectedIntent,
@@ -1467,6 +1475,27 @@ ${
   submitChat(event, value) {
     this.smartbarAction = "chat";
     this.#dispatchSmartbarCommitEvent(event, value);
+  }
+
+  /**
+   * Routes Enter-key submissions in smartbar mode when queries are suppressed.
+   * The suppressed branch of startQuery() has already cached a heuristic URL
+   * UrlbarResult for URL-shaped input, so reuse it via pickResult() to share
+   * the engagement telemetry and load path with the non-suppressed flow.
+   * Otherwise the input is a chat prompt.
+   *
+   * @param {Event} event - The triggering event.
+   */
+  #handleSuppressedNavigation(event) {
+    if (this._resultForCurrentValue?.type == lazy.UrlbarUtils.RESULT_TYPE.URL) {
+      // pickResult() reads _lastSearchString for engagement telemetry. The
+      // suppressed branch of startQuery() intentionally leaves it untouched
+      // during typing, so set it here for the committed value only.
+      this._lastSearchString = this.value;
+      this.pickResult(this._resultForCurrentValue, event);
+      return;
+    }
+    this.submitChat(event, this.untrimmedValue);
   }
 
   /**
@@ -1499,7 +1528,8 @@ ${
     const action = event.detail.action;
     this.smartbarAction = action;
     const isExplicitAction =
-      event.type === "aiwindow-input-cta:on-action-change";
+      event.type === "aiwindow-input-cta:on-action-change" ||
+      event.type === "aiwindow-input-cta:on-search-engine-select";
 
     // For non-explicit actions, forward to handleNavigation.
     if (!isExplicitAction) {
@@ -1569,9 +1599,12 @@ ${
    *   The principal that the action was triggered from.
    */
   handleNavigation({ event, oneOffParams, triggeringPrincipal }) {
-    // When queries are suppressed, submit directly to chat.
+    // When queries are suppressed (e.g. while a chat is active), no provider
+    // results are available to decide the action, so route based on the
+    // smartbar action that #updateSmartbarCTAButton inferred from the typed
+    // value.
     if (this.#isSmartbarMode && this._permanentlySuppressStartQuery) {
-      this.submitChat(event, this.untrimmedValue);
+      this.#handleSuppressedNavigation(event);
       return;
     }
 
@@ -1904,7 +1937,8 @@ ${
 
     if (
       result.providerName == lazy.UrlbarProviderGlobalActions.name &&
-      this.#providesSearchMode(result)
+      this.#providesSearchMode(result) &&
+      !this.view.selectedElement?.dataset.immediateSearch
     ) {
       this.maybeConfirmSearchModeFromResult({
         result,
@@ -1921,7 +1955,8 @@ ${
     // engineering effort. See review discussion at bug 1667766.
     if (
       (this.searchMode?.isPreview &&
-        result.providerName == lazy.UrlbarProviderGlobalActions.name) ||
+        result.providerName == lazy.UrlbarProviderGlobalActions.name &&
+        !this.view.selectedElement?.dataset.immediateSearch) ||
       (result.heuristic &&
         this.searchMode?.isPreview &&
         this.view.oneOffSearchButtons?.selectedButton)
@@ -2377,7 +2412,23 @@ ${
     }
 
     if (this.#isSmartbarMode) {
-      this.#dispatchSmartbarCommitEvent(event, this.untrimmedValue);
+      // Override the CTA action when a non-heuristic result is picked. The
+      // heuristic result (and the case with no heuristic) should respect the
+      // CTA mode, so leave `action` undefined to fall back to it.
+      let action;
+      if (!result.heuristic) {
+        switch (result.type) {
+          case lazy.UrlbarUtils.RESULT_TYPE.SEARCH:
+            action = "search";
+            break;
+          case lazy.UrlbarUtils.RESULT_TYPE.AI_CHAT:
+            action = "chat";
+            break;
+          default:
+            action = "navigate";
+        }
+      }
+      this.#dispatchSmartbarCommitEvent(event, this.untrimmedValue, action);
     }
     this._loadURL(
       url,
@@ -2767,7 +2818,17 @@ ${
     }
 
     if (this._suppressStartQuery) {
-      this.#updateSmartbarCTAButton();
+      // Provider results are skipped in this branch (e.g. while a chat is
+      // active in the Smart Window). Reuse UrlbarProviderHeuristicFallback's
+      // URL detection so URL-shaped input is still recognized as a navigation,
+      // and so pickResult() can drive the engagement telemetry + load path
+      // used everywhere else. Leave _lastSearchString alone — callers (and
+      // tests) rely on it preserving the last actually-run search;
+      // #handleSuppressedNavigation sets it just before pickResult().
+      const result =
+        lazy.UrlbarProviderHeuristicFallback.matchUnknownUrl(queryContext);
+      this.setResultForCurrentValue(result);
+      this.#updateSmartbarCTAButton(result);
       return;
     }
 
@@ -3155,6 +3216,7 @@ ${
         }
       }
     }
+    Services.obs.notifyObservers(null, "urlbar-searchmodechanged");
   }
 
   /**
@@ -3447,8 +3509,6 @@ ${
       return;
     }
     this.setSearchMode(searchMode, this.window.gBrowser.selectedBrowser);
-    this.searchModeSwitcher?.onSearchModeChanged();
-    lazy.UrlbarSearchTermsPersistence.onSearchModeChanged(this.window);
   }
 
   getBrowserState(browser) {
@@ -5342,7 +5402,7 @@ ${
       this.setPageProxyState("invalid", true);
     }
 
-    this.searchModeSwitcher?.onSearchModeChanged();
+    Services.obs.notifyObservers(null, "urlbar-searchmodechanged");
   }
 
   /**

@@ -36,7 +36,7 @@ async function testMeasuringToolHighlighterDestroyed(toolbox) {
     await waitForMeasureButtonInDOM(toolbox, true);
   }
   await toolbox.selectTool("inspector");
-  const inspectorFront = await toolbox.target.getFront("inspector");
+  let inspectorFront = await toolbox.target.getFront("inspector");
 
   info("Activating the measuring tool");
   await activateMeasureButton(toolbox);
@@ -66,6 +66,25 @@ async function testMeasuringToolHighlighterDestroyed(toolbox) {
   ok(
     inspectorFront.getKnownHighlighter(HIGHLIGHTER_TYPES.MEASURING)?.isShown(),
     "Measuring tool highlighter is shown again after re-enabling"
+  );
+
+  info("Reload the page");
+  await reloadSelectedTab();
+  inspectorFront = await toolbox.target.getFront("inspector");
+  is(
+    inspectorFront.getKnownHighlighter(HIGHLIGHTER_TYPES.MEASURING),
+    undefined,
+    "Highlighter doesn't exist anymore after reloading"
+  );
+  ok(
+    !isButtonActive(getMeasureButtonInDOM(toolbox)),
+    "Measure button isn't active after reloading the page"
+  );
+  await activateMeasureButton(toolbox);
+  await waitForHighlighterState(inspectorFront, true);
+  ok(
+    inspectorFront.getKnownHighlighter(HIGHLIGHTER_TYPES.MEASURING)?.isShown(),
+    "Measuring tool highlighter can be displayed after reloading"
   );
 }
 
@@ -105,9 +124,13 @@ async function activateMeasureButton(toolbox) {
   if (!button) {
     throw new Error("Couldn't find the measure button");
   }
-  const activated = waitFor(() => button.classList.contains("checked"));
+  const activated = waitFor(() => isButtonActive(button));
   button.click();
   await activated;
+}
+
+function isButtonActive(button) {
+  return button.classList.contains("checked");
 }
 
 async function waitForHighlighterState(inspectorFront, shouldBeShown) {

@@ -21,7 +21,6 @@ import org.mozilla.fenix.components.appstate.AppAction
 import org.mozilla.fenix.e2e.SystemInsetsPaddedFragment
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.navigateWithBreadcrumb
-import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.ext.showToolbar
 import org.mozilla.fenix.home.pocket.ContentRecommendationsFeatureHelper
 import org.mozilla.fenix.utils.Settings
@@ -51,11 +50,11 @@ class HomeSettingsFragment : PreferenceFragmentCompat(), SystemInsetsPaddedFragm
 
     override fun onAttach(context: Context) {
         super.onAttach(context)
-        if (!::fenixSettings.isInitialized) {
-            fenixSettings = context.settings()
-        }
         if (!::fenixComponents.isInitialized) {
             fenixComponents = context.components
+        }
+        if (!::fenixSettings.isInitialized) {
+            fenixSettings = fenixComponents.settings
         }
     }
 

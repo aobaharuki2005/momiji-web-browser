@@ -1568,6 +1568,12 @@ parent:
      */
     sync GetHyphDict(nullable nsIURI aURI) returns (ReadOnlySharedMemoryHandle aHandle);
 
+    /**
+     * Clear out the ContentParent's reference to a ParentProcessChannelHandle
+     * which no longer has outstanding references from the content process.
+     */
+    async DropParentProcessChannelHandle(nsID aUuid);
+
     async CreateWindow(PBrowser aThisTab,
                        MaybeDiscardedBrowsingContext aParent,
                        PBrowser aNewTab,

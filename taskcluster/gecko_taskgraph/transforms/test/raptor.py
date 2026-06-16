@@ -651,7 +651,7 @@ def add_simpleperf(config, tests):
                 "extra-options", []
             )
             extra_options.extend([
-                "--add-option=--simpleperf",
+                "--simpleperf",
                 "--browsertime-arg=androidSimpleperf=$MOZ_FETCHES_DIR/android-simpleperf",
             ])
             app_data_dir = f"/storage/emulated/0/Android/data/{app_packages[app]}/files"
@@ -710,7 +710,7 @@ def add_simpleperf(config, tests):
 def handle_simpleperf_symbol(config, tests):
     for test in tests:
         extra_options = test.get("mozharness", {}).get("extra-options", [])
-        if "--add-option=--simpleperf" in extra_options:
+        if "--simpleperf" in extra_options:
             group, symbol = split_symbol(test["treeherder-symbol"])
             test["treeherder-symbol"] = join_symbol(group, f"{symbol}-p")
         yield test

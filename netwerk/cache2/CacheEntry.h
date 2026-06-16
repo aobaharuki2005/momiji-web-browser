@@ -62,10 +62,10 @@ class CacheEntry final : public nsIRunnable,
   void ClearCallbacks();
 #endif
 
-  CacheEntryHandle* NewHandle();
+  already_AddRefed<CacheEntryHandle> NewHandle();
   // For a new and recreated entry w/o a callback, we need to wrap it
   // with a handle to detect writing consumer is gone.
-  CacheEntryHandle* NewWriteHandle();
+  already_AddRefed<CacheEntryHandle> NewWriteHandle();
 
   // Forwarded to from CacheEntryHandle : nsICacheEntry
   nsresult GetKey(nsACString& aKey);

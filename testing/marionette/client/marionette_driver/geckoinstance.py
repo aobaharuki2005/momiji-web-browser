@@ -181,6 +181,8 @@ class GeckoInstance:
         "security.remote_settings.intermediates.enabled": False,
         # Disable logging for remote settings
         "services.settings.loglevel": "off",
+        # Disable the WebAuthn consents prompt
+        "security.webauthn.related_origin_requests_mode": 1,
         # Ensure blocklist updates don't hit the network
         "services.settings.server": "data:,#remote-settings-dummy/v1",
         # Disable password capture, so that tests that include forms aren"t

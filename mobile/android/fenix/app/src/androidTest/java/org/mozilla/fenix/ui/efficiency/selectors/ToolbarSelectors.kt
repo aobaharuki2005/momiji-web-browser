@@ -63,6 +63,13 @@ object ToolbarSelectors {
         groups = listOf("homeScreenToolbar"),
     )
 
+    val SITE_INFORMATION_BUTTON = Selector(
+        strategy = SelectorStrategy.COMPOSE_BY_CONTENT_DESCRIPTION,
+        value = "Site information",
+        description = "Site information button",
+        groups = listOf("browserViewToolbarItems"),
+    )
+
     val all = listOf(
         TOOLBAR,
         TAB_COUNTER,
@@ -71,5 +78,6 @@ object ToolbarSelectors {
         TOOLBAR_URL_BOX_UIAUTOMATOR,
         NEW_TAB_BUTTON,
         SEARCH_ENGINE_SELECTOR_ICON(),
+        SITE_INFORMATION_BUTTON,
     )
 }

@@ -6,7 +6,16 @@
 import React, { useEffect, useRef, useState } from "react";
 import { useSelector } from "react-redux";
 import { actionCreators as ac, actionTypes as at } from "common/Actions.mjs";
-import { SafeAnchor } from "../../DiscoveryStreamComponents/SafeAnchor/SafeAnchor";
+
+// Stream URLs come from an untrusted backend, so only allow http(s) through to
+// the href; anything else (e.g. javascript:) renders as a non-navigating link.
+function safeStreamUrl(url) {
+  try {
+    return ["http:", "https:"].includes(new URL(url).protocol) ? url : "";
+  } catch (e) {
+    return "";
+  }
+}
 
 // Map known backend entitlement strings to localized tag IDs. Anything not in
 // this map falls back to the raw string from `stream.entitlement`.
@@ -45,10 +54,12 @@ function StreamRow({ stream, dispatch, widgetSize }) {
   };
   return (
     <li className="watch-live-modal-row">
-      <SafeAnchor
+      <a
         className="watch-live-modal-row-link"
-        url={stream.url}
-        onLinkClick={handleClick}
+        href={safeStreamUrl(stream.url)}
+        target="_blank"
+        rel="noopener noreferrer"
+        onClick={handleClick}
       >
         <span className="watch-live-modal-row-text">
           <span className="watch-live-modal-product">
@@ -62,7 +73,7 @@ function StreamRow({ stream, dispatch, widgetSize }) {
           </span>
         </span>
         <span className="watch-live-modal-play" aria-hidden="true" />
-      </SafeAnchor>
+      </a>
     </li>
   );
 }

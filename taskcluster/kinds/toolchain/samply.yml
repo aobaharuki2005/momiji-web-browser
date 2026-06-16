@@ -30,6 +30,18 @@ linux64-samply:
             - linux64-rust
             - sysroot-x86_64-linux-gnu
 
+linux64-aarch64-samply:
+    description: "samply toolchain build for aarch64 Linux"
+    treeherder:
+        symbol: TLA64(samply)
+    run:
+        arguments: ['aarch64-unknown-linux-gnu']
+    fetches:
+        toolchain:
+            - linux64-clang-toolchain
+            - linux64-rust
+            - sysroot-aarch64-linux-gnu
+
 macosx64-samply:
     description: "samply toolchain build for x86_64 macOS"
     treeherder:

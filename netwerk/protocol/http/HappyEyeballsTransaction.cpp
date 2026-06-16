@@ -27,15 +27,34 @@ namespace mozilla::net {
 
 HappyEyeballsTransaction::HappyEyeballsTransaction(
     nsHttpConnectionInfo* aConnInfo, nsIInterfaceRequestor* aCallbacks,
-    uint32_t aCaps, StatusForwarder&& aStatusForwarder,
+    uint32_t aCaps, uint64_t aBrowserId, StatusForwarder&& aStatusForwarder,
+    ClientAuthForwarder&& aClientAuthRequestedForwarder,
+    ClientAuthForwarder&& aClientAuthSelectedForwarder,
     ZeroRttHandle* aZeroRttHandle)
     : SpeculativeTransaction(aConnInfo, aCallbacks, aCaps,
                              /* aCallback */ nullptr,
                              /* reportActivity */ false),
       mStatusForwarder(std::move(aStatusForwarder)),
-      mZeroRttHandle(aZeroRttHandle) {
+      mClientAuthRequestedForwarder(std::move(aClientAuthRequestedForwarder)),
+      mClientAuthSelectedForwarder(std::move(aClientAuthSelectedForwarder)),
+      mZeroRttHandle(aZeroRttHandle),
+      mBrowserId(aBrowserId) {
   LOG1(("HappyEyeballsTransaction ctor %p handle=%p", this,
         mZeroRttHandle.get()));
+}
+
+void HappyEyeballsTransaction::OnClientAuthCertificateRequested() {
+  LOG(("HappyEyeballsTransaction::OnClientAuthCertificateRequested %p", this));
+  if (mClientAuthRequestedForwarder) {
+    mClientAuthRequestedForwarder();
+  }
+}
+
+void HappyEyeballsTransaction::OnClientAuthCertificateSelected() {
+  LOG(("HappyEyeballsTransaction::OnClientAuthCertificateSelected %p", this));
+  if (mClientAuthSelectedForwarder) {
+    mClientAuthSelectedForwarder();
+  }
 }
 
 HappyEyeballsTransaction::~HappyEyeballsTransaction() {

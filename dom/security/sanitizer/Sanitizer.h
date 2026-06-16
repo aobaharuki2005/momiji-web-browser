@@ -56,6 +56,10 @@ class Sanitizer final : public nsISupports, public nsWrapperCache {
   bool RemoveElement(const StringOrSanitizerElementNamespace& aElement);
   bool ReplaceElementWithChildren(
       const StringOrSanitizerElementNamespace& aElement);
+  bool AllowProcessingInstruction(
+      const StringOrSanitizerProcessingInstruction& aPI);
+  bool RemoveProcessingInstruction(
+      const StringOrSanitizerProcessingInstruction& aPI);
   bool AllowAttribute(const StringOrSanitizerAttributeNamespace& aAttribute);
   bool RemoveAttribute(const StringOrSanitizerAttributeNamespace& aAttribute);
   bool SetComments(bool aAllow);
@@ -75,13 +79,13 @@ class Sanitizer final : public nsISupports, public nsWrapperCache {
   ~Sanitizer() = default;
 
   void CanonicalizeConfiguration(const SanitizerConfig& aConfig,
-                                 bool aAllowCommentsAndDataAttributes,
+                                 bool aAllowCommentsPIsAndDataAttributes,
                                  ErrorResult& aRv);
   void IsValid(ErrorResult& aRv);
 
   void SetDefaultConfig();
   void SetConfig(const SanitizerConfig& aConfig,
-                 bool aAllowCommentsAndDataAttributes, ErrorResult& aRv);
+                 bool aAllowCommentsPIsAndDataAttributes, ErrorResult& aRv);
 
   void MaybeMaterializeDefaultConfig();
 
@@ -104,6 +108,8 @@ class Sanitizer final : public nsISupports, public nsWrapperCache {
     MOZ_ASSERT(!mElements);
     MOZ_ASSERT(!mRemoveElements);
     MOZ_ASSERT(!mReplaceWithChildrenElements);
+    MOZ_ASSERT(!mProcessingInstructions);
+    MOZ_ASSERT(!mRemoveProcessingInstructions);
     MOZ_ASSERT(!mAttributes);
     MOZ_ASSERT(!mRemoveAttributes);
   }
@@ -113,6 +119,9 @@ class Sanitizer final : public nsISupports, public nsWrapperCache {
   Maybe<sanitizer::CanonicalElementMap> mElements;
   Maybe<sanitizer::CanonicalElementSet> mRemoveElements;
   Maybe<sanitizer::CanonicalElementSet> mReplaceWithChildrenElements;
+
+  Maybe<sanitizer::CanonicalPISet> mProcessingInstructions;
+  Maybe<sanitizer::CanonicalPISet> mRemoveProcessingInstructions;
 
   Maybe<sanitizer::CanonicalAttributeSet> mAttributes;
   Maybe<sanitizer::CanonicalAttributeSet> mRemoveAttributes;

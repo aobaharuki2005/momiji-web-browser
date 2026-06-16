@@ -52,11 +52,19 @@ class nsHttpTransaction;
 class HappyEyeballsTransaction final : public SpeculativeTransaction {
  public:
   using StatusForwarder = std::function<void(nsITransport*, nsresult, int64_t)>;
+  using ClientAuthForwarder = std::function<void()>;
 
   HappyEyeballsTransaction(nsHttpConnectionInfo* aConnInfo,
                            nsIInterfaceRequestor* aCallbacks, uint32_t aCaps,
+                           uint64_t aBrowserId,
                            StatusForwarder&& aStatusForwarder,
+                           ClientAuthForwarder&& aClientAuthRequestedForwarder,
+                           ClientAuthForwarder&& aClientAuthSelectedForwarder,
                            ZeroRttHandle* aZeroRttHandle);
+
+  // Forward the real transaction's BrowserId: PSM's client-cert dialog looks
+  // up a BrowsingContext.
+  uint64_t BrowserId() override { return mBrowserId; }
 
   void SetConnectedCallback(std::function<void(nsresult)>&& aCallback) {
     mCloseCallback = std::move(aCallback);
@@ -102,6 +110,8 @@ class HappyEyeballsTransaction final : public SpeculativeTransaction {
   // txn.
   void OnTransportStatus(nsITransport* aTransport, nsresult aStatus,
                          int64_t aProgress) override;
+  void OnClientAuthCertificateRequested() override;
+  void OnClientAuthCertificateSelected() override;
   nsresult ReadSegments(nsAHttpSegmentReader* aReader, uint32_t aCount,
                         uint32_t* aCountRead) override;
   // Asserts unreachable in debug. By design HET is never the transaction
@@ -173,7 +183,10 @@ class HappyEyeballsTransaction final : public SpeculativeTransaction {
                   nsresult aReason = NS_OK);
 
   StatusForwarder mStatusForwarder;
+  ClientAuthForwarder mClientAuthRequestedForwarder;
+  ClientAuthForwarder mClientAuthSelectedForwarder;
   RefPtr<ZeroRttHandle> mZeroRttHandle;
+  uint64_t mBrowserId = 0;
 
   // Non-null only after Adopt(). Backs QueryHttpTransaction() so
   // callers that still hold an HT pointer can reach the real txn.

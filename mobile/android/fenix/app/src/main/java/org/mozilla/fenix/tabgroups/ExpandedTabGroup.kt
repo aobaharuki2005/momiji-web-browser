@@ -91,6 +91,7 @@ fun ExpandedTabGroup(
             tabs = group.tabs,
             displayTabsInGrid = true,
             dragAndDropEnabled = false,
+            reorderingEnabled = false,
             displayTabGroupOnboarding = false,
             selectedItemIndex = group.initialScrollIndex,
             selectionMode = TabsTrayState.Mode.Normal,
@@ -102,6 +103,7 @@ fun ExpandedTabGroup(
             onDeleteTabGroupClick = { }, // Ignore tab group deletes
             onEditTabGroupClick = { }, // Ignore tab group edits
             onCloseTabGroupClick = { }, // Ignore tab group closes
+            onTabGroupOnboardingDismiss = { }, // Ignore onboarding dismissals - onboarding is not shown in this layout
             contentPadding = PaddingValues(0.dp), // TabLayout should not have its own content padding inside this view
             focusEnabled = true, // Drag and drop is not possible in this view, so focus should never be suppressed
         )

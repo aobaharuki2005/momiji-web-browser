@@ -1839,6 +1839,9 @@ export var UrlbarUtils = {
         if (result.providerName == "UrlbarProviderTabToSearch") {
           return "tabtosearch";
         }
+        if (result.providerName == "UrlbarProviderAiChat") {
+          return "ai_search_fallback";
+        }
         if (result.payload.suggestion) {
           let type = result.payload.trending ? "trending" : "searchsuggestion";
           if (result.isRichSuggestion) {
@@ -2142,6 +2145,9 @@ export var UrlbarUtils = {
           return result.providerName == "UrlbarProviderRecentSearches"
             ? "recent_search"
             : "search_history";
+        }
+        if (result.providerName === "UrlbarProviderAiChat") {
+          return "ai_search_fallback";
         }
         if (result.payload.suggestion) {
           let type = result.payload.trending

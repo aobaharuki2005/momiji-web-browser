@@ -6,6 +6,7 @@
 
 #include "nsISupportsPrimitives.h"
 #include "nsArrayUtils.h"
+#include "nsComponentManagerUtils.h"
 #include "nsMenuPopupFrame.h"
 #include "nsDeviceContext.h"
 #include "mozilla/dom/XULPopupElement.h"
@@ -52,6 +53,7 @@
 #include "nsPIDOMWindow.h"
 #include "nsThreadUtils.h"
 #include "nsMenuBarX.h"
+#include "nsMenuGroupOwnerX.h"
 #include "nsMenuUtilsX.h"
 #include "nsStyleConsts.h"
 #include "nsLayoutUtils.h"
@@ -8155,8 +8157,28 @@ static NSImage* GetMenuMaskImage() {
 - (NSTouchBar*)makeTouchBar {
   [mTouchBar release];
   mTouchBar = [[nsTouchBar alloc] init];
-  if (mTouchBar) {
+  if (mTouchBar && !sTouchBarIsInitialized) {
     sTouchBarIsInitialized = YES;
+    // The menu bar may have been built before the Touch Bar was initialized,
+    // in which case the "Customize Touch Bar" item was hidden and its trailing
+    // separator was never added. Unhide the item and add the separator now so
+    // the menu matches what CreateApplicationMenu would have produced.
+    if (sApplicationMenu) {
+      NSMenuItem* touchBarItem =
+          [sApplicationMenu itemWithTag:eCommand_ID_TouchBar];
+      if (touchBarItem) {
+        [touchBarItem setHidden:NO];
+        NSInteger touchBarIndex = [sApplicationMenu indexOfItem:touchBarItem];
+        NSInteger separatorIndex = touchBarIndex + 1;
+        BOOL hasSeparator = separatorIndex < [sApplicationMenu numberOfItems] &&
+                            [[sApplicationMenu
+                                itemAtIndex:separatorIndex] isSeparatorItem];
+        if (touchBarIndex != -1 && !hasSeparator) {
+          [sApplicationMenu insertItem:[NSMenuItem separatorItem]
+                               atIndex:separatorIndex];
+        }
+      }
+    }
   }
   return mTouchBar;
 }

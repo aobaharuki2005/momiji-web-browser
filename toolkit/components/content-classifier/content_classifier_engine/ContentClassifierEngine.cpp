@@ -12,7 +12,7 @@
 namespace mozilla {
 
 ContentClassifierEngineResult ContentClassifierEngine::CheckNetworkRequest(
-    const ContentClassifierRequest& aRequest) {
+    const ContentClassifierRequest& aRequest, bool aPreviouslyMatched) {
   if (!mEngine || !sInitializedETLDService) {
     return ContentClassifierEngineResult(NS_ERROR_NOT_INITIALIZED, mFeature);
   }
@@ -34,7 +34,8 @@ ContentClassifierEngineResult ContentClassifierEngine::CheckNetworkRequest(
   nsresult rv = content_classifier_engine_check_network_request_preparsed(
       mEngine, &aRequest.mUrl, &aRequest.mSchemelessSite,
       &aRequest.mSourceSchemelessSite, &aRequest.mRequestType,
-      aRequest.mThirdParty, &matched, &important, &exception);
+      aRequest.mThirdParty, aPreviouslyMatched, &matched, &important,
+      &exception);
   return ContentClassifierEngineResult(matched, !exception.IsEmpty(), important,
                                        rv, mFeature);
 }

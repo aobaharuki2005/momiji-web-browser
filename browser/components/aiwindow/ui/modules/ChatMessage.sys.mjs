@@ -202,7 +202,7 @@ export class ChatMessage {
 
       switch (key) {
         case TOKEN_LABELS.EXISTING_MEMORY:
-          (this._pendingMemoryIds ??= []).push(value);
+          this.memoriesApplied.push(value);
           break;
         case TOKEN_LABELS.SEARCH:
           this.webSearchQueries.push(value);

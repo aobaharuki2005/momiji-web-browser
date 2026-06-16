@@ -81,6 +81,10 @@ aiwindow-input-cta-menu-label-search-with = Search with…
 
 aiwindow-input-cta-search-submenu-header = Search
 
+aiwindow-input-cta-stop-button =
+    .aria-label = Stop response generation
+    .title = Stop response
+
 ## Smartbar
 
 smartbar-placeholder =
@@ -220,7 +224,7 @@ smartwindow-footer-history =
 ## Disclaimer
 ## Text displayed to user to warn user about potential mistakes.
 
-smartwindow-disclaimer = AI can make mistakes. <a data-l10n-name="report-link">Report any issues</a>.
+smartwindow-disclaimer = AI can make mistakes.
 
 ## FirefoxView Chats
 ## Chats in this context refers to chats saved from the Smart Window Assistant
@@ -320,3 +324,14 @@ aiwindow-feedback-reason-lacks-personalization = Lacks personalization or contex
 aiwindow-feedback-reason-performance-or-usability = Performance or usability issue
 aiwindow-feedback-reason-harmful-or-offensive = Harmful or offensive
 aiwindow-feedback-reason-other = Other
+
+## Smart Window ai-chat-grid
+
+aiwindow-ai-chat-grid-view-controls =
+    .aria-label = Switch view layout
+aiwindow-ai-chat-grid-list-view =
+    .aria-label = Switch mode: List View
+    .tooltiptext = List View
+aiwindow-ai-chat-grid-grid-view =
+    .aria-label = Switch mode: Grid View
+    .tooltiptext = Grid View

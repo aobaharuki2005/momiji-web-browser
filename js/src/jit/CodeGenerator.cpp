@@ -22683,40 +22683,61 @@ void CodeGenerator::visitLocalTimeToUTC(LLocalTimeToUTC* ins) {
 void CodeGenerator::visitYearFromTime(LYearFromTime* ins) {
   FloatRegister utcTime = ToFloatRegister(ins->utcTime());
   Register temp0 = ToRegister(ins->temp0());
-  MOZ_ASSERT(ToFloatRegister(ins->output()) == ReturnDoubleReg);
+  Register temp1 = ToRegister(ins->temp1());
+  ValueOperand output = ToOutValue(ins);
 
-  using Fn = double (*)(JSContext*, double);
+  masm.reserveStack(sizeof(JS::Value));
+  masm.moveStackPtrTo(temp1);
+
+  using Fn = void (*)(JSContext*, double, JS::Value*);
   masm.setupAlignedABICall();
   masm.loadJSContext(temp0);
   masm.passABIArg(temp0);
   masm.passABIArg(utcTime, ABIType::Float64);
-  masm.callWithABI<Fn, jit::DateYearFromTime>(ABIType::Float64);
+  masm.passABIArg(temp1);
+  masm.callWithABI<Fn, jit::DateYearFromTime>();
+
+  masm.Pop(output);
 }
 
 void CodeGenerator::visitMonthFromTime(LMonthFromTime* ins) {
   FloatRegister utcTime = ToFloatRegister(ins->utcTime());
   Register temp0 = ToRegister(ins->temp0());
-  MOZ_ASSERT(ToFloatRegister(ins->output()) == ReturnDoubleReg);
+  Register temp1 = ToRegister(ins->temp1());
+  ValueOperand output = ToOutValue(ins);
 
-  using Fn = double (*)(JSContext*, double);
+  masm.reserveStack(sizeof(JS::Value));
+  masm.moveStackPtrTo(temp1);
+
+  using Fn = void (*)(JSContext*, double, JS::Value*);
   masm.setupAlignedABICall();
   masm.loadJSContext(temp0);
   masm.passABIArg(temp0);
   masm.passABIArg(utcTime, ABIType::Float64);
-  masm.callWithABI<Fn, jit::DateMonthFromTime>(ABIType::Float64);
+  masm.passABIArg(temp1);
+  masm.callWithABI<Fn, jit::DateMonthFromTime>();
+
+  masm.Pop(output);
 }
 
 void CodeGenerator::visitDateFromTime(LDateFromTime* ins) {
   FloatRegister utcTime = ToFloatRegister(ins->utcTime());
   Register temp0 = ToRegister(ins->temp0());
-  MOZ_ASSERT(ToFloatRegister(ins->output()) == ReturnDoubleReg);
+  Register temp1 = ToRegister(ins->temp1());
+  ValueOperand output = ToOutValue(ins);
 
-  using Fn = double (*)(JSContext*, double);
+  masm.reserveStack(sizeof(JS::Value));
+  masm.moveStackPtrTo(temp1);
+
+  using Fn = void (*)(JSContext*, double, JS::Value*);
   masm.setupAlignedABICall();
   masm.loadJSContext(temp0);
   masm.passABIArg(temp0);
   masm.passABIArg(utcTime, ABIType::Float64);
-  masm.callWithABI<Fn, jit::DateDateFromTime>(ABIType::Float64);
+  masm.passABIArg(temp1);
+  masm.callWithABI<Fn, jit::DateDateFromTime>();
+
+  masm.Pop(output);
 }
 
 void CodeGenerator::visitNewDateObject(LNewDateObject* lir) {

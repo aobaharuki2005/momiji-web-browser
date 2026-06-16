@@ -1750,9 +1750,16 @@ validateSecretKey(SFTKSession *session, SFTKObject *object,
                 sftk_FreeAttribute(attribute);
                 return CKR_KEY_SIZE_RANGE;
             }
+            /* sftk_FindAttribute returns a private copy, so set the parity
+             * bits on it and then write the value back to the object. */
             sftk_FormatDESKey((unsigned char *)attribute->attrib.pValue,
                               attribute->attrib.ulValueLen);
+            crv = sftk_forceAttribute(object, CKA_VALUE,
+                                      attribute->attrib.pValue,
+                                      attribute->attrib.ulValueLen);
             sftk_FreeAttribute(attribute);
+            if (crv != CKR_OK)
+                return crv;
             break;
         case CKK_AES:
             attribute = sftk_FindAttribute(object, CKA_VALUE);
@@ -5149,7 +5156,6 @@ sftk_CreateNewSlot(SFTKSlot *slot, CK_OBJECT_CLASS class,
     unsigned int moduleIndex = NSC_NON_FIPS_MODULE;
     SFTKAttribute *attribute;
     sftk_parameters paramStrings;
-    char *paramString;
     CK_SLOT_ID slotID = 0;
     SFTKSlot *newSlot = NULL;
     CK_RV crv = CKR_OK;
@@ -5164,8 +5170,16 @@ sftk_CreateNewSlot(SFTKSlot *slot, CK_OBJECT_CLASS class,
     if (attribute == NULL) {
         return CKR_TEMPLATE_INCOMPLETE;
     }
-    paramString = (char *)attribute->attrib.pValue;
-    crv = sftk_parseParameters(paramString, &paramStrings, isFIPS);
+    /* sftk_parseParameters scans attribute->attrib.pValue as a C string;
+     * reject if it isn't NUL-terminated within ulValueLen. */
+    if (attribute->attrib.ulValueLen == 0 ||
+        memchr(attribute->attrib.pValue, '\0',
+               attribute->attrib.ulValueLen) == NULL) {
+        crv = CKR_ATTRIBUTE_VALUE_INVALID;
+        goto loser;
+    }
+    crv = sftk_parseParameters((char *)attribute->attrib.pValue,
+                               &paramStrings, isFIPS);
     if (crv != CKR_OK) {
         goto loser;
     }

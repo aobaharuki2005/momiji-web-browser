@@ -3652,6 +3652,42 @@ class GeckoEngineTest {
     }
 
     @Test
+    fun `web extension delegate handles add-on onReady event`() {
+        val runtime: GeckoRuntime = mock()
+        val webExtensionController: WebExtensionController = mock()
+        whenever(runtime.webExtensionController).thenReturn(webExtensionController)
+
+        val extension = mockNativeWebExtension("test", "uri")
+        val webExtensionsDelegate: WebExtensionDelegate = mock()
+        val engine = GeckoEngine(context, runtime = runtime)
+        engine.registerWebExtensionDelegate(webExtensionsDelegate)
+
+        val geckoDelegateCaptor = argumentCaptor<WebExtensionController.AddonManagerDelegate>()
+        verify(webExtensionController).setAddonManagerDelegate(geckoDelegateCaptor.capture())
+
+        assertEquals(Unit, geckoDelegateCaptor.value.onReady(extension))
+        val extensionCaptor = argumentCaptor<WebExtension>()
+
+        // Note: the "reacts to WebExtensionDelegate onReady" test in
+        // WebExtensionSupportTest.kt provides further verification of onReady
+        // doing anything meaningful.
+        verify(webExtensionsDelegate).onReady(extensionCaptor.capture())
+        val capturedExtension =
+            extensionCaptor.value as mozilla.components.browser.engine.gecko.webextension.GeckoWebExtension
+        assertEquals(extension, capturedExtension.nativeExtension)
+
+        // registerTabHandler must be called again on the extension at onReady,
+        // to make sure that changes to optionsPageUrl are propagated, and applied
+        // when the onOpenOptionsPage delegate is called.
+        // This is a regression test for bug 2046177.
+        verify(extension).tabDelegate = any()
+
+        // Although there are no known dependencies on setActionDelegate at the
+        // time of writing, we also update the action delegate for consistency.
+        verify(extension).setActionDelegate(any())
+    }
+
+    @Test
     fun `WHEN isTranslationsEngineSupported is called successfully THEN onSuccess is called`() {
         val runtime: GeckoRuntime = mock()
         val engine = GeckoEngine(testContext, runtime = runtime, runtimeTranslationAccessor = runtimeTranslationAccessor)

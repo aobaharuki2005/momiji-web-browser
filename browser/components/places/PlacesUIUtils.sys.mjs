@@ -915,7 +915,7 @@ export var PlacesUIUtils = {
     aNode,
     aWhere,
     aWindow,
-    { aPrivate = false, userContextId = 0 } = {}
+    { aPrivate = false, userContextId = undefined } = {}
   ) {
     if (
       aNode &&

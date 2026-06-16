@@ -676,3 +676,94 @@ add_task(async function test_rowid_conflict() {
 
   await semanticManager.shutdown();
 });
+
+add_task(async function test_infer_respects_distance_threshold() {
+  await PlacesUtils.history.clear();
+  Services.prefs.setBoolPref("places.semanticHistory.featureGate", true);
+
+  // Build a query vector and two entries: one pointing in nearly the same
+  // direction (cosine distance ~0) and one orthogonal to it (cosine distance
+  // ~1).
+  const makeVector = (size, components) => {
+    let v = Array(size).fill(0);
+    for (let [i, val] of Object.entries(components)) {
+      v[i] = val;
+    }
+    return v;
+  };
+
+  const searchString = "search query string";
+  const embeddingSize =
+    createPlacesSemanticHistoryManager().embedder.embeddingSize;
+  const queryVector = makeVector(embeddingSize, { 0: 1 });
+  const entries = [
+    {
+      url: "https://near.moz.com/",
+      title: "near entry page",
+      vector: makeVector(embeddingSize, { 0: 1, 1: 0.05 }),
+    },
+    {
+      url: "https://far.moz.com/",
+      title: "far entry page",
+      vector: makeVector(embeddingSize, { 1: 1 }),
+    },
+  ];
+
+  await PlacesTestUtils.addVisits(entries);
+
+  // Run infer() with the given threshold and return the resulting URLs. On the
+  // first call the entries are indexed into a fresh semantic database; later
+  // calls reuse it. The "search query string" entry is only used to embed the
+  // query and is not added to history.
+  async function inferUrls(distanceThreshold, { index = false } = {}) {
+    let manager = createPlacesSemanticHistoryManager({
+      changeThresholdCount: 1,
+      deferredTaskInterval: 100, // lower time to avoid timeouts.
+      distanceThreshold,
+    });
+    if (index) {
+      await manager.semanticDB.removeDatabaseFiles();
+    }
+    await manager.getConnection();
+    manager.embedder.setEngine(
+      new MockMLEngine(embeddingSize, [
+        ...entries,
+        { title: searchString, vector: queryVector },
+      ])
+    );
+    if (index) {
+      await TestUtils.topicObserved(
+        "places-semantichistorymanager-update-complete"
+      );
+    }
+    let { results } = await manager.infer({ searchString });
+    await manager.shutdown();
+    return results;
+  }
+
+  let results = await inferUrls(0.5, { index: true });
+  let urls = results.map(r => r.url);
+  Assert.ok(
+    urls.includes("https://near.moz.com/"),
+    "Entry within the distance threshold should be returned"
+  );
+  Assert.ok(
+    !urls.includes("https://far.moz.com/"),
+    "Entry beyond the distance threshold should be filtered out"
+  );
+  for (let r of results) {
+    Assert.lessOrEqual(
+      r.distance,
+      0.5,
+      "Every returned distance should be within the threshold"
+    );
+  }
+
+  // With a permissive threshold the far entry should come back, proving the
+  // threshold value is actually honored rather than ignored.
+  let permissiveUrls = (await inferUrls(1.5)).map(r => r.url);
+  Assert.ok(
+    permissiveUrls.includes("https://far.moz.com/"),
+    "Far entry should be returned when the threshold is permissive"
+  );
+});

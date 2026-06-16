@@ -47,6 +47,7 @@ class ShortcutsFragment : Fragment(), SystemInsetsPaddedFragment {
                 ShortcutsMiddleware(
                     appStore = requireComponents.appStore,
                     topSitesUseCases = requireComponents.useCases.topSitesUseCase,
+                    merinoManifestProvider = requireComponents.core.merinoManifestProvider,
                     settings = requireComponents.settings,
                     scope = viewLifecycleOwner.lifecycleScope,
                 ),

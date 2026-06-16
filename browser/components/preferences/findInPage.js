@@ -228,12 +228,18 @@ var gSearchResultsPane = {
           }
         }
       }
-      let range = document.createRange();
-      range.setStart(startNode, startValue);
-      range.setEnd(endNode, endValue);
-      this.getFindSelection(startNode.documentGlobal).addRange(range);
+      try {
+        let range = document.createRange();
+        range.setStart(startNode, startValue);
+        range.setEnd(endNode, endValue);
+        this.getFindSelection(startNode.documentGlobal).addRange(range);
 
-      this.searchResultsHighlighted = true;
+        this.searchResultsHighlighted = true;
+      } catch (ex) {
+        // The range can span text nodes that don't share a selection root (e.g.
+        // across a shadow DOM boundary), which the find selection rejects. The
+        // match still counts as found, so don't let it abort the whole search.
+      }
     }
 
     return !!indices.length;
@@ -345,11 +351,12 @@ var gSearchResultsPane = {
         // is in the pane title (moz-page-header) or in content rendered
         // outside any setting-group (e.g. paneExperimental's description).
         if (child.localName === "setting-pane") {
-          let groupSelector =
+          const BASE_SELECTOR =
             "setting-group:not([data-hidden-from-search]):not([hidden]):not([data-hidden-by-setting-group])";
-          if (subQuery) {
-            groupSelector += ":not(.visually-hidden)";
-          }
+          let groupSelector = subQuery
+            ? `${BASE_SELECTOR}:not(.visually-hidden)`
+            : BASE_SELECTOR;
+
           let groups = child.querySelectorAll(groupSelector);
           let anyGroupMatched = false;
           for (let group of groups) {
@@ -365,9 +372,10 @@ var gSearchResultsPane = {
           if (!paneMatched) {
             paneMatched = await this.searchWithinNode(child, this.query);
             if (paneMatched) {
-              // Pane title or pane-level content matched but no specific
-              // group did — show all groups so the pane isn't empty.
-              for (let group of groups) {
+              // Pane title or pane-level content matched but no specific group
+              // did. Re-query with the base selector to make sure previously
+              // .visually-hidden groups get shown.
+              for (let group of child.querySelectorAll(BASE_SELECTOR)) {
                 group.classList.remove("visually-hidden");
               }
             }
@@ -426,6 +434,14 @@ var gSearchResultsPane = {
         for (let anchorNode of this.listSearchTooltips) {
           this.createSearchTooltip(anchorNode, this.query);
         }
+        // Tooltips created during the search loop above may have been positioned
+        // against an intermediate layout (e.g. while the no-results message was
+        // still visible). Now that layout has settled, reposition them all.
+        await new Promise(resolve => requestAnimationFrame(resolve));
+        if (query !== this.query) {
+          return;
+        }
+        this._recomputeTooltipPositions();
       }
     } else {
       noResultsEl.hidden = true;
@@ -655,8 +671,12 @@ var gSearchResultsPane = {
       nodeObject.getAttribute("data-hidden-from-search") !== "true"
     ) {
       result = await this.searchWithinNode(child, searchPhrase);
-      // Creating tooltips for menulist element
-      if (result && nodeObject.localName === "menulist") {
+      // Creating tooltips for menulist and moz-select elements
+      if (
+        result &&
+        (nodeObject.localName === "menulist" ||
+          nodeObject.localName === "moz-select")
+      ) {
         this.listSearchTooltips.add(nodeObject);
       }
 
@@ -800,7 +820,14 @@ var gSearchResultsPane = {
     // putting tooltips on, we have to flush layout intentionally. Once
     // menulists don't use XUL layout we can remove this and use plain CSS to
     // position them, see bug 1363730.
-    let anchorRect = anchorNode.getBoundingClientRect();
+    let positioningNode = anchorNode;
+    if (anchorNode.localName == "moz-select") {
+      // Position relative to the visible select control rather than the
+      // full-width moz-select host element so the tooltip is centered on it.
+      positioningNode =
+        anchorNode.shadowRoot?.querySelector(".select-wrapper") ?? anchorNode;
+    }
+    let anchorRect = positioningNode.getBoundingClientRect();
     let tooltipContainerRect =
       this.searchTooltipContainer.getBoundingClientRect();
     let tooltipRect = searchTooltip.getBoundingClientRect();

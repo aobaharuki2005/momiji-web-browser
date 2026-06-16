@@ -127,6 +127,7 @@ toolkit.jar:
    content/global/elements/moz-checkbox.css    (widgets/moz-checkbox/moz-checkbox.css)
    content/global/elements/moz-checkbox.mjs    (widgets/moz-checkbox/moz-checkbox.mjs)
    content/global/elements/moz-checkbox-icon.svg    (widgets/moz-checkbox/moz-checkbox-icon.svg)
+   content/global/elements/moz-input-color.tokens.css       (widgets/moz-input-color/moz-input-color.tokens.css)
    content/global/elements/moz-input-color.css         (widgets/moz-input-color/moz-input-color.css)
    content/global/elements/moz-input-color.mjs         (widgets/moz-input-color/moz-input-color.mjs)
    content/global/elements/moz-fieldset.css    (widgets/moz-fieldset/moz-fieldset.css)

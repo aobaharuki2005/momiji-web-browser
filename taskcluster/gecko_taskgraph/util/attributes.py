@@ -173,14 +173,6 @@ def release_level(params):
     return "staging"
 
 
-def is_try(params):
-    """
-    Determine whether this graph is being built on a try project or for
-    `mach try fuzzy`.
-    """
-    return "try" in params["project"] or params["try_mode"] == "try_select"
-
-
 def task_name(task):
     if task.label.startswith(task.kind + "-"):
         return task.label[len(task.kind) + 1 :]

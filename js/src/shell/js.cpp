@@ -2372,6 +2372,7 @@ static bool CreateMappedArrayBuffer(JSContext* cx, unsigned argc, Value* vp) {
   RootedObject obj(cx,
                    JS::NewMappedArrayBufferWithContents(cx, size, contents));
   if (!obj) {
+    JS::ReleaseMappedArrayBufferContents(contents, size);
     return false;
   }
 
@@ -5231,23 +5232,6 @@ static bool CheckRegExpSyntax(JSContext* cx, unsigned argc, Value* vp) {
   return true;
 }
 
-static bool IsPrefAvailable(const char* pref) {
-  if (!fuzzingSafe) {
-    // All prefs in fuzzing unsafe mode are enabled.
-    return true;
-  }
-#define WASM_FEATURE(NAME, LOWER_NAME, COMPILE_PRED, COMPILER_PRED, FLAG_PRED, \
-                     FLAG_FORCE_ON, FLAG_FUZZ_ON, PREF)                        \
-  if constexpr (!FLAG_FUZZ_ON) {                                               \
-    if (strcmp("wasm_" #PREF, pref) == 0) {                                    \
-      return false;                                                            \
-    }                                                                          \
-  }
-  JS_FOR_WASM_FEATURES(WASM_FEATURE)
-#undef WASM_FEATURE
-  return true;
-}
-
 template <typename T>
 static bool ParsePrefValue(const char* name, const char* val, T* result) {
   if constexpr (std::is_same_v<T, bool>) {
@@ -5277,7 +5261,8 @@ static bool ParsePrefValue(const char* name, const char* val, T* result) {
 static bool SetPrefToTrueForBool(const char* name) {
   // Search for a matching pref and try to set it to a default value for the
   // type.
-#define CHECK_PREF(NAME, CPP_NAME, TYPE, SETTER, IS_STARTUP_PREF)      \
+#define CHECK_PREF(NAME, CPP_NAME, TYPE, SETTER, IS_STARTUP_PREF,      \
+                   FUZZING_SAFE)                                       \
   if (strcmp(name, NAME) == 0) {                                       \
     if constexpr (std::is_same_v<TYPE, bool>) {                        \
       JS::Prefs::SETTER(true);                                         \
@@ -5331,8 +5316,9 @@ static bool SetPrefValue(JSContext* cx, unsigned argc, Value* vp) {
   }
 
   // Search for a matching pref and try to set it to the provided value.
-#define CHECK_PREF(NAME, CPP_NAME, TYPE, SETTER, IS_STARTUP_PREF)             \
-  if (IsPrefAvailable(NAME) && StringEqualsLiteral(name, NAME)) {             \
+#define CHECK_PREF(NAME, CPP_NAME, TYPE, SETTER, IS_STARTUP_PREF,             \
+                   FUZZING_SAFE)                                              \
+  if (StringEqualsLiteral(name, NAME)) {                                      \
     if (IS_STARTUP_PREF) {                                                    \
       JS_ReportErrorASCII(cx, "%s is a startup pref and can't be set", NAME); \
       return false;                                                           \
@@ -5360,7 +5346,8 @@ static bool SetPrefValue(JSContext* cx, unsigned argc, Value* vp) {
 static bool SetPrefToValue(const char* name, size_t nameLen,
                            const char* value) {
   // Search for a matching pref and try to set it to the provided value.
-#define CHECK_PREF(NAME, CPP_NAME, TYPE, SETTER, IS_STARTUP_PREF)         \
+#define CHECK_PREF(NAME, CPP_NAME, TYPE, SETTER, IS_STARTUP_PREF,         \
+                   FUZZING_SAFE)                                          \
   if (nameLen == strlen(NAME) && memcmp(name, NAME, strlen(NAME)) == 0) { \
     TYPE v;                                                               \
     if (!ParsePrefValue<TYPE>(NAME, value, &v)) {                         \
@@ -5386,7 +5373,7 @@ static bool SetPrefToValue(const char* name, size_t nameLen,
 static bool SetPref(const char* pref) {
   const char* assign = strchr(pref, '=');
   if (!assign) {
-    if (IsPrefAvailable(pref) && !SetPrefToTrueForBool(pref)) {
+    if (!SetPrefToTrueForBool(pref)) {
       return false;
     }
     return true;
@@ -5395,30 +5382,29 @@ static bool SetPref(const char* pref) {
   size_t nameLen = assign - pref;
   const char* valStart = assign + 1;  // Skip '='.
 
-  if (IsPrefAvailable(pref) && !SetPrefToValue(pref, nameLen, valStart)) {
+  if (!SetPrefToValue(pref, nameLen, valStart)) {
     return false;
   }
   return true;
 }
 
 static void ListPrefs() {
-  auto printPref = [](const char* name, auto defaultVal) {
-    if (!IsPrefAvailable(name)) {
-      return;
-    }
+  auto printPref = [](const char* name, auto defaultVal, bool fuzzingSafe) {
+    const char* suffix = fuzzingSafe ? "" : "  [not fuzzing-safe]";
     using T = decltype(defaultVal);
     if constexpr (std::is_same_v<T, bool>) {
-      fprintf(stderr, "%s=%s\n", name, defaultVal ? "true" : "false");
+      fprintf(stderr, "%s=%s%s\n", name, defaultVal ? "true" : "false", suffix);
     } else if constexpr (std::is_same_v<T, int32_t>) {
-      fprintf(stderr, "%s=%d\n", name, defaultVal);
+      fprintf(stderr, "%s=%d%s\n", name, defaultVal, suffix);
     } else {
       static_assert(std::is_same_v<T, uint32_t>);
-      fprintf(stderr, "%s=%u\n", name, defaultVal);
+      fprintf(stderr, "%s=%u%s\n", name, defaultVal, suffix);
     }
   };
 
-#define PRINT_PREF(NAME, CPP_NAME, TYPE, SETTER, IS_STARTUP_PREF) \
-  printPref(NAME, JS::Prefs::CPP_NAME());
+#define PRINT_PREF(NAME, CPP_NAME, TYPE, SETTER, IS_STARTUP_PREF, \
+                   FUZZING_SAFE)                                  \
+  printPref(NAME, JS::Prefs::CPP_NAME(), FUZZING_SAFE);
   FOR_EACH_JS_PREF(PRINT_PREF)
 #undef PRINT_PREF
 }
@@ -7659,7 +7645,6 @@ static bool GetMaxArgs(JSContext* cx, unsigned argc, Value* vp) {
   return true;
 }
 
-#ifdef ENABLE_SOURCE_PHASE_IMPORTS
 static bool GetAbstractModuleSource(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
   if (JS::Prefs::experimental_source_phase_imports()) {
@@ -7674,7 +7659,6 @@ static bool GetAbstractModuleSource(JSContext* cx, unsigned argc, Value* vp) {
   }
   return true;
 }
-#endif
 
 static bool IsHTMLDDA_Call(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
@@ -10417,11 +10401,9 @@ JS_FN_HELP("createUserArrayBuffer", CreateUserArrayBuffer, 1, 0,
 "getMaxArgs()",
 "  Return the maximum number of supported args for a call."),
 
-#ifdef ENABLE_SOURCE_PHASE_IMPORTS
     JS_FN_HELP("getAbstractModuleSource", GetAbstractModuleSource, 0, 0,
 "getAbstractModuleSource()",
 "  Return the %AbstractModuleSource% intrinsic constructor."),
-#endif
 
     JS_FN_HELP("createIsHTMLDDA", CreateIsHTMLDDA, 0, 0,
 "createIsHTMLDDA()",
@@ -13240,6 +13222,11 @@ bool InitOptionParser(OptionParser& op) {
 #ifdef JS_CODEGEN_RISCV64
       !op.addBoolOption('\0', "riscv-debug",
                         "Print riscv debugging messages.") ||
+      !op.addStringOption(
+          '\0', "riscv-ext", "[features]",
+          "Specify RISCV code generation features. Starts with ISA (\"rv64g\") "
+          "or profile (\"rva20u64\", \"rva22u64\", \"rva23u64\"), followed by "
+          "extensions separated with '_'.") ||
 #endif
 #ifdef JS_SIMULATOR_RISCV64
       !op.addBoolOption('\0', "riscv-sim-trace",
@@ -13334,11 +13321,6 @@ bool InitOptionParser(OptionParser& op) {
       !op.addBoolOption('\0', "enable-import-text", "Enable import text") ||
       !op.addBoolOption('\0', "enable-promise-allkeyed",
                         "Enable Promise.allKeyed") ||
-      !op.addBoolOption(
-          '\0', "enable-promise-safe-resolve",
-          "Enable thenable-curtailment's safe-resolve second parameter on "
-          "Promise resolve functions") ||
-
       !op.addBoolOption('\0', "enable-arraybuffer-immutable",
                         "Enable immutable ArrayBuffers") ||
       !op.addBoolOption('\0', "enable-iterator-chunking",
@@ -13377,6 +13359,8 @@ bool SetGlobalOptionsPreJSInit(const OptionParser& op) {
     fuzzingSafe =
         (getenv("MOZ_FUZZING_SAFE") && getenv("MOZ_FUZZING_SAFE")[0] != '0');
   }
+  JS::Prefs::setFuzzingSafe(fuzzingSafe);
+  JS::Prefs::setReportIgnoredFuzzingUnsafePrefs(true);
 
   if (op.getBoolOption("strict-benchmark-mode")) {
     sBenchmarkMode = BenchmarkMode::Strict;
@@ -13447,11 +13431,6 @@ bool SetGlobalOptionsPreJSInit(const OptionParser& op) {
   if (op.getBoolOption("enable-promise-allkeyed")) {
     JS::Prefs::setAtStartup_experimental_promise_allkeyed(true);
   }
-#  ifdef NIGHTLY_BUILD
-  if (op.getBoolOption("enable-promise-safe-resolve")) {
-    JS::Prefs::setAtStartup_experimental_promise_safe_resolve(true);
-  }
-#  endif  // NIGHTLY_BUILD
   if (op.getBoolOption("enable-iterator-chunking")) {
     JS::Prefs::setAtStartup_experimental_iterator_chunking(true);
   }
@@ -13468,7 +13447,6 @@ bool SetGlobalOptionsPreJSInit(const OptionParser& op) {
     JS::Prefs::set_experimental_wasm_esm_integration(true);
   }
 #endif
-#ifdef ENABLE_SOURCE_PHASE_IMPORTS
   if (op.getBoolOption("enable-source-phase-imports")) {
     JS::Prefs::set_experimental_source_phase_imports(true);
   }
@@ -13477,7 +13455,6 @@ bool SetGlobalOptionsPreJSInit(const OptionParser& op) {
         setAtStartup_experimental_source_phase_imports_test262_module_source(
             true);
   }
-#endif
 #ifdef ENABLE_EXPLICIT_RESOURCE_MANAGEMENT
   if (op.getBoolOption("enable-explicit-resource-management")) {
     JS::Prefs::set_experimental_explicit_resource_management(true);
@@ -13616,6 +13593,11 @@ bool SetGlobalOptionsPreJSInit(const OptionParser& op) {
   if (op.getBoolOption("no-cssc")) {
     vixl::CPUFeatures cssc(vixl::CPUFeatures::kCSSC);
     jit::ARM64Flags::DisableCPUFeatures(cssc);
+  }
+#endif
+#if defined(JS_CODEGEN_RISCV64)
+  if (const char* str = op.getStringOption("riscv-ext")) {
+    jit::SetRISCV64ExtensionsString(str);
   }
 #endif
 #ifndef __wasi__

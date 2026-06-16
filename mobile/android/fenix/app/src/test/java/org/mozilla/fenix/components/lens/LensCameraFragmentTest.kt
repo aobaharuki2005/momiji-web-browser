@@ -682,7 +682,7 @@ class LensCameraFragmentTest {
         fragment.qrImageAvailableListener.onImageAvailable(mockReader)
 
         verify { mockImage.close() }
-        verify(exactly = 0) { analyzer.analyze(any()) }
+        verify(exactly = 0) { analyzer.analyze(any<Image>()) }
         verify(exactly = 0) { fragment.handleQrResult(any()) }
     }
 
@@ -690,7 +690,7 @@ class LensCameraFragmentTest {
     fun `GIVEN cameraMode is QR AND analyzer returns a string WHEN qrImageAvailableListener fires THEN handleQrResult is posted`() {
         val fragment = LensCameraFragment()
         val analyzer: QrAnalyzer = mockk()
-        every { analyzer.analyze(any()) } returns "https://example.com"
+        every { analyzer.analyze(any<Image>()) } returns "https://example.com"
         fragment.qrAnalyzer = analyzer
         fragment.cameraMode.value = CameraMode.QR
 
@@ -710,7 +710,7 @@ class LensCameraFragmentTest {
     fun `GIVEN cameraMode is QR AND analyzer returns null WHEN qrImageAvailableListener fires THEN handleQrResult is not invoked`() {
         val fragment = LensCameraFragment()
         val analyzer: QrAnalyzer = mockk()
-        every { analyzer.analyze(any()) } returns null
+        every { analyzer.analyze(any<Image>()) } returns null
         fragment.qrAnalyzer = analyzer
         fragment.cameraMode.value = CameraMode.QR
 
@@ -879,5 +879,29 @@ class LensCameraFragmentTest {
         fragment.restoreFromState(savedState)
 
         assertFalse(fragment.qrResultSent)
+    }
+
+    // --- buildGalleryRequestBundle tests ---
+
+    @Test
+    fun `GIVEN cameraMode is LENS WHEN buildGalleryRequestBundle is called THEN it signals the LENS gallery request`() {
+        val fragment = LensCameraFragment()
+        fragment.cameraMode.value = CameraMode.LENS
+
+        val bundle = fragment.buildGalleryRequestBundle()
+
+        assertTrue(bundle.getBoolean(LensCameraFragment.RESULT_GALLERY_REQUEST))
+        assertFalse(bundle.getBoolean(LensCameraFragment.RESULT_QR_GALLERY_REQUEST))
+    }
+
+    @Test
+    fun `GIVEN cameraMode is QR WHEN buildGalleryRequestBundle is called THEN it signals the QR gallery request`() {
+        val fragment = LensCameraFragment()
+        fragment.cameraMode.value = CameraMode.QR
+
+        val bundle = fragment.buildGalleryRequestBundle()
+
+        assertTrue(bundle.getBoolean(LensCameraFragment.RESULT_QR_GALLERY_REQUEST))
+        assertFalse(bundle.getBoolean(LensCameraFragment.RESULT_GALLERY_REQUEST))
     }
 }

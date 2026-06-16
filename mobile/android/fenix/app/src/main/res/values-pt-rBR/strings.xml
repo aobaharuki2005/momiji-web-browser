@@ -332,21 +332,9 @@
   <!--
     Browser Toolbar
 
-    Content description for the Home screen button on the browser toolbar
-  -->
-  <string name="browser_toolbar_home">Tela inicial</string>
-  <!--
-    Browser Toolbar
-
     Content description for the translate page toolbar button that opens the translations dialog when no translation has occurred.
   -->
   <string name="browser_toolbar_translate">Traduzir página</string>
-  <!--
-    Content description (not visible, for screen readers etc.) for the translate page toolbar button that opens the translations dialog when the page is translated successfully.
-    %1$s is the name of the language that is displayed in the original page. (For example: English)
-    %2$s is the name of the language which the page was translated to. (For example: French)
-  -->
-  <string name="browser_toolbar_translated_successfully">Página traduzida de %1$s para %2$s.</string>
   <!-- CFR description for the browser toolbar describing the "Shake to summarize feature" -->
   <string name="browser_toolbar_summarize_cfr_description">Agite seu dispositivo para resumir esta página em segundos. ⚡️</string>
   <!--
@@ -377,8 +365,6 @@
   <string name="ai_controls_banner_headline">Você sempre tem escolha no %s</string>
   <!-- Supporting text for the AI controls banner. %s is a learn more link using ai_controls_learn_more as text. -->
   <string name="ai_controls_banner_supporting_text_2">Isto inclui usar ou não recursos aprimorados com inteligência artificial. %s</string>
-  <!-- Supporting text for the AI controls banner -->
-  <string name="ai_controls_banner_supporting_text">Isto inclui usar ou não recursos aprimorados com inteligência artificial.</string>
   <!-- Link text for learning more about AI controls -->
   <string name="ai_controls_learn_more">Saiba mais</string>
   <!-- Title for the block AI enhancements toggle -->
@@ -423,12 +409,6 @@
   <string name="default_locale_text">Usar idioma do dispositivo</string>
   <!-- Placeholder text shown in the search bar before a user enters text -->
   <string name="locale_search_hint">Pesquisar idioma</string>
-  <!--
-    Search Fragment
-
-    Button in the search view that lets a user search by scanning a QR code
-  -->
-  <string name="search_scan_button_2">Capturar código QR</string>
   <!--
     Search Fragment
 
@@ -1142,7 +1122,7 @@
   <!-- Title for the customize home screen section with sponsored shortcuts. -->
   <string name="customize_toggle_contile">Atalhos patrocinados</string>
   <!-- Title for the customize home screen section that toggles the Homepage sports widget. -->
-  <string name="customize_toggle_world_cup" tools:ignore="UnusedResources">Copa do Mundo</string>
+  <string name="customize_toggle_world_cup">Copa do Mundo</string>
   <!--
     Wallpapers
 
@@ -1482,8 +1462,6 @@
   <string name="library_desktop_bookmarks_unfiled">Outros favoritos</string>
   <!-- Option in Library to open History page -->
   <string name="library_history">Histórico</string>
-  <!-- Option in Library to open a new tab -->
-  <string name="library_new_tab">Nova aba</string>
   <!-- Settings Page Title -->
   <string name="settings_title">Configurações</string>
   <!-- Content description (not visible, for screen readers etc.): "Close button for library settings" -->
@@ -2088,6 +2066,8 @@
   <!-- Placeholder text for the description field to prompt the user on what they should type. -->
   <string name="webcompat_reporter_problem_description_placeholder_text">O que aconteceu? O que deveria ter acontecido?</string>
   <!-- Label of the checkbox on the “Report broken site” screen for sending URLS blocked by Enhanced Tracking Protection. -->
+  <string name="webcompat_reporter_etp_checkbox_text_2">Enviar lista de itens bloqueados pela proteção contra rastreamento</string>
+  <!-- Label of the checkbox on the “Report broken site” screen for sending URLS blocked by Enhanced Tracking Protection. -->
   <string name="webcompat_reporter_etp_checkbox_text">Enviar URLs bloqueadas pela proteção contra rastreamento</string>
   <!-- Description text for the checkbox on the “Report broken site” screen for sending URLS blocked by Enhanced Tracking Protection. It informs the user when checked, the report will include the list of URLs that were blocked by Enhanced Tracking Protection on the current page. -->
   <string name="webcompat_reporter_etp_checkbox_description">A proteção aprimorada contra rastreamento pode bloquear rastreadores e scripts que alguns sites precisam para funcionar corretamente.</string>
@@ -2225,12 +2205,8 @@
   <string name="edit_bookmark_folder_fragment_title">Editar pasta</string>
   <!-- Bookmark URL editing field label -->
   <string name="bookmark_url_label">URL</string>
-  <!-- Bookmark FOLDER editing field label -->
-  <string name="bookmark_folder_label">PASTA</string>
   <!-- Text indicating which folder a bookmark or folder will be saved in -->
   <string name="bookmark_save_in_label">Salvar em</string>
-  <!-- Bookmark NAME editing field label -->
-  <string name="bookmark_name_label">NOME</string>
   <!-- Label for a text input field for a bookmark or folder name -->
   <string name="bookmark_name_label_normal_case">Nome</string>
   <!-- Bookmark select folder screen title -->
@@ -2274,12 +2250,8 @@
   <string name="bookmark_empty_list_root_title">Mantenha todos os seus favoritos juntos</string>
   <!-- Bookmark screen folder description. %s is the count of bookmark folder children -->
   <string name="bookmarks_folder_description">Favoritos da pasta: %s</string>
-  <!-- Description for the bookmark list empty state when you're not signed into sync. -->
-  <string name="bookmark_empty_list_guest_description">Salve sites enquanto navega. Entre na conta para trazer favoritos de outros dispositivos sincronizados.</string>
   <!-- Text for the button to navigate to sync authentication -->
   <string name="bookmark_empty_list_guest_cta">Entrar na conta para sincronizar</string>
-  <!-- Description for the bookmark list empty state when you're signed into sync. -->
-  <string name="bookmark_empty_list_authenticated_description">Salve sites enquanto navega. Também são trazidos favoritos de outros dispositivos sincronizados.</string>
   <!-- Description for the bookmark list empty state when you're in an empty folder. -->
   <string name="bookmark_empty_list_folder_description">Adicione favoritos enquanto navega para poder encontrar seus sites preferidos mais tarde.</string>
   <!-- Description for the add new folder button when selecting a folder. -->
@@ -2394,8 +2366,6 @@
   <string name="collections_header">Coleções</string>
   <!-- Content description (not visible, for screen readers etc.): Opens the collection menu when pressed -->
   <string name="collection_menu_button_content_description">Menu de coleções</string>
-  <!-- Label to describe what collections are to a new user without any collections -->
-  <string name="no_collections_description2">Reúna o que é importante para você.\nAgrupe pesquisas, sites e abas semelhantes para acesso rápido mais tarde.</string>
   <!-- Title for the "select tabs" step of the collection creator -->
   <string name="create_collection_select_tabs">Selecionar abas</string>
   <!-- Title for the "select collection" step of the collection creator -->
@@ -2847,8 +2817,6 @@
   <string name="etp_suspected_fingerprinters_description">Ativa a proteção contra rastreamento de identidade digital para impedir suspeitos.</string>
   <!-- Category of trackers (fingerprinters) that can be blocked by Enhanced Tracking Protection -->
   <string name="etp_known_fingerprinters_title">Rastreadores de identidade digital (fingerprinters) conhecidos</string>
-  <!-- Label for the fingerprinters category shown in the tracking protections dashboard breakdown -->
-  <string name="tracking_dashboard_fingerprinters_category_name">Fingerprinters (rastreadores de identidade digital)</string>
   <!--
     Description of the SmartBlock Enhanced Tracking Protection feature. The * symbol is intentionally hardcoded here,
     as we use it on the UI to indicate which trackers have been partially unblocked.
@@ -3139,8 +3107,6 @@
   <string name="ip_protection_promo_headline">VPN integrada no %s</string>
   <!-- Body text for the browser VPN promo card . %s is a learn more link using ip_protection_learn_more as text. -->
   <string name="ip_protection_promo_body_2">Navegue com proteção extra, ocultando sua localização, mesmo em redes públicas de WiFi. %s</string>
-  <!-- Body text for the browser VPN promo card -->
-  <string name="ip_protection_promo_body">Navegue com proteção extra, ocultando sua localização, mesmo em redes públicas de WiFi.</string>
   <!-- Link text that opens additional information about the browser VPN -->
   <string name="ip_protection_learn_more">Saiba mais</string>
   <!-- Label for the monthly data allowance section on the browser VPN settings screen -->
@@ -3511,6 +3477,10 @@
   <string name="homepage_shortcuts_show_all_content_description">Exibir todos os atalhos</string>
   <!-- Label for the "Add shortcut" button displayed as a tile. -->
   <string name="homepage_shortcuts_add_shortcut">Adicionar atalho</string>
+  <!-- Title for the "Add to homepage" bottom sheet. -->
+  <string name="homepage_shortcuts_add_to_homepage">Adicionar à página inicial</string>
+  <!-- Label for the "Add website" button in the "Add to homepage" bottom sheet. -->
+  <string name="homepage_shortcuts_add_website">Adicionar site</string>
   <!-- Title text for the "Enter a Website URL" dialog for adding a shortcut. -->
   <string name="homepage_shortcuts_add_website_title">Digite a URL de um site</string>
   <!-- Title text displayed in the dialog when shortcuts limit is reached. -->
@@ -3599,8 +3569,6 @@
   <string name="default_browser_experiment_card_title">Mude seu navegador padrão</string>
   <!-- Default browser card text -->
   <string name="default_browser_experiment_card_text" tools:ignore="BrandUsage">Abra links, emails e mensagens automaticamente no Firefox.</string>
-  <!-- Content description for close button in collection placeholder. -->
-  <string name="remove_home_collection_placeholder_content_description">Remover</string>
   <!-- Content description radio buttons with a link to more information -->
   <string name="radio_preference_info_content_description">Clique para ver mais detalhes</string>
   <!-- Content description for the action bar "up" button -->
@@ -3632,20 +3600,10 @@
     Action label for elements that can be collapsed if interacting with them. Talkback will append this to say "Double tap to collapse".
   -->
   <string name="a11y_action_label_collapse">recolher</string>
-  <!-- Current state for elements that can be collapsed if interacting with them. Talkback will dictate this after a state change. -->
-  <string name="a11y_state_label_collapsed">recolhido</string>
   <!-- Action label for elements that can be expanded if interacting with them. Talkback will append this to say "Double tap to expand". -->
   <string name="a11y_action_label_expand">expandir</string>
-  <!-- Current state for elements that can be expanded if interacting with them. Talkback will dictate this after a state change. -->
-  <string name="a11y_state_label_expanded">expandido</string>
   <!-- Action label for links to a website containing documentation about a wallpaper collection. Talkback will append this to say "Double tap to open link to learn more about this collection". -->
   <string name="a11y_action_label_wallpaper_collection_learn_more">abrir link para saber mais sobre esta coleção</string>
-  <!-- Content description for headings announced by accessibility service. %s is the text of the heading. Talkback will announce the text and then speak the word "Heading" indicating to the user that this text is a heading for a section. -->
-  <string name="a11y_heading">%s, título de seção</string>
-  <!-- Title for dialog displayed when trying to access links present in a text. -->
-  <string name="a11y_links_title">Links</string>
-  <!-- Additional content description for text bodies that contain urls. -->
-  <string name="a11y_links_available">Links disponíveis</string>
   <!-- Translations feature -->
 
   <!--
@@ -3912,6 +3870,19 @@
     %s is the name of the app (for example "Firefox").
   -->
   <string name="protection_panel_banner_protected_title">%s está protegendo você</string>
+  <plurals name="protection_panel_banner_protected_blocked_trackers_description">
+    <!--
+      Description text for the protection panel banner when privacy dashboard is enabled.
+      %1$d is the number of trackers blocked.
+    -->
+    <item quantity="one">%1$d rastreador bloqueado neste site.</item>
+    <item quantity="other">%1$d rastreadores bloqueados neste site.</item>
+  </plurals>
+  <!--
+    Description text for the protection panel banner when privacy dashboard is enabled.
+    and there are no trackers blocked.
+  -->
+  <string name="protection_panel_banner_protected_no_blocked_trackers_description">Você está protegido.</string>
   <!-- Description text for the protection panel banner when tracking protection is enabled. -->
   <string name="protection_panel_banner_protected_description">Você está protegido. Se detectarmos algo, avisaremos você.</string>
   <!-- Label text for the Enhanced Tracking Protection toggle. -->
@@ -4558,7 +4529,7 @@
   <!-- Sports widget match status label shown during halftime of a match. -->
   <string name="sports_widget_halftime" tools:ignore="UnusedResources">Intervalo</string>
   <!-- Sports widget match status label shown during extra time of a match. -->
-  <string name="sports_widget_extra_time" tools:ignore="UnusedResources">Prorrogação</string>
+  <string name="sports_widget_extra_time">Prorrogação</string>
   <!-- Sports widget match status label shown during penalties of a match. -->
   <string name="sports_widget_penalties">Pênaltis</string>
   <!--
@@ -4673,14 +4644,23 @@
   <!--
     Firefox Labs
 
-    Banner title text on the Firefox Labs screen.
+    Firefox Labs is the name of a screen in Settings to allow users to learn about
+    experimental and in-development features, and turn those features on and off.
+    The "Labs" portion can be localized, "Firefox" must be treated as a brand and kept
+    in English.
   -->
-  <string name="firefox_labs_banner_title">Teste nossos recursos experimentais!</string>
+  <string name="firefox_labs_title" tools:ignore="BrandUsage">Firefox Labs</string>
+  <!-- Banner title text on the Firefox Labs screen. -->
+  <string name="firefox_labs_banner_title_2">Teste nossos recursos experimentais!</string>
   <!--
     Banner description text on the Firefox Labs screen. Provides information on what Firefox Labs does. %s is the name of the app (for example "Firefox Nightly").
     Text will appear under the Firefox Labs banner title.
   -->
   <string name="firefox_labs_experimental_description">Eles estão em desenvolvimento e evolução, então podem afetar o funcionamento do %s.</string>
+  <!-- The link text shown when a feedback URL for a Firefox Labs feature is available. The feedback URL page will allow users to provide opinions and suggestions. -->
+  <string name="firefox_labs_share_feedback">Compartilhe sua opinião</string>
+  <!-- Content description for the share feedback link on a Firefox Labs feature. This text will be used by screen readers to provide more context on the feedback link. %s is the name of the Firefox Labs feature. -->
+  <string name="firefox_labs_share_feedback_content_description">Compartilhe sua opinião sobre %s.</string>
   <!-- Button text on the Firefox Labs screen for restoring all toggles back to the default settings. The button will turn off any experimental features. -->
   <string name="firefox_labs_restore_default_button_text">Restaurar padrão</string>
   <!-- The title used in a confirmation dialog on the Firefox Labs screen when toggling "on" or "off" an experimental feature that requires a restart. -->
@@ -4693,6 +4673,10 @@
   <string name="firefox_labs_restore_defaults_dialog_title">É necessário reiniciar</string>
   <!-- The description used in a confirmation dialog on the Firefox Labs screen when restoring the application to its defaults by turning "off" any experimental features. %s is the name of the app (for example "Firefox Nightly") -->
   <string name="firefox_labs_restore_defaults_dialog_message">Para restaurar o padrão, reinicie o %s.</string>
+  <!-- The description text that is displayed in the confirmation dialog on the Firefox Labs screen for toggling "on" experimental features. %s is the name of the app (for example "Firefox Nightly") -->
+  <string name="firefox_labs_feature_enable_dialog_message">Para ativar este recurso, reinicie o %s.</string>
+  <!-- The description text that is displayed in the confirmation dialog on the Firefox Labs screen for toggling "off" experimental features. %s is the name of the app (for example "Firefox Nightly") -->
+  <string name="firefox_labs_feature_disable_dialog_message">Para desativar este recurso, reinicie o %s.</string>
   <!-- Text displayed on the Firefox Labs screen when there are no Labs experimental features present. -->
   <string name="firefox_labs_no_labs_available_description">Nenhum recurso experimental para testar agora</string>
 </resources>

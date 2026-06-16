@@ -361,7 +361,8 @@ class SportsWidgetMiddlewareTest {
     fun `GIVEN no team WHEN a live group-stage match exists THEN that round wins over any played R32`() = runTest {
         // Defensive case — the contract says one stage per day, so this shouldn't happen,
         // but if a live game and a past higher-round match coexist, the live game's round
-        // takes priority (rule 1 beats rule 2).
+        // takes priority for the active round (rule 1 beats rule 2): group stage is active.
+        // R32 is then its (decided) next round, so it also surfaces via the next-round reveal.
         val groupLive = match(
             id = 1L,
             day = 28,
@@ -383,16 +384,25 @@ class SportsWidgetMiddlewareTest {
         dispatchAndAwait(store, SportsWidgetAction.FetchMatches)
 
         val matches = store.state.sportsWidgetState.matchCardStates.flatMap { it.matches + it.relatedMatches }
-        assertEquals(listOf(1L), matches.map { it.globalEventId })
+        assertEquals(setOf(1L, 2L), matches.map { it.globalEventId }.toSet())
     }
 
     @Test
     fun `GIVEN no team WHEN R16 has begun THEN R32 and group stage drop away`() = runTest {
-        // QF, SF, FINAL still upcoming; max ordinal among played stages is R16.
+        // QF, SF, FINAL still upcoming; max ordinal among played stages is R16. The QF fixture
+        // is still fully undetermined (its teams depend on R16 results), so the next-round
+        // reveal doesn't surface it yet — only the active R16 shows.
         val groupDone = match(1L, day = 18, stage = TournamentRound.GROUP_STAGE, status = MatchStatus.Final)
         val r32Done = match(2L, day = 28, stage = TournamentRound.ROUND_OF_32, status = MatchStatus.Final)
         val r16Done = match(3L, day = 4, stage = TournamentRound.ROUND_OF_16, status = MatchStatus.Final)
-        val qfNext = match(4L, day = 8, stage = TournamentRound.QUARTER_FINAL, status = MatchStatus.Scheduled)
+        val qfNext = match(
+            id = 4L,
+            day = 8,
+            stage = TournamentRound.QUARTER_FINAL,
+            status = MatchStatus.Scheduled,
+            homeTeam = null,
+            awayTeam = null,
+        )
         val repo = StubRepository(
             Result.success(
                 TeamMatchesResult(
@@ -483,6 +493,279 @@ class SportsWidgetMiddlewareTest {
         assertEquals(setOf(1L, 2L), matches.map { it.globalEventId }.toSet())
     }
 
+    @Test
+    fun `GIVEN no team WHEN a next-round fixture has one side decided THEN it surfaces alongside the active round`() =
+        runTest {
+            // Group stage is active (its game is the most-recently played). The next round (R32)
+            // has started to fill in: one fixture has a single team set (the other still TBD),
+            // and another is fully undetermined. The decided-one-side fixture surfaces; the
+            // fully-TBD one does not.
+            val groupDone = match(1L, day = 18, stage = TournamentRound.GROUP_STAGE, status = MatchStatus.Final)
+            val r32OneSide = match(
+                id = 2L,
+                day = 28,
+                stage = TournamentRound.ROUND_OF_32,
+                status = MatchStatus.Scheduled,
+                awayTeam = null,
+            )
+            val r32FullyTbd = match(
+                id = 3L,
+                day = 29,
+                stage = TournamentRound.ROUND_OF_32,
+                status = MatchStatus.Scheduled,
+                homeTeam = null,
+                awayTeam = null,
+            )
+            val repo = StubRepository(
+                Result.success(
+                    TeamMatchesResult(
+                        previous = listOf(groupDone),
+                        current = emptyList(),
+                        next = listOf(r32OneSide, r32FullyTbd),
+                    ),
+                ),
+            )
+            val store = appStore(repo)
+
+            dispatchAndAwait(store, SportsWidgetAction.FetchMatches)
+
+            val matches = store.state.sportsWidgetState.matchCardStates.flatMap { it.matches + it.relatedMatches }
+            assertEquals(setOf(1L, 2L), matches.map { it.globalEventId }.toSet())
+            // The surfaced next-round fixture renders with its undecided side absent (shown as TBD).
+            val revealed = matches.first { it.globalEventId == 2L }
+            assertEquals("MEX", revealed.home?.key)
+            assertEquals(null, revealed.away)
+        }
+
+    @Test
+    fun `GIVEN no team WHEN every next-round fixture is fully TBD THEN the next round is withheld`() = runTest {
+        // R32 exists in the response but neither fixture has a team yet, so nothing from it
+        // should leak into the pager — only the active group stage shows.
+        val groupDone = match(1L, day = 18, stage = TournamentRound.GROUP_STAGE, status = MatchStatus.Final)
+        val r32TbdA = match(
+            id = 2L,
+            day = 28,
+            stage = TournamentRound.ROUND_OF_32,
+            status = MatchStatus.Scheduled,
+            homeTeam = null,
+            awayTeam = null,
+        )
+        val r32TbdB = match(
+            id = 3L,
+            day = 29,
+            stage = TournamentRound.ROUND_OF_32,
+            status = MatchStatus.Scheduled,
+            homeTeam = null,
+            awayTeam = null,
+        )
+        val repo = StubRepository(
+            Result.success(
+                TeamMatchesResult(
+                    previous = listOf(groupDone),
+                    current = emptyList(),
+                    next = listOf(r32TbdA, r32TbdB),
+                ),
+            ),
+        )
+        val store = appStore(repo)
+
+        dispatchAndAwait(store, SportsWidgetAction.FetchMatches)
+
+        val matches = store.state.sportsWidgetState.matchCardStates.flatMap { it.matches + it.relatedMatches }
+        assertEquals(setOf(1L), matches.map { it.globalEventId }.toSet())
+    }
+
+    @Test
+    fun `GIVEN no team WHEN a decided fixture is two rounds ahead THEN only the immediate next round is revealed`() =
+        runTest {
+            // Only the round immediately after the active one is surfaced. A decided R16 fixture
+            // (two rounds ahead of the active group stage) stays hidden; the R32 one does not.
+            val groupDone = match(1L, day = 18, stage = TournamentRound.GROUP_STAGE, status = MatchStatus.Final)
+            val r32OneSide = match(
+                id = 2L,
+                day = 28,
+                stage = TournamentRound.ROUND_OF_32,
+                status = MatchStatus.Scheduled,
+                awayTeam = null,
+            )
+            val r16OneSide = match(
+                id = 3L,
+                day = 5,
+                month = 7,
+                stage = TournamentRound.ROUND_OF_16,
+                status = MatchStatus.Scheduled,
+                awayTeam = null,
+            )
+            val repo = StubRepository(
+                Result.success(
+                    TeamMatchesResult(
+                        previous = listOf(groupDone),
+                        current = emptyList(),
+                        next = listOf(r32OneSide, r16OneSide),
+                    ),
+                ),
+            )
+            val store = appStore(repo)
+
+            dispatchAndAwait(store, SportsWidgetAction.FetchMatches)
+
+            val matches = store.state.sportsWidgetState.matchCardStates.flatMap { it.matches + it.relatedMatches }
+            assertEquals(setOf(1L, 2L), matches.map { it.globalEventId }.toSet())
+        }
+
+    @Test
+    fun `GIVEN no team WHEN a group-stage and a next-round match fall on the same day THEN each round gets its own card`() =
+        runTest {
+            // Bug 2046721: the last group-stage games and the first revealed Round of 32 fixtures
+            // can fall on the same day. Grouping by day alone merged them into one card labelled
+            // GROUP_STAGE; each round must get its own card so R32 isn't shown under a group heading.
+            val groupDone = match(1L, day = 28, stage = TournamentRound.GROUP_STAGE, status = MatchStatus.Final)
+            val r32SameDay = match(2L, day = 28, stage = TournamentRound.ROUND_OF_32, status = MatchStatus.Scheduled)
+            val repo = StubRepository(
+                Result.success(
+                    TeamMatchesResult(
+                        previous = listOf(groupDone),
+                        current = emptyList(),
+                        next = listOf(r32SameDay),
+                    ),
+                ),
+            )
+            val store = appStore(repo)
+
+            dispatchAndAwait(store, SportsWidgetAction.FetchMatches)
+
+            val cards = store.state.sportsWidgetState.matchCardStates
+            assertEquals(
+                setOf(TournamentRound.GROUP_STAGE, TournamentRound.ROUND_OF_32),
+                cards.map { it.round }.toSet(),
+            )
+            val r32Card = cards.first { it.round == TournamentRound.ROUND_OF_32 }
+            assertEquals(listOf(2L), (r32Card.matches + r32Card.relatedMatches).map { it.globalEventId })
+            val groupCard = cards.first { it.round == TournamentRound.GROUP_STAGE }
+            assertEquals(listOf(1L), (groupCard.matches + groupCard.relatedMatches).map { it.globalEventId })
+        }
+
+    // region fetch throttle / in-flight dedup
+
+    @Test
+    fun `fetch throttle GIVEN two dispatches within the interval THEN repository is called once`() = runTest {
+        val repo = StubRepository(Result.success(resultWithMatches()))
+        var nowMs = 0L
+        val store = appStore(repo, clock = { nowMs })
+
+        dispatchAndAwait(store, SportsWidgetAction.FetchMatches)
+        nowMs = 30_000L
+        dispatchAndAwait(store, SportsWidgetAction.FetchMatches)
+
+        assertEquals(1, repo.fetchCount)
+    }
+
+    @Test
+    fun `fetch throttle GIVEN second dispatch after the interval THEN repository is called again`() = runTest {
+        val repo = StubRepository(Result.success(resultWithMatches()))
+        var nowMs = 0L
+        val store = appStore(repo, clock = { nowMs })
+
+        dispatchAndAwait(store, SportsWidgetAction.FetchMatches)
+        nowMs = 60_000L
+        dispatchAndAwait(store, SportsWidgetAction.FetchMatches)
+
+        assertEquals(2, repo.fetchCount)
+    }
+
+    @Test
+    fun `fetch throttle GIVEN previous fetch failed THEN retry within interval is still throttled`() = runTest {
+        // A failing endpoint must not be hammered by retries; the throttle is stamped on
+        // attempt, not on success.
+        val repo = StubRepository(Result.failure(RuntimeException("boom")))
+        var nowMs = 0L
+        val store = appStore(repo, clock = { nowMs })
+
+        dispatchAndAwait(store, SportsWidgetAction.FetchMatches)
+        nowMs = 10_000L
+        dispatchAndAwait(store, SportsWidgetAction.FetchMatches)
+
+        assertEquals(1, repo.fetchCount)
+    }
+
+    @Test
+    fun `fetch throttle GIVEN a custom Nimbus interval THEN the configured value is honored`() = runTest {
+        // The throttle is wired in from the Nimbus `fetch-throttle-seconds` flag at
+        // construction time; the middleware itself just respects whatever interval it's
+        // handed. Verify that a smaller-than-default value lets a second dispatch
+        // through that the default would have blocked.
+        val repo = StubRepository(Result.success(resultWithMatches()))
+        var nowMs = 0L
+        val store = appStore(repo, clock = { nowMs }, fetchMinIntervalSeconds = 5)
+
+        dispatchAndAwait(store, SportsWidgetAction.FetchMatches)
+        nowMs = 10_000L // would be throttled at the 60s default; allowed at 5s.
+        dispatchAndAwait(store, SportsWidgetAction.FetchMatches)
+
+        assertEquals(2, repo.fetchCount)
+    }
+
+    @Test
+    fun `fetch throttle GIVEN bypassThrottle is true THEN repeat dispatches fetch immediately`() = runTest {
+        // Mock-server / debug-drawer case: QA flips the bypass and expects refresh,
+        // Home onResume, and "Apply session" to fire fetches without waiting on the
+        // 60 s timer.
+        val repo = StubRepository(Result.success(resultWithMatches()))
+        var nowMs = 0L
+        val store = appStore(repo, clock = { nowMs }, bypassThrottle = { true })
+
+        dispatchAndAwait(store, SportsWidgetAction.FetchMatches)
+        nowMs = 1_000L // well inside the default throttle window
+        dispatchAndAwait(store, SportsWidgetAction.FetchMatches)
+        nowMs = 2_000L
+        dispatchAndAwait(store, SportsWidgetAction.FetchMatches)
+
+        assertEquals(3, repo.fetchCount)
+    }
+
+    @Test
+    fun `fetch dedup GIVEN bypassThrottle is true THEN in-flight guard still blocks concurrent dispatch`() = runTest {
+        // The bypass turns off rate-limiting, not the dedup; we never want two
+        // concurrent network calls hitting the same endpoint even in debug mode.
+        val repo = GatedStubRepository(Result.success(resultWithMatches()))
+        val store = appStore(repo, bypassThrottle = { true })
+
+        store.dispatch(SportsWidgetAction.FetchMatches)
+        testScheduler.runCurrent()
+        store.dispatch(SportsWidgetAction.FetchMatches)
+        testScheduler.runCurrent()
+
+        assertEquals(1, repo.fetchCount)
+
+        repo.gate.complete(Unit)
+        testScheduler.advanceUntilIdle()
+        assertEquals(1, repo.fetchCount)
+    }
+
+    @Test
+    fun `fetch dedup GIVEN a fetch is in flight THEN a concurrent dispatch is dropped`() = runTest {
+        val repo = GatedStubRepository(Result.success(resultWithMatches()))
+        // Use distinct clock values so the throttle alone would let the second dispatch
+        // through — leaving the in-flight guard as the only thing that can stop it.
+        var nowMs = 0L
+        val store = appStore(repo, clock = { nowMs })
+
+        store.dispatch(SportsWidgetAction.FetchMatches)
+        testScheduler.runCurrent()
+        assertEquals(1, repo.fetchCount)
+
+        nowMs = 120_000L // well past the throttle window
+        store.dispatch(SportsWidgetAction.FetchMatches)
+        testScheduler.runCurrent()
+        assertEquals(1, repo.fetchCount)
+
+        repo.gate.complete(Unit)
+        testScheduler.advanceUntilIdle()
+        assertEquals(1, repo.fetchCount)
+    }
+
+    // endregion
+
     // region helpers
 
     private val teamA = SportsTeam("MEX", 1L, "Mexico", "MEX", null, null, false)
@@ -494,11 +777,13 @@ class SportsWidgetMiddlewareTest {
         stage: TournamentRound,
         status: MatchStatus,
         month: Int = 6,
+        homeTeam: SportsTeam? = teamA,
+        awayTeam: SportsTeam? = teamB,
     ): SportsMatch = SportsMatch(
         globalEventId = id,
         date = ZonedDateTime.of(2026, month, day, 14, 0, 0, 0, zone),
-        homeTeam = teamA,
-        awayTeam = teamB,
+        homeTeam = homeTeam,
+        awayTeam = awayTeam,
         matchStatus = status,
         homeScore = null,
         awayScore = null,
@@ -538,14 +823,20 @@ class SportsWidgetMiddlewareTest {
     }
 
     private fun TestScope.appStore(
-        repo: StubRepository,
+        repo: SportsRepository,
         sportsWidgetState: SportsWidgetState = SportsWidgetState(),
         connectivityManager: ConnectivityManager = onlineConnectivityManager(),
+        clock: () -> Long = { 0L },
+        fetchMinIntervalSeconds: Int = 60,
+        bypassThrottle: () -> Boolean = { false },
     ): AppStore {
         val middleware = SportsWidgetMiddleware(
             sportsRepository = repo,
             connectivityManager = connectivityManager,
             coroutineScope = CoroutineScope(UnconfinedTestDispatcher(testScheduler)),
+            clock = clock,
+            fetchMinIntervalSeconds = fetchMinIntervalSeconds,
+            bypassThrottle = bypassThrottle,
         )
         return AppStore(
             initialState = AppState(sportsWidgetState = sportsWidgetState),
@@ -580,6 +871,24 @@ class SportsWidgetMiddlewareTest {
 
         override suspend fun fetchMatches(): Result<TeamMatchesResult> {
             fetchCount += 1
+            return response
+        }
+    }
+
+    // Lets the test pause a fetch mid-flight via [gate] so a second dispatch can race
+    // it; required to observe the in-flight dedup guard in [SportsWidgetMiddleware.fetchAndBuild]
+    // (the default test dispatcher otherwise runs each launched coroutine to completion
+    // before control returns to the test).
+    private class GatedStubRepository(
+        private val response: Result<TeamMatchesResult>,
+    ) : SportsRepository {
+        var fetchCount: Int = 0
+            private set
+        val gate: kotlinx.coroutines.CompletableDeferred<Unit> = kotlinx.coroutines.CompletableDeferred()
+
+        override suspend fun fetchMatches(): Result<TeamMatchesResult> {
+            fetchCount += 1
+            gate.await()
             return response
         }
     }

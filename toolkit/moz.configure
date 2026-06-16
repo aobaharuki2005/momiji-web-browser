@@ -1529,6 +1529,7 @@ def x11_libs(webrtc):
         "xcb-shm",
         "x11-xcb",
         "xext",
+        "xfixes",
         "xrandr >= 1.4.0",
     ]
     if webrtc:
@@ -1538,7 +1539,6 @@ def x11_libs(webrtc):
             "xcomposite",
             "xcursor",
             "xdamage",
-            "xfixes",
             "xi",
         ]
     return libs
@@ -3169,12 +3169,6 @@ set_config("MOZ_BACKGROUNDTASKS", True, when="--enable-backgroundtasks")
 set_define("MOZ_BACKGROUNDTASKS", True, when="--enable-backgroundtasks")
 
 
-# Update-related programs: updater, maintenance service, update agent,
-# default browser agent.
-# ==============================================================
-include("../build/moz.configure/update-programs.configure")
-
-
 # Mobile optimizations
 # ==============================================================
 option(
@@ -3956,6 +3950,12 @@ with only_when(target_is_osx):
             )
 
         set_config("MOZ_PKCS11_PROCESS_BUNDLEID", moz_pkcs11_process_bundle_id)
+
+
+# Update-related programs: updater, maintenance service, update agent,
+# default browser agent.
+# ==============================================================
+include("../build/moz.configure/update-programs.configure")
 
 
 # Per-format extra args passed to mozbuild.action.package

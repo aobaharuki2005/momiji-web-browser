@@ -13,9 +13,13 @@ import org.mozilla.fenix.home.HomeFragmentDirections
 
 /**
  * Home content controller for handling interactions with the tracking protections pill.
+ *
+ * @param navController [NavController] used for navigation.
+ * @param currentSessionId Optional id of a session to observe for tracker related updates
  */
 class TrackingProtectionController(
     private val navController: NavController,
+    private val currentSessionId: String?,
 ) {
     /**
      * Handle the tracking protections pill being clicked.
@@ -25,7 +29,7 @@ class TrackingProtectionController(
 
         navController.nav(
             R.id.homeFragment,
-            HomeFragmentDirections.actionHomeFragmentToGlobalProtectionsDashboard(),
+            HomeFragmentDirections.actionHomeFragmentToGlobalProtectionsDashboard(currentSessionId),
         )
     }
 }

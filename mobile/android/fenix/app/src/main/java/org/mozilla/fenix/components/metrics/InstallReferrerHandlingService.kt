@@ -15,7 +15,6 @@ import kotlinx.coroutines.launch
 import mozilla.components.support.base.log.logger.Logger
 import org.mozilla.fenix.distributions.DistributionIdManager
 import org.mozilla.fenix.ext.components
-import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.nimbus.FxNimbus
 import java.net.URLDecoder
 
@@ -70,9 +69,14 @@ class InstallReferrerHandlingService(
 
                             if (!installReferrerResponse.isNullOrBlank()) {
                                 response = installReferrerResponse
-                                context.settings().isUserMetaAttributed = isMetaAttribution(installReferrerResponse)
-                                context.settings().isUserTikTokAttributed = isTikTokAttribution(installReferrerResponse)
-                                context.settings().isUserRedditAttributed = isRedditAttribution(installReferrerResponse)
+                                context.components.settings.isUserMetaAttributed =
+                                    isMetaAttribution(installReferrerResponse)
+                                context.components.settings.isUserTikTokAttributed =
+                                    isTikTokAttribution(installReferrerResponse)
+                                context.components.settings.isUserRedditAttributed =
+                                    isRedditAttribution(installReferrerResponse)
+                                context.components.settings.isUserXTwitterAttributed =
+                                    isXTwitterAttribution(installReferrerResponse)
                                 distributionIdManager.updateDistributionIdFromUtmParams(
                                     UTMParams.parseUTMParameters(installReferrerResponse),
                                 )
@@ -82,7 +86,7 @@ class InstallReferrerHandlingService(
                             }
 
                             scope.launch {
-                                context.settings().shouldShowMarketingOnboarding =
+                                context.components.settings.shouldShowMarketingOnboarding =
                                     shouldShowMarketingOnboarding(
                                         installReferrerResponse,
                                         distributionIdManager,
@@ -99,7 +103,7 @@ class InstallReferrerHandlingService(
                         InstallReferrerClient.InstallReferrerResponse.SERVICE_UNAVAILABLE,
                         InstallReferrerClient.InstallReferrerResponse.SERVICE_DISCONNECTED,
                             -> {
-                            context.settings().shouldShowMarketingOnboarding = false
+                            context.components.settings.shouldShowMarketingOnboarding = false
                             safeEndConnection(client)
                             return
                         }
@@ -107,7 +111,7 @@ class InstallReferrerHandlingService(
                 }
 
                 override fun onInstallReferrerServiceDisconnected() {
-                    context.settings().shouldShowMarketingOnboarding = false
+                    context.components.settings.shouldShowMarketingOnboarding = false
                     safeEndConnection(client)
                 }
             },
@@ -149,18 +153,21 @@ class InstallReferrerHandlingService(
         private const val ADJUST_EXTERNAL_CLICK_ID = "adjust_external_click_id"
         private val TIKTOK_EXTERNAL_CLICK_ID_PREFIXES = listOf("E.C.P.C", "E_C_P_C")
         private const val REDDIT_EXTERNAL_CLICK_ID_PREFIX = "reddit_"
+        private const val X_TWITTER_UTM_SOURCE = "x"
+
+        private fun decodeInstallReferrer(installReferrerResponse: String): String =
+            try {
+                URLDecoder.decode(installReferrerResponse, "UTF-8")
+            } catch (e: IllegalArgumentException) {
+                Logger.error("decodeInstallReferrer() - bad installReferrerResponse", e)
+
+                installReferrerResponse
+            }
 
         @VisibleForTesting
         internal fun isTikTokAttribution(installReferrerResponse: String?): Boolean {
             if (installReferrerResponse.isNullOrBlank()) return false
-
-            val decoded = try {
-                URLDecoder.decode(installReferrerResponse, "UTF-8")
-            } catch (e: IllegalArgumentException) {
-                Logger.error("isTikTokAttribution() - bad installReferrerResponse", e)
-
-                installReferrerResponse
-            }
+            val decoded = decodeInstallReferrer(installReferrerResponse)
 
             val clickId = UTMParams.parseInstallReferrer(decoded)[ADJUST_EXTERNAL_CLICK_ID]
                 ?: return false
@@ -171,19 +178,20 @@ class InstallReferrerHandlingService(
         @VisibleForTesting
         internal fun isRedditAttribution(installReferrerResponse: String?): Boolean {
             if (installReferrerResponse.isNullOrBlank()) return false
-
-            val decoded = try {
-                URLDecoder.decode(installReferrerResponse, "UTF-8")
-            } catch (e: IllegalArgumentException) {
-                Logger.error("isRedditAttribution() - bad installReferrerResponse", e)
-
-                installReferrerResponse
-            }
+            val decoded = decodeInstallReferrer(installReferrerResponse)
 
             val clickId = UTMParams.parseInstallReferrer(decoded)[ADJUST_EXTERNAL_CLICK_ID]
                 ?: return false
 
             return clickId.startsWith(REDDIT_EXTERNAL_CLICK_ID_PREFIX, ignoreCase = true)
+        }
+
+        @VisibleForTesting
+        internal fun isXTwitterAttribution(installReferrerResponse: String?): Boolean {
+            if (installReferrerResponse.isNullOrBlank()) return false
+            val decoded = decodeInstallReferrer(installReferrerResponse)
+
+            return UTMParams.parseUTMParameters(decoded).source.equals(X_TWITTER_UTM_SOURCE, ignoreCase = true)
         }
 
         @Suppress("ReturnCount")
@@ -213,6 +221,10 @@ class InstallReferrerHandlingService(
             }
 
             if (isRedditAttribution(installReferrerResponse)) {
+                return true
+            }
+
+            if (isXTwitterAttribution(installReferrerResponse)) {
                 return true
             }
 

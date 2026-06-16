@@ -4,6 +4,7 @@
 "use strict";
 
 ChromeUtils.defineESModuleGetters(this, {
+  ExtensionDocumentId: "resource://gre/modules/ExtensionDocumentId.sys.mjs",
   PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.sys.mjs",
 });
 
@@ -17,6 +18,12 @@ var { DefaultMap, DefaultWeakMap, ExtensionError, parseMatchPatterns } =
   ExtensionUtils;
 
 var { defineLazyGetter } = ExtensionCommon;
+
+const BLACK_1PX_PNG =
+  "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAANSURBVBhXY2BgYPgPAAEEAQBwIGULAAAAAElFTkSuQmCC";
+
+const GRAY_1PX_JPEG =
+  "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQH/wAALCAABAAEBAREA/8QAHwAAAQUBAQEBAQEAAAAAAAAAAAECAwQFBgcICQoL/8QAtRAAAgEDAwIEAwUFBAQAAAF9AQIDAAQRBRIhMUEGE1FhByJxFDKBkaEII0KxwRVS0fAkM2JyggkKFhcYGRolJicoKSo0NTY3ODk6Q0RFRkdISUpTVFVWV1hZWmNkZWZnaGlqc3R1dnd4eXqDhIWGh4iJipKTlJWWl5iZmqKjpKWmp6ipqrKztLW2t7i5usLDxMXGx8jJytLT1NXW19jZ2uHi4+Tl5ufo6erx8vP09fb3+Pn6/9oACAEBAAA/ACj/2Q==";
 
 /**
  * The platform-specific type of native tab objects, which are wrapped by
@@ -99,8 +106,7 @@ class TabBase {
       resetScrollPosition = !!options?.resetScrollPosition;
     }
 
-    // The purpose of this getBoundingClientRect() call is to force a dimension
-    // update to propagate to the child, so that the drawSnapshot() call below
+    // Propagate a layout flush to the child, so drawSnapshot()
     // does not fail with NS_ERROR_LOSS_OF_SIGNIFICANT_DATA.
     let parentRect = this.browser.getBoundingClientRect();
 
@@ -111,6 +117,16 @@ class TabBase {
     }
 
     let wgp = this.browsingContext.currentWindowGlobal;
+
+    let blur =
+      wgp.documentPrincipal.isSystemPrincipal ||
+      (wgp.documentPrincipal.addonId &&
+        wgp.documentPrincipal.addonId !== this.extension.id);
+
+    if (blur && options?.rect) {
+      return options.format === "jpeg" ? GRAY_1PX_JPEG : BLACK_1PX_PNG;
+    }
+
     let image = await wgp.drawSnapshot(
       rect,
       scale * zoom,
@@ -119,9 +135,29 @@ class TabBase {
     );
 
     let canvas = new OffscreenCanvas(image.width, image.height);
-
     let ctx = canvas.getContext("bitmaprenderer", { alpha: false });
     ctx.transferFromImageBitmap(image);
+
+    if (blur) {
+      // Cap result dimensions at 300px, preserving aspect ratio.
+      let cap = Math.min(300 / canvas.width, 300 / canvas.height);
+      let width = Math.ceil(canvas.width * cap);
+      let height = Math.ceil(canvas.height * cap);
+      let blurred = new win.OffscreenCanvas(width, height);
+
+      ctx = blurred.getContext("2d", { alpha: false });
+      ctx.filter = "blur(5px)";
+      ctx.drawImage(canvas, 0, 0, width, height);
+
+      // Bake in JPEG degradation artifacts.
+      let jpeg = await win.createImageBitmap(
+        await blurred.convertToBlob({ type: "image/jpeg", quality: 0.2 })
+      );
+
+      canvas = new OffscreenCanvas(jpeg.width, jpeg.height);
+      ctx = canvas.getContext("bitmaprenderer", { alpha: false });
+      ctx.transferFromImageBitmap(jpeg);
+    }
 
     let blob = await canvas.convertToBlob({
       type: `image/${options?.format ?? "png"}`,
@@ -731,46 +767,68 @@ class TabBase {
 
   /**
    * Query each content process hosting subframes of the tab, return results.
+   * Targets all frames in a tab by default, unless options.frameIds or
+   * options.documentIds are set. These options are mutually exclusive.
    *
    * @param {string} message
    * @param {object} options
    *        These options are also sent to the message handler in the
    *        `ExtensionContentChild`.
-   * @param {number[]} options.frameIds
-   *        When omitted, all frames will be queried.
+   * @param {number[]} [options.frameIds]
+   *        List of frameId to target instead of all frames.
+   * @param {number[]} [options.documentIds]
+   *        List of documentIds to target instead of all frames.
    * @param {boolean} options.returnResultsWithFrameIds
    * @returns {Promise[]}
    */
-  async queryContent(message, options) {
-    let { frameIds } = options;
+  async queryContent(message, { documentIds, frameIds, ...options }) {
+    if (documentIds && frameIds) {
+      // Verify precondition; if ever triggered this is an internal bug.
+      throw new Error("frameIds and documentIds are mutually exclusive");
+    }
 
     /** @type {Map<nsIDOMProcessParent, innerWindowId[]>} */
     let byProcess = new DefaultMap(() => []);
-    // We use this set to know which frame IDs are potentially invalid (as in
-    // not found when visiting the tab's BC tree below) when frameIds is a
-    // non-empty list of frame IDs.
-    let frameIdsSet = new Set(frameIds);
 
-    // Recursively walk the tab's BC tree, find all frames, group by process.
-    function visit(bc) {
-      let win = bc.currentWindowGlobal;
-      let frameId = bc.parent ? bc.id : 0;
-
-      if (win?.domProcess && (!frameIds || frameIdsSet.has(frameId))) {
+    if (documentIds) {
+      const topBrowsingContext = this.browsingContext;
+      for (const documentId of new Set(documentIds)) {
+        let bc =
+          ExtensionDocumentId.getBrowsingContextForDocumentId(documentId);
+        if (!bc || bc.top !== topBrowsingContext) {
+          throw new ExtensionError(`Invalid documentId: ${documentId}`);
+        }
+        // getBrowsingContextForDocumentId ensures that bc is current global.
+        const win = bc.currentWindowGlobal;
         byProcess.get(win.domProcess).push(win.innerWindowId);
-        frameIdsSet.delete(frameId);
       }
+    } else {
+      // We use this set to know which frame IDs are potentially invalid (as in
+      // not found when visiting the tab's BC tree below) when frameIds is a
+      // non-empty list of frame IDs.
+      let frameIdsSet = new Set(frameIds);
 
-      if (!frameIds || frameIdsSet.size > 0) {
-        bc.children.forEach(visit);
+      // Recursively walk the tab's BC tree, find all frames, group by process.
+      function visit(bc) {
+        let win = bc.currentWindowGlobal;
+        let frameId = bc.parent ? bc.id : 0;
+
+        if (win?.domProcess && (!frameIds || frameIdsSet.has(frameId))) {
+          byProcess.get(win.domProcess).push(win.innerWindowId);
+          frameIdsSet.delete(frameId);
+        }
+
+        if (!frameIds || frameIdsSet.size > 0) {
+          bc.children.forEach(visit);
+        }
       }
-    }
-    visit(this.browsingContext);
+      visit(this.browsingContext);
 
-    if (frameIdsSet.size > 0) {
-      throw new ExtensionError(
-        `Invalid frame IDs: [${Array.from(frameIdsSet).join(", ")}].`
-      );
+      if (frameIdsSet.size > 0) {
+        throw new ExtensionError(
+          `Invalid frame IDs: [${Array.from(frameIdsSet).join(", ")}].`
+        );
+      }
     }
 
     let promises = Array.from(byProcess.entries(), ([proc, windows]) =>
@@ -779,7 +837,8 @@ class TabBase {
 
     let results = await Promise.all(promises).catch(err => {
       if (err.name === "DataCloneError") {
-        let fileName = options.jsPaths.slice(-1)[0] || "<anonymous code>";
+        let fileName =
+          options.jsExecuteScriptSources.at(-1)?.file ?? "<anonymous code>";
         let message = `Script '${fileName}' result is non-structured-clonable data`;
         return Promise.reject({ message, fileName });
       }
@@ -788,6 +847,8 @@ class TabBase {
     results = results.flat();
 
     if (!results.length) {
+      // TODO bug 2047009: This error is misleading when the reason for the
+      // lack of results is navigation/removal of all targets.
       let errorMessage = "Missing host permission for the tab";
       if (!frameIds || frameIds.length > 1 || frameIds[0] !== 0) {
         errorMessage += " or frames";
@@ -824,7 +885,7 @@ class TabBase {
    */
   _execute(context, details, kind, method) {
     let options = {
-      jsPaths: [],
+      jsExecuteScriptSources: [],
       cssPaths: [],
       removeCSS: method == "removeCSS",
       extensionId: context.extension.id,
@@ -849,7 +910,11 @@ class TabBase {
     );
 
     if (details.code !== null) {
-      options[`${kind}Code`] = details.code;
+      if (kind === "js") {
+        options.jsExecuteScriptSources.push({ code: details.code });
+      } else if (kind === "css") {
+        options.cssCode = details.code;
+      }
     }
     if (details.file !== null) {
       let url = context.uri.resolve(details.file);
@@ -858,7 +923,11 @@ class TabBase {
           message: "Files to be injected must be within the extension",
         });
       }
-      options[`${kind}Paths`].push(url);
+      if (kind === "js") {
+        options.jsExecuteScriptSources.push({ file: url });
+      } else if (kind === "css") {
+        options.cssPaths.push(url);
+      }
     }
 
     if (details.allFrames) {

@@ -11,11 +11,11 @@
 #include "MFCDMSession.h"
 #include "MFPMPHostWrapper.h"
 #include "RemoteMediaManagerParent.h"
-#include "mozilla/Assertions.h"
 #include "mozilla/EventTargetAndLockCapability.h"
 #include "mozilla/MozPromise.h"
 #include "mozilla/PMFCDMParent.h"
 #include "mozilla/RefPtr.h"
+#include "mozilla/StaticMutex.h"
 
 namespace mozilla {
 
@@ -48,10 +48,7 @@ class MFCDMParent final : public PMFCDMParent {
       MozPromise<CopyableTArray<MFCDMCapabilitiesIPDL>, nsresult, true>;
   static RefPtr<CapabilitiesPromise> GetAllKeySystemsCapabilities();
 
-  static MFCDMParent* GetCDMById(uint64_t aId) {
-    MOZ_ASSERT(sRegisteredCDMs.Contains(aId));
-    return sRegisteredCDMs.Get(aId);
-  }
+  static already_AddRefed<MFCDMParent> GetCDMById(uint64_t aId);
   uint64_t Id() const { return mId; }
   const nsString& GetKeySystem() const { return mKeySystem; }
 
@@ -155,8 +152,11 @@ class MFCDMParent final : public PMFCDMParent {
 
   Maybe<MFCDMInitParamsIPDL> mInitParams;
 
+  // Guards sRegisteredCDMs and the strong reference handed out by GetCDMById.
+  static inline StaticMutex sRegistryMutex;
+
   constinit static inline nsTHashMap<nsUint64HashKey, MFCDMParent*>
-      sRegisteredCDMs;
+      sRegisteredCDMs MOZ_GUARDED_BY(sRegistryMutex);
 
   static inline uint64_t sNextId = 1;
   const uint64_t mId;

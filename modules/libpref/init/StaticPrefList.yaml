@@ -106,6 +106,11 @@
 #   changed at runtime.
 #   This option is only valid for javascript.options.* prefs.
 #
+# - `fuzzing_safe` indicates whether the SpiderMonkey pref is safe to toggle
+#   while fuzzing. Defaults to `true`. When set to `false`, the JS shell ignores
+#   attempts to change the pref while running with --fuzzing-safe.
+#   This option is only valid for prefs with `set_spidermonkey_pref`.
+#
 # The getter function's base name is the same as the pref's name, but with
 # '.' or '-' chars converted to '_', to make a valid identifier. For example,
 # the getter for `foo.bar_baz` is `foo_bar_baz()`. This is ugly but clear,
@@ -516,7 +521,7 @@
 #     applies to touchpad scrolling)
 - name: apz.axis_lock.mode
   type: RelaxedAtomicInt32
-#if defined(XP_MACOSX)
+#if defined(XP_MACOSX) && !defined(NIGHTLY_BUILD)
   value: 3
 #else
   value: 2
@@ -561,6 +566,13 @@
 - name: apz.enlarge_displayport_when_clipped
   type: RelaxedAtomicBool
   value: @IS_ANDROID@
+  mirror: always
+
+# Fast-path notify APZ on non-passive APZ-aware listener registration,
+# without waiting for the next paint.
+- name: apz.fastpath_apz_aware_listener.enabled
+  type: RelaxedAtomicBool
+  value: true
   mirror: always
 
 # Test only.
@@ -1086,6 +1098,46 @@
 - name: browser.cache.disk.enable
   type: RelaxedAtomicBool
   value: true
+  mirror: always
+
+# Whether to encrypt HTTP disk cache data at rest with an in-memory key. The
+# decrypted cache content only ever lives in memory. Off by default; takes
+# effect on restart. Read via CacheCrypto::IsEnabled(), which caches the value
+# on first use so it is stable for the session.
+- name: browser.cache.disk.encryption.enabled
+  type: RelaxedAtomicBool
+  value: false
+  mirror: always
+
+# Base64 of the 32-byte AES-256 key used for disk cache encryption. Empty means
+# "generate one on first use and store it here". This is a development scaffold;
+# the key will move to the OS keystore later.
+- name: browser.cache.disk.encryption.key
+  type: String
+  value: ""
+  mirror: never
+
+# Minimum number of unwritten changes before the disk cache index is written
+# back to disk. Lowering it (e.g. to 1) forces the index to be persisted
+# eagerly; intended for tests.
+- name: browser.cache.disk.index.min_unwritten_changes
+  type: RelaxedAtomicUint32
+  value: 300
+  mirror: always
+
+# Minimum delay in milliseconds between two disk cache index writes. Lowering it
+# (e.g. to 0) forces the index to be persisted eagerly; intended for tests.
+- name: browser.cache.disk.index.min_dump_interval_ms
+  type: RelaxedAtomicUint32
+  value: 20000
+  mirror: always
+
+# Delay in milliseconds after startup before the disk cache index build/update
+# process is started. Lowering it (e.g. to 0) makes the index reach the ready
+# state sooner; intended for tests.
+- name: browser.cache.disk.index.update_start_delay_ms
+  type: RelaxedAtomicUint32
+  value: 50000
   mirror: always
 
 - name: browser.cache.memory.enable
@@ -3135,6 +3187,18 @@
   value: true
   mirror: always
 
+# Whether to allow the TYPE_INTERNAL_FORCE_ALLOWED_DTD content policy type on
+# fetch requests received from a content process. Only consumers such as
+# Thunderbird that still rely on DTD loads should enable this.
+- name: dom.fetch.allow_force_allowed_dtd
+  type: RelaxedAtomicBool
+#if defined(MOZ_THUNDERBIRD)
+  value: true
+#else
+  value: false
+#endif
+  mirror: always
+
 - name: dom.fetchObserver.enabled
   type: RelaxedAtomicBool
   value: false
@@ -3991,7 +4055,13 @@
 # Enable the Picture-in-Picture API
 - name: dom.media-pip.enabled
   type: RelaxedAtomicBool
+#ifdef ANDROID
+# Not yet supported on Android (Fenix), so keep it disabled to avoid
+# webpages successfully feature-detecting an API that fails on use.
+  value: false
+#else
   value: true
+#endif
   mirror: always
   rust: true
 
@@ -4079,7 +4149,7 @@
   value: true
   mirror: always
 
-#if defined(MOZ_WIDGET_COCOA)
+#if defined(MOZ_WIDGET_COCOA) || defined(MOZ_WIDGET_GTK)
 # Whether to use the platform API to "lock" the native pointer for pointer lock.
 - name: dom.pointer-lock.native-lock.enabled
   type: bool
@@ -4704,7 +4774,7 @@
 # For testing purposes only: Cache stencil across navigation
 - name: dom.script_loader.experimental.navigation_cache
   type: bool
-  value: @IS_NIGHTLY_BUILD@
+  value: false
   mirror: always
 
 # The delay until saving the script disk cache in microseconds.
@@ -4923,6 +4993,12 @@
 - name: dom.security.sanitizer.enabled
   type: bool
   value: true
+  mirror: always
+
+# Disabled until the HTML parser produces PI nodes (bug 2044714)
+- name: dom.security.sanitizer.processing-instructions
+  type: bool
+  value: false
   mirror: always
 
 # pref controls credential chooser UI for testing. When true, UI is not shown and
@@ -7022,17 +7098,6 @@
   type: bool
   value: true
   mirror: always
-
-#if defined(XP_MACOSX)
-# Whether or not to interpret the MacOS geolocation permission value
-# NotDetermined as a reason to show a different permission request prompt.
-# This is currently disabled because the OS returns NotDetermined more
-# frequently than we expect.
--   name: geo.prompt.macos_use_not_determined
-    type: bool
-    value: false
-    mirror: always
-#endif
 
 #---------------------------------------------------------------------------
 # Prefs starting with "gfx."
@@ -9328,6 +9393,14 @@
   mirror: always
   set_spidermonkey_pref: always
 
+# No-op pref for testing fuzzing-safe handling of the SpiderMonkey pref system.
+- name: javascript.options.tests.fuzzing-unsafe-pref
+  type: bool
+  value: false
+  mirror: always
+  set_spidermonkey_pref: always
+  fuzzing_safe: false
+
 # The default amount of time to wait from the user being idle to starting a
 # shrinking GC. Measured in milliseconds.
 - name: javascript.options.compact_on_user_inactive_delay
@@ -9459,19 +9532,6 @@
   mirror: always
   set_spidermonkey_pref: startup
 
-  # Experimental support for the second parameter to Promise resolve functions
-  # from https://tc39.es/proposal-thenable-curtailment/
-  #
-  # When true, a resolve function created by `new Promise((resolve, _) => ...)`
-  # accepts an optional second boolean argument `doSafeResolve`; passing `true`
-  # causes the resolution steps that would run user code to be deferred
-  # to a microtask while the resolving functions are latched synchronously.
-- name: javascript.options.experimental.promise_safe_resolve
-  type: bool
-  value: false
-  mirror: always
-  set_spidermonkey_pref: startup
-
   # Experimental support for Iterator Chunking in JavaScript.
 - name: javascript.options.experimental.iterator_chunking
   type: bool
@@ -9532,20 +9592,19 @@
     set_spidermonkey_pref: always
 #endif  // ENABLE_EXPLICIT_RESOURCE_MANAGEMENT
 
-#ifdef ENABLE_SOURCE_PHASE_IMPORTS
   # Experimental support for source phase imports in JavaScript.
 - name: javascript.options.experimental.source_phase_imports
   type: RelaxedAtomicBool
-  value: false
+  value: true
   mirror: always
   set_spidermonkey_pref: always
+
   # Enable support for <module source> module used in test262
 - name: javascript.options.experimental.source_phase_imports.test262_module_source
   type: bool
   value: false
   mirror: always
   set_spidermonkey_pref: startup
-#endif
 
 - name: javascript.options.experimental.error_capture_stack_trace
   type: bool
@@ -9556,14 +9615,6 @@
 - name: javascript.options.experimental.error_stack_trace_limit
   type: bool
   value: true
-  mirror: always
-  set_spidermonkey_pref: startup
-
-# Whether the non-standard object.toSource() path is enabled in ValueToSource
-# for realms without the toSource/uneval builtins.
-- name: javascript.options.legacy_tosource_lookup
-  type: bool
-  value: false
   mirror: always
   set_spidermonkey_pref: startup
 
@@ -9705,6 +9756,7 @@
     value: false
     mirror: always
     set_spidermonkey_pref: always
+    fuzzing_safe: false
 
 -   name: javascript.options.wasm_branch_hinting
     type: bool
@@ -9721,6 +9773,7 @@
     value: false
     mirror: always
     set_spidermonkey_pref: startup
+    fuzzing_safe: false
 
 -   name: javascript.options.wasm_compact_imports
     type: bool
@@ -9733,6 +9786,7 @@
   value: false
   mirror: always
   set_spidermonkey_pref: always
+  fuzzing_safe: false
 
 #if defined(ENABLE_WASM_SIMD)
 #if defined(JS_CODEGEN_X64) || defined(JS_CODEGEN_X86)
@@ -9774,7 +9828,7 @@
 
 -   name: javascript.options.wasm_js_promise_integration
     type: bool
-    value: @IS_NIGHTLY_BUILD@
+    value: true
     mirror: always
     set_spidermonkey_pref: always
 
@@ -9783,6 +9837,7 @@
     value: false
     mirror: always
     set_spidermonkey_pref: always
+    fuzzing_safe: false
 
 # Enables lazy tiering for all modules. Use wasm_lazy_tiering_for_gc to only
 # enable this for GC modules.
@@ -10400,6 +10455,14 @@
   value: false
   mirror: always
 
+# Whether to enable CSS tree-counting functions (sibling-index(), sibling-count()).
+# https://drafts.csswg.org/css-values-5/#tree-counting
+- name: layout.css.tree-counting-functions.enabled
+  type: RelaxedAtomicBool
+  value: @IS_NIGHTLY_BUILD@
+  mirror: always
+  rust: true
+
 # Whether to enable CSS Anchor Positioning support.
 # https://drafts.csswg.org/css-anchor-position-1/
 - name: layout.css.anchor-positioning.enabled
@@ -10592,6 +10655,16 @@
   type: AtomicFloat
   value: -1.0f
   mirror: always
+
+# Is support for CSS background-clip: border-area enabled?
+#
+# NOTE(emilio): Before enabling on content, we need to add support for dotted /
+# dashed / double borders to the codepath, see bug 2046372.
+- name: layout.css.background-clip.border-area.enabled
+  type: RelaxedAtomicBool
+  value: false
+  mirror: always
+  rust: true
 
 # Is support for CSS backdrop-filter enabled?
 - name: layout.css.backdrop-filter.enabled
@@ -10961,13 +11034,6 @@
   mirror: always
   rust: true
 
-# Whether the ViewTimeline WebIDL interface is enabled.
-- name: layout.css.scroll-driven-animations.viewtimeline.enabled
-  type: bool
-  value: false
-  mirror: always
-  rust: true
-
 # When selecting the snap point for CSS scroll snapping, the velocity of the
 # scroll frame is clamped to this speed, in CSS pixels / s.
 - name: layout.css.scroll-snap.prediction-max-velocity
@@ -11064,7 +11130,7 @@
 
 # Whether the "modern" uppercase mapping of ß to ẞ (rather than SS) is used.
 - name: layout.css.text-transform.uppercase-eszett.enabled
-  type: bool
+  type: RelaxedAtomicBool
   value: false
   mirror: always
 
@@ -11106,7 +11172,7 @@
 
 - name: layout.css.link-parameters.enabled
   type: bool
-  value: false
+  value: @IS_NIGHTLY_BUILD@
   mirror: always
   rust: true
 
@@ -12751,6 +12817,12 @@
   mirror: once
 
 - name: media.hardware-video-decoding-vulkan.enabled
+  type: bool
+  value: false
+  mirror: once
+
+# Whether to map Vulkan decoder output directly to DRM PRIME (zero-copy).
+- name: media.hardware-video-decoding-vulkan.direct-export.enabled
   type: bool
   value: false
   mirror: once
@@ -15501,7 +15573,7 @@
 # Enable persistence of the SSL tokens cache to disk
 - name: network.ssl_tokens_cache_persistence
   type: RelaxedAtomicBool
-  value: @IS_EARLY_BETA_OR_EARLIER@
+  value: false
   mirror: always
 
 # The maximum allowed length for a URL - 1MB default.
@@ -15629,6 +15701,24 @@
   type: RelaxedAtomicBool
   value: false
   mirror: always
+
+# When true, the confirmation context starts in the CONFIRM_FAILED state
+# instead of optimistically assuming TRR is usable. Lookups then fall back to
+# native DNS until the first confirmation succeeds, rather than blocking on the
+# TRR connection being established. Used on Android to avoid cold-startup delays
+# when DoH is enabled via autoselect.
+- name: network.trr.start-confirmation-in-failed-state
+  type: RelaxedAtomicBool
+  value: false
+  mirror: always
+
+# Controls whether the DoH rollout on Android sets
+# network.trr.start-confirmation-in-failed-state when it enables DoH. Provides a
+# kill switch for the behavior without changing the underlying TRR pref.
+- name: network.android_doh.start_in_confirmation_failed_state
+  type: bool
+  value: true
+  mirror: never
 
 # Use GET (rather than POST)
 - name: network.trr.useGET
@@ -16126,6 +16216,13 @@
 - name: network.http.http3.enable_0rtt
   type: RelaxedAtomicBool
   value: true
+  mirror: always
+
+# When true, ZeroRttHandle::Finish0RTT treats the real transaction as gone to
+# simulate a transaction is cancelled during 0RTT handshake.
+- name: network.http.0rtt_force_txn_gone_for_testing
+  type: RelaxedAtomicBool
+  value: false
   mirror: always
 
 # Maximum time (ms) a session can remain in ZERORTT state before being
@@ -19538,15 +19635,6 @@
 # Prefs starting with "webgl." (for pref access from Worker threads)
 #---------------------------------------------------------------------------
 
-- name: webgl.1.allow-core-profiles
-  type: RelaxedAtomicBool
-#ifdef XP_MACOSX
-  value: true
-#else
-  value: false
-#endif
-  mirror: always
-
 - name: webgl.1.request_es2
   type: RelaxedAtomicBool
 #ifdef XP_WIN
@@ -20159,7 +20247,7 @@
 # pref for emergency purposes.
 - name: widget.gtk.rounded-bottom-corners.enabled
   type: bool
-  value: false
+  value: true
   mirror: always
   rust: true
 

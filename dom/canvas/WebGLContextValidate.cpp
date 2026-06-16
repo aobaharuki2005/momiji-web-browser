@@ -239,6 +239,12 @@ static webgl::Limits MakeLimits(const WebGLContext& webgl) {
   if (webgl.IsWebGL2() ||
       limits.supportedExtensions[WebGLExtensionID::WEBGL_draw_buffers]) {
     gl.GetUIntegerv(LOCAL_GL_MAX_DRAW_BUFFERS, &limits.maxColorDrawBuffers);
+    // The driver may report `MAX_DRAW_BUFFERS` larger than the compile-time
+    // `webgl::kMaxDrawBuffers` that sizes all per-color-buffer host state (e.g.
+    // `WebGLFramebuffer::mColorAttachments`). Clamp so attachment indices
+    // derived from this limit can never exceed those fixed-size arrays.
+    limits.maxColorDrawBuffers =
+        std::min(limits.maxColorDrawBuffers, uint32_t{webgl::kMaxDrawBuffers});
   }
 
   if (limits.supportedExtensions[WebGLExtensionID::EXT_disjoint_timer_query]) {
@@ -485,6 +491,13 @@ bool WebGLContext::InitAndValidateGL(FailureReason* const out_failReason) {
 
   if (gl->IsSupported(gl::GLFeature::seamless_cube_map_opt_in)) {
     gl->fEnable(LOCAL_GL_TEXTURE_CUBE_MAP_SEAMLESS);
+  }
+
+  if (!gl->IsGLES() && gl->ShadingLanguageVersion() < 150) {
+    const nsPrintfCString reason("GL_SHADING_LANGUAGE_VERSION: %u < 150!",
+                                 gl->ShadingLanguageVersion());
+    *out_failReason = {"FEATURE_FAILURE_WEBGL_GLSL_VERSION", reason};
+    return false;
   }
 
   // initialize shader translator

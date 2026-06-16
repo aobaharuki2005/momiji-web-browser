@@ -123,6 +123,15 @@ class IPProtectionReducerTest {
     }
 
     @Test
+    fun `WHEN ActivationFailed is dispatched THEN activate is cleared`() {
+        val state = defaultState.copy(activate = true)
+        assertEquals(
+            state.copy(activate = null),
+            iPProtectionReducer(state, IPProtectionAction.ToggleFailed),
+        )
+    }
+
+    @Test
     fun `WHEN ProxyActiveShown is dispatched THEN proxyActiveShown is true`() {
         assertEquals(
             defaultState.copy(proxyActiveShown = true),
@@ -245,6 +254,38 @@ class IPProtectionReducerTest {
         val resultState = iPProtectionReducer(initialState, InternalAction.FinishingEnrollment(false))
 
         assertEquals(AccountStatus.NeedsAuthorization, resultState.accountState.status)
+    }
+
+    @Test
+    fun `WHEN AccountManagerStateChanged to Uninitialized is dispatched THEN data and proxy flags are reset to defaults`() {
+        val dirtyState = defaultState.copy(
+            eligibilityStatus = EligibilityStatus.Eligible,
+            proxyStatus = Authorized.Active,
+            serviceStatus = ServiceState.Ready,
+            remainingDataBytes = 1000L,
+            maxDataBytes = 5000L,
+            resetDate = "2026-06-01T00:00:00Z",
+            accountState = AccountState(AccountStatus.EnrolledAndEntitled),
+            proxyActiveShown = true,
+            activate = true,
+        )
+
+        val resultState = iPProtectionReducer(
+            dirtyState,
+            InternalAction.AccountManagerStateChanged(AccountStatus.Uninitialized),
+        )
+
+        assertEquals(
+            dirtyState.copy(
+                remainingDataBytes = -1L,
+                maxDataBytes = -1L,
+                resetDate = null,
+                proxyActiveShown = false,
+                activate = false,
+                accountState = AccountState(AccountStatus.Uninitialized),
+            ),
+            resultState,
+        )
     }
 
     private fun buildIPProtectionState(

@@ -134,7 +134,7 @@ class nsFrameLoader final : public nsStubMutationObserver,
 
   NS_INLINE_DECL_STATIC_IID(NS_FRAMELOADER_IID)
 
-  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
+  NS_DECL_CYCLE_COLLECTING_ISUPPORTS_FINAL
   NS_DECL_CYCLE_COLLECTION_WRAPPERCACHE_CLASS(nsFrameLoader)
 
   NS_DECL_NSIMUTATIONOBSERVER_ATTRIBUTECHANGED
@@ -441,7 +441,7 @@ class nsFrameLoader final : public nsStubMutationObserver,
    * If we are an IPC frame, set mRemoteFrame. Otherwise, create and
    * initialize mDocShell.
    */
-  nsresult MaybeCreateDocShell();
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY nsresult MaybeCreateDocShell();
   nsresult EnsureMessageManager();
   nsresult ReallyLoadFrameScripts();
   nsDocShell* GetDocShell() const { return mDocShell; }

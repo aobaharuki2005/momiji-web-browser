@@ -232,6 +232,21 @@ void js::gc::GetTraceThingInfo(char* buf, size_t bufsize, void* thing,
             bufsize--;
             PutEscapedString(buf, bufsize, fun->maybePartialDisplayAtom(), 0);
           }
+        } else if (obj->is<NativeObject>()) {
+          uint32_t nslots = JSCLASS_RESERVED_SLOTS(obj->getClass());
+          if (nslots > 0) {
+            for (uint32_t ix = 0; ix < nslots; ix++) {
+              JS::Value slot = obj->as<NativeObject>().getReservedSlot(0);
+              // PrivateValues are aliased with doubles
+              if (!slot.isDouble()) continue;
+              int written = snprintf(buf, bufsize, " %u:Private(%p)", ix,
+                                     slot.toPrivateUnchecked());
+              buf += written;
+              bufsize -= written;
+            }
+          } else {
+            snprintf(buf, bufsize, " <unknown object>");
+          }
         } else {
           snprintf(buf, bufsize, " <unknown object>");
         }

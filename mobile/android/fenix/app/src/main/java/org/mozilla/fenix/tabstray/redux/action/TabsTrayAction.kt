@@ -190,4 +190,9 @@ sealed interface TabsTrayAction : Action {
      * [TabsTrayAction] fired when a tab drag is cancelled from the tabs tray.
      */
     object TabDragCancel : TabsTrayAction
+
+    /**
+     * Long pressed a [TabsTrayItem] in the TabsTray.
+     */
+    data class TabItemLongClicked(val item: TabsTrayItem) : TabsTrayAction
 }

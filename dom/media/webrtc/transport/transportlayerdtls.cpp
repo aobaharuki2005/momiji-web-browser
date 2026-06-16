@@ -840,6 +840,25 @@ nsresult TransportLayerDtls::GetChannelInfo(SSLChannelInfo* info) const {
   return NS_OK;
 }
 
+nsTArray<nsTArray<uint8_t>> TransportLayerDtls::GetPeerCertChainDer() const {
+  CheckThread();
+  nsTArray<nsTArray<uint8_t>> result;
+  UniqueCERTCertList chain(SSL_PeerCertificateChain(ssl_fd_.get()));
+  if (!chain) {
+    MOZ_MTLOG(ML_NOTICE,
+              LAYER_INFO << "SSL_PeerCertificateChain returned no certs");
+    return result;
+  }
+  for (CERTCertListNode* node = CERT_LIST_HEAD(chain);
+       !CERT_LIST_END(node, chain); node = CERT_LIST_NEXT(node)) {
+    const SECItem& der = node->cert->derCert;
+    nsTArray<uint8_t> bytes;
+    bytes.AppendElements(der.data, der.len);
+    result.AppendElement(std::move(bytes));
+  }
+  return result;
+}
+
 nsresult TransportLayerDtls::GetCipherSuite(uint16_t* cipherSuite) const {
   if (!cipherSuite) {
     MOZ_MTLOG(ML_ERROR, LAYER_INFO << "GetCipherSuite passed a nullptr");

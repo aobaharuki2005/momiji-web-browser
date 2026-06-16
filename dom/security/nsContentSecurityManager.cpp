@@ -281,7 +281,8 @@ static nsresult DoCheckLoadURIChecks(nsIURI* aURI, nsILoadInfo* aLoadInfo) {
   // In practice, these DTDs are just used for localization, so applying the
   // same principal check as Fluent.
   if (aLoadInfo->InternalContentPolicyType() ==
-      nsIContentPolicy::TYPE_INTERNAL_DTD) {
+          nsIContentPolicy::TYPE_INTERNAL_DTD &&
+      mozilla::StaticPrefs::dom_fetch_allow_force_allowed_dtd()) {
     RefPtr<Document> doc;
     aLoadInfo->GetLoadingDocument(getter_AddRefs(doc));
     bool allowed = false;
@@ -295,7 +296,8 @@ static nsresult DoCheckLoadURIChecks(nsIURI* aURI, nsILoadInfo* aLoadInfo) {
   // that need to access localization DTDs. We just allow through
   // TYPE_INTERNAL_FORCE_ALLOWED_DTD no matter what the triggering principal is.
   if (aLoadInfo->InternalContentPolicyType() ==
-      nsIContentPolicy::TYPE_INTERNAL_FORCE_ALLOWED_DTD) {
+          nsIContentPolicy::TYPE_INTERNAL_FORCE_ALLOWED_DTD &&
+      mozilla::StaticPrefs::dom_fetch_allow_force_allowed_dtd()) {
     return NS_OK;
   }
 
@@ -1450,25 +1452,19 @@ nsresult nsContentSecurityManager::doContentSecurityCheck(
     DebugDoContentSecurityCheck(aChannel, loadInfo);
   }
 
-  nsresult rv = CheckAllowLoadInSystemPrivilegedContext(aChannel);
-  NS_ENSURE_SUCCESS(rv, rv);
+  MOZ_TRY(CheckAllowLoadInSystemPrivilegedContext(aChannel));
 
-  rv = CheckAllowLoadInPrivilegedAboutContext(aChannel);
-  NS_ENSURE_SUCCESS(rv, rv);
+  MOZ_TRY(CheckAllowLoadInPrivilegedAboutContext(aChannel));
 
   // We want to also check redirected requests to ensure
   // the target maintains the proper javascript file extensions.
-  rv = CheckAllowExtensionProtocolScriptLoad(aChannel);
-  NS_ENSURE_SUCCESS(rv, rv);
+  MOZ_TRY(CheckAllowExtensionProtocolScriptLoad(aChannel));
 
-  rv = CheckChannelHasProtocolSecurityFlag(aChannel);
-  NS_ENSURE_SUCCESS(rv, rv);
+  MOZ_TRY(CheckChannelHasProtocolSecurityFlag(aChannel));
 
-  rv = CheckAllowLoadByTriggeringRemoteType(aChannel);
-  NS_ENSURE_SUCCESS(rv, rv);
+  MOZ_TRY(CheckAllowLoadByTriggeringRemoteType(aChannel));
 
-  rv = CheckForIncoherentResultPrincipal(aChannel);
-  NS_ENSURE_SUCCESS(rv, rv);
+  MOZ_TRY(CheckForIncoherentResultPrincipal(aChannel));
 
   // if dealing with a redirected channel then we have already installed
   // streamlistener and redirect proxies and so we are done.
@@ -1478,24 +1474,19 @@ nsresult nsContentSecurityManager::doContentSecurityCheck(
 
   // make sure that only one of the five security flags is set in the loadinfo
   // e.g. do not require same origin and allow cross origin at the same time
-  rv = ValidateSecurityFlags(loadInfo);
-  NS_ENSURE_SUCCESS(rv, rv);
+  MOZ_TRY(ValidateSecurityFlags(loadInfo));
 
   if (loadInfo->GetSecurityMode() ==
       nsILoadInfo::SEC_REQUIRE_CORS_INHERITS_SEC_CONTEXT) {
-    rv = DoCORSChecks(aChannel, loadInfo, aInAndOutListener);
-    NS_ENSURE_SUCCESS(rv, rv);
+    MOZ_TRY(DoCORSChecks(aChannel, loadInfo, aInAndOutListener));
   }
 
-  rv = CheckChannel(aChannel);
-  NS_ENSURE_SUCCESS(rv, rv);
+  MOZ_TRY(CheckChannel(aChannel));
 
   // Perform all ContentPolicy checks (MixedContent, CSP, ...)
-  rv = DoContentSecurityChecks(aChannel, loadInfo);
-  NS_ENSURE_SUCCESS(rv, rv);
+  MOZ_TRY(DoContentSecurityChecks(aChannel, loadInfo));
 
-  rv = CheckAllowFileProtocolScriptLoad(aChannel);
-  NS_ENSURE_SUCCESS(rv, rv);
+  MOZ_TRY(CheckAllowFileProtocolScriptLoad(aChannel));
 
   // now lets set the initialSecurityFlag for subsequent calls
   loadInfo->SetInitialSecurityCheckDone(true);

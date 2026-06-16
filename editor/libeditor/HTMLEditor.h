@@ -170,6 +170,8 @@ class HTMLEditor final : public EditorBase,
 
   bool IsEmpty() const final;
 
+  dom::EditContext* GetEditContext() const final;
+
   bool CanPaste(nsIClipboard::ClipboardType aClipboardType) const final;
   using EditorBase::CanPaste;
 
@@ -747,8 +749,6 @@ class HTMLEditor final : public EditorBase,
    */
   bool IsTabbable() const { return IsInteractionAllowed(); }
 
-  dom::EditContext* GetEditContext() const override final;
-
   /**
    * NotifyEditingHostMaybeChanged() is called when new element becomes
    * contenteditable when the document already had contenteditable elements.
@@ -763,8 +763,8 @@ class HTMLEditor final : public EditorBase,
    * @parem aNodeInserted  Return the node which was inserted.
    */
   MOZ_CAN_RUN_SCRIPT  // USED_BY_COMM_CENTRAL
-      nsresult
-      InsertAsQuotation(const nsAString& aQuotedText, nsINode** aNodeInserted);
+      nsresult InsertAsQuotation(const nsAString& aQuotedText,
+                                 nsINode** aNodeInserted);
 
   MOZ_CAN_RUN_SCRIPT nsresult InsertHTMLAsAction(
       const nsAString& aInString, nsIPrincipal* aPrincipal = nullptr);

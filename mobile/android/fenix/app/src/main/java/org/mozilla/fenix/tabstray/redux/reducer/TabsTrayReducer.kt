@@ -31,6 +31,7 @@ internal object TabsTrayReducer {
             is TabsTrayAction.SelectAllNormalTabs,
             is TabsTrayAction.ExitSelectMode,
             is TabsTrayAction.AddSelectTab,
+            is TabsTrayAction.TabItemLongClicked,
             is TabsTrayAction.RemoveSelectTab,
                 -> handleSelectionModeActions(state, action)
 
@@ -150,12 +151,17 @@ internal object TabsTrayReducer {
             is TabsTrayAction.ExitSelectMode ->
                 state.copy(mode = TabsTrayState.Mode.Normal)
 
-            is TabsTrayAction.AddSelectTab -> state.copy(
-                mode = TabsTrayState.Mode.Select(
-                    selectedTabs = state.mode.selectedTabs + action.tab,
-                    selectedTabGroups = state.mode.selectedTabGroups,
-                ),
+            is TabsTrayAction.AddSelectTab -> addTabSelection(
+                state = state,
+                tab = action.tab,
             )
+
+            is TabsTrayAction.TabItemLongClicked -> {
+                handleTabItemLongClicked(
+                    state = state,
+                    action = action,
+                )
+            }
 
             is TabsTrayAction.RemoveSelectTab -> {
                 val selectedTabs = state.mode.selectedTabs - action.tab
@@ -173,6 +179,56 @@ internal object TabsTrayReducer {
 
             else -> state
         }
+    }
+
+    private fun handleTabItemLongClicked(
+        state: TabsTrayState,
+        action: TabsTrayAction.TabItemLongClicked,
+    ): TabsTrayState {
+        // Note that the selected tab check is also executed in TabsTrayTelemetryMiddleware
+        // and should be updated if this business logic ever changes.
+        if (state.mode.selectedTabs.isNotEmpty()) {
+            return state
+        }
+        return when (action.item) {
+            is TabsTrayItem.TabGroup -> {
+                addTabGroupSelection(
+                    state = state,
+                    group = action.item,
+                )
+            }
+
+            is TabsTrayItem.Tab -> {
+                val tabItem = action.item
+                // Private tabs cannot be multi-selected
+                if (!tabItem.private) {
+                    addTabSelection(
+                        state = state,
+                        tab = action.item,
+                    )
+                } else {
+                    state
+                }
+            }
+        }
+    }
+
+    private fun addTabSelection(state: TabsTrayState, tab: TabsTrayItem.Tab): TabsTrayState {
+        return state.copy(
+            mode = TabsTrayState.Mode.Select(
+                selectedTabs = state.mode.selectedTabs + tab,
+                selectedTabGroups = state.mode.selectedTabGroups,
+            ),
+        )
+    }
+
+    private fun addTabGroupSelection(state: TabsTrayState, group: TabsTrayItem.TabGroup): TabsTrayState {
+        return state.copy(
+            mode = TabsTrayState.Mode.Select(
+                selectedTabs = state.mode.selectedTabs + group.tabs,
+                selectedTabGroups = state.mode.selectedTabGroups + group,
+            ),
+        )
     }
 
     private fun handleTabUpdates(state: TabsTrayState, action: TabsTrayAction): TabsTrayState {

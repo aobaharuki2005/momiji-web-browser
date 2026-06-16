@@ -8,11 +8,36 @@ import { actionCreators as ac, actionTypes as at } from "common/Actions.mjs";
 
 const PREF_SPORTS_WIDGET_SIZE = "widgets.sportsWidget.size";
 
-const STATUS_L10N_MAP = {
+const USER_ACTION_TYPES = {
+  OPEN_MATCH_SEARCH: "open_match_search",
+};
+
+// Visible placeholder shown in place of a team's country code when the
+// match-up isn't decided yet.
+const TBD_PLACEHOLDER = "--";
+
+// The /matches API has been observed sending the American spelling
+// "canceled" alongside the British "cancelled" we localise to. Map both keys
+// to the same Fluent IDs (see UPCOMING_STATUS_ARIA_L10N_MAP below) so the
+// badge and aria-label render either way without a data-team-side fix.
+const UPCOMING_STATUS_L10N_MAP = {
   delayed: "newtab-sports-widget-delayed",
   postponed: "newtab-sports-widget-postponed",
   suspended: "newtab-sports-widget-suspended",
   cancelled: "newtab-sports-widget-cancelled",
+  canceled: "newtab-sports-widget-cancelled",
+};
+
+// Keep the keys in sync with LIVE_STATUS_TYPES in SportsFeed.sys.mjs so any
+// new in-progress status either gets a localized footer here or is filtered
+// out at the feed before reaching the row.
+const LIVE_STATUS_L10N_MAP = {
+  halftime: "newtab-sports-widget-match-halftime",
+  "extra time": "newtab-sports-widget-match-extra-time",
+};
+
+const RESULTS_STATUS_L10N_MAP = {
+  final: "newtab-sports-widget-match-full-time",
 };
 
 const UPCOMING_STATUS_ARIA_L10N_MAP = {
@@ -20,6 +45,7 @@ const UPCOMING_STATUS_ARIA_L10N_MAP = {
   postponed: "newtab-sports-widget-match-aria-label-upcoming-postponed",
   suspended: "newtab-sports-widget-match-aria-label-upcoming-suspended",
   cancelled: "newtab-sports-widget-match-aria-label-upcoming-cancelled",
+  canceled: "newtab-sports-widget-match-aria-label-upcoming-cancelled",
 };
 
 function ScorePill({
@@ -44,12 +70,81 @@ function ScorePill({
   );
 }
 
+// Renders one side of a match row: the team flag and code, or a placeholder
+// when the team is not yet decided.
+function MatchTeam({ team, isFollowed }) {
+  if (!team) {
+    return (
+      <div className="sports-match-team">
+        <span className="sports-match-flag-wrapper">
+          <span
+            className="sports-match-flag sports-match-flag-tbd"
+            aria-hidden="true"
+          />
+        </span>
+        <span className="sports-match-code">{TBD_PLACEHOLDER}</span>
+      </div>
+    );
+  }
+  return (
+    <div className="sports-match-team">
+      <span
+        className={`sports-match-flag-wrapper${isFollowed ? " is-followed" : ""}`}
+      >
+        <img
+          className="sports-match-flag"
+          src={team.icon_url}
+          alt={team.name}
+          title={team.name}
+        />
+        {isFollowed && (
+          <span className="sports-match-flag-check" aria-hidden="true" />
+        )}
+      </span>
+      <span className="sports-match-code">
+        {isFollowed ? <strong>{team.key}</strong> : team.key}
+      </span>
+    </div>
+  );
+}
+
+// Fallback shown in the Upcoming tab if the backend returns no matches.
+function UpcomingMatchPlaceholder({ size = "large" }) {
+  return (
+    <>
+      <div
+        className={`sports-match-row sports-match-row-${size} sports-match-row-placeholder`}
+        aria-hidden="true"
+      >
+        <MatchTeam team={null} />
+        <div className="sports-match-upcoming">
+          <span
+            className="sports-match-time sports-match-vs"
+            data-l10n-id="newtab-sports-widget-match-vs"
+          />
+        </div>
+        <MatchTeam team={null} />
+      </div>
+      {size === "large" && (
+        <p className="sports-upcoming-empty-info">
+          <span
+            className="sports-upcoming-empty-info-icon"
+            aria-hidden="true"
+          />
+          <span data-l10n-id="newtab-sports-widget-no-upcoming-matches" />
+        </p>
+      )}
+    </>
+  );
+}
+
 function SportsMatchRow({
   match,
   variant,
   size = "large",
   handleInteraction,
   followedTeams,
+  tbdTeamName = "",
 }) {
   const dispatch = useDispatch();
   // Read the widget size pref (not `size`, which can be "list" when the
@@ -71,8 +166,10 @@ function SportsMatchRow({
     away_penalty,
     query,
   } = match;
-  const isHomeFollowed = !!followedTeams?.has(home_team.key);
-  const isAwayFollowed = !!followedTeams?.has(away_team.key);
+  const isHomeFollowed = !!(home_team && followedTeams?.has(home_team.key));
+  const isAwayFollowed = !!(away_team && followedTeams?.has(away_team.key));
+  const homeTeamName = home_team ? home_team.name : tbdTeamName;
+  const awayTeamName = away_team ? away_team.name : tbdTeamName;
   const dateTimestamp = new Date(date).getTime();
   // (developer note): Assumes home_score/away_score exclude extra time goals
   const displayHomeScore = home_score + (home_extra || 0);
@@ -92,7 +189,7 @@ function SportsMatchRow({
   // translators see complete sentences and the strings are independently
   // translatable.
   function getAriaLabelL10n() {
-    const teams = { homeTeam: home_team.name, awayTeam: away_team.name };
+    const teams = { homeTeam: homeTeamName, awayTeam: awayTeamName };
     if (variant === "results") {
       if (hasPenalties) {
         return {
@@ -128,7 +225,7 @@ function SportsMatchRow({
     // Upcoming. Non-scheduled statuses use a per-status Fluent ID; the
     // default ("scheduled") announces kickoff time/date.
     const upcomingId =
-      UPCOMING_STATUS_ARIA_L10N_MAP[status_type] ||
+      UPCOMING_STATUS_ARIA_L10N_MAP[status_type?.toLowerCase()] ||
       "newtab-sports-widget-match-aria-label-upcoming";
     return {
       id: upcomingId,
@@ -139,15 +236,39 @@ function SportsMatchRow({
 
   function renderMiddle() {
     switch (variant) {
-      case "now":
+      case "now": {
+        const liveStatusL10nId =
+          LIVE_STATUS_L10N_MAP[status_type?.toLowerCase()];
+        if (!liveStatusL10nId) {
+          return (
+            <ScorePill
+              homeScore={displayHomeScore}
+              awayScore={displayAwayScore}
+              variant="now"
+            />
+          );
+        }
         return (
-          <ScorePill
-            homeScore={displayHomeScore}
-            awayScore={displayAwayScore}
-            variant="now"
-          />
+          <div className="sports-match-live">
+            <ScorePill
+              homeScore={displayHomeScore}
+              awayScore={displayAwayScore}
+              variant="now"
+            />
+            <div className="sports-match-live-footer">
+              <span data-l10n-id={liveStatusL10nId} />
+            </div>
+          </div>
         );
+      }
       case "results": {
+        // Per Figma the Results footer is always "Full time" (optionally
+        // "• Penalties"); default to it for unmapped status_types so any
+        // stale live-state value that leaks into this bucket doesn't render
+        // raw API text in the UI.
+        const resultsStatusL10nId =
+          RESULTS_STATUS_L10N_MAP[status_type?.toLowerCase()] ||
+          "newtab-sports-widget-match-full-time";
         return (
           <div className="sports-match-result">
             <ScorePill
@@ -158,8 +279,8 @@ function SportsMatchRow({
               variant="results"
             />
             <div className="sports-match-result-footer">
-              <span data-l10n-id="newtab-sports-widget-match-full-time" />
-              {hasPenalties && (
+              <span data-l10n-id={resultsStatusL10nId} />
+              {hasPenalties && size !== "list" && (
                 <>
                   <span aria-hidden="true">•</span>
                   <span data-l10n-id="newtab-sports-widget-match-penalties" />
@@ -171,7 +292,8 @@ function SportsMatchRow({
       }
       // Default is the upcoming variant
       default: {
-        const statusL10nId = STATUS_L10N_MAP[status_type];
+        const statusL10nId =
+          UPCOMING_STATUS_L10N_MAP[status_type?.toLowerCase()];
         const dateArgs = JSON.stringify({ date: dateTimestamp });
         return (
           <div className="sports-match-upcoming">
@@ -214,7 +336,7 @@ function SportsMatchRow({
         data: {
           widget_name: "sports",
           widget_source: "widget",
-          user_action: "open_match_search",
+          user_action: USER_ACTION_TYPES.OPEN_MATCH_SEARCH,
           action_value: variant,
           widget_size: widgetSize,
         },
@@ -260,45 +382,11 @@ function SportsMatchRow({
       })}
     >
       {/* (developer note): Replace href with SERP link. */}
-      <div className="sports-match-team">
-        <span
-          className={`sports-match-flag-wrapper${isHomeFollowed ? " is-followed" : ""}`}
-        >
-          <img
-            className="sports-match-flag"
-            src={home_team.icon_url}
-            alt={home_team.name}
-            title={home_team.name}
-          />
-          {isHomeFollowed && (
-            <span className="sports-match-flag-check" aria-hidden="true" />
-          )}
-        </span>
-        <span className="sports-match-code">
-          {isHomeFollowed ? <strong>{home_team.key}</strong> : home_team.key}
-        </span>
-      </div>
+      <MatchTeam team={home_team} isFollowed={isHomeFollowed} />
       {renderMiddle()}
-      <div className="sports-match-team">
-        <span
-          className={`sports-match-flag-wrapper${isAwayFollowed ? " is-followed" : ""}`}
-        >
-          <img
-            className="sports-match-flag"
-            src={away_team.icon_url}
-            alt={away_team.name}
-            title={away_team.name}
-          />
-          {isAwayFollowed && (
-            <span className="sports-match-flag-check" aria-hidden="true" />
-          )}
-        </span>
-        <span className="sports-match-code">
-          {isAwayFollowed ? <strong>{away_team.key}</strong> : away_team.key}
-        </span>
-      </div>
+      <MatchTeam team={away_team} isFollowed={isAwayFollowed} />
     </a>
   );
 }
 
-export { SportsMatchRow };
+export { SportsMatchRow, UpcomingMatchPlaceholder };

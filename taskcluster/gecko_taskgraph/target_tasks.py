@@ -25,7 +25,6 @@ from taskgraph.util.yaml import load_yaml
 
 from gecko_taskgraph import GECKO, TEST_CONFIGS
 from gecko_taskgraph.util.attributes import (
-    is_try,
     match_run_on_hg_branches,
     match_run_on_projects,
     match_run_on_repo_type,
@@ -1821,7 +1820,7 @@ def target_tasks_os_integration(full_task_graph, parameters, graph_config):
         if not any(attrmatch(task.attributes, **c) for c in candidate_attrs):
             continue
 
-        if not is_try(parameters):
+        if parameters["try_mode"] is not None:
             # Only run hardware tasks if scheduled from try. We do this because
             # the `cron` task is designed to provide a base for testing worker
             # images, which isn't something that impacts our hardware pools.

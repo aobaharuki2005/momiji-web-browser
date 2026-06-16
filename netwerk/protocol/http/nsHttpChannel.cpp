@@ -1042,6 +1042,13 @@ static bool canUseHTTPSRRonNetwork(bool& aTRREnabled) {
     }
   }
 
+  // With Happy Eyeballs enabled we can allow native HTTPS RR queries: HE's
+  // resolution-delay timer lets connection attempts proceed using the A/AAAA
+  // results even when the native HTTPS RR lookup is slow or blocked.
+  if (StaticPrefs::network_http_happy_eyeballs_enabled()) {
+    return true;
+  }
+
   if (RefPtr<NetworkConnectivityService> ncs =
           NetworkConnectivityService::GetSingleton()) {
     nsINetworkConnectivityService::ConnectivityState state;
@@ -2642,7 +2649,7 @@ NS_IMETHODIMP nsHttpChannel::GetHttpProxyConnectResponseCode(
     int32_t* aResponseCode) {
   NS_ENSURE_ARG_POINTER(aResponseCode);
   if (mProxyConnectResponseHead) {
-    *aResponseCode = mProxyConnectResponseHead->Status();
+    *aResponseCode = mProxyConnectResponseHead->Head().Status();
   } else if (mConnectionInfo && mConnectionInfo->UsingConnect()) {
     *aResponseCode = 0;
   } else {
@@ -2654,8 +2661,8 @@ NS_IMETHODIMP nsHttpChannel::GetHttpProxyConnectResponseCode(
 NS_IMETHODIMP nsHttpChannel::GetHttpProxyResponseHeader(
     const nsACString& aHeader, nsACString& aValue) {
   if (mProxyConnectResponseHead) {
-    return mProxyConnectResponseHead->GetHeader(nsHttp::ResolveAtom(aHeader),
-                                                aValue);
+    return mProxyConnectResponseHead->Head().GetHeader(
+        nsHttp::ResolveAtom(aHeader), aValue);
   }
   return NS_ERROR_NOT_AVAILABLE;
 }
@@ -3987,7 +3994,7 @@ nsresult nsHttpChannel::ProxyFailover() {
 }
 
 void nsHttpChannel::SetHTTPSSVCRecord(
-    already_AddRefed<nsIDNSHTTPSSVCRecord>&& aRecord) {
+    already_AddRefed<nsIDNSHTTPSSVCRecord> aRecord) {
   LOG(("nsHttpChannel::SetHTTPSSVCRecord [this=%p]\n", this));
   nsCOMPtr<nsIDNSHTTPSSVCRecord> record = aRecord;
   MOZ_ASSERT(!mHTTPSSVCRecord);
@@ -8256,8 +8263,6 @@ void nsHttpChannel::MaybeStartDNSPrefetch() {
       dnsFlags |= nsIDNSService::RESOLVE_BYPASS_CACHE;
     }
 
-    (void)mDNSPrefetch->PrefetchHigh(dnsFlags);
-
     bool unused;
     if (StaticPrefs::network_dns_use_https_rr_as_altsvc() && !mHTTPSSVCRecord &&
         !(mCaps & NS_HTTP_DISALLOW_HTTPS_RR) &&
@@ -8275,6 +8280,15 @@ void nsHttpChannel::MaybeStartDNSPrefetch() {
                                       // Do nothing. This is a DNS prefetch.
                                     });
     }
+
+    // Issue per-family prefetches (A and AAAA) so Happy Eyeballs can reuse
+    // them instead of starting its own lookups. Skip a family that won't be
+    // queried; with IPv6 disabled the AAAA request collapses to A, so skip it
+    // to avoid a duplicate.
+    bool skipIPv4 = mCaps & NS_HTTP_DISABLE_IPV4;
+    bool skipIPv6 = (mCaps & NS_HTTP_DISABLE_IPV6) ||
+                    StaticPrefs::network_dns_disableIPv6();
+    (void)mDNSPrefetch->PrefetchHighPerFamily(dnsFlags, skipIPv4, skipIPv6);
   }
 }
 
@@ -9455,7 +9469,7 @@ nsresult nsHttpChannel::ContinueOnStartRequest2(nsresult result) {
        mStatus == NS_ERROR_NET_TIMEOUT || mStatus == NS_ERROR_NET_RESET)) {
     PushRedirectAsyncFunc(&nsHttpChannel::ContinueOnStartRequest3);
     if (NS_SUCCEEDED(ProxyFailover())) {
-      mProxyConnectResponseHead.reset();
+      mProxyConnectResponseHead = nullptr;
       return NS_OK;
     }
     PopRedirectAsyncFunc(&nsHttpChannel::ContinueOnStartRequest3);

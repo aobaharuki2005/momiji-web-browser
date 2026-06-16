@@ -65,13 +65,6 @@ interface TabManagerInteractor :
     fun onRecentlyClosedClicked()
 
     /**
-     * Invoked when a tab is long clicked.
-     *
-     * @param tab [TabsTrayItem] that was clicked.
-     */
-    fun onTabLongClicked(tab: TabsTrayItem): Boolean
-
-    /**
      * Invoked when the back button is pressed.
      *
      * @return true if the back button press was consumed.
@@ -91,7 +84,7 @@ interface TabManagerInteractor :
     /**
      * A tab has been closed.
      */
-    fun onTabClosed(tab: TabsTrayItem, source: String? = null)
+    fun onTabClosed(tab: TabsTrayItem.Tab, source: String? = null)
 }
 
 /**
@@ -108,7 +101,7 @@ class DefaultTabManagerInteractor(
     }
 
     override fun onDeletePrivateTabWarningAccepted(tabId: String, source: String?) {
-        controller.handleDeleteTabWarningAccepted(tabId, source)
+        controller.handleDeletePrivateTabWarningAccepted(tabId = tabId, source = source)
     }
 
     override fun onDeleteSelectedTabsClicked() {
@@ -141,8 +134,8 @@ class DefaultTabManagerInteractor(
 
     override fun onBackPressed(): Boolean = controller.handleBackPressed()
 
-    override fun onTabClosed(tab: TabsTrayItem, source: String?) {
-        controller.handleTabDeletion(tab.id, source)
+    override fun onTabClosed(tab: TabsTrayItem.Tab, source: String?) {
+        controller.handleTabDeletion(tab, source)
     }
 
     override fun onTabSelected(tab: TabsTrayItem.Tab, source: String?) {
@@ -163,10 +156,6 @@ class DefaultTabManagerInteractor(
 
     override fun onRecentlyClosedClicked() {
         controller.handleNavigateToRecentlyClosed()
-    }
-
-    override fun onTabLongClicked(tab: TabsTrayItem): Boolean {
-        return controller.handleTabLongClick(tab)
     }
 
     /**

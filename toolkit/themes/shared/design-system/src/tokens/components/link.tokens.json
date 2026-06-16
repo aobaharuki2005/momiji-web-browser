@@ -7,7 +7,9 @@
           "default": "{color.accent.primary.@base}"
         },
         "platform": {
-          "default": "LinkText"
+          "nativeTheme": "LinkText",
+          "light": "{color.blue.60}",
+          "dark": "{color.cyan.30}"
         }
       }
     },

@@ -190,7 +190,7 @@ export async function constructRelevantMemoriesContextMessage(message) {
           return `${memory.id} - ${memory.memory_summary}`;
         })
         .join("\n- ");
-    const relevantMemoriesContextPrompt = await lazy.loadPrompt(
+    const { prompt: relevantMemoriesContextPrompt } = await lazy.loadPrompt(
       lazy.MODEL_FEATURES.MEMORIES_RELEVANT_CONTEXT
     );
     const content = lazy.renderPrompt(relevantMemoriesContextPrompt, {

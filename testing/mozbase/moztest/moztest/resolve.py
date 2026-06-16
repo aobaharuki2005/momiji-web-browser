@@ -993,7 +993,7 @@ class TestResolver(MozbuildObject):
                 candidate_paths |= {
                     t["file_relpath"]
                     for t in self.tests
-                    if mozpath.normpath(t[key]) == path
+                    if key in t and mozpath.normpath(t[key]) == path
                 }
                 continue
 

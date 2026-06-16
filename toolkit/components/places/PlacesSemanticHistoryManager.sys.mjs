@@ -916,13 +916,18 @@ class PlacesSemanticHistoryManager {
       `
       WITH
       matches AS (
-        SELECT url_hash, distance
+        SELECT rowid AS vec_rowid, url_hash
         FROM vec_history_mapping
         JOIN vec_history USING (rowid)
         WHERE embedding MATCH (:vector)
         AND k=2
-        AND distance <= :distanceThreshold
         ORDER BY distance
+      ),
+      scored AS (
+        SELECT matches.url_hash,
+               vec_distance_cosine(vec_history.embedding, :vector) AS distance
+        FROM matches
+        JOIN vec_history ON vec_history.rowid = matches.vec_rowid
       )
       SELECT id,
              title,
@@ -931,8 +936,9 @@ class PlacesSemanticHistoryManager {
              frecency,
              last_visit_date
       FROM moz_places
-      JOIN matches USING (url_hash)
+      JOIN scored USING (url_hash)
       WHERE ${lazy.PAGES_FRECENCY_FIELD} <> 0
+      AND distance <= :distanceThreshold
       ORDER BY distance
       `,
       {

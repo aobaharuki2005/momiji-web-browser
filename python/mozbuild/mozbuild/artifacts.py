@@ -1387,12 +1387,7 @@ class Artifacts:
                 return "win64-aarch64" + target_suffix
             return ("win64" if target_64bit else "win32") + target_suffix
         if self._defines.get("XP_MACOSX", False):
-            if (
-                not self._substs.get("MOZ_DEBUG")
-                or self._substs["TARGET_CPU"] == "x86_64"
-            ):
-                # We only produce unified builds in automation, so the target_cpu
-                # check is not relevant.
+            if self._substs["TARGET_CPU"] == "x86_64":
                 return "macosx64" + target_suffix
             if self._substs["TARGET_CPU"] == "aarch64":
                 return "macosx64-aarch64" + target_suffix

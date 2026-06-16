@@ -118,7 +118,7 @@ merge-%: IS_LANGUAGE_REPACK=1
 merge-%: AB_CD=$*
 merge-%:
 	$(RM) -rf $(REAL_LOCALE_MERGEDIR)
-	$(PYTHON3) -m moz.l10n.bin.build --config $(srcdir)/l10n.toml --base $(L10NBASEDIR) --target $(BASE_MERGE) --locales $(AB_CD)
+	$(PYTHON3) -m moz.l10n.bin.build --config $(srcdir)/l10n.toml --base $(L10NBASEDIR) --target $(BASE_MERGE) --locales $(AB_CD) --coverage
 # Hunspell dictionaries are interesting, as we don't ship the en-US
 # dictionary in repacks. Thus we can't use the merge logic from
 # compare-locales above, which would add en-US.dic and en-US.aff to

@@ -6,7 +6,6 @@
 /* import-globals-from main.js */
 /* import-globals-from home.js */
 /* import-globals-from search.js */
-/* import-globals-from containers.js */
 /* import-globals-from privacy.js */
 /* import-globals-from sync.js */
 /* import-globals-from moreFromMozilla.js */
@@ -417,6 +416,7 @@ const CONFIG_PANES = Object.freeze({
     iconSrc: "chrome://browser/skin/fxa/avatar-empty.svg",
     groupIds: [
       "defaultBrowserSync",
+      "accountDisabled",
       "account",
       "sync",
       "importBrowserData",
@@ -458,6 +458,12 @@ const CONFIG_PANES = Object.freeze({
     iconSrc: "chrome://browser/skin/translations.svg",
     module: "chrome://browser/content/preferences/config/translations.mjs",
     visible: () => srdSectionEnabled("translations"),
+  },
+  containers: {
+    parent: srdSectionEnabled("tabsBrowsing") ? "tabsBrowsing" : "general",
+    l10nId: "containers-section-header2",
+    groupIds: ["containers"],
+    module: "chrome://browser/content/preferences/config/containers.mjs",
   },
 });
 
@@ -521,7 +527,6 @@ function init_all() {
   register_module("paneHome", gHomePane);
   register_module("paneSearch", gSearchPane);
   register_module("panePrivacy", gPrivacyPane);
-  register_module("paneContainers", gContainersPane);
 
   // Restore the cached Firefox Labs nav button visibility so it shows
   // immediately when recipes are expected to be available, before
@@ -733,7 +738,16 @@ async function gotoPref(
     if (
       !(!document.location.hash && category == kDefaultCategoryInternalName)
     ) {
-      document.location.hash = friendlyName;
+      let targetHash = "#" + friendlyName;
+      if (document.location.hash != targetHash) {
+        if (aShowReason == "Click") {
+          // A user clicked on a category, so add a history entry so back navigates between panes.
+          history.pushState(category, document.title, targetHash);
+        } else {
+          // Adding a new entry here would trap the back button on about:preferences.
+          history.replaceState(category, document.title, targetHash);
+        }
+      }
     }
   }
   // Treat back/forward navigations (aShowReason == "Hash") as visits to the

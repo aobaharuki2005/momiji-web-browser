@@ -164,9 +164,6 @@
         },
         "xxlarge": {
           "Value": 24
-        },
-        "xxxlarge": {
-          "Value": 32
         }
       },
       "width": {
@@ -396,7 +393,7 @@
           },
           "pinned": {
             "expanded": {
-              "Value": "#FFFFFF"
+              "Value": 0
             },
             "container": {
               "expanded": {
@@ -421,11 +418,6 @@
       "padding": {
         "inline": {
           "Value": 8
-        }
-      },
-      "border": {
-        "radius": {
-          "Value": "{toolbarbutton/border/radius}"
         }
       },
       "outline": {
@@ -499,9 +491,9 @@
           "Smart Light (WIP)": "rgba(0, 0, 0, 0)",
           "disabled": {
             "Light": "{color/gray/30}",
-            "Dark": "{color/gray/50}",
+            "Dark": "{color/gray/45}",
             "HCM": "{GrayText}",
-            "Private": "{color/gray/50}",
+            "Private": "{color/gray/45}",
             "Smart Light (WIP)": "{color/gray/30}"
           }
         }
@@ -542,23 +534,9 @@
     "border": {
       "color": {
         "Light": "{color/gray/30}",
-        "Dark": "{color/gray/50}",
+        "Dark": "{color/gray/45}",
         "HCM": "{CanvasText}",
-        "Private": "{color/gray/35}",
-        "overlay": {
-          "Light": "{color/gray/05}",
-          "Dark": "{color/gray/25}",
-          "HCM": "{CanvasText}",
-          "Private": "{color/gray/25}",
-          "Smart Light (WIP)": "#F0F0F4"
-        },
-        "default": {
-          "Light": "{color/gray/25}",
-          "Dark": "{color/gray/40}",
-          "HCM": "{CanvasText}",
-          "Private": "{color/gray/30}",
-          "Smart Light (WIP)": "{color/gray/10}"
-        },
+        "Private": "{color/gray/45}",
         "transparent": {
           "Light": "rgba(0, 0, 0, 0)",
           "Dark": "rgba(0, 0, 0, 0)",
@@ -568,16 +546,16 @@
         },
         "deemphasized": {
           "Light": "{color/gray/20}",
-          "Dark": "{color/gray/60}",
+          "Dark": "{color/gray/55}",
           "HCM": "{CanvasText}",
-          "Private": "{color/gray/45}",
-          "Smart Light (WIP)": "{color/gray/15}"
+          "Private": "{color/gray/55}",
+          "Smart Light (WIP)": "{color/gray/20}"
         },
         "interactive": {
-          "Light": "{color/gray/40}",
-          "Dark": "{color/gray/40}",
+          "Light": "{color/gray/35}",
+          "Dark": "{color/gray/45}",
           "HCM": "{ButtonText}",
-          "Private": "{color/gray/35}",
+          "Private": "{color/gray/45}",
           "hover": {
             "Light": "{border/color/interactive}",
             "Dark": "{border/color/interactive}",
@@ -594,12 +572,12 @@
           },
           "disabled": {
             "Light": "{color/gray/25}",
-            "Dark": "{color/gray/50}",
+            "Dark": "{color/gray/60}",
             "HCM": "{GrayText}",
-            "Private": "{border/color/interactive}",
+            "Private": "{color/gray/60}",
             "Smart Light (WIP)": "{border/color/interactive}"
           },
-          "Smart Light (WIP)": "{color/gray/40}"
+          "Smart Light (WIP)": "{color/gray/35}"
         },
         "selected": {
           "Light": "{color/accent/primary}",
@@ -608,7 +586,7 @@
           "Private": "{color/accent/primary}",
           "Smart Light (WIP)": "{color/accent/primary}"
         },
-        "Smart Light (WIP)": "{color/gray/25}",
+        "Smart Light (WIP)": "{color/gray/30}",
         "error": {
           "Light": "{color/red/50}",
           "Dark": "{color/red/20}",
@@ -628,7 +606,7 @@
           "Smart Light (WIP)": "rgba(0, 0, 0, 0.25)"
         },
         "canvas": {
-          "Light": "{color/gray/05}",
+          "Light": "{color/gray/0}",
           "Dark": "{color/gray/90}",
           "HCM": "{Canvas}",
           "Private": "{color/gray/90}",
@@ -664,24 +642,15 @@
         },
         "box": {
           "Light": "{color/white}",
-          "Dark": "{color/gray/75}",
+          "Dark": "{color/gray/70}",
           "HCM": "{background/color/canvas}",
-          "Private": "{color/gray/75}",
+          "Private": "{color/gray/70}",
           "info": {
             "Light": "{color/gray/15}",
-            "Dark": "{color/gray/60}",
+            "Dark": "{color/gray/65}",
             "HCM": "{background/color/canvas}",
-            "Private": "{color/gray/60}",
+            "Private": "{color/gray/65}",
             "Smart Light (WIP)": "{color/gray/15}"
-          },
-          "accent": {
-            "primary": {
-              "Light": "{color/violet-desaturated/10}",
-              "Dark": "{color/violet-desaturated/70}",
-              "HCM": "{background/color/canvas}",
-              "Private": "{color/violet-desaturated/70}",
-              "Smart Light (WIP)": "{color/violet-desaturated/10}"
-            }
           },
           "Smart Light (WIP)": "{color/white}"
         }
@@ -1301,19 +1270,12 @@
     },
     "divider": {
       "color": {
-        "default": {
-          "Light": "{border/color/default}",
-          "Dark": "{border/color/default}",
-          "HCM": "#FFFFFF",
-          "Private": "{color/purple-desaturated/50}",
-          "Smart Light (WIP)": "{border/color/default}"
-        },
         "tinted": {
-          "Light": "#888FC3",
-          "Dark": "rgba(136, 143, 195, 0.699999988079071)",
-          "HCM": "#FFFFFF",
-          "Private": "{color/purple-desaturated/50}",
-          "Smart Light (WIP)": "#888FC3"
+          "Light": "{toolbarbutton/icon/fill}",
+          "Dark": "{toolbarbutton/icon/fill}",
+          "HCM": "{toolbarbutton/icon/fill}",
+          "Private": "{toolbarbutton/icon/fill}",
+          "Smart Light (WIP)": "{toolbarbutton/icon/fill}"
         }
       }
     },
@@ -1492,11 +1454,18 @@
     "promo": {
       "border": {
         "color": {
-          "Light": "rgba(21, 20, 26, 0.11999999731779099)",
-          "Dark": "rgba(251, 251, 254, 0.11999999731779099)",
+          "Light": "rgba(24, 14, 48, 0.11999999731779099)",
+          "Dark": "rgba(242, 240, 248, 0.11999999731779099)",
           "HCM": "{CanvasText}",
           "Private": "rgba(251, 251, 254, 0.11999999731779099)",
-          "Smart Light (WIP)": "rgba(21, 20, 26, 0.11999999731779099)"
+          "Smart Light (WIP)": "rgba(24, 14, 48, 0.11999999731779099)",
+          "vibrant": {
+            "Light": "{promo/border/color}",
+            "Dark": "{promo/border/color}",
+            "HCM": "{promo/border/color}",
+            "Private": "{promo/border/color}",
+            "Smart Light (WIP)": "{promo/border/color}"
+          }
         }
       },
       "background": {
@@ -1505,16 +1474,14 @@
           "Dark": "{background/color/box/info}",
           "HCM": "{background/color/box/info}",
           "Private": "{background/color/box/info}",
-          "accent": {
-            "primary": {
-              "Light": "{background/color/box/accent/primary}",
-              "Dark": "{background/color/box/accent/primary}",
-              "HCM": "{background/color/box/accent/primary}",
-              "Private": "{background/color/box/accent/primary}",
-              "Smart Light (WIP)": "{background/color/box/accent/primary}"
-            }
-          },
-          "Smart Light (WIP)": "{background/color/box/info}"
+          "Smart Light (WIP)": "{background/color/box/info}",
+          "vibrant": {
+            "Light": "{color/violet-desaturated/10}",
+            "Dark": "{color/violet-desaturated/70}",
+            "HCM": "{Canvas}",
+            "Private": "{color/violet-desaturated/70}",
+            "Smart Light (WIP)": "{color/violet-desaturated/10}"
+          }
         }
       }
     },
@@ -1804,9 +1771,9 @@
         "grey": {
           "default": {
             "Light": "{color/gray/55}",
-            "Dark": "{color/gray/05}",
+            "Dark": "{color/gray/0}",
             "HCM": "#FFFFFF",
-            "Private": "{color/gray/05}",
+            "Private": "{color/gray/0}",
             "Smart Light (WIP)": "{color/gray/55}"
           },
           "hover": {
@@ -1818,9 +1785,9 @@
           },
           "focused": {
             "Light": "{color/gray/55}",
-            "Dark": "{color/gray/05}",
+            "Dark": "{color/gray/0}",
             "HCM": "#FFFFFF",
-            "Private": "{color/gray/05}",
+            "Private": "{color/gray/0}",
             "Smart Light (WIP)": "{color/gray/55}"
           },
           "text": {
@@ -2129,17 +2096,6 @@
           "HCM": "{Canvas}",
           "Private": "{color/violet-desaturated/70}",
           "Smart Light (WIP)": "rgba(255, 255, 255, 0.800000011920929)"
-        }
-      },
-      "button": {
-        "text": {
-          "color": {
-            "Light": "{color/purple-desaturated/50}",
-            "Dark": "{color/violet/0}",
-            "HCM": "{ButtonText}",
-            "Private": "#F0F0FF",
-            "Smart Light (WIP)": "{color/purple-desaturated/50}"
-          }
         }
       },
       "field": {
@@ -2485,24 +2441,24 @@
         },
         "border": {
           "color": {
-            "Light": "{button/border/color}",
-            "Dark": "{button/border/color}",
+            "Light": "rgba(255, 255, 255, 0)",
+            "Dark": "rgba(255, 255, 255, 0)",
             "HCM": "{button/border/color}",
-            "Private": "#FFFFFF",
-            "Smart Light (WIP)": "#FFFFFF",
+            "Private": "rgba(255, 255, 255, 0)",
+            "Smart Light (WIP)": "rgba(255, 255, 255, 0)",
             "hover": {
-              "Light": "{button/border/color/hover}",
-              "Dark": "{button/border/color/hover}",
+              "Light": "rgba(255, 255, 255, 0)",
+              "Dark": "rgba(255, 255, 255, 0)",
               "HCM": "{button/border/color/hover}",
-              "Private": "#FFFFFF",
-              "Smart Light (WIP)": "#FFFFFF"
+              "Private": "rgba(255, 255, 255, 0)",
+              "Smart Light (WIP)": "rgba(255, 255, 255, 0)"
             },
             "active": {
-              "Light": "{button/border/color/active}",
-              "Dark": "{button/border/color/active}",
+              "Light": "rgba(255, 255, 255, 0)",
+              "Dark": "rgba(255, 255, 255, 0)",
               "HCM": "{button/border/color/active}",
-              "Private": "#FFFFFF",
-              "Smart Light (WIP)": "#FFFFFF"
+              "Private": "rgba(255, 255, 255, 0)",
+              "Smart Light (WIP)": "rgba(255, 255, 255, 0)"
             }
           }
         },
@@ -2563,13 +2519,13 @@
           "Dark": "{text/color}",
           "HCM": "{text/color}",
           "Private": "{text/color}",
-          "Smart Light (WIP)": "#FFFFFF",
+          "Smart Light (WIP)": "{text/color}",
           "inactive": {
             "Light": "{text/color/deemphasized}",
             "Dark": "{text/color/deemphasized}",
             "HCM": "{text/color/deemphasized}",
             "Private": "{text/color/deemphasized}",
-            "Smart Light (WIP)": "#FFFFFF"
+            "Smart Light (WIP)": "{text/color/deemphasized}"
           }
         }
       }
@@ -2589,21 +2545,21 @@
             "Dark": "{color/violet-desaturated/0}",
             "HCM": "{button/text/color/ghost/active}",
             "Private": "{button/text/color/ghost/active}",
-            "Smart Light (WIP)": "{toolbar/button/text/color}"
+            "Smart Light (WIP)": "{button/text/color/ghost/active}"
           },
           "disabled": {
             "Light": "{toolbarbutton/icon/fill}",
             "Dark": "{toolbarbutton/icon/fill}",
             "HCM": "{button/text/color/ghost/disabled}",
             "Private": "{button/text/color/disabled}",
-            "Smart Light (WIP)": "{toolbar/button/text/color}"
+            "Smart Light (WIP)": "{button/text/color/ghost/disabled}"
           },
           "ghost": {
             "Light": "{toolbarbutton/icon/fill}",
             "Dark": "{toolbarbutton/icon/fill}",
             "HCM": "{button/text/color/ghost}",
             "Private": "{button/text/color/ghost}",
-            "Smart Light (WIP)": "{toolbar/button/text/color}"
+            "Smart Light (WIP)": "{button/text/color/ghost}"
           },
           "selected": {
             "Light": "{toolbarbutton/icon/fill/active}",
@@ -2689,14 +2645,14 @@
             "Light": "rgba(117, 102, 159, 0.25)",
             "Dark": "rgba(182, 170, 217, 0.25)",
             "HCM": "{button/background/color/hover}",
-            "Private": "rgba(176, 163, 210, 0.25)",
+            "Private": "rgba(182, 170, 217, 0.25)",
             "Smart Light (WIP)": "#FFFFFF"
           },
           "active": {
             "Light": "rgba(117, 102, 159, 0.4000000059604645)",
             "Dark": "rgba(182, 170, 217, 0.4000000059604645)",
             "HCM": "{button/background/color/active}",
-            "Private": "rgba(176, 163, 210, 0.4000000059604645)",
+            "Private": "rgba(182, 170, 217, 0.4000000059604645)",
             "Smart Light (WIP)": "#FFFFFF"
           }
         }
@@ -2800,10 +2756,10 @@
           "background": {
             "color": {
               "selected": {
-                "Light": "{color/violet-desaturated/30}",
-                "Dark": "{color/violet-desaturated/50}",
+                "Light": "{color/accent/primary}",
+                "Dark": "{color/accent/primary}",
                 "HCM": "{SelectedItem}",
-                "Private": "{color/violet-desaturated/50}",
+                "Private": "{color/accent/primary}",
                 "Smart Light (WIP)": "#FFFFFF"
               }
             }
@@ -2824,6 +2780,17 @@
               "Smart Light (WIP)": "#FFFFFF"
             }
           }
+        }
+      }
+    },
+    "message-bar": {
+      "background": {
+        "color": {
+          "Light": "{background/color/box}",
+          "Dark": "{background/color/box}",
+          "HCM": "{background/color/box}",
+          "Private": "{background/color/box}",
+          "Smart Light (WIP)": "{background/color/box}"
         }
       }
     }
@@ -3047,14 +3014,6 @@
         },
         "90": {
           "Value": "#1A1220"
-        }
-      },
-      "purple-desaturated": {
-        "30": {
-          "Value": "#C0A7D4"
-        },
-        "50": {
-          "Value": "#816297"
         }
       },
       "pink": {
@@ -3719,29 +3678,6 @@
         },
         "Value": "{panel/padding/block}"
       },
-      "menuitem": {
-        "padding": {
-          "inline": {
-            "Value": 8
-          },
-          "block": {
-            "Value": 8
-          }
-        },
-        "margin": {
-          "block": {
-            "Value": 0
-          },
-          "inline": {
-            "Value": 8
-          }
-        },
-        "border": {
-          "radius": {
-            "Value": "{border/radius/xxlarge}"
-          }
-        }
-      },
       "border": {
         "radius": {
           "Value": 16
@@ -3864,6 +3800,48 @@
       "icon": {
         "margin-end": {
           "Value": 5.5
+        }
+      },
+      "border": {
+        "radius": {
+          "Value": "{toolbarbutton/border/radius}"
+        }
+      }
+    },
+    "panel-menuitem": {
+      "padding": {
+        "inline": {
+          "Value": 8
+        },
+        "block": {
+          "Value": 8
+        }
+      },
+      "margin": {
+        "block": {
+          "Value": 0
+        },
+        "inline": {
+          "Value": 8
+        }
+      },
+      "border": {
+        "radius": {
+          "Value": "{border/radius/xxlarge}"
+        }
+      }
+    },
+    "message-bar": {
+      "border": {
+        "radius": {
+          "Value": "{border/radius/large}"
+        }
+      }
+    },
+    "input-color": {
+      "border": {
+        "radius": {
+          "Value": "{border/radius/large}"
         }
       }
     }

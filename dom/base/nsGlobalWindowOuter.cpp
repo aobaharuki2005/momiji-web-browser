@@ -1812,11 +1812,12 @@ void nsGlobalWindowOuter::SetInitialPrincipal(
 
   // Use the subject (or system) principal as the storage principal too until
   // the new window finishes navigating and gets a real storage principal.
-  nsDocShell::Cast(GetDocShell())
-      ->CreateAboutBlankDocumentViewer(
-          aNewWindowPrincipal, aNewWindowPrincipal, mDoc->GetPolicyContainer(),
-          mDoc->GetDocBaseURI(),
-          /* aIsInitialDocument */ true, mDoc->GetEmbedderPolicy());
+  nsCOMPtr<nsIPolicyContainer> policyContainer = mDoc->GetPolicyContainer();
+  nsCOMPtr<nsIURI> base = mDoc->GetDocBaseURI();
+  RefPtr<nsDocShell> docShell = nsDocShell::Cast(GetDocShell());
+  docShell->CreateAboutBlankDocumentViewer(
+      aNewWindowPrincipal, aNewWindowPrincipal, policyContainer, base,
+      /* aIsInitialDocument */ true, mDoc->GetEmbedderPolicy());
 
   if (mDoc) {
     MOZ_ASSERT(mDoc->IsInitialDocument(),
@@ -7262,7 +7263,7 @@ void nsGlobalWindowOuter::CheckForDPIChange() {
 }
 
 nsresult nsGlobalWindowOuter::Dispatch(
-    already_AddRefed<nsIRunnable>&& aRunnable) const {
+    already_AddRefed<nsIRunnable> aRunnable) const {
   MOZ_RELEASE_ASSERT(NS_IsMainThread());
   return NS_DispatchToCurrentThread(std::move(aRunnable));
 }

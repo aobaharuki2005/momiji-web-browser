@@ -4,9 +4,10 @@
 
 :host(.infobar) {
   --info-bar-background-color: light-dark(var(--color-white), rgb(66, 65, 77));
-  --info-bar-text-color: light-dark(var(--color-gray-100), var(--color-gray-05));
+  --info-bar-text-color: light-dark(var(--color-gray-100), var(--color-gray-0));
   --message-bar-border-color: color-mix(in srgb, currentColor 9%, transparent);
   --message-bar-border-radius: var(--border-radius-small);
+  --message-bar-icon-container-margin-block-start: 0;
   position: relative;
 
   &::before {

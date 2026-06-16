@@ -587,11 +587,7 @@ static bool GetBuildConfiguration(JSContext* cx, unsigned argc, Value* vp) {
     return false;
   }
 
-#ifdef ENABLE_SOURCE_PHASE_IMPORTS
   value = BooleanValue(true);
-#else
-  value = BooleanValue(false);
-#endif
   if (!JS_SetProperty(cx, info, "source-phase-imports", value)) {
     return false;
   }
@@ -9369,9 +9365,9 @@ static bool GetAllPrefNames(JSContext* cx, unsigned argc, Value* vp) {
     return values.append(StringValue(s));
   };
 
-#define ADD_NAME(NAME, CPP_NAME, TYPE, SETTER, IS_STARTUP_PREF) \
-  if (!addPref(NAME)) {                                         \
-    return false;                                               \
+#define ADD_NAME(NAME, CPP_NAME, TYPE, SETTER, IS_STARTUP_PREF, FUZZING_SAFE) \
+  if (!addPref(NAME)) {                                                       \
+    return false;                                                             \
   }
   FOR_EACH_JS_PREF(ADD_NAME)
 #undef ADD_NAME
@@ -9412,7 +9408,8 @@ static bool GetPrefValue(JSContext* cx, unsigned argc, Value* vp) {
   };
 
   // Search for a matching pref and return its value.
-#define CHECK_PREF(NAME, CPP_NAME, TYPE, SETTER, IS_STARTUP_PREF) \
+#define CHECK_PREF(NAME, CPP_NAME, TYPE, SETTER, IS_STARTUP_PREF, \
+                   FUZZING_SAFE)                                  \
   if (StringEqualsLiteral(name, NAME)) {                          \
     setReturnValue(JS::Prefs::CPP_NAME());                        \
     return true;                                                  \
@@ -9932,6 +9929,7 @@ static bool ResetFallbackStubStates(JSContext* cx, unsigned argc, Value* vp) {
     stub->discardStubs(zone, &icScript->icEntry(i));
     stub->state().reset();
   }
+  script->jitScript()->notePurgedStubs();
 
   args.rval().setUndefined();
   return true;
@@ -10623,7 +10621,7 @@ JS_FN_HELP("resolvePromise", ResolvePromise, 2, 0,
 JS_FN_HELP("safeResolvePromise", SafeResolvePromise, 2, 0,
 "safeResolvePromise(promise, resolution)",
 "  Resolve a Promise by calling the JSAPI function JS::SafeResolve, which\n"
-"  implements the MaybeDeferredPromiseResolve abstract operation from the\n"
+"  implements the SafePromiseResolve abstract operation from the\n"
 "  thenable-curtailment proposal."),
 #endif  // NIGHTLY_BUILD
 JS_FN_HELP("rejectPromise", RejectPromise, 2, 0,

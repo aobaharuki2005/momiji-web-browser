@@ -8,6 +8,35 @@ add_setup(async function setup() {
   await PlacesUtils.bookmarks.eraseEverything();
 });
 
+add_task(async function focus() {
+  info("Open view with some results");
+  await UrlbarTestUtils.promiseAutocompleteResultPopup({
+    value: "",
+    window,
+  });
+  Assert.ok(gURLBar.hasAttribute("breakout"));
+  Assert.ok(gURLBar.hasAttribute("breakout-extend"));
+
+  info("Close view by ESC");
+  await UrlbarTestUtils.promisePopupClose(window, () => {
+    EventUtils.synthesizeKey("KEY_Escape");
+  });
+  Assert.ok(!gURLBar.view.isOpen);
+  Assert.ok(gURLBar.hasAttribute("focused"));
+  Assert.ok(gURLBar.hasAttribute("breakout"));
+  Assert.equal(
+    gURLBar.hasAttribute("breakout-extend"),
+    Services.prefs.getBoolPref("browser.nova.enabled")
+  );
+
+  info("Blur the focus from the urlbar");
+  EventUtils.synthesizeKey("KEY_Escape");
+  Assert.ok(!gURLBar.view.isOpen);
+  Assert.ok(!gURLBar.hasAttribute("focused"));
+  Assert.ok(gURLBar.hasAttribute("breakout"));
+  Assert.ok(!gURLBar.hasAttribute("breakout-extend"));
+});
+
 add_task(async function empty_to_some() {
   info("Open view and change the search mode");
   let manager = ProvidersManager.getInstanceForSap("urlbar");
@@ -18,12 +47,10 @@ add_task(async function empty_to_some() {
   );
   await UrlbarTestUtils.promiseSearchComplete(window);
   Assert.equal(UrlbarTestUtils.getResultCount(window), 0);
-  Assert.ok(gURLBar.hasAttribute("breakout"));
+  Assert.ok(gURLBar.view.isOpen);
   Assert.ok(gURLBar.hasAttribute("focused"));
-  Assert.equal(
-    gURLBar.hasAttribute("breakout-extend"),
-    Services.prefs.getBoolPref("browser.nova.enabled")
-  );
+  Assert.ok(gURLBar.hasAttribute("breakout"));
+  Assert.ok(gURLBar.hasAttribute("breakout-extend"));
 
   info("Open view with some results");
   let someProvider = new UrlbarTestUtils.TestProvider({
@@ -94,13 +121,41 @@ add_task(async function some_to_empty() {
     window,
   });
   Assert.equal(UrlbarTestUtils.getResultCount(window), 0);
+  Assert.ok(gURLBar.view.isOpen);
+  Assert.ok(gURLBar.hasAttribute("focused"));
+  Assert.ok(gURLBar.hasAttribute("breakout"));
+  Assert.ok(gURLBar.hasAttribute("breakout-extend"));
+
+  manager.unregisterProvider(emptyProvider);
+  await UrlbarTestUtils.promisePopupClose(window);
+});
+
+add_task(async function oneoffs() {
+  await SpecialPowers.pushPrefEnv({
+    set: [["browser.urlbar.scotchBonnet.enableOverride", false]],
+  });
+
+  let manager = ProvidersManager.getInstanceForSap("urlbar");
+  let emptyProvider = new UrlbarTestUtils.TestProvider({
+    results: [],
+    name: "emptyProvider",
+    priority: Infinity,
+  });
+  manager.registerProvider(emptyProvider);
+
+  await UrlbarTestUtils.promiseAutocompleteResultPopup({
+    value: "empty",
+    window,
+  });
+  Assert.equal(UrlbarTestUtils.getResultCount(window), 0);
   Assert.ok(gURLBar.hasAttribute("breakout"));
   Assert.ok(gURLBar.hasAttribute("focused"));
-  Assert.equal(
+  Assert.ok(
     gURLBar.hasAttribute("breakout-extend"),
-    Services.prefs.getBoolPref("browser.nova.enabled", false)
+    "breakout-extend shuld be set if there is oneoff buttons"
   );
 
   manager.unregisterProvider(emptyProvider);
   await UrlbarTestUtils.promisePopupClose(window);
+  await SpecialPowers.popPrefEnv();
 });

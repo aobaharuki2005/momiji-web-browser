@@ -70,7 +70,7 @@
   --urlbarView-action-button-hover-background-color: var(--urlbarview-background-color-hover);
 
   --urlbarView-tail150-overlay-background: var(--color-violet-90);
-  --urlbarView-tail150-overlay-color: var(--color-gray-05);
+  --urlbarView-tail150-overlay-color: var(--color-gray-0);
   --urlbarView-tail150-canvas-background: var(--color-violet-110);
 
   --urlbarView-separator-char: "•" / "—";
@@ -95,7 +95,7 @@
 .urlbarView {
   /* Compensate for the row's transparent border (gutter), so the selection rect
      is flush with the input container's border edge. */
-  margin-inline: calc(-1 * var(--urlbarView-row-gutter));
+  margin: calc(-1 * var(--urlbarView-row-gutter));
 
   /* Don't handle window drag events in case we are overlapping a toolbar */
   -moz-window-dragging: no-drag;
@@ -106,12 +106,14 @@
 }
 
 .urlbarView-results {
-  padding-block: var(--urlbarView-padding);
   white-space: nowrap;
 
-  /* Vertically center the one-offs when no results are present. */
-  .urlbarView[noresults] > .urlbarView-body-outer > .urlbarView-body-inner > & {
-    padding-block: 0;
+  .urlbar:not([noresults]) > .urlbarView > .urlbarView-body-outer > .urlbarView-body-inner > & {
+    padding-block-start: var(--urlbarView-padding);
+
+    :root[uidensity="compact"] & {
+      padding: var(--urlbarView-padding);
+    }
   }
 }
 
@@ -1666,11 +1668,17 @@
       }
     }
 
-    > .urlbarView-realtime-description-bottom {
+    > .urlbarView-realtime-description-bottom > .urlbarView-sports-status {
+      font-weight: var(--font-weight-bold);
+    }
+
+    .urlbarView-row:not([selected])
+      > .urlbarView-realtime-root
+      > .urlbarView-realtime-item:not([selected])
+      > &
+      > .urlbarView-realtime-description-bottom
       > .urlbarView-sports-status {
-        color: var(--green-status-color);
-        font-weight: var(--font-weight-bold);
-      }
+      color: var(--green-status-color);
     }
   }
 }
@@ -1682,9 +1690,11 @@
   align-items: start;
   padding-block: 10px;
   flex-wrap: wrap;
+  width: unset;
+  margin-inline: calc(var(--urlbarView-padding) + var(--urlbarView-favicon-margin-start));
 }
 
-.urlbarView:not([noresults]) > .search-one-offs:not([hidden]) {
+#urlbar:not([noresults]) > .urlbarView > .search-one-offs:not([hidden]) {
   border-top: 1px solid var(--urlbarview-separator-color);
 }
 

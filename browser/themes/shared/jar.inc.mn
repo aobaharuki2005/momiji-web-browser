@@ -157,7 +157,6 @@
   skin/classic/browser/preferences/category-privacy-security.svg    (../shared/preferences/category-privacy-security.svg)
   skin/classic/browser/preferences/category-search.svg         (../shared/preferences/category-search.svg)
   skin/classic/browser/preferences/category-sync.svg           (../shared/preferences/category-sync.svg)
-  skin/classic/browser/preferences/containers.css              (../shared/preferences/containers.css)
   skin/classic/browser/preferences/containers-dialog.css       (../shared/preferences/containers-dialog.css)
   skin/classic/browser/preferences/dialog.css                  (../shared/preferences/dialog.css)
   skin/classic/browser/preferences/fox-ai.svg                  (../shared/preferences/fox-ai.svg)
@@ -304,6 +303,7 @@
   skin/classic/browser/tabbrowser/tab-groups-list.css          (../shared/tabbrowser/tab-groups-list.css)
   skin/classic/browser/tabbrowser/tab-hover-preview.css        (../shared/tabbrowser/tab-hover-preview.css)
   skin/classic/browser/tabbrowser/tab.tokens.css               (../shared/tabbrowser/tab.tokens.css)
+  skin/classic/browser/tabbrowser/tabs-navbar.tokens.css       (../shared/tabbrowser/tabs-navbar.tokens.css)
   skin/classic/browser/tabbrowser/tabs.css                     (../shared/tabbrowser/tabs.css)
 
   skin/classic/browser/update-badge.svg                        (../shared/update-badge.svg)
@@ -324,6 +324,8 @@
   skin/classic/browser/places/tree-icons.css                   (../shared/places/tree-icons.css)
   skin/classic/browser/privatebrowsing/aboutPrivateBrowsing.css (../shared/privatebrowsing/aboutPrivateBrowsing.css)
   skin/classic/browser/privatebrowsing/favicon.svg             (../shared/privatebrowsing/favicon.svg)
+  skin/classic/browser/privatebrowsing/fox-tail.svg            (../shared/privatebrowsing/fox-tail.svg)
+  skin/classic/browser/privatebrowsing/pbm-logo.svg            (../shared/privatebrowsing/pbm-logo.svg)
 
   skin/classic/browser/syncedtabs/sidebar.css                  (../shared/syncedtabs/sidebar.css)
 

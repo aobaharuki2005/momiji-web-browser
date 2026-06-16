@@ -15,10 +15,10 @@ namespace mozilla {
 
 extern LazyLogModule gMediaDemuxerLog;
 #define MKV_DEBUG(msg, ...) \
-  MOZ_LOG(gMediaDemuxerLog, LogLevel::Debug, (msg, ##__VA_ARGS__))
+  MOZ_LOG_FMT(gMediaDemuxerLog, LogLevel::Debug, msg, ##__VA_ARGS__)
 
 static void ReportCodecUsage(int aCodec) {
-  MKV_DEBUG("ReportCodecUsage, codec: %d", aCodec);
+  MKV_DEBUG("ReportCodecUsage, codec: {}", aCodec);
   switch (aCodec) {
     case NESTEGG_CODEC_AV1:
       mozilla::glean::media::mkv_codec_type
@@ -156,8 +156,7 @@ nsresult MatroskaDemuxer::SetContainerAudioCodecInfo(
         aacCodecSpecificData.mEncoderDelayFrames = static_cast<uint32_t>(
             std::lround(static_cast<double>(codecDelayUs) * aParams.rate /
                         (USECS_PER_S * AAC_SAMPLES_PER_FRAME)));
-        MKV_DEBUG("AAC stream in MKV container, %" PRIu32
-                  " frames of encoder delay.",
+        MKV_DEBUG("AAC stream in MKV container, {} frames of encoder delay.",
                   aacCodecSpecificData.mEncoderDelayFrames);
       } else {
         aacCodecSpecificData.mEncoderDelayFrames = 0;
@@ -169,9 +168,9 @@ nsresult MatroskaDemuxer::SetContainerAudioCodecInfo(
         return NS_ERROR_FAILURE;
       }
       aacCodecSpecificData.mMediaFrameCount = frameCount;
-      MKV_DEBUG("AAC stream in MKV container, media frames: %" PRIu64
-                ", delay frames : %" PRIu32,
-                frameCount, aacCodecSpecificData.mEncoderDelayFrames);
+      MKV_DEBUG(
+          "AAC stream in MKV container, media frames: {}, delay frames : {}",
+          frameCount, aacCodecSpecificData.mEncoderDelayFrames);
       mInfo.mAudio.mCodecSpecificConfig =
           AudioCodecSpecificVariant{std::move(aacCodecSpecificData)};
       break;

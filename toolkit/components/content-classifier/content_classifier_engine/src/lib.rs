@@ -84,6 +84,7 @@ pub unsafe extern "C" fn content_classifier_engine_check_network_request_prepars
     source_schemeless_site: &nsACString,
     request_type: &nsACString,
     third_party: bool,
+    previously_matched_rule: bool,
     out_matched: *mut bool,
     out_important: *mut bool,
     out_exception: *mut nsCString,
@@ -108,11 +109,7 @@ pub unsafe extern "C" fn content_classifier_engine_check_network_request_prepars
         third_party,
     );
 
-    // Bug 2041805: this is inefficient.
-    // We have to do it because of how exceptions are processed and how we group rules.
-    // Exceptions are (by default) only checked when they are already matched by the same engine.
-    // So our exceptions that are in separate lists would be useless without the last flag=true here.
-    let result = engine.check_network_request_subset(&request, false, true);
+    let result = engine.check_network_request_subset(&request, previously_matched_rule, false);
 
     *out_matched = result.matched;
     *out_important = result.important;

@@ -5591,15 +5591,10 @@ interface nsILoginManager extends nsISupports {
   readonly initializationPromise: Promise<any>;
   addLoginAsync(aLogin: nsILoginInfo): Promise<any>;
   addLogins(aLogins: any): Promise<any>;
-  removeLogin(aLogin: nsILoginInfo): void;
   removeLoginAsync(aLogin: nsILoginInfo): Promise<any>;
-  modifyLogin(oldLogin: nsILoginInfo, newLoginData: nsISupports): void;
   modifyLoginAsync(oldLogin: nsILoginInfo, newLoginData: nsISupports): Promise<any>;
-  recordPasswordUse(aLogin: nsILoginInfo, aPrivateContextWithoutExplicitConsent: boolean, aLoginType: string, aFilled: boolean): void;
   recordPasswordUseAsync(aLogin: nsILoginInfo, aPrivateContextWithoutExplicitConsent: boolean, aLoginType: string, aFilled: boolean): Promise<any>;
-  removeAllUserFacingLogins(): void;
   removeAllUserFacingLoginsAsync(): Promise<any>;
-  removeAllLogins(): void;
   removeAllLoginsAsync(): Promise<any>;
   getAllLogins(): Promise<any>;
   getAllLoginsWithCallback(aCallback: nsILoginSearchCallback): void;
@@ -5609,10 +5604,8 @@ interface nsILoginManager extends nsISupports {
   getLoginSavingEnabled(aHost: string): boolean;
   setLoginSavingEnabled(aHost: string, isEnabled: boolean): void;
   findLogins(aOrigin: string, aActionOrigin: string, aHttpRealm: string): nsILoginInfo[];
-  countLogins(aOrigin: string, aActionOrigin: string, aHttpRealm: string): u32;
   countLoginsAsync(aOrigin: string, aActionOrigin: string, aHttpRealm: string): Promise<any>;
   searchLoginsAsync(matchData: any): Promise<any>;
-  searchLogins(matchData: nsIPropertyBag): nsILoginInfo[];
   getSyncID(): Promise<any>;
   setSyncID(syncID: string): Promise<any>;
   getLastSync(): Promise<any>;

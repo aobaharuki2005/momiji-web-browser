@@ -8,8 +8,9 @@ import android.util.Log
 import kotlinx.coroutines.runBlocking
 import mozilla.components.feature.sitepermissions.SitePermissionsRules
 import org.mozilla.fenix.R
+import org.mozilla.fenix.components.appstate.AppAction
+import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.getPreferenceKey
-import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.helpers.Constants.TAG
 import org.mozilla.fenix.helpers.ETPPolicy.CUSTOM
 import org.mozilla.fenix.helpers.ETPPolicy.STANDARD
@@ -36,6 +37,7 @@ class FeatureSettingsHelperDelegate : FeatureSettingsHelper {
         isDeleteSitePermissionsEnabled = settings.deleteSitePermissions,
         isOpenInAppBannerEnabled = settings.shouldShowOpenInAppBanner,
         isUnifiedTrustPanelEnabled = settings.enableUnifiedTrustPanel,
+        isHomepageSportsWidgetVisible = settings.showHomepageSportsWidget,
         etpPolicy = getETPPolicy(settings),
         isLocationPermissionEnabled = getFeaturePermission(PhoneFeature.LOCATION, settings),
         isMenuRedesignCFREnabled = settings.shouldShowMenuCFR,
@@ -67,6 +69,7 @@ class FeatureSettingsHelperDelegate : FeatureSettingsHelper {
     override var isPWAsPromptEnabled: Boolean by updatedFeatureFlags::isPWAsPromptEnabled
     override var isOpenInAppBannerEnabled: Boolean by updatedFeatureFlags::isOpenInAppBannerEnabled
     override var isUnifiedTrustPanelEnabled: Boolean by updatedFeatureFlags::isUnifiedTrustPanelEnabled
+    override var isHomepageSportsWidgetVisible: Boolean by updatedFeatureFlags::isHomepageSportsWidgetVisible
     override var etpPolicy: ETPPolicy by updatedFeatureFlags::etpPolicy
     override var isLocationPermissionEnabled: SitePermissionsRules.Action by updatedFeatureFlags::isLocationPermissionEnabled
     override var isMenuRedesignCFREnabled: Boolean by updatedFeatureFlags::isMenuRedesignCFREnabled
@@ -111,6 +114,8 @@ class FeatureSettingsHelperDelegate : FeatureSettingsHelper {
         settings.microsurveyFeatureEnabled = featureFlags.isMicrosurveyEnabled
         settings.shouldUseBottomToolbar = featureFlags.shouldUseBottomToolbar
         settings.enableUnifiedTrustPanel = featureFlags.isUnifiedTrustPanelEnabled
+        settings.showHomepageSportsWidget = featureFlags.isHomepageSportsWidgetVisible
+        setSportsWidgetVisibility(featureFlags.isHomepageSportsWidgetVisible)
         setETPPolicy(featureFlags.etpPolicy)
         setPermissions(PhoneFeature.LOCATION, featureFlags.isLocationPermissionEnabled)
         settings.onboardingFeatureEnabled = featureFlags.onboardingFeatureEnabled
@@ -137,6 +142,7 @@ private data class FeatureFlags(
     var isDeleteSitePermissionsEnabled: Boolean,
     var isOpenInAppBannerEnabled: Boolean,
     var isUnifiedTrustPanelEnabled: Boolean,
+    var isHomepageSportsWidgetVisible: Boolean,
     var etpPolicy: ETPPolicy,
     var isLocationPermissionEnabled: SitePermissionsRules.Action,
     var isMenuRedesignCFREnabled: Boolean,
@@ -241,7 +247,14 @@ internal fun getFeaturePermission(feature: PhoneFeature, settings: Settings): Si
 private fun setPermissions(feature: PhoneFeature, action: SitePermissionsRules.Action) {
     runBlocking {
         Log.i(TAG, "setPermissions: Trying to set $action permission for $feature.")
-        appContext.settings().setSitePermissionsPhoneFeatureAction(feature, action)
+        appContext.components.settings.setSitePermissionsPhoneFeatureAction(feature, action)
         Log.i(TAG, "setPermissions: Set $action permission for $feature.")
+    }
+}
+
+private fun setSportsWidgetVisibility(isVisible: Boolean) {
+    runBlocking {
+        appContext.components.appStore
+            .dispatch(AppAction.SportsWidgetAction.VisibilityChanged(isVisible))
     }
 }

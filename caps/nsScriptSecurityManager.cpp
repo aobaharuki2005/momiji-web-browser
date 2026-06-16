@@ -38,6 +38,7 @@
 #include "nsDirectoryServiceDefs.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsPIDOMWindow.h"
+#include "nsPIDOMWindowInlines.h"
 #include "nsIDocShell.h"
 #include "nsIConsoleService.h"
 #include "nsIOService.h"

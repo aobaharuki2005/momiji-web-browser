@@ -31,6 +31,123 @@ newtab-card-dismiss-button =
     .title = 닫기
     .aria-label = 닫기
 
+## Strings for "Homepage" and "Firefox Home" sections of about:settings#home.
+## Homepage panel
+
+home-homepage-title =
+    .label = 홈페이지
+home-homepage-new-windows =
+    .label = 새 창
+home-homepage-new-tabs =
+    .label = 새 탭
+# This option leads to the "Custom Homepage" subpage
+home-homepage-custom-homepage-button =
+    .label = 특정 사이트 선택
+
+## Custom URLs subpage
+
+# Subheader on the Custom Homepage subpage. Followed by a form to enter URLs and a list of URLs already saved, if any.
+home-custom-homepage-card-header =
+    .label = 웹 사이트 주소
+home-custom-homepage-address =
+    .placeholder = 주소 입력
+home-custom-homepage-address-button =
+    .label = 주소 추가
+# Shown when no custom websites/URLs to use as a homepage have been added yet
+home-custom-homepage-no-results =
+    .label = 아직 추가된 웹 사이트가 없습니다.
+home-custom-homepage-delete-address-button =
+    .aria-label = 주소 삭제
+    .title = 주소 삭제
+# Further options to use when setting the home page. Two action buttons are placed in line with this prompt
+# to replace the current home page with a currently open page or bookmark.
+home-custom-homepage-replace-with-prompt =
+    .label = 대체:
+# Button that appears in-line after text "Replace with" (home-custom-homepage-replace-with-prompt)
+home-custom-homepage-current-pages-button =
+    .label = 현재 열려있는 페이지
+# Button that appears in-line after text "Replace with" (home-custom-homepage-replace-with-prompt)
+home-custom-homepage-bookmarks-button =
+    .label = 북마크…
+
+## Firefox Home content
+
+home-prefs-content-header =
+    .label = { -firefox-home-brand-name }
+home-prefs-search-header2 =
+    .label = 검색
+home-prefs-stories-header2 =
+    .label = 이야기
+    .description = { -brand-product-name } 제품군이 선별한 뛰어난 콘텐츠
+home-prefs-widgets-header =
+    .label = 위젯
+# Lists is a widget on New Tab, similar to a to-do widget
+home-prefs-lists-header =
+    .label = 목록
+# Timer is a widget on New Tab, similar to the Pomodoro timer.
+home-prefs-timer-header =
+    .label = 타이머
+# Sports is a widget on New Tab showing sports scores and schedules.
+home-prefs-sports-widget-header =
+    .label = 스포츠
+# Clock is a widget on New Tab that displays time zones around the world.
+home-prefs-clocks-header =
+    .label = 시계
+home-prefs-mission-message2 =
+    .message = 스폰서는 더 나은 웹을 만들려는 저희를 지원합니다.
+home-prefs-manage-topics-link2 =
+    .label = 주제 관리
+home-prefs-choose-wallpaper-link2 =
+    .label = 배경 화면 선택
+home-prefs-firefox-logo-header =
+    .label = { -brand-short-name } 로고
+# Informational message bar that appears in the Firefox Home section when the options are disabled.
+# The user must select Firefox Home as their homepage for either new tabs or new windows to enable
+# the features in settings.
+home-prefs-firefox-home-disabled-notice =
+    .message = 이 기능을 사용하려면, 새 탭이나 새 창을 { -firefox-home-brand-name }으로 설정하세요.
+# Variables:
+#   $num (number) - Number of rows displayed
+home-prefs-sections-rows-option-srd =
+    .label = { $num } 행
+# Dropdown option shown when an extension replaces the contents of new windows or tabs.
+# Variables:
+#   $extension (string) - Name of the extension
+home-prefs-homepage-extension-option =
+    .label = 확장 기능 ({ $extension })
+home-restore-defaults-srd =
+    .label = 기본값으로 복원
+    .accesskey = R
+home-mode-choice-default-fx-srd =
+    .label = { -firefox-home-brand-name } (기본값)
+home-mode-choice-custom-srd =
+    .label = 사용자 지정 URL…
+home-mode-choice-blank-srd =
+    .label = 빈 페이지
+home-prefs-shortcuts-header-srd =
+    .label = 바로 가기
+home-prefs-shortcuts-select =
+    .aria-label = 바로 가기
+home-prefs-shortcuts-by-option-sponsored-srd =
+    .label = 스폰서 바로 가기
+home-prefs-recommended-by-option-sponsored-stories-srd =
+    .label = 스폰서 소식
+home-prefs-highlights-option-visited-pages-srd =
+    .label = 방문한 페이지
+home-prefs-highlights-options-bookmarks-srd =
+    .label = 북마크
+home-prefs-highlights-option-most-recent-download-srd =
+    .label = 가장 최근 다운로드
+home-prefs-recent-activity-header-srd =
+    .label = 최근 활동
+home-prefs-recent-activity-select =
+    .aria-label = 최근 활동
+home-prefs-weather-header-srd =
+    .label = 날씨
+home-prefs-support-firefox-header-srd =
+    .label = { -brand-product-name } 지원
+home-prefs-mission-message-learn-more-link-srd = 방법 알아보기
+
 ## Search box component.
 
 # "Search" is a verb/action
@@ -151,6 +268,8 @@ newtab-menu-section-block = 차단
 # "Follow", "unfollow", and "following" are social media terms that refer to subscribing to or unsubscribing from a section of stories.
 # e.g. Following the travel section of stories.
 newtab-menu-section-unfollow-topic = 팔로우 취소
+# Context menu option to open a support page explaining the New Tab personalization features and privacy controls.
+newtab-menu-section-learn-more = 더 알아보기
 # "Follow", "unfollow", and "following" are social media terms that refer to subscribing to or unsubscribing from a section of stories.
 # e.g. Following the travel section of stories.
 newtab-menu-section-unfollow = 주제 팔로우 취소
@@ -756,8 +875,6 @@ newtab-widget-lists-button-add-item = 항목 추가
 newtab-widget-lists-input-add-an-item2 =
     .placeholder = 항목 추가
     .aria-label = 항목 추가
-newtab-widget-lists-input-add-an-item =
-    .placeholder = 항목 추가
 newtab-widget-lists-input-error = 항목을 추가하려면 텍스트를 포함하세요.
 newtab-widget-lists-input-menu-open-link = 링크 열기
 newtab-widget-lists-input-menu-move-up = 위로 이동
@@ -785,11 +902,6 @@ newtab-widget-lists-name-placeholder-checklist2 =
 newtab-widget-lists-name-placeholder-new2 =
     .placeholder = 새 목록
     .aria-label = 목록 이름 편집
-newtab-widget-lists-name-placeholder-checklist =
-    .placeholder = 체크리스트
-# The placeholder value of the name field for a newly created list
-newtab-widget-lists-name-placeholder-new =
-    .placeholder = 새 목록
 newtab-widget-section-title = 위젯
 newtab-widget-menu-hide = 위젯 숨기기
 newtab-widget-menu-change-size = 크기 변경
@@ -1042,6 +1154,28 @@ newtab-sports-widget-match-full-time = 경기 종료
 newtab-sports-widget-match-halftime = 하프타임
 newtab-sports-widget-match-extra-time = 연장전
 newtab-sports-widget-match-penalties = 페널티
+# Separator shown between two teams in a placeholder match row when no upcoming
+# match details are available yet.
+newtab-sports-widget-match-vs = vs
+# Note shown in the Upcoming tab when no match details are available yet.
+newtab-sports-widget-no-upcoming-matches = 향후 경기 정보를 기대해 주세요
+
+## Sports widget live-games pagination. Shown when 2+ matches are live at the same time
+
+# arrow button that goes to the previous page of live matches.
+newtab-sports-widget-pagination-previous =
+    .aria-label = 이전
+    .title = 이전
+# arrow button that goes to the next page of live matches.
+newtab-sports-widget-pagination-next =
+    .aria-label = 다음
+    .title = 다음
+# Dot indicator that jumps directly to a given live match.
+# $index (number) - 1-based position of this dot in the list.
+# $total (number) - Total number of live matches.
+newtab-sports-widget-pagination-dot =
+    .aria-label = 라이브 경기 { $index } / { $total }
+    .title = 라이브 경기 { $index } / { $total }
 
 ## Accessible labels for match rows in the sports widget. These are read by
 ## screen readers to announce the match details and status.
@@ -1102,6 +1236,8 @@ newtab-sports-widget-team-name-label-eng =
     .label = 잉글랜드
 newtab-sports-widget-team-name-label-sco =
     .label = 스코틀랜드
+# Placeholder used in a match row's aria-label for an undecided team (shown visually as "--").
+newtab-sports-widget-team-tbd = 미정
 
 ## Sports widget OMC messages
 ## Shown as on-screen messages promoting the Sports widget and World Cup wallpapers.

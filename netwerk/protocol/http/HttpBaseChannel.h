@@ -161,6 +161,10 @@ class HttpBaseChannel : public nsHashPropertyBag,
   NS_IMETHOD GetBlockAuthPrompt(bool* aValue) override;
   NS_IMETHOD SetBlockAuthPrompt(bool aValue) override;
   NS_IMETHOD GetCanceled(bool* aCanceled) override;
+  NS_IMETHOD GetParentProcessChannelHandle(
+      mozilla::dom::ParentProcessChannelHandle** aValue) override;
+  NS_IMETHOD SetParentProcessChannelHandle(
+      mozilla::dom::ParentProcessChannelHandle* aValue) override;
 
   // nsIEncodedChannel
   NS_IMETHOD GetApplyConversion(bool* value) override;
@@ -745,6 +749,8 @@ class HttpBaseChannel : public nsHashPropertyBag,
   nsCOMPtr<nsIEventTarget> mCurrentThread;
 
   RefPtr<OpaqueResponseBlocker> mORB;
+
+  RefPtr<mozilla::dom::ParentProcessChannelHandle> mParentProcessChannelHandle;
 
  private:
   // Proxy release all members above on main thread.

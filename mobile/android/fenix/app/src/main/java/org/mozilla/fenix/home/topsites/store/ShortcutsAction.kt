@@ -27,6 +27,13 @@ sealed class ShortcutsAction : Action {
     data class UpdateTopSites(val topSites: List<TopSite>) : ShortcutsAction()
 
     /**
+     * [ShortcutsAction] dispatched when the list of popular sites is updated.
+     *
+     * @property popularSites The new list of [PopularSite]s to display.
+     */
+    data class UpdatePopularSites(val popularSites: List<PopularSite>) : ShortcutsAction()
+
+    /**
      * [ShortcutsAction] dispatched when the visibility of the add shortcut tile is updated.
      *
      * @property showAddShortcut Whether the add shortcut tile should be visible.

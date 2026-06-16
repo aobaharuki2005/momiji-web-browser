@@ -1731,6 +1731,11 @@ nsNSSComponent::Observe(nsISupports* aSubject, const char* aTopic,
       ClearSSLExternalAndInternalSessionCache();
     }
   } else if (!nsCRT::strcmp(aTopic, "last-pb-context-exited")) {
+    RefPtr<SharedCertVerifier> certVerifier(
+        mozilla::psm::GetDefaultCertVerifier());
+    if (certVerifier) {
+      certVerifier->ClearPrivateBrowsingOCSPCache();
+    }
     return ClearSSLExternalAndInternalSessionCache();
   }
 
@@ -1758,7 +1763,8 @@ nsresult nsNSSComponent::GetNewPrompter(nsIPrompt** result) {
   return rv;
 }
 
-nsresult nsNSSComponent::LogoutAuthenticatedPK11() {
+NS_IMETHODIMP
+nsNSSComponent::ClearTLSCacheAndCancelAllConnections() {
   ClearSSLExternalAndInternalSessionCache();
 
   nsCOMPtr<nsIObserverService> os = mozilla::services::GetObserverService();

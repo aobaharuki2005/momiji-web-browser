@@ -589,7 +589,7 @@ uint32_t CycleCollectedJSContext::RecursionDepth() const {
 }
 
 void CycleCollectedJSContext::RunInStableState(
-    already_AddRefed<nsIRunnable>&& aRunnable) {
+    already_AddRefed<nsIRunnable> aRunnable) {
   MOZ_ASSERT(mJSContext);
   nsCOMPtr<nsIRunnable> runnable = std::move(aRunnable);
   PROFILER_MARKER("CycleCollectedJSContext::RunInStableState", OTHER, {},
@@ -598,7 +598,7 @@ void CycleCollectedJSContext::RunInStableState(
 }
 
 void CycleCollectedJSContext::AddPendingIDBTransaction(
-    already_AddRefed<nsIRunnable>&& aTransaction) {
+    already_AddRefed<nsIRunnable> aTransaction) {
   MOZ_ASSERT(mJSContext);
 
   PendingIDBTransactionData data;

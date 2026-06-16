@@ -45,44 +45,9 @@
 #include "jit/riscv64/base/Integer.h"
 #include "jit/riscv64/disasm/Disasm-riscv64.h"
 
-#if defined(__linux__) && !defined(JS_SIMULATOR_RISCV64)
-#  include <sys/syscall.h>
-#  if __has_include(<asm/hwprobe.h>)
-#    include <asm/hwprobe.h>
-#  endif
-#endif
-
 using mozilla::DebugOnly;
 namespace js {
 namespace jit {
-
-// static
-void RVFlags::Init() {
-  MOZ_ASSERT(!sComputed);
-#if defined(__linux__) && !defined(JS_SIMULATOR_RISCV64) && \
-    __has_include(<asm/hwprobe.h>)
-  riscv_hwprobe probe[1] = {{RISCV_HWPROBE_KEY_IMA_EXT_0, 0}};
-  if (syscall(__NR_riscv_hwprobe, probe, 1, 0, nullptr, 0) == 0) {
-    if (probe[0].value & RISCV_HWPROBE_EXT_ZBA) {
-      sZbaExtension = true;
-    }
-    if (probe[0].value & RISCV_HWPROBE_EXT_ZBB) {
-      sZbbExtension = true;
-    }
-  }
-#else
-  if (getenv("RISCV_EXT_ZBA")) {
-    // Force on Zba extension for testing purposes or on non-linux platforms.
-    sZbaExtension = true;
-  }
-  if (getenv("RISCV_EXT_ZBB")) {
-    // Force on Zbb extension for testing purposes or on non-linux platforms.
-    sZbbExtension = true;
-  }
-#endif
-
-  sComputed = true;
-}
 
 #define UNIMPLEMENTED_RISCV() MOZ_CRASH("RISC_V not implemented");
 
@@ -497,6 +462,183 @@ static constexpr auto ToImmPtrParts(int64_t imm) {
   };
 }
 
+// Read or write to an instruction sequence written by |li_ptr|.
+class LiPtr {
+ public:
+  // li_ptr emits a six instruction sequence.
+  static constexpr size_t Length = 6;
+
+ private:
+  Instruction* start_;
+
+  Instruction* at(size_t index) {
+    MOZ_ASSERT(index < Length);
+    return start_ + index * kInstrSize;
+  }
+
+  const Instruction* at(size_t index) const {
+    MOZ_ASSERT(index < Length);
+    return start_ + index * kInstrSize;
+  }
+
+ public:
+  explicit LiPtr(Instruction* start) : start_(start) {}
+
+  /**
+   * Return true iff this is a li_ptr instruction sequence.
+   */
+  bool isValid() const {
+    return at(0)->IsLui() && at(1)->IsAddi() && at(2)->IsSlli() &&
+           at(3)->IsOri() && at(4)->IsSlli() && at(5)->IsOri();
+  }
+
+  /**
+   * Disassemble the li_ptr instruction sequence.
+   */
+  void disassemble() {
+#ifdef JS_DISASM_RISCV64
+    Assembler::disassembleInstr(at(0));
+    Assembler::disassembleInstr(at(1));
+    Assembler::disassembleInstr(at(2));
+    Assembler::disassembleInstr(at(3));
+    Assembler::disassembleInstr(at(4));
+    Assembler::disassembleInstr(at(5));
+#endif
+  }
+
+  /**
+   * Return the register to which this li_ptr instruction sequence writes to.
+   */
+  int target() const {
+    MOZ_ASSERT(isValid());
+
+    // All instructions must write to the same register.
+    MOZ_ASSERT(at(0)->RdValue() == at(1)->RdValue());
+    MOZ_ASSERT(at(0)->RdValue() == at(2)->RdValue());
+    MOZ_ASSERT(at(0)->RdValue() == at(3)->RdValue());
+    MOZ_ASSERT(at(0)->RdValue() == at(4)->RdValue());
+    MOZ_ASSERT(at(0)->RdValue() == at(5)->RdValue());
+
+    return at(0)->RdValue();
+  }
+
+  /**
+   * Load the constant encoded in the li_ptr instruction sequence.
+   */
+  uintptr_t load() const {
+    MOZ_ASSERT(isValid());
+
+    // lui(rd, high_20);
+    int64_t imm = int64_t(at(0)->Imm20UValue() << kImm20Shift);
+
+    // addi(rd, rd, low_12);  // 31 bits in rd.
+    imm += int64_t(at(1)->Imm12Value());
+
+    // slli(rd, rd, 11);  // Space for next 11 bits
+    MOZ_ASSERT(at(2)->Imm12Value() == 11);
+    imm <<= 11;
+
+    // ori(rd, rd, b11);  // 11 bits are added, 42 bit in rd.
+    imm |= int64_t(at(3)->Imm12Value());
+
+    // slli(rd, rd, 6);  // Space for next 6 bits
+    MOZ_ASSERT(at(4)->Imm12Value() == 6);
+    imm <<= 6;
+
+    // ori(rd, rd, a6);  // 6 bits are added, 48 bit in rd.
+    imm |= int64_t(at(5)->Imm12Value());
+
+    MOZ_ASSERT((imm & 0xffff'0000'0000'0000ll) == 0, "pointers are 48 bits");
+    return static_cast<uintptr_t>(imm);
+  }
+
+  /**
+   * Update the constant embedded in the li_ptr instruction sequence.
+   */
+  void update(uintptr_t value) {
+    MOZ_ASSERT(isValid());
+
+    auto [high_20, low_12, b11, a6] = ToImmPtrParts(value);
+
+    // lui(rd, high_20);
+    at(0)->SetImm20UValue(high_20);
+
+    // addi(rd, rd, low_12);  // 31 bits in rd.
+    at(1)->SetImm12Value(low_12);
+
+    // slli(rd, rd, 11);  // Space for next 11 bits
+    MOZ_ASSERT(at(2)->Imm12Value() == 11);
+
+    // ori(rd, rd, b11);  // 11 bits are added, 42 bit in rd.
+    at(3)->SetImm12Value(b11);
+
+    // slli(rd, rd, 6);  // Space for next 6 bits
+    MOZ_ASSERT(at(4)->Imm12Value() == 6);
+
+    // ori(rd, rd, a6);  // 6 bits are added, 48 bit in rd.
+    at(5)->SetImm12Value(a6);
+
+    MOZ_ASSERT(load() == value);
+  }
+
+  /**
+   * Write the li_ptr instruction sequence, overwriting any previous
+   * instructions.
+   */
+  void write(Register rd, uintptr_t value) {
+    auto [high_20, low_12, b11, a6] = ToImmPtrParts(value);
+
+    // lui(rd, high_20);
+    at(0)->SetUFormat(RO_LUI, rd.code(), high_20);
+
+    // addi(rd, rd, low_12);  // 31 bits in rd.
+    at(1)->SetIFormat(RO_ADDI, rd.code(), rd.code(), low_12);
+
+    // slli(rd, rd, 11);  // Space for next 11 bits
+    at(2)->SetIFormat(RO_SLLI, rd.code(), rd.code(), 11);
+
+    // ori(rd, rd, b11);  // 11 bits are added, 42 bit in rd.
+    at(3)->SetIFormat(RO_ORI, rd.code(), rd.code(), b11);
+
+    // slli(rd, rd, 6);  // Space for next 6 bits
+    at(4)->SetIFormat(RO_SLLI, rd.code(), rd.code(), 6);
+
+    // ori(rd, rd, a6);  // 6 bits are added, 48 bit in rd.
+    at(5)->SetIFormat(RO_ORI, rd.code(), rd.code(), a6);
+
+    MOZ_ASSERT(load() == value);
+  }
+};
+
+uintptr_t Assembler::LoadLiPtrInstructions(Instruction* instr) {
+  LiPtr ptr(instr);
+  if (!ptr.isValid()) {
+    // Dump the faulty instruction sequence before crashing.
+    ptr.disassemble();
+  }
+  MOZ_RELEASE_ASSERT(ptr.isValid());
+
+  return ptr.load();
+}
+
+void Assembler::UpdateLiPtrInstructions(Instruction* instr, uintptr_t value) {
+  LiPtr ptr(instr);
+  if (!ptr.isValid()) {
+    // Dump the faulty instruction sequence before crashing.
+    ptr.disassemble();
+  }
+  MOZ_RELEASE_ASSERT(ptr.isValid());
+
+  ptr.update(value);
+}
+
+void Assembler::WriteLiPtrInstructions(Instruction* instr, Register reg,
+                                       uintptr_t value) {
+  // Forcibly overwrites whatever was written at |instr| with |value|.
+  LiPtr ptr(instr);
+  ptr.write(reg, value);
+}
+
 BufferOffset Assembler::li_ptr(Register rd, int64_t imm) {
   AutoForbidPoolsAndNops afp(this, 6);
   BufferOffset offset = nextOffset();
@@ -511,10 +653,12 @@ BufferOffset Assembler::li_ptr(Register rd, int64_t imm) {
 
   lui(rd, high_20);
   addi(rd, rd, low_12);  // 31 bits in rd.
-  slli(rd, rd, 11);      // Space for next 11 bis
+  slli(rd, rd, 11);      // Space for next 11 bits
   ori(rd, rd, b11);      // 11 bits are put in. 42 bit in rd
   slli(rd, rd, 6);       // Space for next 6 bits
-  ori(rd, rd, a6);       // 6 bits are put in. 48 bis in rd
+  ori(rd, rd, a6);       // 6 bits are put in. 48 bits in rd
+
+  MOZ_ASSERT_IF(!oom(), LiPtr(getInstructionAt(offset)).isValid());
 
   return offset;
 }
@@ -539,6 +683,148 @@ static constexpr auto ToImm64Parts(int64_t imm) {
   };
 }
 
+// Read or write to an instruction sequence written by |li_constant|.
+class LiConstant {
+ public:
+  // li_constant emits an eight instruction sequence.
+  static constexpr size_t Length = 8;
+
+ private:
+  Instruction* start_;
+
+  Instruction* at(size_t index) {
+    MOZ_ASSERT(index < Length);
+    return start_ + index * kInstrSize;
+  }
+
+  const Instruction* at(size_t index) const {
+    MOZ_ASSERT(index < Length);
+    return start_ + index * kInstrSize;
+  }
+
+ public:
+  explicit LiConstant(Instruction* start) : start_(start) {}
+
+  /**
+   * Return true iff this is a li_constant instruction sequence.
+   */
+  bool isValid() const {
+    return at(0)->IsLui() && at(1)->IsAddiw() && at(2)->IsSlli() &&
+           at(3)->IsAddi() && at(4)->IsSlli() && at(5)->IsAddi() &&
+           at(6)->IsSlli() && at(7)->IsAddi();
+  }
+
+  /**
+   * Disassemble the li_constant instruction sequence.
+   */
+  void disassemble() {
+#ifdef JS_DISASM_RISCV64
+    Assembler::disassembleInstr(at(0));
+    Assembler::disassembleInstr(at(1));
+    Assembler::disassembleInstr(at(2));
+    Assembler::disassembleInstr(at(3));
+    Assembler::disassembleInstr(at(4));
+    Assembler::disassembleInstr(at(5));
+    Assembler::disassembleInstr(at(6));
+    Assembler::disassembleInstr(at(7));
+#endif
+  }
+
+  /**
+   * Load the constant encoded in the li_constant instruction sequence.
+   */
+  int64_t load() const {
+    MOZ_ASSERT(isValid());
+
+    // lui(rd, high_20);  // Bits 63:48
+    int64_t imm = int64_t(at(0)->Imm20UValue() << kImm20Shift);
+
+    // addiw(rd, rd, d12);  // Bits 47:36
+    imm += int64_t(at(1)->Imm12Value());
+
+    // slli(rd, rd, 12);
+    MOZ_ASSERT(at(2)->Imm12Value() == 12);
+    imm <<= 12;
+
+    // addi(rd, rd, c12);  // Bits 35:24
+    imm += int64_t(at(3)->Imm12Value());
+
+    // slli(rd, rd, 12);
+    MOZ_ASSERT(at(4)->Imm12Value() == 12);
+    imm <<= 12;
+
+    // addi(rd, rd, b12);  // Bits 23:12
+    imm += int64_t(at(5)->Imm12Value());
+
+    // slli(rd, rd, 12);
+    MOZ_ASSERT(at(6)->Imm12Value() == 12);
+    imm <<= 12;
+
+    // addi(rd, rd, a12);  // Bits 11:0
+    imm += int64_t(at(7)->Imm12Value());
+
+    return imm;
+  }
+
+  /**
+   * Update the constant embedded in the li_constant instruction sequence.
+   */
+  void update(int64_t value) {
+    MOZ_ASSERT(isValid());
+
+    auto [high_20, d12, c12, b12, a12] = ToImm64Parts(value);
+
+    // lui(rd, high_20);  // Bits 63:48
+    at(0)->SetImm20UValue(high_20);
+
+    // addiw(rd, rd, d12);  // Bits 47:36
+    at(1)->SetImm12Value(d12);
+
+    // slli(rd, rd, 12);
+    MOZ_ASSERT(at(2)->Shamt() == 12);
+
+    // addi(rd, rd, c12);  // Bits 35:24
+    at(3)->SetImm12Value(c12);
+
+    // slli(rd, rd, 12);
+    MOZ_ASSERT(at(4)->Shamt() == 12);
+
+    // addi(rd, rd, b12);  // Bits 23:12
+    at(5)->SetImm12Value(b12);
+
+    // slli(rd, rd, 12);
+    MOZ_ASSERT(at(6)->Shamt() == 12);
+
+    // addi(rd, rd, a12);  // Bits 11:0
+    at(7)->SetImm12Value(a12);
+
+    MOZ_ASSERT(load() == value);
+  }
+};
+
+int64_t Assembler::LoadLiConstantInstructions(Instruction* instr) {
+  LiConstant cst(instr);
+  if (!cst.isValid()) {
+    // Dump the faulty instruction sequence before crashing.
+    cst.disassemble();
+  }
+  MOZ_RELEASE_ASSERT(cst.isValid());
+
+  return cst.load();
+}
+
+void Assembler::UpdateLiConstantInstructions(Instruction* instr,
+                                             int64_t value) {
+  LiConstant cst(instr);
+  if (!cst.isValid()) {
+    // Dump the faulty instruction sequence before crashing.
+    cst.disassemble();
+  }
+  MOZ_RELEASE_ASSERT(cst.isValid());
+
+  cst.update(value);
+}
+
 BufferOffset Assembler::li_constant(Register rd, int64_t imm) {
   AutoForbidPoolsAndNops afp(this, 8);
   BufferOffset offset = nextOffset();
@@ -556,6 +842,8 @@ BufferOffset Assembler::li_constant(Register rd, int64_t imm) {
   addi(rd, rd, b12);  // Bits 23:12
   slli(rd, rd, 12);
   addi(rd, rd, a12);  // Bits 11:0
+
+  MOZ_ASSERT_IF(!oom(), LiConstant(getInstructionAt(offset)).isValid());
 
   return offset;
 }
@@ -635,36 +923,6 @@ int Assembler::disassembleInstr(Instruction* instr, bool enable_spew) {
 }
 #endif /* JS_DISASM_RISCV64 */
 
-uint64_t Assembler::jumpChainTargetAddressAt(Instruction* pos) {
-  Instruction* instr0 = pos;
-  DEBUG_PRINTF("jumpChainTargetAddressAt: pc: 0x%p\t", instr0);
-  Instruction* instr1 = pos + 1 * kInstrSize;
-  Instruction* instr2 = pos + 2 * kInstrSize;
-  Instruction* instr3 = pos + 3 * kInstrSize;
-  Instruction* instr4 = pos + 4 * kInstrSize;
-  Instruction* instr5 = pos + 5 * kInstrSize;
-
-  // Interpret instructions for address generated by li: See listing in
-  // Assembler::jumpChainSetTargetValueAt() just below.
-  if (instr0->IsLui() && instr1->IsAddi() && instr2->IsSlli() &&
-      instr3->IsOri() && instr4->IsSlli() && instr5->IsOri()) {
-    // Assemble the 64 bit value.
-    int64_t addr = (int64_t)(instr0->Imm20UValue() << kImm20Shift) +
-                   (int64_t)instr1->Imm12Value();
-    MOZ_ASSERT(instr2->Imm12Value() == 11);
-    addr <<= 11;
-    addr |= (int64_t)instr3->Imm12Value();
-    MOZ_ASSERT(instr4->Imm12Value() == 6);
-    addr <<= 6;
-    addr |= (int64_t)instr5->Imm12Value();
-
-    DEBUG_PRINTF("addr: %" PRIx64 "\n", addr);
-    return static_cast<uint64_t>(addr);
-  }
-  // We should never get here, force a bad address if we do.
-  MOZ_CRASH("RISC-V  UNREACHABLE");
-}
-
 void Assembler::PatchDataWithValueCheck(CodeLocationLabel label,
                                         ImmPtr newValue, ImmPtr expectedValue) {
   PatchDataWithValueCheck(label, PatchedImmPtr(newValue.value),
@@ -676,229 +934,55 @@ void Assembler::PatchDataWithValueCheck(CodeLocationLabel label,
                                         PatchedImmPtr expectedValue) {
   Instruction* inst = Instruction::At(label.raw());
 
-  // Extract old Value
+  // Check the previous value matches |expectedValue|.
   DebugOnly<uint64_t> value = Assembler::ExtractLoad64Value(inst);
   MOZ_ASSERT(value == uint64_t(expectedValue.value));
 
-  // Replace with new value
+  // Update the instruction with |newValue|.
   Assembler::UpdateLoad64Value(inst, uint64_t(newValue.value));
 }
 
 uint64_t Assembler::ExtractLoad64Value(Instruction* inst0) {
   DEBUG_PRINTF("\tExtractLoad64Value: \tpc:%p ", inst0);
-  if (inst0->IsJal()) {
-    int offset = inst0->Imm20JValue();
-    inst0 = inst0 + offset;
-  }
-  Instruction* instr1 = inst0 + 1 * kInstrSize;
+  MOZ_ASSERT(!inst0->IsJal(), "unexpected pool guard");
+
+  // This method is called for 48-bit (li_ptr) and 64-bit (li_constant)
+  // patchable immediates.
+  //
+  // The li_ptr and li_constant instruction sequences both start with the "lui"
+  // instruction, so we have to inspect the second instruction to determine
+  // which instruction sequence to read:
+  // - li_constant starts with the instruction sequence "lui; addiw ...".
+  // - li_ptr starts with the instruction sequence "lui; addi ...".
+
+  Instruction* instr1 = inst0 + kInstrSize;
   if (instr1->IsAddiw()) {
-    // Li64
-    Instruction* instr2 = inst0 + 2 * kInstrSize;
-    Instruction* instr3 = inst0 + 3 * kInstrSize;
-    Instruction* instr4 = inst0 + 4 * kInstrSize;
-    Instruction* instr5 = inst0 + 5 * kInstrSize;
-    Instruction* instr6 = inst0 + 6 * kInstrSize;
-    Instruction* instr7 = inst0 + 7 * kInstrSize;
-    if (inst0->IsLui() && instr1->IsAddiw() && instr2->IsSlli() &&
-        instr3->IsAddi() && instr4->IsSlli() && instr5->IsAddi() &&
-        instr6->IsSlli() && instr7->IsAddi()) {
-      int64_t imm = (int64_t)(inst0->Imm20UValue() << kImm20Shift) +
-                    (int64_t)instr1->Imm12Value();
-      MOZ_ASSERT(instr2->Imm12Value() == 12);
-      imm <<= 12;
-      imm += (int64_t)instr3->Imm12Value();
-      MOZ_ASSERT(instr4->Imm12Value() == 12);
-      imm <<= 12;
-      imm += (int64_t)instr5->Imm12Value();
-      MOZ_ASSERT(instr6->Imm12Value() == 12);
-      imm <<= 12;
-      imm += (int64_t)instr7->Imm12Value();
-      DEBUG_PRINTF("imm:%" PRIx64 "\n", imm);
-      return imm;
-    }
-#ifdef JS_DISASM_RISCV64
-    FLAG_riscv_debug = true;
-    disassembleInstr(inst0);
-    disassembleInstr(instr1);
-    disassembleInstr(instr2);
-    disassembleInstr(instr3);
-    disassembleInstr(instr4);
-    disassembleInstr(instr5);
-    disassembleInstr(instr6);
-    disassembleInstr(instr7);
-#endif /* JS_DISASM_RISCV64 */
-    MOZ_CRASH();
+    return LoadLiConstantInstructions(inst0);
   } else {
-    DEBUG_PRINTF("\n");
-#ifdef JS_DISASM_RISCV64
-    Instruction* instrf1 = (inst0 - 1 * kInstrSize);
-    Instruction* instr2 = inst0 + 2 * kInstrSize;
-    Instruction* instr3 = inst0 + 3 * kInstrSize;
-    Instruction* instr4 = inst0 + 4 * kInstrSize;
-    Instruction* instr5 = inst0 + 5 * kInstrSize;
-    Instruction* instr6 = inst0 + 6 * kInstrSize;
-    Instruction* instr7 = inst0 + 7 * kInstrSize;
-    disassembleInstr(instrf1);
-    disassembleInstr(inst0);
-    disassembleInstr(instr1);
-    disassembleInstr(instr2);
-    disassembleInstr(instr3);
-    disassembleInstr(instr4);
-    disassembleInstr(instr5);
-    disassembleInstr(instr6);
-    disassembleInstr(instr7);
-#endif /* JS_DISASM_RISCV64 */
-    MOZ_ASSERT(instr1->IsAddi());
-    // Li48
-    return jumpChainTargetAddressAt(inst0);
+    return LoadLiPtrInstructions(inst0);
   }
 }
 
 void Assembler::UpdateLoad64Value(Instruction* inst0, uint64_t value) {
   DEBUG_PRINTF("\tUpdateLoad64Value: pc: %p\tvalue: %" PRIx64 "\n", inst0,
                value);
-  Instruction* instr1 = inst0 + 1 * kInstrSize;
-  if (inst0->IsJal()) {
-    inst0 = inst0 + inst0->Imm20JValue();
-    instr1 = inst0 + 1 * kInstrSize;
-  }
+  MOZ_ASSERT(!inst0->IsJal(), "unexpected pool guard");
+
+  // This method is called for 48-bit (li_ptr) and 64-bit (li_constant)
+  // patchable immediates.
+  //
+  // The li_ptr and li_constant instruction sequences both start with the "lui"
+  // instruction, so we have to inspect the second instruction to determine
+  // which instruction sequence to patch:
+  // - li_constant starts with the instruction sequence "lui; addiw ...".
+  // - li_ptr starts with the instruction sequence "lui; addi ...".
+
+  Instruction* instr1 = inst0 + kInstrSize;
   if (instr1->IsAddiw()) {
-    Instruction* instr0 = inst0;
-    [[maybe_unused]] Instruction* instr2 = inst0 + 2 * kInstrSize;
-    Instruction* instr3 = inst0 + 3 * kInstrSize;
-    [[maybe_unused]] Instruction* instr4 = inst0 + 4 * kInstrSize;
-    Instruction* instr5 = inst0 + 5 * kInstrSize;
-    [[maybe_unused]] Instruction* instr6 = inst0 + 6 * kInstrSize;
-    Instruction* instr7 = inst0 + 7 * kInstrSize;
-    MOZ_ASSERT(inst0->IsLui() && instr1->IsAddiw() && instr2->IsSlli() &&
-               instr3->IsAddi() && instr4->IsSlli() && instr5->IsAddi() &&
-               instr6->IsSlli() && instr7->IsAddi());
-
-    auto [high_20, d12, c12, b12, a12] = ToImm64Parts(value);
-
-    // lui(rd, high_20);  // Bits 63:48
-    instr0->SetImm20UValue(high_20);
-
-    // addiw(rd, rd, d12);  // Bits 47:36
-    instr1->SetImm12Value(d12);
-
-    // slli(rd, rd, 12);
-    MOZ_ASSERT(instr2->Shamt() == 12);
-
-    // addi(rd, rd, c12);  // Bits 35:24
-    instr3->SetImm12Value(c12);
-
-    // slli(rd, rd, 12);
-    MOZ_ASSERT(instr4->Shamt() == 12);
-
-    // addi(rd, rd, b12);  // Bits 23:12
-    instr5->SetImm12Value(b12);
-
-    // slli(rd, rd, 12);
-    MOZ_ASSERT(instr6->Shamt() == 12);
-
-    // addi(rd, rd, a12);  // Bits 11:0
-    instr7->SetImm12Value(a12);
-
-#ifdef JS_DISASM_RISCV64
-    disassembleInstr(instr0);
-    disassembleInstr(instr1);
-    disassembleInstr(instr2);
-    disassembleInstr(instr3);
-    disassembleInstr(instr4);
-    disassembleInstr(instr5);
-    disassembleInstr(instr6);
-    disassembleInstr(instr7);
-#endif /* JS_DISASM_RISCV64 */
-    MOZ_ASSERT(ExtractLoad64Value(inst0) == value);
+    UpdateLiConstantInstructions(inst0, value);
   } else {
-#ifdef JS_DISASM_RISCV64
-    Instruction* instr0 = inst0;
-    Instruction* instr2 = inst0 + 2 * kInstrSize;
-    Instruction* instr3 = inst0 + 3 * kInstrSize;
-    Instruction* instr4 = inst0 + 4 * kInstrSize;
-    Instruction* instr5 = inst0 + 5 * kInstrSize;
-    Instruction* instr6 = inst0 + 6 * kInstrSize;
-    Instruction* instr7 = inst0 + 7 * kInstrSize;
-    disassembleInstr(instr0);
-    disassembleInstr(instr1);
-    disassembleInstr(instr2);
-    disassembleInstr(instr3);
-    disassembleInstr(instr4);
-    disassembleInstr(instr5);
-    disassembleInstr(instr6);
-    disassembleInstr(instr7);
-#endif /* JS_DISASM_RISCV64 */
-    MOZ_ASSERT(instr1->IsAddi());
-    jumpChainSetTargetValueAt(inst0, value);
+    UpdateLiPtrInstructions(inst0, value);
   }
-}
-
-void Assembler::jumpChainSetTargetValueAt(Instruction* pc, uint64_t target) {
-  DEBUG_PRINTF("\tjumpChainSetTargetValueAt: pc: %p\ttarget: %" PRIx64 "\n", pc,
-               target);
-
-  Instruction* instr0 = pc;
-  Instruction* instr1 = pc + 1 * kInstrSize;
-  Instruction* instr2 = pc + 2 * kInstrSize;
-  Instruction* instr3 = pc + 3 * kInstrSize;
-  Instruction* instr4 = pc + 4 * kInstrSize;
-  Instruction* instr5 = pc + 5 * kInstrSize;
-
-  // Check we have the result from a li macro-instruction.
-  MOZ_ASSERT(instr0->IsLui() && instr1->IsAddi() && instr2->IsSlli() &&
-             instr3->IsOri() && instr4->IsSlli() && instr5->IsOri());
-
-  auto [high_20, low_12, b11, a6] = ToImmPtrParts(target);
-
-  instr0->SetImm20UValue(high_20);
-  instr1->SetImm12Value(low_12);
-  instr2->SetShamt(11);
-  instr3->SetImm12Value(b11);
-  instr4->SetShamt(6);
-  instr5->SetImm12Value(a6);
-
-  MOZ_ASSERT(jumpChainTargetAddressAt(pc) == target);
-}
-
-void Assembler::WriteLoad64Instructions(Instruction* inst0, Register reg,
-                                        uint64_t value) {
-  DEBUG_PRINTF("\tWriteLoad64Instructions\n");
-
-  // Initialize rd with an address
-  // Pointers are 48 bits
-  // 6 fixed instructions are generated
-
-  auto [high_20, low_12, b11, a6] = ToImmPtrParts(value);
-
-  // lui(rd, high_20);
-  inst0->SetUFormat(RO_LUI, reg.code(), high_20);
-
-  // addi(rd, rd, low_12);  // 31 bits in rd.
-  (inst0 + 1 * kInstrSize)->SetIFormat(RO_ADDI, reg.code(), reg.code(), low_12);
-
-  // slli(rd, rd, 11);  // Space for next 11 bis
-  (inst0 + 2 * kInstrSize)->SetIFormat(RO_SLLI, reg.code(), reg.code(), 11);
-
-  // ori(rd, rd, b11);  // 11 bits are added, 42 bit in rd.
-  (inst0 + 3 * kInstrSize)->SetIFormat(RO_ORI, reg.code(), reg.code(), b11);
-
-  // slli(rd, rd, 6);  // Space for next 6 bits
-  (inst0 + 4 * kInstrSize)->SetIFormat(RO_SLLI, reg.code(), reg.code(), 6);
-
-  // ori(rd, rd, a6);  // 6 bits are added, 48 bit in rd.
-  (inst0 + 5 * kInstrSize)->SetIFormat(RO_ORI, reg.code(), reg.code(), a6);
-
-#ifdef JS_DISASM_RISCV64
-  disassembleInstr(inst0 + 0 * kInstrSize);
-  disassembleInstr(inst0 + 1 * kInstrSize);
-  disassembleInstr(inst0 + 2 * kInstrSize);
-  disassembleInstr(inst0 + 3 * kInstrSize);
-  disassembleInstr(inst0 + 4 * kInstrSize);
-  disassembleInstr(inst0 + 5 * kInstrSize);
-#endif /* JS_DISASM_RISCV64 */
-
-  MOZ_ASSERT(ExtractLoad64Value(inst0) == value);
 }
 
 // This just stomps over memory with 32 bits of raw data. Its purpose is to
@@ -942,8 +1026,9 @@ bool Assembler::jumpChainPutTargetAt(BufferOffset pos,
       instruction->SetImm20JValue(offset);
     } break;
     case LUI: {
-      jumpChainSetTargetValueAt(instruction, reinterpret_cast<uintptr_t>(
-                                                 getInstructionAt(target_pos)));
+      uintptr_t target =
+          reinterpret_cast<uintptr_t>(getInstructionAt(target_pos));
+      UpdateLiPtrInstructions(instruction, target);
     } break;
     case AUIPC: {
       Instruction* instruction2 =
@@ -986,6 +1071,7 @@ int Assembler::jumpChainTargetAt(Instruction* instruction, BufferOffset pos,
 #ifdef JS_DISASM_RISCV64
   disassembleInstr(instruction);
 #endif /* JS_DISASM_RISCV64 */
+
   switch (instruction->InstructionOpcodeType()) {
     case BRANCH: {
       int32_t imm13 = instruction->BranchOffset();
@@ -1018,12 +1104,12 @@ int Assembler::jumpChainTargetAt(Instruction* instruction, BufferOffset pos,
       return pos.getOffset() + imm12;
     }
     case LUI: {
-      uintptr_t imm = jumpChainTargetAddressAt(instruction);
+      uintptr_t imm = LoadLiPtrInstructions(instruction);
       uintptr_t instr_address = reinterpret_cast<uintptr_t>(instruction);
       if (imm == kEndOfJumpChain) {
         return kEndOfChain;
       }
-      MOZ_ASSERT(instr_address - imm < INT_MAX);
+      MOZ_ASSERT(instr_address - imm < INT32_MAX);
       int32_t delta = static_cast<int32_t>(instr_address - imm);
       MOZ_ASSERT(pos.getOffset() > delta);
       return pos.getOffset() - delta;
@@ -1144,7 +1230,7 @@ void Assembler::Bind(uint8_t* rawCode, const CodeLabel& label) {
       MOZ_ASSERT(mode == CodeLabel::MoveImmediate ||
                  mode == CodeLabel::JumpImmediate);
       Instruction* inst = Instruction::At(rawCode + offset);
-      Assembler::UpdateLoad64Value(inst, (uint64_t)(rawCode + target));
+      Assembler::UpdateLoad64Value(inst, uint64_t(rawCode + target));
     }
   }
 }
@@ -1559,27 +1645,19 @@ bool Assembler::appendRawCode(const uint8_t* code, size_t numBytes) {
 }
 
 void Assembler::ToggleCall(CodeLocationLabel inst_, bool enabled) {
-#ifdef DEBUG
-  Instruction* i0 = Instruction::At(inst_.raw());
-  Instruction* i1 = Instruction::At(inst_.raw() + 1 * kInstrSize);
-  Instruction* i2 = Instruction::At(inst_.raw() + 2 * kInstrSize);
-  Instruction* i3 = Instruction::At(inst_.raw() + 3 * kInstrSize);
-  Instruction* i4 = Instruction::At(inst_.raw() + 4 * kInstrSize);
-#endif
-  Instruction* i5 = Instruction::At(inst_.raw() + 5 * kInstrSize);
-  Instruction* i6 = Instruction::At(inst_.raw() + 6 * kInstrSize);
+  LiPtr ptr(Instruction::At(inst_.raw()));
+  if (!ptr.isValid()) {
+    ptr.disassemble();
+  }
+  MOZ_RELEASE_ASSERT(ptr.isValid());
 
-  MOZ_ASSERT(i0->IsLui());
-  MOZ_ASSERT(i1->IsAddi());
-  MOZ_ASSERT(i2->IsSlli());
-  MOZ_ASSERT(i3->IsOri());
-  MOZ_ASSERT(i4->IsSlli());
-  MOZ_ASSERT(i5->IsOri());
+  Instruction* next = Instruction::At(inst_.raw() + LiPtr::Length * kInstrSize);
+  MOZ_ASSERT(next->IsJalr() || next->IsNop());
 
   if (enabled) {
-    i6->SetIFormat(RO_JALR, ra.code(), i5->RdValue(), 0);
+    next->SetIFormat(RO_JALR, ra.code(), ptr.target(), 0);
   } else {
-    i6->SetNop();
+    next->SetNop();
   }
 }
 

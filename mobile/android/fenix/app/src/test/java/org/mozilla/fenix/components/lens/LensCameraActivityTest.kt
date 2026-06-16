@@ -157,6 +157,48 @@ class LensCameraActivityTest {
     }
 
     @Test
+    fun `GIVEN a decoded QR string WHEN handleQrDecodeResult is called THEN the activity finishes with EXTRA_SCAN_RESULT_DATA`() {
+        val controller = Robolectric.buildActivity(LensCameraActivity::class.java).setup()
+        val activity = controller.get()
+        val qrString = "https://example.com/from-gallery"
+
+        activity.handleQrDecodeResult(qrString)
+
+        val shadow = Shadows.shadowOf(activity)
+        assertEquals(Activity.RESULT_OK, shadow.resultCode)
+        assertEquals(qrString, shadow.resultIntent.getStringExtra(QrScanActivity.EXTRA_SCAN_RESULT_DATA))
+        assertTrue(activity.isFinishing)
+    }
+
+    @Test
+    fun `GIVEN no QR decoded from the picked image WHEN handleQrDecodeResult is called with null THEN a toast is shown and the activity stays open`() {
+        val controller = Robolectric.buildActivity(LensCameraActivity::class.java).setup()
+        val activity = controller.get()
+
+        activity.handleQrDecodeResult(null)
+
+        assertEquals(
+            activity.getString(R.string.lens_camera_qr_no_code_found),
+            ShadowToast.getTextOfLatestToast(),
+        )
+        assertFalse(activity.isFinishing)
+    }
+
+    @Test
+    fun `GIVEN an empty QR result WHEN handleQrDecodeResult is called THEN a toast is shown and the activity stays open`() {
+        val controller = Robolectric.buildActivity(LensCameraActivity::class.java).setup()
+        val activity = controller.get()
+
+        activity.handleQrDecodeResult("")
+
+        assertEquals(
+            activity.getString(R.string.lens_camera_qr_no_code_found),
+            ShadowToast.getTextOfLatestToast(),
+        )
+        assertFalse(activity.isFinishing)
+    }
+
+    @Test
     fun `WHEN the fragment result bundle has an empty QR string THEN the QR branch is ignored`() {
         val controller = Robolectric.buildActivity(LensCameraActivity::class.java).setup()
         val activity = controller.get()

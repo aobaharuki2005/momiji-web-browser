@@ -54,6 +54,8 @@ skip-if = [
 
 ["browser_localfile4_postDownload.js"]
 
+["browser_localfile_navigation.js"]
+
 ["browser_newwindow.js"]
 run-if = [
   "debug", # This is a test for leaks, see comment in the test.

@@ -550,10 +550,10 @@ export class MemoriesManager {
    */
   static async memoryClassifyMessage(message) {
     const engine = await this.ensureOpenAIEngineForUsage();
-    const systemPrompt = await loadPrompt(
+    const { prompt: systemPrompt } = await loadPrompt(
       MODEL_FEATURES.MEMORIES_MESSAGE_CLASSIFICATION_SYSTEM
     );
-    const userPromptTemplate = await loadPrompt(
+    const { prompt: userPromptTemplate } = await loadPrompt(
       MODEL_FEATURES.MEMORIES_MESSAGE_CLASSIFICATION_USER
     );
     const userPrompt = await renderPrompt(userPromptTemplate, {

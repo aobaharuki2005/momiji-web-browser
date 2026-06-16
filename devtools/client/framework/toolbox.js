@@ -91,6 +91,8 @@ const lazy = {};
 ChromeUtils.defineESModuleGetters(lazy, {
   AppConstants: "resource://gre/modules/AppConstants.sys.mjs",
   ExtensionUtils: "resource://gre/modules/ExtensionUtils.sys.mjs",
+  LocalModeMappings:
+    "resource://devtools/client/framework/LocalModeMappings.sys.mjs",
 });
 loader.lazyRequireGetter(this, "flags", "resource://devtools/shared/flags.js");
 loader.lazyRequireGetter(
@@ -225,6 +227,9 @@ loader.lazyGetter(this, "ProfilerBackground", () => {
     "resource://devtools/client/performance-new/shared/background.sys.mjs"
   );
 });
+
+const DEVTOOLS_STYLESHEETS_IN_DEBUGGER =
+  "devtools.debugger.features.stylesheets-in-debugger";
 
 const BOOLEAN_CONFIGURATION_PREFS = {
   "devtools.cache.disabled": {
@@ -1133,6 +1138,12 @@ class Toolbox extends EventEmitter {
       }
 
       await this.initHarAutomation();
+      // Local Mode mappings only work with local tab debugging.
+      // It sounds irrelevant for workers/add-ons, and would require
+      // some very specific work to be functional for remote tabs debugging.
+      if (this._descriptorFront.isLocalTab) {
+        await lazy.LocalModeMappings.setup(this);
+      }
 
       this.emit("ready");
       this._resolveIsOpen();
@@ -2462,22 +2473,41 @@ class Toolbox extends EventEmitter {
 
   /**
    * Update the visibility of the buttons.
+   *
+   * @param {object} options
+   * @param {boolean} options.fromWillNavigate: true if this is called because the
+   *        page is going to navigate
    */
-  updateToolboxButtonsVisibility() {
+  updateToolboxButtonsVisibility({ fromWillNavigate = false } = {}) {
     const inspectorFront = this.target.getCachedFront("inspector");
 
-    this.toolbarButtons.forEach(button => {
+    let hasHighlighters = false;
+    for (const button of this.toolbarButtons) {
       button.isVisible = this._commandIsVisible(button);
 
-      if (!button.isVisible && inspectorFront) {
-        // Any highlighters associated with the toolbox button need to be cleared
-        // when a button is hidden.
-        button.highlighterTypes?.forEach(type => {
-          inspectorFront.destroyHighlighterByType(type);
-        });
+      if (
+        inspectorFront &&
+        // We want to destroy highlighters associated with the toolbox button when:
+        // - the button gets hidden (from the Settings panel)
+        // - or when we're going to navigate
+        (!button.isVisible || fromWillNavigate)
+      ) {
+        if (!button.highlighterTypes) {
+          continue;
+        }
+
+        for (const type of button.highlighterTypes) {
+          if (inspectorFront.getKnownHighlighter(type)?.isShown()) {
+            inspectorFront.destroyHighlighterByType(type);
+            hasHighlighters = true;
+          }
+        }
       }
-    });
-    this._renderToolboxButtons();
+    }
+
+    if (hasHighlighters || !fromWillNavigate) {
+      this._renderToolboxButtons();
+    }
   }
 
   /**
@@ -3450,7 +3480,7 @@ class Toolbox extends EventEmitter {
       this._updateFrames({ destroyAll: true });
     }
 
-    this.updateToolboxButtonsVisibility();
+    this.updateToolboxButtonsVisibility({ fromWillNavigate: true });
 
     const toolId = this.currentToolId;
     // For now, only inspector, webconsole, netmonitor and accessibility fire "reloaded" event
@@ -4347,6 +4377,7 @@ class Toolbox extends EventEmitter {
       BROWSERTOOLBOX_SCOPE_PREF,
       this._refreshHostTitle
     );
+    lazy.LocalModeMappings.destroy(this);
 
     // We normally handle toolClosed from selectTool() but in the event of the
     // toolbox closing we need to handle it here instead.
@@ -4639,7 +4670,7 @@ class Toolbox extends EventEmitter {
    *
    * @param {string} url The URL of the CSS file to open.
    */
-  async viewGeneratedSourceInStyleEditor(url) {
+  async viewStyleGeneratedSource(url) {
     if (typeof url !== "string") {
       console.warn("Failed to open generated source, no url given");
       return false;
@@ -4648,16 +4679,19 @@ class Toolbox extends EventEmitter {
     // The style editor hides the generated file if the file has original
     // sources, so we have no choice but to open whichever original file
     // corresponds to the first line of the generated file.
-    return viewSource.viewSourceInStyleEditor(this, url, 1);
+    // TODO: Update this when sourcemaps support for stylesheets is supported
+    // in the debugger.
+    return this.viewStyleSourceByURL(url, 1);
   }
 
   /**
-   * Given a URL for a stylesheet (generated or original), open in the style
-   * editor if possible. Falls back to plain "view-source:".
+   * Given a URL for a stylesheet (generated or original), open in the debugger
+   * if the `devtools.debugger.features.stylesheets-in-debugger` pref is enabled
+   *  or open in the style editor if possible. Falls back to plain "view-source:".
    * If the stylesheet has a sourcemap, we will attempt to open the original
    * version of the file instead of the generated version.
    */
-  async viewSourceInStyleEditorByURL(url, line, column) {
+  async viewStyleSourceByURL(url, line, column) {
     if (typeof url !== "string") {
       console.warn("Failed to open source, no url given");
       return false;
@@ -4668,9 +4702,14 @@ class Toolbox extends EventEmitter {
       );
 
       // This is a fallback in case of programming errors, but in a perfect
-      // world, viewSourceInStyleEditorByURL would always get a line/colum.
+      // world, viewStyleSourceByURL would always get a line/column.
       line = 1;
       column = null;
+    }
+
+    // Instead view the stylesheet in the debugger since the pref is enabled
+    if (Services.prefs.getBoolPref(DEVTOOLS_STYLESHEETS_IN_DEBUGGER)) {
+      return viewSource.viewSourceInDebugger(this, url, line, column, null);
     }
 
     return viewSource.viewSourceInStyleEditor(this, url, line, column);
@@ -4681,7 +4720,7 @@ class Toolbox extends EventEmitter {
    * If the stylesheet has a sourcemap, we will attempt to open the original
    * version of the file instead of the generated version.
    */
-  async viewSourceInStyleEditorByResource(stylesheetResource, line, column) {
+  async viewStyleSourceByResource(stylesheetResource, line, column) {
     if (!stylesheetResource || typeof stylesheetResource !== "object") {
       console.warn("Failed to open source, no stylesheet given");
       return false;
@@ -4692,9 +4731,20 @@ class Toolbox extends EventEmitter {
       );
 
       // This is a fallback in case of programming errors, but in a perfect
-      // world, viewSourceInStyleEditorByResource would always get a line/colum.
+      // world, viewStyleSourceByResource would always get a line/colum.
       line = 1;
       column = null;
+    }
+
+    // Instead view the stylesheet in the debugger since the pref is enabled
+    if (Services.prefs.getBoolPref(DEVTOOLS_STYLESHEETS_IN_DEBUGGER)) {
+      return viewSource.viewSourceInDebugger(
+        this,
+        stylesheetResource.href,
+        line,
+        column,
+        stylesheetResource.resourceId
+      );
     }
 
     return viewSource.viewSourceInStyleEditor(

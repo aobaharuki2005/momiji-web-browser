@@ -54,6 +54,7 @@ import kotlinx.coroutines.withContext
 import mozilla.appservices.places.BookmarkRoot
 import mozilla.components.browser.state.action.MediaSessionAction
 import mozilla.components.browser.state.action.SearchAction
+import mozilla.components.browser.state.action.WebExtensionAction
 import mozilla.components.browser.state.search.SearchEngine
 import mozilla.components.browser.state.selector.getNormalOrPrivateTabs
 import mozilla.components.browser.state.selector.selectedTab
@@ -64,9 +65,6 @@ import mozilla.components.concept.engine.EngineView
 import mozilla.components.concept.storage.HistoryMetadataKey
 import mozilla.components.feature.contextmenu.DefaultSelectionActionDelegate
 import mozilla.components.feature.customtabs.isCustomTabIntent
-import mozilla.components.feature.ipprotection.IPProtectionFxaAuthFlow
-import mozilla.components.feature.ipprotection.IPProtectionFxaAuthFlow.Companion.EntrypointConfig
-import mozilla.components.feature.ipprotection.IPProtectionFxaAuthFlow.Companion.INTENT_ON_COMPLETE
 import mozilla.components.feature.media.ext.findActiveMediaTab
 import mozilla.components.feature.privatemode.notification.PrivateNotificationFeature
 import mozilla.components.feature.search.BrowserStoreSearchAdapter
@@ -105,7 +103,6 @@ import org.mozilla.fenix.browser.BrowserFragment
 import org.mozilla.fenix.browser.browsingmode.BrowsingMode
 import org.mozilla.fenix.browser.browsingmode.BrowsingModeManager
 import org.mozilla.fenix.browser.browsingmode.DefaultBrowsingModeManager
-import org.mozilla.fenix.components.accounts.FenixFxAEntryPoint
 import org.mozilla.fenix.components.appstate.AppAction
 import org.mozilla.fenix.components.appstate.AppAction.ShareAction
 import org.mozilla.fenix.components.appstate.OrientationMode
@@ -138,11 +135,11 @@ import org.mozilla.fenix.ext.getIntentSessionId
 import org.mozilla.fenix.ext.getIntentSource
 import org.mozilla.fenix.ext.getNavDirections
 import org.mozilla.fenix.ext.hasTopDestination
+import org.mozilla.fenix.ext.isAllowedDuringOnboardingIntent
 import org.mozilla.fenix.ext.nav
 import org.mozilla.fenix.ext.openSetDefaultBrowserOption
 import org.mozilla.fenix.ext.recordEventInNimbus
 import org.mozilla.fenix.ext.setNavigationIcon
-import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.extension.WebExtensionPromptFeature
 import org.mozilla.fenix.home.HomeFragment
 import org.mozilla.fenix.home.TopSitesRefresher
@@ -252,7 +249,6 @@ open class HomeActivity : LocaleAwareAppCompatActivity(), NavHostActivity, Crash
             store = components.ipProtection.store,
             appStore = components.appStore,
             errorMessages = ErrorMessages(
-                connectionError = this.getString(R.string.ip_protection_connection_error_snackbar),
                 dataLimitReached = this.getString(
                     R.string.ip_protection_data_limit_reached_snackbar,
                     FxNimbus.features.ipProtection.value().dataLimitGigabyte,
@@ -276,7 +272,7 @@ open class HomeActivity : LocaleAwareAppCompatActivity(), NavHostActivity, Crash
         DefaultTopSitesBinding(
             browserStore = components.core.store,
             topSitesStorage = components.core.topSitesStorage,
-            settings = settings(),
+            settings = components.settings,
             resources = resources,
             crashReporter = components.analytics.crashReporter,
         )
@@ -305,7 +301,7 @@ open class HomeActivity : LocaleAwareAppCompatActivity(), NavHostActivity, Crash
 
     private val externalAppLinkStatusBinding by lazy {
         ExternalAppLinkStatusBinding(
-            settings = settings(),
+            settings = components.settings,
             appLinksUseCases = components.useCases.appLinksUseCases,
             browserStore = components.core.store,
             appStore = components.appStore,
@@ -341,25 +337,9 @@ open class HomeActivity : LocaleAwareAppCompatActivity(), NavHostActivity, Crash
             appStore = components.appStore,
             browserStore = components.core.store,
             storage = DefaultPrivateBrowsingLockStorage(
-                preferences = settings().preferences,
+                preferences = components.settings.preferences,
                 privateBrowsingLockPrefKey = getString(R.string.pref_key_private_browsing_locked),
             ),
-        )
-    }
-
-    private val ipProtectionFxaAccountAuthFlow by lazy {
-        IPProtectionFxaAuthFlow(
-            accountManager = components.backgroundServices.accountManager,
-            store = components.ipProtection.store,
-            entrypointConfig = EntrypointConfig(
-                authorization = FenixFxAEntryPoint.IPProtectionMainMenu,
-                authentication = FenixFxAEntryPoint.IPProtectionOnboarding,
-            ),
-            onAuthRequested = { url, onCompleteAction ->
-                val intent = SupportUtils.createAuthCustomTabIntent(this, url)
-                intent.putExtra(INTENT_ON_COMPLETE, onCompleteAction)
-                startActivity(intent)
-            },
         )
     }
 
@@ -473,12 +453,13 @@ open class HomeActivity : LocaleAwareAppCompatActivity(), NavHostActivity, Crash
         window.decorView.layoutDirection = Locale.getDefault().layoutDirection
 
         binding = ActivityHomeBinding.inflate(layoutInflater)
-        val isLauncherIntent = intent.toSafeIntent().isLauncherIntent
 
-        val shouldShowOnboarding = settings().shouldShowOnboarding(
-            hasUserBeenOnboarded = components.fenixOnboarding.userHasBeenOnboarded(),
-            isLauncherIntent = isLauncherIntent,
-        )
+        Performance.processIntentIfPerformanceTest(intent, this)
+
+        val shouldShowOnboarding = !intent.isAllowedDuringOnboardingIntent(packageName) &&
+            with(components) {
+                settings.shouldShowOnboarding(fenixOnboarding.userHasBeenOnboarded())
+            }
 
         SplashScreenManager(
             splashScreenOperation = createSplashScreenOperation(shouldShowOnboarding),
@@ -487,7 +468,7 @@ open class HomeActivity : LocaleAwareAppCompatActivity(), NavHostActivity, Crash
             storage = DefaultSplashScreenStorage(components.settings),
             showSplashScreen = { installSplashScreen().setKeepOnScreenCondition(it) },
             onSplashScreenFinished = { result ->
-                // Before the slashscreen ends the application has a different theme not supporting edge to edge.
+                // Before the splashscreen ends the application has a different theme not supporting edge to edge.
                 EdgeToEdgeFragmentLifecycleCallbacks.register(supportFragmentManager, window)
 
                 if (result.sendTelemetry) {
@@ -518,7 +499,7 @@ open class HomeActivity : LocaleAwareAppCompatActivity(), NavHostActivity, Crash
                             setContent {
                                 FenixOverlay(
                                     browserStore = components.core.store,
-                                    inactiveTabsEnabled = settings().inactiveTabsAreEnabled,
+                                    inactiveTabsEnabled = components.settings.inactiveTabsAreEnabled,
                                     loginsStorage = components.core.passwordsStorage,
                                     tabGroupRepository = components.core.tabGroupRepository,
                                 )
@@ -564,11 +545,9 @@ open class HomeActivity : LocaleAwareAppCompatActivity(), NavHostActivity, Crash
             }
         }
 
-        Performance.processIntentIfPerformanceTest(intent, this)
-
         // This will record an event in Nimbus' internal event store. Used for behavioral targeting
         recordEventInNimbus("app_opened")
-        if (settings().isTelemetryEnabled) {
+        if (components.settings.isTelemetryEnabled) {
             lifecycle.addObserver(
                 BreadcrumbsRecorder(
                     components.analytics.crashReporter,
@@ -604,8 +583,8 @@ open class HomeActivity : LocaleAwareAppCompatActivity(), NavHostActivity, Crash
             crashReporterBinding,
             defaultTopSitesBinding,
             TopSitesRefresher(
-                settings = settings(),
-                topSitesProvider = if (settings().enableMozillaAdsClient) {
+                settings = components.settings,
+                topSitesProvider = if (components.settings.enableMozillaAdsClient) {
                     components.core.macTopSitesProvider
                 } else {
                     components.core.marsTopSitesProvider
@@ -624,8 +603,6 @@ open class HomeActivity : LocaleAwareAppCompatActivity(), NavHostActivity, Crash
 
         if (!isCustomTabIntent(intent)) {
             lifecycle.addObserver(webExtensionPromptFeature)
-            // FIXME(IPP) move this to each UI fragment with separate entry points.
-            lifecycle.addObserver(ipProtectionFxaAccountAuthFlow)
         }
 
         if (shouldAddToRecentsScreen(intent)) {
@@ -644,16 +621,16 @@ open class HomeActivity : LocaleAwareAppCompatActivity(), NavHostActivity, Crash
         components.core.requestInterceptor.setNavigationController(navHost.navController)
 
         supportFragmentManager.registerFragmentLifecycleCallbacks(
-            StatusBarColorManager(themeManager, this, settings().isTabStripEnabled),
+            StatusBarColorManager(themeManager, this, components.settings.isTabStripEnabled),
             true,
         )
 
-        if (settings().showContileFeature) {
+        if (components.settings.showContileFeature) {
             components.core.contileTopSitesUpdater.startPeriodicWork()
         }
 
-        if (!settings().hiddenEnginesRestored) {
-            settings().hiddenEnginesRestored = true
+        if (!components.settings.hiddenEnginesRestored) {
+            components.settings.hiddenEnginesRestored = true
             components.useCases.searchUseCases.restoreHiddenSearchEngines.invoke()
         }
 
@@ -692,7 +669,7 @@ open class HomeActivity : LocaleAwareAppCompatActivity(), NavHostActivity, Crash
 
     @VisibleForTesting
     internal fun maybeShowSetAsDefaultBrowserPrompt(
-        shouldShowSetAsDefaultPrompt: Boolean = settings().shouldShowSetAsDefaultPrompt(),
+        shouldShowSetAsDefaultPrompt: Boolean = components.settings.shouldShowSetAsDefaultPrompt(),
         isDefaultBrowser: Boolean = Browsers.isDefaultBrowser(applicationContext),
         isTheCorrectBuildVersion: Boolean = Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q,
     ) {
@@ -702,7 +679,7 @@ open class HomeActivity : LocaleAwareAppCompatActivity(), NavHostActivity, Crash
                 components.appStore.dispatch(AppAction.UpdateWasNativeDefaultBrowserPromptShown(true))
                 showSetDefaultBrowserPrompt()
                 Metrics.setAsDefaultBrowserNativePromptShown.record()
-                settings().setAsDefaultPromptCalled()
+                components.settings.setAsDefaultPromptCalled()
             }
         }
     }
@@ -768,7 +745,7 @@ open class HomeActivity : LocaleAwareAppCompatActivity(), NavHostActivity, Crash
         }
 
         lifecycleScope.launch(IO) {
-            if (settings().checkIfFenixIsDefaultBrowserOnAppResume()) {
+            if (components.settings.checkIfFenixIsDefaultBrowserOnAppResume()) {
                 if (components.appStore.state.wasNativeDefaultBrowserPromptShown) {
                     Metrics.defaultBrowserChangedViaNativeSystemPrompt.record(NoExtras())
                 }
@@ -818,6 +795,14 @@ open class HomeActivity : LocaleAwareAppCompatActivity(), NavHostActivity, Crash
         )
 
         ProfilerMarkers.homeActivityOnStart(binding.rootContainer, components.core.engine.profiler)
+
+        if (components.settings.longfoxPeekAnimationShownCount < Settings.LONGFOX_PEEK_ANIMATION_MAX_SHOWS) {
+            components.settings.appLaunchCount++
+            components.appStore.dispatch(
+                AppAction.UpdateShowFoxPeekAnimation(components.settings.shouldShowLongfoxPeekAnimationThisTime()),
+            )
+        }
+
         components.core.engine.profiler?.addMarker(
             MarkersActivityLifecycleCallbacks.MARKER_NAME,
             startProfilerTime,
@@ -863,7 +848,7 @@ open class HomeActivity : LocaleAwareAppCompatActivity(), NavHostActivity, Crash
 
     final override fun onPause() {
         // We should return to the browser if there were normal tabs when we left the app
-        settings().shouldReturnToBrowser =
+        components.settings.shouldReturnToBrowser =
             components.core.store.state.getNormalOrPrivateTabs(private = false).isNotEmpty()
 
         lifecycleScope.launch(IO) {
@@ -871,9 +856,9 @@ open class HomeActivity : LocaleAwareAppCompatActivity(), NavHostActivity, Crash
                 applicationContext,
                 showMobileRoot = false,
             )
-            settings().desktopBookmarksSize = desktopFolders.count()
+            components.settings.desktopBookmarksSize = desktopFolders.count()
 
-            settings().mobileBookmarksSize = components.core.bookmarksStorage.countBookmarksInTrees(
+            components.settings.mobileBookmarksSize = components.core.bookmarksStorage.countBookmarksInTrees(
                 listOf(BookmarkRoot.Mobile.id),
             ).toInt()
         }
@@ -1028,7 +1013,7 @@ open class HomeActivity : LocaleAwareAppCompatActivity(), NavHostActivity, Crash
                 listOf(
                     CrashReporterIntentProcessor(components.appStore),
                 ) + externalSourceIntentProcessors
-            intentProcessors.forEach { it.process(intent, navHost.navController, this.intent, settings()) }
+            intentProcessors.forEach { it.process(intent, navHost.navController, this.intent, components.settings) }
             browsingModeManager.updateMode(intent)
         }
     }
@@ -1417,7 +1402,7 @@ open class HomeActivity : LocaleAwareAppCompatActivity(), NavHostActivity, Crash
 
         // Normal tabs + cold start -> Should go back to browser if we had any tabs open when we left last
         // except for PBM + Cold Start there won't be any tabs since they're evicted so we never will navigate
-        if (settings().shouldReturnToBrowser && !browsingModeManager.mode.isPrivate) {
+        if (components.settings.shouldReturnToBrowser && !browsingModeManager.mode.isPrivate) {
             // Navigate to home first (without rendering it) to add it to the back stack.
             openToBrowser(BrowserDirection.FromGlobal, null)
         }
@@ -1469,7 +1454,7 @@ open class HomeActivity : LocaleAwareAppCompatActivity(), NavHostActivity, Crash
     }
 
     private fun updateSecureWindowFlags(mode: BrowsingMode = browsingModeManager.mode) {
-        if (mode == BrowsingMode.Private && !settings().shouldSecureModeBeOverridden) {
+        if (mode == BrowsingMode.Private && !components.settings.shouldSecureModeBeOverridden) {
             window.addFlags(FLAG_SECURE)
         } else {
             window.clearFlags(FLAG_SECURE)
@@ -1489,16 +1474,37 @@ open class HomeActivity : LocaleAwareAppCompatActivity(), NavHostActivity, Crash
     }
 
     private fun openOptionsPage(activeOptionsPage: ActiveOptionsPage) {
-        createOpenOptionsPageDirections(activeOptionsPage)?.let {
-            navHost.navController.navigate(it)
+        if (!suppressOptionsPageInAddonManagement(
+                navHost.navController.currentDestination?.id,
+                activeOptionsPage,
+            )
+        ) {
+            createOpenOptionsPageDirections(activeOptionsPage)?.let {
+                navHost.navController.navigate(it)
+            }
         }
     }
 
     @VisibleForTesting
-    internal fun createOpenOptionsPageDirections(activeOptionsPage: ActiveOptionsPage): NavDirections? {
-        val extensionState = components.core.store.state.extensions.values.firstOrNull {
-            it.activeOptionsPage == activeOptionsPage
+    internal fun suppressOptionsPageInAddonManagement(
+        currentDestinationId: Int?,
+        activeOptionsPage: ActiveOptionsPage,
+    ): Boolean {
+        if (currentDestinationId !in ADDON_MANAGEMENT_DESTINATIONS) {
+            return false
         }
+        findExtensionForOptionsPage(activeOptionsPage)
+            ?.let {
+                components.core.store.dispatch(
+                    WebExtensionAction.ClearOptionsPageSession(it.id),
+                )
+            }
+        return true
+    }
+
+    @VisibleForTesting
+    internal fun createOpenOptionsPageDirections(activeOptionsPage: ActiveOptionsPage): NavDirections? {
+        val extensionState = findExtensionForOptionsPage(activeOptionsPage)
 
         return extensionState?.let {
             NavGraphDirections.actionGlobalWebExtensionActionOptionsPageFragment(
@@ -1508,6 +1514,10 @@ open class HomeActivity : LocaleAwareAppCompatActivity(), NavHostActivity, Crash
             )
         }
     }
+
+    private fun findExtensionForOptionsPage(activeOptionsPage: ActiveOptionsPage): WebExtensionState? =
+        components.core.store.state.extensions.values
+            .firstOrNull { it.activeOptionsPage == activeOptionsPage }
 
     /**
      * The root container is null at this point, so let the HomeActivity know that
@@ -1566,13 +1576,13 @@ open class HomeActivity : LocaleAwareAppCompatActivity(), NavHostActivity, Crash
                 intent,
                 navHost.navController,
                 this.intent,
-                settings(),
+                components.settings,
             )
         }
     }
 
     @VisibleForTesting
-    internal fun getSettings(): Settings = settings()
+    internal fun getSettings(): Settings = components.settings
 
     private fun shouldNavigateToBrowserOnColdStart(savedInstanceState: Bundle?): Boolean {
         return isActivityColdStarted(intent, savedInstanceState) &&
@@ -1618,7 +1628,7 @@ open class HomeActivity : LocaleAwareAppCompatActivity(), NavHostActivity, Crash
     }
 
     private fun showCrashReporter(crashIDs: List<String>?) {
-        if (!settings().useNewCrashReporterFlow) {
+        if (!components.settings.useNewCrashReporterFlow) {
             return
         }
 
@@ -1640,5 +1650,13 @@ open class HomeActivity : LocaleAwareAppCompatActivity(), NavHostActivity, Crash
         private const val PWA_RECENTLY_USED_THRESHOLD = DateUtils.DAY_IN_MILLIS * 30L
 
         private const val REQUEST_CODE_CAMERA_PERMISSIONS = 1
+
+        private val ADDON_MANAGEMENT_DESTINATIONS = setOf(
+            R.id.addonsManagementFragment,
+            R.id.installedAddonDetailsFragment,
+            R.id.addonInternalSettingsFragment,
+            R.id.addonDetailsFragment,
+            R.id.addonPermissionsDetailFragment,
+        )
     }
 }

@@ -213,9 +213,20 @@ function channelOpenPromise(chan, flags) {
 // Test if we can connect to the server with the IP hint address.
 add_task(async function testConnectionWithiphint() {
   Services.dns.clearCache(true);
+  // Happy Eyeballs uses the HTTPS RR's IP hint only while A/AAAA haven't
+  // answered yet; once an answer arrives -- even a negative one -- the hint is
+  // dropped. Delay A/AAAA so they stay pending and the connection uses the
+  // hint. The non-HE path doesn't start these lookups this early, so it skips
+  // the delay.
+  let dohQuery = "/doh?httpssvc_use_iphint=1";
+  if (
+    Services.prefs.getBoolPref("network.http.happy_eyeballs_enabled", false)
+  ) {
+    dohQuery += "&delayIPv4=1000&delayIPv6=1000";
+  }
   Services.prefs.setCharPref(
     "network.trr.uri",
-    "https://127.0.0.1:" + h2Port + "/doh?httpssvc_use_iphint=1"
+    "https://127.0.0.1:" + h2Port + dohQuery
   );
   Services.prefs.setIntPref("network.trr.mode", 3);
 

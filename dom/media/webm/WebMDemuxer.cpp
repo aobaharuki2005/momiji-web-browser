@@ -141,7 +141,7 @@ static void webmdemux_log(nestegg* aContext, unsigned int aSeverity,
 
   SprintfLiteral(msg, "%p [Nestegg-%s] ", aContext, sevStr);
   PR_vsnprintf(msg + strlen(msg), sizeof(msg) - strlen(msg), aFormat, args);
-  MOZ_LOG(gNesteggLog, LogLevel::Debug, ("%s", msg));
+  MOZ_LOG_FMT(gNesteggLog, LogLevel::Debug, "{}", msg);
 
   va_end(args);
 }

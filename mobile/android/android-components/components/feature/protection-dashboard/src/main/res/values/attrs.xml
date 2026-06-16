@@ -4,10 +4,6 @@
    - You can obtain one at http://mozilla.org/MPL/2.0/.  -->
 <resources>
     <declare-styleable name="ProtectionsDashboard">
-        <attr name="mozacProtectionsDashboardBackground" format="reference"/>
-        <attr name="mozacProtectionsDashboardTextPrimary" format="reference"/>
-        <attr name="mozacProtectionsDashboardTextSecondary" format="reference"/>
-        <attr name="mozacProtectionsDashboardTextAccent" format="reference"/>
         <attr name="mozacProtectionsDashboardChipBackground" format="reference"/>
         <attr name="mozacProtectionsDashboardChipText" format="reference"/>
         <attr name="mozacProtectionsDashboardProgressBar" format="reference"/>

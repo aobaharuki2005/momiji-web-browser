@@ -48,6 +48,7 @@
 #include "nsIGlobalObject.h"
 #include "nsJSUtils.h"
 #include "nsNetUtil.h"
+#include "nsPIDOMWindowInlines.h"
 #include "nsProxyRelease.h"
 #include "nsReadableUtils.h"
 #include "nsStreamUtils.h"
@@ -78,7 +79,7 @@ void AbortStream(JSContext* aCx, ReadableStream* aReadableStream,
 
 class AbortSignalMainThread final : public AbortSignalImpl {
  public:
-  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
+  NS_DECL_CYCLE_COLLECTING_ISUPPORTS_FINAL
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(AbortSignalMainThread)
 
   explicit AbortSignalMainThread(SignalAborted aAborted)

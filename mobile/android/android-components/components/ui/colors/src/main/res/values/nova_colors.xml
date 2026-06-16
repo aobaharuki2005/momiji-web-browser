@@ -6,7 +6,7 @@
     <!-- Black And White -->
     <color name="novaWhite">#ffffffff</color>
     <color name="novaBlack">#ff000000</color>
-    <color name="novaBlackA32">#52000000</color>
+    <color name="novaBlackA50">#80000000</color>
 
     <!-- Gray -->
     <color name="novaGray0">#fffcfbff</color>
@@ -40,6 +40,7 @@
     <color name="novaVioletDesaturated30A55">#8cb0a3d2</color>
     <color name="novaVioletDesaturated40">#ff9484bd</color>
     <color name="novaVioletDesaturated50">#ff75669f</color>
+    <color name="novaVioletDesaturated50A86">#db75669f</color>
     <color name="novaVioletDesaturated60">#ff584a7d</color>
     <color name="novaVioletDesaturated70">#ff3e315f</color>
     <color name="novaVioletDesaturated80">#ff281d44</color>

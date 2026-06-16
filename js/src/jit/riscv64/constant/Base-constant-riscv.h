@@ -6,6 +6,8 @@
 
 #include "mozilla/Assertions.h"
 
+#include <stdint.h>
+
 namespace js {
 namespace jit {
 

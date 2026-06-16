@@ -286,6 +286,7 @@ MACH_COMMANDS = {
     "wpt-test-paths": MachCommandReference("testing/web-platform/mach_commands.py"),
     "wpt-unittest": MachCommandReference("testing/web-platform/mach_commands.py"),
     "wpt-update": MachCommandReference("testing/web-platform/mach_commands.py"),
+    "wrshell": MachCommandReference("gfx/wr/mach_commands.py"),
     "xpcshell": MachCommandReference("js/xpconnect/mach_commands.py"),
     "xpcshell-test": MachCommandReference(
         "testing/xpcshell/mach_commands.py", ["test"]

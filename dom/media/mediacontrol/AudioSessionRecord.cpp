@@ -12,12 +12,11 @@
 namespace mozilla::dom {
 
 void AudioSessionRecord::LogState(uint64_t aBcId) const {
-  MOZ_LOG(
+  MOZ_LOG_FMT(
       gMediaControlLog, LogLevel::Debug,
-      ("AudioSessionRecord bc=%" PRIu64
-       ", typeOverride=%s, audibleAtMs=%" PRId64 ", state=%s",
-       aBcId, mTypeOverride ? GetEnumString(*mTypeOverride).get() : "<none>",
-       mAudibleAtMs.valueOr(-1), GetEnumString(mState).get()));
+      "AudioSessionRecord bc={}, typeOverride={}, audibleAtMs={}, state={}",
+      aBcId, mTypeOverride ? GetEnumString(*mTypeOverride).get() : "<none>",
+      mAudibleAtMs.valueOr(-1), GetEnumString(mState).get());
 }
 
 void AudioSessionRecord::SetTypeOverride(

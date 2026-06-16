@@ -25,7 +25,7 @@
     --button-background-color: color-mix(in srgb, currentColor 7%, transparent);
     --button-background-color-hover: color-mix(in srgb, currentColor 14%, transparent);
     --button-background-color-active: color-mix(in srgb, currentColor 21%, transparent);
-    --button-text-color: light-dark(var(--color-gray-100), var(--color-gray-05));
+    --button-text-color: light-dark(var(--color-gray-100), var(--color-gray-0));
     --button-text-color-primary: light-dark(var(--color-white), var(--color-gray-100));
 
     /** color **/
@@ -65,7 +65,7 @@
     --table-row-background-color-alternate: light-dark(#f0f0f4, var(--color-gray-80));
 
     /** text-color **/
-    --text-color: light-dark(var(--color-gray-100), var(--color-gray-05));
+    --text-color: light-dark(var(--color-gray-100), var(--color-gray-0));
     --text-color-accent-primary-selected: light-dark(var(--color-white), var(--color-gray-100));
   }
 }

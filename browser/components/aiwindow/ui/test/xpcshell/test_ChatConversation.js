@@ -961,7 +961,7 @@ add_task(
     const conversation = new ChatConversation({});
     conversation.addAssistantMessage("text", "some response");
     const assistantMsg = conversation.messages.at(-1);
-    assistantMsg._pendingMemoryIds = ["mem-1", "mem-1", "mem-2", "mem-2"];
+    assistantMsg.memoriesApplied = ["mem-1", "mem-1", "mem-2", "mem-2"];
 
     async function* emptyStream() {}
     await conversation.receiveResponse(emptyStream());
@@ -982,10 +982,6 @@ add_task(
       assistantMsg.memoriesApplied,
       mockMemories,
       "memoriesApplied should be set to the resolved memories"
-    );
-    Assert.ok(
-      !("_pendingMemoryIds" in assistantMsg),
-      "_pendingMemoryIds should be deleted after processing"
     );
 
     sandbox.restore();
@@ -1416,52 +1412,14 @@ add_task(async function test_convertUrlToToken_tokenGeneration() {
   }
 });
 
-add_task(async function test_generatePrompt_tableInstructions_pref_enabled() {
-  Services.prefs.setBoolPref("browser.smartwindow.allowTables", false);
-  registerCleanupFunction(() =>
-    Services.prefs.clearUserPref("browser.smartwindow.allowTables")
-  );
-
+add_task(async function test_generatePrompt_persistsPromptVersion() {
   const sandbox = lazy.sinon.createSandbox();
-  const loadPromptStub = lazy.sinon
-    .stub()
-    .onFirstCall()
-    .resolves("system prompt {tableInstructions}")
-    .onSecondCall()
-    .resolves("table instructions content");
+  const loadPromptStub = lazy.sinon.stub().resolves({
+    prompt: "system prompt",
+    version: "chat-v1",
+  });
   _setLoadPromptForTesting(loadPromptStub);
-  const conversation = new ChatConversation({});
-  sandbox.stub(ChatConversation, "getRealTimeInfo").resolves(null);
-  sandbox.stub(conversation, "getMemoriesContext").resolves(null);
 
-  await conversation.generatePrompt("hello", null);
-
-  _setLoadPromptForTesting(null);
-  sandbox.restore();
-
-  const systemMessage = conversation.messages.find(
-    m => m.role === MESSAGE_ROLE.SYSTEM
-  );
-  Assert.ok(
-    systemMessage.content.body.includes("table instructions content"),
-    "system prompt should include table instructions when pref is true"
-  );
-});
-
-add_task(async function test_generatePrompt_tableInstructions_pref_disabled() {
-  Services.prefs.setBoolPref("browser.smartwindow.allowTables", true);
-  registerCleanupFunction(() =>
-    Services.prefs.clearUserPref("browser.smartwindow.allowTables")
-  );
-
-  const sandbox = lazy.sinon.createSandbox();
-  const loadPromptStub = lazy.sinon
-    .stub()
-    .onFirstCall()
-    .resolves("system prompt {tableInstructions}")
-    .onSecondCall()
-    .resolves("do tables");
-  _setLoadPromptForTesting(loadPromptStub);
   const conversation = new ChatConversation({});
   sandbox.stub(ChatConversation, "getRealTimeInfo").resolves(null);
   sandbox.stub(conversation, "getMemoriesContext").resolves(null);
@@ -1470,18 +1428,47 @@ add_task(async function test_generatePrompt_tableInstructions_pref_disabled() {
 
   Assert.equal(
     loadPromptStub.callCount,
-    2,
-    "loadPrompt should be called twice"
+    1,
+    "system prompt is loaded with a single loadPrompt call"
   );
   const systemMessage = conversation.messages.find(
     m => m.role === MESSAGE_ROLE.SYSTEM
   );
-  Assert.ok(
-    !systemMessage.content.body.includes("table instructions"),
-    "system prompt should not include table instructions when pref is false"
+  Assert.equal(
+    systemMessage.content.version,
+    "chat-v1",
+    "version is stored on the system message content"
   );
+  Assert.equal(
+    conversation.chatPromptVersion,
+    "chat-v1",
+    "getter reads the version from the system message"
+  );
+
   _setLoadPromptForTesting(null);
   sandbox.restore();
+});
+
+add_task(function test_chatPromptVersion_readsFromExistingSystemMessage() {
+  const conversation = new ChatConversation({});
+  conversation.addSystemMessage(SYSTEM_PROMPT_TYPE.TEXT, "body", "chat-v2");
+
+  Assert.equal(
+    conversation.chatPromptVersion,
+    "chat-v2",
+    "getter returns the version from a pre-existing system message"
+  );
+});
+
+add_task(function test_chatPromptVersion_emptyForLegacyMessage() {
+  const conversation = new ChatConversation({});
+  // Simulate a system message persisted before this change shipped.
+  conversation.addSystemMessage(SYSTEM_PROMPT_TYPE.TEXT, "body");
+  Assert.equal(
+    conversation.chatPromptVersion,
+    "",
+    "getter returns empty string for legacy system messages with no version"
+  );
 });
 
 add_task(
@@ -1832,5 +1819,123 @@ add_task(function test_addToolCallMessage_emits_for_error_payload() {
     received.content.name,
     undefined,
     "Error-path TOOL message has no name field"
+  );
+});
+
+add_task(function test_resolvePendingToolConfirmation_no_messages() {
+  const conversation = new ChatConversation({});
+  Assert.equal(
+    conversation.resolvePendingToolConfirmation({ description: "x" }, "tc-1"),
+    false,
+    "Returns false when there are no messages"
+  );
+});
+
+add_task(function test_resolvePendingToolConfirmation_non_tool_message() {
+  const conversation = new ChatConversation({});
+  conversation.addUserMessage("hi", null);
+  conversation.addAssistantMessage("text", "hello");
+
+  Assert.equal(
+    conversation.resolvePendingToolConfirmation({ description: "x" }, "tc-1"),
+    false,
+    "Returns false when last message is not a TOOL message"
+  );
+});
+
+add_task(function test_resolvePendingToolConfirmation_tool_not_pending() {
+  const conversation = new ChatConversation({});
+  conversation.addUserMessage("hi", null);
+  conversation.addAssistantMessage("text", "hello");
+  conversation.addToolCallMessage({
+    tool_call_id: "tc-1",
+    name: "manage_tabs",
+    body: { success: true },
+  });
+
+  Assert.equal(
+    conversation.resolvePendingToolConfirmation({ description: "x" }, "tc-1"),
+    false,
+    "Returns false when the tool body is not pending"
+  );
+});
+
+add_task(function test_resolvePendingToolConfirmation_toolCallId_mismatch() {
+  const conversation = new ChatConversation({});
+  conversation.addUserMessage("close my tabs", null);
+  conversation.addAssistantMessage("text", "confirm?");
+  conversation.addToolCallMessage({
+    tool_call_id: "tc-1",
+    name: "manage_tabs",
+    body: { pending: true },
+  });
+
+  const noopResolved = conversation.resolvePendingToolConfirmation(
+    { description: "mismatch" },
+    "tc-other"
+  );
+  Assert.equal(
+    noopResolved,
+    false,
+    "Returns false when toolCallId does not match the most recent tool message"
+  );
+  Assert.deepEqual(
+    conversation.messages.at(-1).content.body,
+    { pending: true },
+    "Body should remain unchanged when toolCallId does not match"
+  );
+
+  const okResolved = conversation.resolvePendingToolConfirmation(
+    { description: "match" },
+    "tc-1"
+  );
+  Assert.equal(
+    okResolved,
+    true,
+    "Returns true when toolCallId filter matches the tail"
+  );
+});
+
+add_task(function test_resolvePendingToolConfirmation_resolves_pending_tail() {
+  const conversation = new ChatConversation({});
+  conversation.addUserMessage("close my tabs", null);
+  conversation.addAssistantMessage("text", "confirm?");
+  conversation.addToolCallMessage({
+    tool_call_id: "tc-1",
+    name: "manage_tabs",
+    body: { pending: true, action: "close" },
+  });
+
+  const tailBefore = conversation.messages.at(-1);
+
+  let emittedMessage = null;
+  conversation.on("chat-conversation:message-update", (_event, m) => {
+    emittedMessage = m;
+  });
+
+  const outcome = { description: "User confirmed." };
+  const resolved = conversation.resolvePendingToolConfirmation(outcome, "tc-1");
+
+  Assert.equal(resolved, true, "Returns true when a pending tail is resolved");
+  const tailAfter = conversation.messages.at(-1);
+  Assert.strictEqual(
+    tailAfter,
+    tailBefore,
+    "Resolves in place rather than appending a new message"
+  );
+  Assert.deepEqual(
+    tailAfter.content.body,
+    outcome,
+    "Body is replaced with the supplied outcome"
+  );
+  Assert.equal(
+    tailAfter.content.tool_call_id,
+    "tc-1",
+    "Other content keys are preserved"
+  );
+  Assert.equal(
+    emittedMessage,
+    tailAfter,
+    "Emits chat-conversation:message-update with the resolved tail message"
   );
 });

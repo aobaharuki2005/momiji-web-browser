@@ -50,7 +50,7 @@ class IDBIndex final : public nsISupports, public nsWrapperCache {
   bool mRooted;
 
  public:
-  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
+  NS_DECL_CYCLE_COLLECTING_ISUPPORTS_FINAL
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(IDBIndex)
 
   [[nodiscard]] static RefPtr<IDBIndex> Create(

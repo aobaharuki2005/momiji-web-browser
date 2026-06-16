@@ -7,6 +7,8 @@ import {
   getWidgetOrder,
   isWidgetAddable,
   isWidgetEnabled,
+  isWidgetToggleVisible,
+  isWidgetsContainerVisible,
   resolveWidgetSize,
   resolveWidgetOrder,
   resolveWidgetHasSidebar,
@@ -14,6 +16,74 @@ import {
 } from "common/WidgetsRegistry.mjs";
 
 const registryIds = WIDGET_REGISTRY.map(w => w.id);
+const listsWidget = WIDGET_REGISTRY.find(w => w.id === "lists");
+
+describe("isWidgetToggleVisible", () => {
+  it("is false when nothing enables it", () => {
+    expect(isWidgetToggleVisible(listsWidget, {})).toBe(false);
+  });
+
+  it("is true via the system pref", () => {
+    expect(
+      isWidgetToggleVisible(listsWidget, {
+        "widgets.system.lists.enabled": true,
+      })
+    ).toBe(true);
+  });
+
+  it("is true via trainhopConfig.widgets (addable)", () => {
+    expect(
+      isWidgetToggleVisible(listsWidget, {
+        trainhopConfig: { widgets: { listsEnabled: true } },
+      })
+    ).toBe(true);
+  });
+
+  it("is true via the widgetsSettings.*Visible override", () => {
+    expect(
+      isWidgetToggleVisible(listsWidget, {
+        trainhopConfig: { widgetsSettings: { listsVisible: true } },
+      })
+    ).toBe(true);
+  });
+
+  it("is additive only — a false widgetsSettings value cannot hide a system-enabled toggle", () => {
+    expect(
+      isWidgetToggleVisible(listsWidget, {
+        "widgets.system.lists.enabled": true,
+        trainhopConfig: { widgetsSettings: { listsVisible: false } },
+      })
+    ).toBe(true);
+  });
+});
+
+describe("isWidgetsContainerVisible", () => {
+  it("is false when nothing enables it", () => {
+    expect(isWidgetsContainerVisible({})).toBe(false);
+  });
+
+  it("is true via the system pref", () => {
+    expect(isWidgetsContainerVisible({ "widgets.system.enabled": true })).toBe(
+      true
+    );
+  });
+
+  it("is true via trainhopConfig.widgets.enabled", () => {
+    expect(
+      isWidgetsContainerVisible({
+        trainhopConfig: { widgets: { enabled: true } },
+      })
+    ).toBe(true);
+  });
+
+  it("is true via widgetsSettings.enabled", () => {
+    expect(
+      isWidgetsContainerVisible({
+        trainhopConfig: { widgetsSettings: { enabled: true } },
+      })
+    ).toBe(true);
+  });
+});
 
 describe("getWidgetOrder", () => {
   it("returns registry default order when pref is empty", () => {
@@ -130,6 +200,15 @@ describe("isWidgetAddable", () => {
         [listsWidget.systemEnabledPref]: false,
       })
     ).toBe(false);
+  });
+
+  it("is addable when revealed via widgetsSettings (so the toggle is functional)", () => {
+    expect(
+      isWidgetAddable(listsWidget, {
+        [listsWidget.systemEnabledPref]: false,
+        trainhopConfig: { widgetsSettings: { listsVisible: true } },
+      })
+    ).toBe(true);
   });
 
   it("does not consider the user's enabled pref", () => {

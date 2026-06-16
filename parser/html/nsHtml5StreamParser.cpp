@@ -2861,6 +2861,6 @@ void nsHtml5StreamParser::MarkAsBroken(nsresult aRv) {
 }
 
 nsresult nsHtml5StreamParser::DispatchToMain(
-    already_AddRefed<nsIRunnable>&& aRunnable) {
+    already_AddRefed<nsIRunnable> aRunnable) {
   return SchedulerGroup::Dispatch(std::move(aRunnable));
 }

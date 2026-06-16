@@ -98,6 +98,7 @@
 #include "prtime.h"
 #include "prenv.h"
 
+#include "nsComponentManagerUtils.h"
 #include "nsContentUtils.h"
 #include "nsISupportsPrimitives.h"
 #include "nsITheme.h"

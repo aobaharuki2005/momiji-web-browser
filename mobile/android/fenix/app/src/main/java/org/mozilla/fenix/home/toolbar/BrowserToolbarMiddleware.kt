@@ -291,7 +291,7 @@ class BrowserToolbarMiddleware(
         store.dispatch(
             PageOriginUpdated(
                 PageOrigin(
-                    hint = if (settings.showVoiceSearchInDisplayToolbar) {
+                    hint = if (isVoiceSearchEnabledForDisplayToolbar()) {
                         R.string.search_hint_short
                     } else {
                         R.string.search_hint
@@ -320,7 +320,7 @@ class BrowserToolbarMiddleware(
         )
 
     private fun buildEndPageActions(): List<Action> = buildList {
-        if (settings.showVoiceSearchInDisplayToolbar && isSpeechRecognitionAvailable()) {
+        if (isVoiceSearchEnabledForDisplayToolbar() && isSpeechRecognitionAvailable()) {
             add(
                 ActionButtonRes(
                     drawableResId = iconsR.drawable.mozac_ic_microphone_24,
@@ -330,6 +330,9 @@ class BrowserToolbarMiddleware(
             )
         }
     }
+
+    private fun isVoiceSearchEnabledForDisplayToolbar() =
+        settings.shouldShowVoiceSearch && settings.showVoiceSearchInDisplayToolbar
 
     private fun isSpeechRecognitionAvailable() =
         Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH)

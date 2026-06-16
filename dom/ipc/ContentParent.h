@@ -106,6 +106,7 @@ class MemoryReport;
 class TabContext;
 class GetFilesHelper;
 class MemoryReportRequestHost;
+class ParentProcessChannelHandle;
 class RemoteWorkerDebuggerManagerParent;
 class RemoteWorkerManager;
 class RemoteWorkerServiceParent;
@@ -366,7 +367,7 @@ class ContentParent final : public PContentParent,
 
   NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(ContentParent, nsIObserver)
 
-  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
+  NS_DECL_CYCLE_COLLECTING_ISUPPORTS_FINAL
   NS_DECL_NSIDOMPROCESSPARENT
   NS_DECL_NSIOBSERVER
   NS_DECL_NSIDOMGEOPOSITIONCALLBACK
@@ -463,6 +464,12 @@ class ContentParent final : public PContentParent,
   already_AddRefed<nsDocShellLoadState> TakePendingLoadStateForId(
       uint64_t aLoadIdentifier);
   void StorePendingLoadState(nsDocShellLoadState* aLoadState);
+
+  // Helper methods for managing parent-process channel handles for channels
+  // which are being loaded into this process.
+  nsID AddParentProcessChannelHandle(ParentProcessChannelHandle* aHandle);
+  already_AddRefed<ParentProcessChannelHandle> ReadParentProcessChannelHandle(
+      const nsID& aUuid);
 
   /**
    * Kill our subprocess and make sure it dies.  Should only be used
@@ -1433,6 +1440,8 @@ class ContentParent final : public PContentParent,
   mozilla::ipc::IPCResult RecvKillGPUProcess();
 #endif
 
+  mozilla::ipc::IPCResult RecvDropParentProcessChannelHandle(const nsID& aUuid);
+
  public:
   void SendGetFilesResponseAndForget(const nsID& aID,
                                      const GetFilesResponseResult& aResult);
@@ -1642,6 +1651,13 @@ class ContentParent final : public PContentParent,
   // load ID. If the load is then requested from the content process, we can
   // compare the load state and ensure it matches.
   nsTHashMap<uint64_t, RefPtr<nsDocShellLoadState>> mPendingLoadStates;
+
+  // When a content process is given a handle for the channel completing a
+  // document load, that handle is assigned a unique UUID. That UUID is stored
+  // here, and can be used by the content process to name the specific channel
+  // when creating the final document.
+  nsTHashMap<nsID, RefPtr<ParentProcessChannelHandle>>
+      mPendingParentProcessChannelHandles;
 
   // See `BrowsingContext::mEpochs` for an explanation of this field.
   uint64_t mBrowsingContextFieldEpoch = 0;

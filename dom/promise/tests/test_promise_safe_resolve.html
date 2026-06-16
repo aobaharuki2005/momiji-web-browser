@@ -18,8 +18,8 @@
 // synchronously during read(), running the getter on the caller's stack.
 //
 // The thenable-curtailment proposal — exposed here behind the pref
-// dom.promise.safe_resolve — routes MaybeResolve through JS::SafeResolve,
-// which defers that read to a microtask.
+// dom.promise.experimental_safe_resolve — routes MaybeResolve through
+// JS::SafeResolve, which defers that read to a microtask.
 //
 // Invariants under test:
 //

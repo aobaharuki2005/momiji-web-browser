@@ -87,7 +87,7 @@ class ContentClassifierEngine final {
   const ContentClassifierFeature& Feature() const { return mFeature; }
 
   ContentClassifierEngineResult CheckNetworkRequest(
-      const ContentClassifierRequest& aRequest);
+      const ContentClassifierRequest& aRequest, bool aPreviouslyMatched);
 
  private:
   ~ContentClassifierEngine() {

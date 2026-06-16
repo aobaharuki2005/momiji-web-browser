@@ -40,7 +40,7 @@
 namespace mozilla {
 
 #define LOG(msg, ...) \
-  MOZ_LOG(gRemoteDecodeLog, LogLevel::Debug, (msg, ##__VA_ARGS__))
+  MOZ_LOG_FMT(gRemoteDecodeLog, LogLevel::Debug, msg, ##__VA_ARGS__)
 
 using namespace ipc;
 using namespace layers;

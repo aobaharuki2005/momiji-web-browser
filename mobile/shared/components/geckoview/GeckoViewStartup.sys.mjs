@@ -75,7 +75,6 @@ const JSWINDOWACTORS = {
       esModuleURI: "resource:///actors/GeckoViewPromptChild.sys.mjs",
       events: {
         click: { capture: false, mozSystemGroup: true },
-        contextmenu: { capture: false, mozSystemGroup: true },
         mozshowdropdown: {},
         "mozshowdropdown-sourcetouch": {},
         MozOpenDateTimePicker: {},

@@ -12,7 +12,9 @@ import {
   makeScriptSourceId,
   createGeneratedSource,
   createSourceMapOriginalSource,
+  createStyleSheet,
   createScriptSourceActor,
+  createStyleSheetActor,
 } from "../../client/firefox/create";
 import { toggleBlackBox } from "./blackbox";
 import { syncPendingBreakpoint } from "../breakpoints/index";
@@ -351,7 +353,8 @@ export function newGeneratedSources(sourceResources) {
       for (const sourceActor of newSourceActors) {
         if (
           selectedLocation?.source == sourceActor.sourceObject &&
-          sourceActor.sourceObject.isHTML
+          sourceActor.sourceObject.isHTML &&
+          !sourceActor.sourceObject.isStyleSheet
         ) {
           await dispatch(
             setBreakableLines(
@@ -372,6 +375,39 @@ export function newGeneratedSources(sourceResources) {
     })();
 
     return resultIds.map(id => getSourceFromId(getState(), id));
+  };
+}
+
+export function newStyleSheetSources(styleSheetResources) {
+  return async ({ dispatch }) => {
+    if (!styleSheetResources.length) {
+      return;
+    }
+    const styleSheets = [];
+    const styleSheetActors = [];
+    for (const styleSheetResource of styleSheetResources) {
+      // By the time we process the sources, the related target
+      // might already have been destroyed. It means that the sources
+      // are also about to be destroyed, so ignore them.
+      // (This is covered by browser_toolbox_backward_forward_navigation.js)
+      if (
+        styleSheetResource.targetFront.isDestroyed() ||
+        // Currently hide inline sources. Should remove in Bug 2037006
+        styleSheetResource.href == null
+      ) {
+        continue;
+      }
+      const stylesheet = createStyleSheet(styleSheetResource);
+      styleSheets.push(stylesheet);
+      styleSheetActors.push(
+        createStyleSheetActor(styleSheetResource, stylesheet)
+      );
+    }
+    if (!styleSheets.length) {
+      return;
+    }
+    dispatch({ type: "ADD_SOURCES", sources: styleSheets });
+    dispatch(insertSourceActors(styleSheetActors));
   };
 }
 

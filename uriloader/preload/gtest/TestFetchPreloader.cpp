@@ -116,6 +116,14 @@ NS_IMETHODIMP FakeChannel::SetLoadInfo(nsILoadInfo* aLoadInfo) { return NS_OK; }
 NS_IMETHODIMP FakeChannel::GetLoadInfo(nsILoadInfo** aLoadInfo) {
   return NS_OK;
 }
+NS_IMETHODIMP FakeChannel::GetParentProcessChannelHandle(
+    mozilla::dom::ParentProcessChannelHandle** aValue) {
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+NS_IMETHODIMP FakeChannel::SetParentProcessChannelHandle(
+    mozilla::dom::ParentProcessChannelHandle* aValue) {
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
 NS_IMETHODIMP FakeChannel::GetIsDocument(bool* aIsDocument) {
   *aIsDocument = false;
   return NS_OK;

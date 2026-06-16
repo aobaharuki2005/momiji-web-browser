@@ -2143,7 +2143,9 @@ void AbsoluteContainingBlock::ReflowAbsoluteFrame(
       return;
     }
     aKidFrame->SetPosition(rect.TopLeft());
-    aKidFrame->UpdateOverflow();
+    if (aKidFrame->FrameMaintainsOverflow()) {
+      aKidFrame->UpdateOverflow();
+    }
   }();
 
   if (currentFallbackIndex) {

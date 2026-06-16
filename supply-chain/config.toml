@@ -27,6 +27,10 @@ notes = "This is the upstream code with a fix for rust 1.89."
 audit-as-crates-io = true
 notes = "This is the upstream code plus the ARM intrinsics workaround from qcms, see bug 1882209."
 
+[policy.authenticator]
+audit-as-crates-io = false
+notes = "This is a first-party crate which is no longer published through crates.io."
+
 [policy.autocfg]
 audit-as-crates-io = true
 notes = "This is the upstream code plus a few local fixes, see bug 1685697."
@@ -158,6 +162,10 @@ audit-as-crates-io = true
 [policy.midir]
 audit-as-crates-io = true
 notes = "This is a pinned version of the upstream code, presumably to get a fix that hadn't been released yet. We should consider switching to the latest official release."
+
+[policy.minidump-writer]
+audit-as-crates-io = true
+notes = "We are letting a pre-release ride the trains to catch any regressions before we cut an actual release."
 
 [policy.mls-rs-provider-sqlite]
 audit-as-crates-io = true

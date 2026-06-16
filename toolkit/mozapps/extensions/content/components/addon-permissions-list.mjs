@@ -142,6 +142,10 @@ class AddonPermissionsList extends AboutAddonsHTMLElement {
         : []
     );
 
+    let policyBlockedPerms =
+      Services.policies?.getExtensionSettings(this.addon.id)
+        ?.blocked_permissions ?? [];
+
     if (optionalEntries.length) {
       let section = permissionsFrag.querySelector(
         ".addon-permissions-optional"
@@ -155,6 +159,8 @@ class AddonPermissionsList extends AboutAddonsHTMLElement {
         ".addon-permissions-list"
       );
 
+      let anyPolicyBlockedPerm = false;
+      let anyPolicyLockedHost = false;
       for (let id = 0; id < optionalEntries.length; id++) {
         let [perm, msg] = optionalEntries[id];
 
@@ -176,6 +182,11 @@ class AddonPermissionsList extends AboutAddonsHTMLElement {
         toggle.id = `permission-${id}`;
         toggle.setAttribute("permission-type", type);
 
+        if (type === "permission" && policyBlockedPerms.includes(perm)) {
+          toggle.setAttribute("disabled", "true");
+          anyPolicyBlockedPerm = true;
+        }
+
         let checked =
           grantedPerms.permissions.includes(perm) ||
           grantedPerms.origins.includes(perm) ||
@@ -192,6 +203,7 @@ class AddonPermissionsList extends AboutAddonsHTMLElement {
 
         if (type === "origin" && policyLockedOrigins.has(perm)) {
           toggle.setAttribute("disabled", "true");
+          anyPolicyLockedHost = true;
         }
 
         toggle.setAttribute("permission-key", perm);
@@ -215,11 +227,7 @@ class AddonPermissionsList extends AboutAddonsHTMLElement {
         }
       }
 
-      let hasPolicyLockedHosts = optionalEntries.some(([perm]) =>
-        policyLockedOrigins.has(perm)
-      );
-
-      if (hasPolicyLockedHosts) {
+      if (anyPolicyLockedHost || anyPolicyBlockedPerm) {
         let wrapper = permissionsFrag.querySelector(
           ".addon-permissions-list-wrapper"
         );

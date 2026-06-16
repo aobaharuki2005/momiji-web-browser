@@ -794,13 +794,14 @@ void HttpConnectionUDP::HandleTunnelResponse(
   MOZ_ASSERT(TunnelSetupInProgress());
   MOZ_ASSERT(mIsInTunnel);
 
-  mProxyConnectResponseHead = Some(responseHead);
+  mProxyConnectResponseHead =
+      MakeRefPtr<ProxyConnectResponseHead>(responseHead);
   if (responseHead.Status() == 200) {
     ChangeState(HttpConnectionState::REQUEST);
   }
 
   bool onlyConnect = mTransactionCaps & NS_HTTP_CONNECT_ONLY;
-  aHttpTransaction->OnProxyConnectComplete(responseHead);
+  aHttpTransaction->OnProxyConnectComplete(mProxyConnectResponseHead);
   if (responseHead.Status() == 200) {
     LOG(("proxy CONNECT succeeded! onlyconnect=%d mIsInTunnel=%d\n",
          onlyConnect, mIsInTunnel));
@@ -1035,6 +1036,12 @@ void HttpConnectionUDP::CloseTransaction(nsAHttpTransaction* trans,
   MOZ_ASSERT(OnSocketThread(), "not on socket thread");
 
   if (NS_SUCCEEDED(reason) || (reason == NS_BASE_STREAM_CLOSED)) {
+    if (aIsShutdown && mHttp3Session) {
+      // The underlying socket has been closed. Cancel the Http3Session timer
+      // to prevent it from firing on the now-closed socket.
+      mHttp3Session->SetCleanShutdown(true);
+      mHttp3Session->Close(reason);
+    }
     return;
   }
 

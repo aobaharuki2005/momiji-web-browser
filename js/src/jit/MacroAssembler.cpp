@@ -8410,9 +8410,13 @@ void MacroAssembler::emitWeapMapBarrierFastPath(ValueOperand value,
   // If the gray bit is set, then we *do* need a barrier.
   branchTestPtr(Assembler::NonZero, markWord, mask, barrier);
 
-  // Otherwise, we don't need a barrier unless we're in the middle of
-  // an incremental GC.
-  branchTestNeedsMarkingBarrierAnyZone(Assembler::NonZero, barrier, temp1);
+  // Otherwise, the tenured cell needs a barrier only if its zone is being
+  // marked by an incremental GC.
+  Register zone = temp2;
+  loadPtr(Address(chunk, gc::ChunkZoneOffset), zone);
+  branchTest32(Assembler::NonZero,
+               Address(zone, Zone::offsetOfNeedsMarkingBarrier()), Imm32(0x1),
+               barrier);
   bind(&done);
 }
 
@@ -9809,6 +9813,11 @@ void MacroAssembler::maybeLoadIteratorFromShape(Register obj, Register dest,
   computeEffectiveAddress(BaseIndex(nativeIterator, temp3, ScalePointer,
                                     NativeIterator::offsetOfFirstProperty()),
                           nativeIterator);
+
+  if constexpr (sizeof(PropertyIndex) != alignof(GCPtr<Shape*>)) {
+    addPtr(Imm32(alignof(GCPtr<Shape*>) - 1), nativeIterator);
+    andPtr(Imm32(-int32_t(alignof(GCPtr<Shape*>))), nativeIterator);
+  }
 
   Register expectedProtoShape = nativeIterator;
 

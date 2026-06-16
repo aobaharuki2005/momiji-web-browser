@@ -262,6 +262,7 @@ macosx-custom-car:
             is_official_build=true,
             symbol_level=0,
             target_cpu="x64",
+            use_clang_modules=false,
             use_v8_context_snapshot=false,
             v8_symbol_level=0
         ]
@@ -298,6 +299,7 @@ macosx-arm64-custom-car:
             is_official_build=true,
             symbol_level=0,
             target_cpu="arm64",
+            use_clang_modules=false,
             use_v8_context_snapshot=false,
             v8_symbol_level=0
         ]
@@ -772,7 +774,7 @@ win64-aarch64-vs2026:
         toolchain-artifact: project/gecko/vs/vs.tar.zst
         toolchain-alias: win64-aarch64-vs
 
-linux64-afl-instrumentation-4.0:
+linux64-afl-instrumentation:
     description: "AFL++ instrumentation toolchain build"
     treeherder:
         symbol: TL(afl++)
@@ -783,10 +785,9 @@ linux64-afl-instrumentation-4.0:
         resources:
             - taskcluster/scripts/misc/afl-nyx.patch
         toolchain-artifact: public/build/afl-instrumentation.tar.zst
-        toolchain-alias: linux64-afl-instrumentation
     fetches:
         fetch:
-            - afl-plus-plus-4.0
+            - afl-plus-plus
         toolchain:
             - linux64-clang
             - linux64-toolchain-sysroot

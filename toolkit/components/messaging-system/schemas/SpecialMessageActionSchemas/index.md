@@ -267,6 +267,10 @@ Windows only.
   // Only set Firefox as the default PDF handler if the current PDF handler is a
   // known browser.
   onlyIfKnownBrowser?: boolean;
+  // If the OS hands the stub PDF back to Firefox after the user picks Firefox
+  // in the open-with dialog, open a follow-up PDF in a new tab instead of
+  // suppressing the launch.
+  openInFirefox?: boolean;
 }
 ```
 

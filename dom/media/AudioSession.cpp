@@ -10,9 +10,9 @@
 #include "nsGlobalWindowInner.h"
 
 #undef LOG
-#define LOG(msg, ...)                        \
-  MOZ_LOG(gMediaControlLog, LogLevel::Debug, \
-          ("AudioSession=%p, " msg, this, ##__VA_ARGS__))
+#define LOG(msg, ...)                                                     \
+  MOZ_LOG_FMT(gMediaControlLog, LogLevel::Debug, "AudioSession={}, " msg, \
+              fmt::ptr(this), ##__VA_ARGS__)
 
 namespace mozilla::dom {
 
@@ -32,7 +32,7 @@ void AudioSession::SetType(AudioSessionType aType) {
   if (mType == aType) {
     return;
   }
-  LOG("SetType %s", GetEnumString(aType).get());
+  LOG("SetType {}", GetEnumString(aType).get());
   mType = aType;
   if (nsPIDOMWindowInner* window = GetOwnerWindow()) {
     if (WindowGlobalChild* wgc = window->GetWindowGlobalChild()) {
@@ -45,7 +45,7 @@ void AudioSession::SetState(AudioSessionState aState) {
   if (mState == aState) {
     return;
   }
-  LOG("SetState %s", GetEnumString(aState).get());
+  LOG("SetState {}", GetEnumString(aState).get());
   mState = aState;
   RefPtr<AsyncEventDispatcher> dispatcher =
       new AsyncEventDispatcher(this, u"statechange"_ns, CanBubble::eNo);

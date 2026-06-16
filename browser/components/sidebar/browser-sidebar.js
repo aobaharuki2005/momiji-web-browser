@@ -245,6 +245,7 @@ var SidebarController = {
           elementId: "sidebar-switcher-opentabs",
           url: "chrome://browser/content/sidebar/sidebar-opentabs.html",
           menuId: "menu_openTabsSidebar",
+          keyId: "viewOpenTabsSidebarKb",
           menuL10nId: "menu-view-open-tabs",
           revampL10nId: "sidebar-menu-open-tabs-label",
           iconUrl: "chrome://browser/content/firefoxview/view-opentabs.svg",
@@ -371,9 +372,8 @@ var SidebarController = {
 
   get sidebarContainer() {
     if (!this._sidebarContainer) {
-      // This is the *parent* of the `sidebar-main` component.
-      // TODO: Rename this element in the markup in order to avoid confusion. (Bug 1904860)
-      this._sidebarContainer = document.getElementById("sidebar-main");
+      // This is the *parent* of the `sidebar-main` component. Its ID is "sidebar-container
+      this._sidebarContainer = document.getElementById("sidebar-container");
     }
     return this._sidebarContainer;
   },
@@ -879,7 +879,7 @@ var SidebarController = {
     [...browser.children].forEach((node, i, children) => {
       node.style.order = this._positionStart ? i + 1 : children.length - i;
     });
-    let sidebarContainer = document.getElementById("sidebar-main");
+    let sidebarContainer = document.getElementById("sidebar-container");
     let sidebarMain = document.querySelector("sidebar-main");
 
     // Indicate we've switched ordering to the box
@@ -1200,7 +1200,7 @@ var SidebarController = {
     return Promise.allSettled(tasks);
   },
 
-  async _animateSidebarMain() {
+  async _animateSidebarContainer() {
     let tabbox = document.getElementById("tabbrowser-tabbox");
     let animatingElements;
     let expandOnHoverEnabled = document.documentElement.hasAttribute(
@@ -1440,7 +1440,7 @@ var SidebarController = {
     }
 
     if (this._animationEnabled && !window.gReduceMotion) {
-      this._animateSidebarMain();
+      this._animateSidebarContainer();
     }
 
     if (expandOnToggle) {
@@ -1575,7 +1575,7 @@ var SidebarController = {
       // Collapse sidebar if needed
       if (this._state.launcherExpanded && !isHovered) {
         if (this._animationEnabled && !window.gReduceMotion) {
-          this._animateSidebarMain();
+          this._animateSidebarContainer();
         }
         this._state.launcherExpanded = false;
         await this.waitUntilStable();
@@ -2411,7 +2411,7 @@ var SidebarController = {
     contentArea.toggleAttribute("sidebar-launcher-hovered", true);
     this._state.launcherHoverActive = true;
     if (this._animationEnabled && !window.gReduceMotion) {
-      this._animateSidebarMain();
+      this._animateSidebarContainer();
     }
     this._state.launcherExpanded = true;
     this._mouseEnterDeferred.resolve();
@@ -2425,7 +2425,7 @@ var SidebarController = {
     contentArea.toggleAttribute("sidebar-launcher-hovered", false);
     this._state.launcherHoverActive = false;
     if (this._animationEnabled && !window.gReduceMotion) {
-      this._animateSidebarMain();
+      this._animateSidebarContainer();
     }
     this._state.launcherExpanded = false;
   },
@@ -2753,7 +2753,7 @@ XPCOMUtils.defineLazyPreferenceGetter(
           !window.gReduceMotion &&
           newValue !== "expand-on-hover"
         ) {
-          SidebarController._animateSidebarMain();
+          SidebarController._animateSidebarContainer();
         }
 
         // launcher is always initially expanded with vertical tabs unless we're doing expand-on-hover

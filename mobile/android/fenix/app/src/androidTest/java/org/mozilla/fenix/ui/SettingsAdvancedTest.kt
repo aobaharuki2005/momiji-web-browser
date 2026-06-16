@@ -16,7 +16,7 @@ import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.mozilla.fenix.customannotations.SmokeTest
-import org.mozilla.fenix.ext.settings
+import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.helpers.AppAndSystemHelper.assertNativeAppOpens
 import org.mozilla.fenix.helpers.AppAndSystemHelper.assertYoutubeAppOpens
 import org.mozilla.fenix.helpers.Constants
@@ -181,7 +181,7 @@ class SettingsAdvancedTest {
     // Assumes Youtube is installed and enabled
     @Test
     fun privateBrowsingAskBeforeOpeningLinkInAppCancelTest() {
-        TestHelper.appContext.settings().shouldShowCookieBannersCFR = false
+        TestHelper.appContext.components.settings.shouldShowCookieBannersCFR = false
         composeTestRule.activityRule.applySettingsExceptions {
             it.openLinksInExternalApp = OpenLinksInApp.ASK
         }

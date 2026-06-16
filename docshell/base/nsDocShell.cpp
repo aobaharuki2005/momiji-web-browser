@@ -40,6 +40,7 @@
 #include "mozilla/StaticPrefs_docshell.h"
 #include "mozilla/StaticPrefs_dom.h"
 #include "mozilla/StaticPrefs_extensions.h"
+#include "mozilla/StaticPrefs_network.h"
 #include "mozilla/StaticPrefs_privacy.h"
 #include "mozilla/StaticPrefs_security.h"
 #include "mozilla/StaticPrefs_ui.h"
@@ -217,6 +218,7 @@
 #include "nsNetCID.h"
 #include "nsNetUtil.h"
 #include "nsObjectLoadingContent.h"
+#include "nsPIDOMWindowInlines.h"
 #include "nsPingListener.h"
 #include "nsPoint.h"
 #include "nsQueryObject.h"
@@ -1378,7 +1380,7 @@ void nsDocShell::FirePageHideShowNonRecursive(bool aShow) {
   }
 }
 
-nsresult nsDocShell::Dispatch(already_AddRefed<nsIRunnable>&& aRunnable) {
+nsresult nsDocShell::Dispatch(already_AddRefed<nsIRunnable> aRunnable) {
   nsCOMPtr<nsIRunnable> runnable(aRunnable);
   if (NS_WARN_IF(!GetWindow())) {
     // Window should only be unavailable after destroyed.
@@ -4830,8 +4832,8 @@ nsresult nsDocShell::SetCurScrollPosEx(int32_t aCurHorizontalPos,
     return NS_OK;
   }
 
-  presShell->ScrollToVisual(targetPos, layers::FrameMetrics::eMainThread,
-                            scrollMode);
+  presShell->ScrollToVisual(
+      targetPos, layers::ScrollOffsetUpdateType::MainThread, scrollMode);
 
   return NS_OK;
 }
@@ -6345,21 +6347,22 @@ nsresult nsDocShell::CreateInitialDocumentViewer(
   MOZ_DIAGNOSTIC_ASSERT(!mDocumentViewer);
   MOZ_ASSERT(aOpenWindowInfo, "Why don't we have openwindowinfo?");
 
+  nsCOMPtr<nsIPrincipal> principal =
+      aOpenWindowInfo->PrincipalToInheritForAboutBlank();
+  nsCOMPtr<nsIPrincipal> partitionedPrincipal =
+      aOpenWindowInfo->PartitionedPrincipalToInheritForAboutBlank();
+
   // Previously, CreateDocumentViewerForActor would've used the actor's
   // principal.
+  MOZ_ASSERT_IF(aWindowActor, aWindowActor->DocumentPrincipal() == principal);
   MOZ_ASSERT_IF(aWindowActor,
-                aWindowActor->DocumentPrincipal() ==
-                    aOpenWindowInfo->PrincipalToInheritForAboutBlank());
-  MOZ_ASSERT_IF(
-      aWindowActor,
-      aWindowActor->DocumentPrincipal() ==
-          aOpenWindowInfo->PartitionedPrincipalToInheritForAboutBlank());
+                aWindowActor->DocumentPrincipal() == partitionedPrincipal);
 
+  nsCOMPtr<nsIPolicyContainer> policyContainer =
+      aOpenWindowInfo->PolicyContainerToInheritForAboutBlank();
+  nsCOMPtr<nsIURI> base = aOpenWindowInfo->BaseUriToInheritForAboutBlank();
   MOZ_TRY(CreateAboutBlankDocumentViewer(
-      aOpenWindowInfo->PrincipalToInheritForAboutBlank(),
-      aOpenWindowInfo->PartitionedPrincipalToInheritForAboutBlank(),
-      aOpenWindowInfo->PolicyContainerToInheritForAboutBlank(),
-      aOpenWindowInfo->BaseUriToInheritForAboutBlank(),
+      principal, partitionedPrincipal, policyContainer, base,
       /* aIsInitialDocument */ true,
       aOpenWindowInfo->CoepToInheritForAboutBlank(),
       /* aTryToSaveOldPresentation */ true,
@@ -10070,9 +10073,11 @@ nsresult nsDocShell::CompleteInitialAboutBlankLoad(
   // the right principal (bug 1979032)
   if (principalMismatch || shouldBeSandboxed) {
     // This will sandbox the principals as needed
+    nsCOMPtr<nsIPolicyContainer> policyContainer =
+        aLoadState->PolicyContainer();
+    nsCOMPtr<nsIURI> base = doc->GetDocBaseURI();
     rv = CreateAboutBlankDocumentViewer(
-        expectedPrincipal, expectedPartitionedPrincipal,
-        aLoadState->PolicyContainer(), doc->GetDocBaseURI(),
+        expectedPrincipal, expectedPartitionedPrincipal, policyContainer, base,
         /* aIsInitialDocument */ true);
     NS_ENSURE_SUCCESS(rv, rv);
 
@@ -11300,9 +11305,11 @@ nsresult nsDocShell::LoadHistoryEntry(nsDocShellLoadState* aLoadState,
     // Don't cache the presentation if we're going to just reload the
     // current entry. Caching would lead to trying to save the different
     // content viewers in the same SessionHistoryEntry object.
+    nsCOMPtr<nsIPrincipal> principal = aLoadState->PrincipalToInherit();
+    nsCOMPtr<nsIPrincipal> partitionedPrincipal =
+        aLoadState->PartitionedPrincipalToInherit();
     rv = CreateAboutBlankDocumentViewer(
-        aLoadState->PrincipalToInherit(),
-        aLoadState->PartitionedPrincipalToInherit(), nullptr, nullptr,
+        principal, partitionedPrincipal, nullptr, nullptr,
         /* aIsInitialDocument */ false, Nothing(), !aLoadingCurrentEntry);
 
     if (NS_FAILED(rv)) {

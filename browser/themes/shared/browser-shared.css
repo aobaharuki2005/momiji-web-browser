@@ -11,6 +11,7 @@
 @import url("chrome://browser/skin/tabbrowser/ctrlTab.css");
 @import url("chrome://browser/skin/tabbrowser/fullscreen-and-pointerlock.css");
 @import url("chrome://browser/skin/tabbrowser/tab.tokens.css");
+@import url("chrome://browser/skin/tabbrowser/tabs-navbar.tokens.css");
 @import url("chrome://browser/skin/tabbrowser/tabs.css");
 @import url("chrome://browser/skin/tabbrowser/tab-groups-list.css");
 @import url("chrome://browser/skin/tabbrowser/tab-hover-preview.css");
@@ -116,13 +117,14 @@ body {
   --browser-area-z-index-toolbox-while-animating: 4;
 
   --lwt-additional-images: none;
-  --lwt-background-alignment: right top;
   --lwt-background-tiling: no-repeat;
+  --lwt-background-alignment: right top;
+  --lwt-background-size: auto;
 
   --toolbox-background-image: none;
+  --toolbox-background-repeat: no-repeat;
+  --toolbox-background-position: right top;
   --toolbox-background-size: auto;
-  --toolbox-background-position: top left;
-  --toolbox-background-repeat: repeat;
 
   @media -moz-pref("browser.nova.enabled") {
     --toolbox-background-image: var(--toolbox-background-gradient);
@@ -132,6 +134,7 @@ body {
     --toolbox-background-image: var(--lwt-additional-images);
     --toolbox-background-repeat: var(--lwt-background-tiling);
     --toolbox-background-position: var(--lwt-background-alignment);
+    --toolbox-background-size: var(--lwt-background-size);
   }
 
   &[lwtheme-image] {
@@ -140,6 +143,7 @@ body {
     --toolbox-background-image: var(--lwt-header-image), var(--lwt-additional-images);
     --toolbox-background-repeat: no-repeat, var(--lwt-background-tiling);
     --toolbox-background-position: right top, var(--lwt-background-alignment);
+    --toolbox-background-size: auto, var(--lwt-background-size);
   }
 
   --ext-theme-background-transition: background-color 0.1s cubic-bezier(0.17, 0.67, 0.83, 0.67);
@@ -278,33 +282,20 @@ body {
   }
 }
 
-/* Toolbox background images go either on the `<body>` or on the toolbox itself.
- * For most themes and pre-nova default theme, it goes on the `<body>`. For themes
- * that align the image in the y axis, and the nova default theme, they go on the toolbox.
- * FIXME(bug 2044711): Clean this up by using a more specific attribute or so. */
-@media not -moz-pref("browser.nova.enabled") {
-  :root:not([lwtheme-image-y-align]) body,
-  :root[lwtheme-image-y-align] #navigator-toolbox {
-    background-image: var(--toolbox-background-image);
-    background-repeat: var(--toolbox-background-repeat);
-    background-position: var(--toolbox-background-position);
-    background-size: var(--toolbox-background-size);
-  }
+:root:not([theme-image-in-toolbox]) body,
+:root[theme-image-in-toolbox] #navigator-toolbox {
+  background-image: var(--toolbox-background-image);
+  background-repeat: var(--toolbox-background-repeat);
+  background-position: var(--toolbox-background-position);
+  /* stylelint-disable-next-line stylelint-plugin-mozilla/use-design-tokens */
+  background-size: var(--toolbox-background-size);
 }
 
 @media -moz-pref("browser.nova.enabled") {
-  :root[lwtheme]:not([lwtheme-image-y-align]) #navigator-toolbox {
+  :root[lwtheme]:not([theme-image-in-toolbox]) #navigator-toolbox {
     color: inherit;
     /* stylelint-disable-next-line stylelint-plugin-mozilla/use-design-tokens */
     background-color: light-dark(rgba(0, 0, 0, 0.05), rgba(255, 255, 255, 0.05));
-  }
-
-  :root[lwtheme]:not([lwtheme-image-y-align]) body,
-  :root:is([lwtheme-image-y-align], :not([lwtheme])) #navigator-toolbox {
-    background-image: var(--toolbox-background-image);
-    background-repeat: var(--toolbox-background-repeat);
-    background-position: var(--toolbox-background-position);
-    background-size: var(--toolbox-background-size);
   }
 
   .chrome-block {
@@ -322,7 +313,8 @@ body {
     }
   }
 
-  #sidebar-main {
+  #navigator-toolbox,
+  #sidebar-container {
     background-color: var(--toolbar-background-color);
   }
 }
@@ -1291,40 +1283,7 @@ popupnotificationcontent {
   -moz-context-properties: fill;
   /* Variables defined in browser-colors.css will be updated to use design tokens, see bug 1952566. */
   /* stylelint-disable-next-line stylelint-plugin-mozilla/use-design-tokens */
-  fill: var(--input-color, -moz-DialogText);
-}
-
-.ac-has-end-icon {
-  text-overflow: ellipsis;
-  overflow: hidden;
-}
-
-.popup-notification-body input.ac-has-end-icon {
-  --input-padding-from-arrow-side: calc(2 * var(--space-small) + var(--icon-size)); /* spacing on either side + arrow element width */
-  padding-inline-end: var(--input-padding-from-arrow-side);
-}
-
-/* Avoid overlapping the text on the arrow icon when switching input text direction */
-.popup-notification-body:-moz-locale-dir(rtl) input.ac-has-end-icon:dir(ltr) {
-  padding-left: var(--input-padding-from-arrow-side);
-  padding-right: var(--space-small);
-}
-.popup-notification-body:-moz-locale-dir(ltr) input.ac-has-end-icon:dir(rtl) {
-  padding-right: var(--input-padding-from-arrow-side);
-  padding-left: var(--space-small);
-}
-
-.password-notification-label {
-  margin-block-start: var(--space-large);
-
-  /**
-   * There's already a margin-block-start of 8px on popupnotificationcontent,
-   * so the first label only needs 8px of margin-block-start to match the
-   * spec.
-   */
-  &:first-of-type {
-    margin-block-start: var(--space-small);
-  }
+  fill: var(--input-text-color);
 }
 
 #tab-notification-deck {
@@ -1406,6 +1365,27 @@ popupnotificationcontent {
 
     > span:last-child {
       opacity: var(--opacity-deemphasized-strong);
+    }
+  }
+}
+
+@media -moz-pref("browser.nova.enabled") {
+  .reusable-relay-masks {
+    gap: var(--space-small);
+
+    > button {
+      padding: var(--space-xsmall) var(--space-medium);
+      margin: 0;
+      align-items: center;
+      min-height: var(--size-item-large);
+      border-radius: var(--border-radius-circle);
+      border: 1px solid var(--border-color-deemphasized);
+      background-color: transparent;
+
+      &:hover {
+        background-color: var(--button-background-color-hover);
+        border-color: var(--border-color-selected);
+      }
     }
   }
 }
@@ -1733,7 +1713,7 @@ popupnotificationcontent {
     }
 
     @media -moz-pref("sidebar.verticalTabs") {
-      #sidebar-main {
+      #sidebar-container {
         /* stylelint-disable-next-line stylelint-plugin-mozilla/use-design-tokens -- to be addressed in 2033919 */
         opacity: 0.2;
         pointer-events: none;

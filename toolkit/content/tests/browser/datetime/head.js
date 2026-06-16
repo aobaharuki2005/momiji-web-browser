@@ -105,6 +105,22 @@ class DateTimeTestHelper {
   }
 
   /**
+   * Returns the text contents of the given spinner element's enabled children.
+   *
+   * @param  {DOMElement} element
+   */
+  getSpinnerOptions(element) {
+    return [
+      ...new Set(
+        helper
+          .getChildren(element)
+          .filter(item => !item.classList.contains("disabled"))
+          .map(item => item.textContent)
+      ),
+    ];
+  }
+
+  /**
    * Click on an element
    *
    * @param  {DOMElement} element

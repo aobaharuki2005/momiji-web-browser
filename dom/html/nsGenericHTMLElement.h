@@ -63,7 +63,7 @@ class nsGenericHTMLElement : public nsGenericHTMLElementBase {
   using Element::SetTabIndex;
 
   explicit nsGenericHTMLElement(
-      already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo)
+      already_AddRefed<mozilla::dom::NodeInfo> aNodeInfo)
       : nsGenericHTMLElementBase(std::move(aNodeInfo)) {
     NS_ASSERTION(mNodeInfo->NamespaceID() == kNameSpaceID_XHTML,
                  "Unexpected namespace");
@@ -1049,8 +1049,7 @@ ASSERT_NODE_FLAGS_SPACE(HTML_ELEMENT_TYPE_SPECIFIC_BITS_OFFSET + 3);
  */
 class nsGenericHTMLFormElement : public nsGenericHTMLElement {
  public:
-  nsGenericHTMLFormElement(
-      already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo);
+  nsGenericHTMLFormElement(already_AddRefed<mozilla::dom::NodeInfo> aNodeInfo);
 
   // nsIContent
   void SaveSubtreeState() override;
@@ -1204,7 +1203,7 @@ class nsGenericHTMLFormControlElement : public nsGenericHTMLFormElement,
                                         public nsIFormControl {
  public:
   nsGenericHTMLFormControlElement(
-      already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo, FormControlType);
+      already_AddRefed<mozilla::dom::NodeInfo> aNodeInfo, FormControlType);
 
   NS_DECL_ISUPPORTS_INHERITED
 
@@ -1283,7 +1282,7 @@ class nsGenericHTMLFormControlElementWithState
     : public nsGenericHTMLFormControlElement {
  public:
   nsGenericHTMLFormControlElementWithState(
-      already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo,
+      already_AddRefed<mozilla::dom::NodeInfo> aNodeInfo,
       mozilla::dom::FromParser aFromParser, FormControlType);
 
   bool IsGenericHTMLFormControlElementWithState() const final { return true; }
@@ -1374,7 +1373,7 @@ class nsGenericHTMLFormControlElementWithState
 namespace mozilla::dom {
 
 using HTMLContentCreatorFunction =
-    nsGenericHTMLElement* (*)(already_AddRefed<mozilla::dom::NodeInfo>&&,
+    nsGenericHTMLElement* (*)(already_AddRefed<mozilla::dom::NodeInfo>,
                               mozilla::dom::FromParser);
 
 }  // namespace mozilla::dom
@@ -1382,19 +1381,19 @@ using HTMLContentCreatorFunction =
 /**
  * A macro to declare the NS_NewHTMLXXXElement() functions.
  */
-#define NS_DECLARE_NS_NEW_HTML_ELEMENT(_elementName)        \
-  namespace mozilla {                                       \
-  namespace dom {                                           \
-  class HTML##_elementName##Element;                        \
-  }                                                         \
-  }                                                         \
-  nsGenericHTMLElement* NS_NewHTML##_elementName##Element(  \
-      already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo, \
+#define NS_DECLARE_NS_NEW_HTML_ELEMENT(_elementName)       \
+  namespace mozilla {                                      \
+  namespace dom {                                          \
+  class HTML##_elementName##Element;                       \
+  }                                                        \
+  }                                                        \
+  nsGenericHTMLElement* NS_NewHTML##_elementName##Element( \
+      already_AddRefed<mozilla::dom::NodeInfo> aNodeInfo,  \
       mozilla::dom::FromParser aFromParser = mozilla::dom::NOT_FROM_PARSER);
 
 #define NS_DECLARE_NS_NEW_HTML_ELEMENT_AS_SHARED(_elementName)                \
   inline nsGenericHTMLElement* NS_NewHTML##_elementName##Element(             \
-      already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo,                   \
+      already_AddRefed<mozilla::dom::NodeInfo> aNodeInfo,                     \
       mozilla::dom::FromParser aFromParser = mozilla::dom::NOT_FROM_PARSER) { \
     return NS_NewHTMLSharedElement(std::move(aNodeInfo), aFromParser);        \
   }
@@ -1404,7 +1403,7 @@ using HTMLContentCreatorFunction =
  */
 #define NS_IMPL_NS_NEW_HTML_ELEMENT(_elementName)                     \
   nsGenericHTMLElement* NS_NewHTML##_elementName##Element(            \
-      already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo,           \
+      already_AddRefed<mozilla::dom::NodeInfo> aNodeInfo,             \
       mozilla::dom::FromParser aFromParser) {                         \
     RefPtr<mozilla::dom::NodeInfo> nodeInfo(aNodeInfo);               \
     auto* nim = nodeInfo->NodeInfoManager();                          \
@@ -1415,7 +1414,7 @@ using HTMLContentCreatorFunction =
 
 #define NS_IMPL_NS_NEW_HTML_ELEMENT_CHECK_PARSER(_elementName)  \
   nsGenericHTMLElement* NS_NewHTML##_elementName##Element(      \
-      already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo,     \
+      already_AddRefed<mozilla::dom::NodeInfo> aNodeInfo,       \
       mozilla::dom::FromParser aFromParser) {                   \
     RefPtr<mozilla::dom::NodeInfo> nodeInfo(aNodeInfo);         \
     auto* nim = nodeInfo->NodeInfoManager();                    \
@@ -1427,13 +1426,13 @@ using HTMLContentCreatorFunction =
 // Here, we expand 'NS_DECLARE_NS_NEW_HTML_ELEMENT()' by hand.
 // (Calling the macro directly (with no args) produces compiler warnings.)
 nsGenericHTMLElement* NS_NewHTMLElement(
-    already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo,
+    already_AddRefed<mozilla::dom::NodeInfo> aNodeInfo,
     mozilla::dom::FromParser aFromParser = mozilla::dom::NOT_FROM_PARSER);
 
 // Distinct from the above in order to have function pointer that compared
 // unequal to a function pointer to the above.
 nsGenericHTMLElement* NS_NewCustomElement(
-    already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo,
+    already_AddRefed<mozilla::dom::NodeInfo> aNodeInfo,
     mozilla::dom::FromParser aFromParser = mozilla::dom::NOT_FROM_PARSER);
 
 NS_DECLARE_NS_NEW_HTML_ELEMENT(Shared)

@@ -19,6 +19,7 @@ android {
 }
 
 dependencies {
+    implementation platform(libs.androidx.compose.bom)
     implementation project(':components:browser-state')
     implementation project(':components:compose-base')
     implementation project(':components:concept-engine')
@@ -37,8 +38,12 @@ dependencies {
     debugImplementation libs.androidx.compose.ui.tooling
 
     testImplementation project(':components:support-test')
+    testImplementation libs.androidx.compose.ui.test
+    testImplementation libs.androidx.compose.ui.test.manifest
+    testImplementation libs.androidx.test.core
     testImplementation libs.androidx.test.junit
     testImplementation libs.kotlinx.coroutines.test
+    testImplementation libs.robolectric
 }
 
 apply from: '../../../common-config.gradle'

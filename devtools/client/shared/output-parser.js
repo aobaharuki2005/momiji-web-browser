@@ -67,35 +67,10 @@ const BASIC_SHAPE_FUNCTIONS = new Set([
   "ellipse",
   "inset",
 ]);
-// TODO: Get the list from an InspectorUtils method (see Bug 2038635)
-const CSS_EXPLAINERS_SUPPORTED_FUNCTIONS = new Set([
-  "abs",
-  "acos",
-  "asin",
-  "atan",
-  "atan2",
-  "attr",
-  "calc",
-  "clamp",
-  "cos",
-  "env",
-  "exp",
-  "hypot",
-  "log",
-  "max",
-  "min",
-  "mod",
-  "pow",
-  // Not supported yet, see Bug 1975530
-  "progress",
-  "rem",
-  "round",
-  "sign",
-  "sin",
-  "sqrt",
-  "tan",
-  "var",
-]);
+
+const CSS_EXPLAINERS_SUPPORTED_FUNCTIONS = new Set(
+  InspectorUtils.getComputationStepsSupportedCSSFunctions()
+);
 
 const BACKDROP_FILTER_ENABLED = Services.prefs.getBoolPref(
   "layout.css.backdrop-filter.enabled"

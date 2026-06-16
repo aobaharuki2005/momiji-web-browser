@@ -170,7 +170,7 @@ already_AddRefed<WindowGlobalChild> WindowGlobalChild::CreateDisconnected(
 
   // Create our new WindowContext
   if (XRE_IsParentProcess()) {
-    windowContext = WindowGlobalParent::CreateDisconnected(aInit);
+    windowContext = WindowGlobalParent::CreateDisconnected(aInit, nullptr);
   } else {
     dom::WindowContext::FieldValues fields = aInit.context().mFields;
     windowContext = new dom::WindowContext(
@@ -209,11 +209,17 @@ void WindowGlobalChild::OnNewDocument(Document* aDocument) {
   SetDocumentPrincipal(aDocument->NodePrincipal(),
                        aDocument->EffectiveStoragePrincipal());
 
-  nsCOMPtr<nsITransportSecurityInfo> securityInfo;
-  if (nsCOMPtr<nsIChannel> channel = aDocument->GetChannel()) {
-    channel->GetSecurityInfo(getter_AddRefs(securityInfo));
+  RefPtr<ParentProcessChannelHandle> documentChannelHandle;
+  if (nsIChannel* chan = aDocument->GetChannel()) {
+    (void)chan->GetParentProcessChannelHandle(
+        getter_AddRefs(documentChannelHandle));
   }
-  SendUpdateDocumentSecurityInfo(securityInfo);
+  RefPtr<ParentProcessChannelHandle> failedChannelHandle;
+  if (nsIChannel* chan = aDocument->GetFailedChannel()) {
+    (void)chan->GetParentProcessChannelHandle(
+        getter_AddRefs(failedChannelHandle));
+  }
+  SendUpdateChannels(documentChannelHandle, failedChannelHandle);
 
   SendUpdateDocumentCspSettings(aDocument->GetBlockAllMixedContent(false),
                                 aDocument->GetUpgradeInsecureRequests(false));

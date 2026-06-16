@@ -98,11 +98,17 @@ object MatchCardBuilder {
         )
     }
 
+    // One card per (day, round): grouping by day alone would merge same-day matches from
+    // different rounds — e.g. the last group-stage games and the first Round of 32 fixtures
+    // both falling on the final group-stage day — into a single card labelled with whichever
+    // stage came first, surfacing knockout fixtures under a group-stage heading (and showing
+    // group names for knockout teams). Splitting by stage gives each round its own card.
     private fun buildNoTeamPerDayCards(sortedMatches: List<SportsMatch>): List<MatchCard> =
         sortedMatches
-            .groupBy { it.date.toLocalDate() }
-            .toSortedMap()
-            .map { (_, dayMatches) -> buildDayCard(dayMatches, dayMatches.first().stage) }
+            .groupBy { it.date.toLocalDate() to it.stage }
+            .entries
+            .sortedWith(compareBy({ it.key.first }, { it.key.second.ordinal }))
+            .map { (key, dayMatches) -> buildDayCard(dayMatches, key.second) }
 
     // Featured (enlarged) match in `matches`, everything else as compact rows in
     // `relatedMatches`. Featured priority: live > next upcoming > most recent past — same
@@ -140,10 +146,11 @@ private fun MatchCard.bucket(): CardBucket {
 //   1. Live matches (chronological)
 //   2. Champion card — Final with TournamentWinner outcome
 //   3. Third Place card — TPP with ThirdPlace outcome (independent of #2)
-//   4. Upcoming bracket-finishing matches by date (TPP Sat before Final Sun)
+//   4. Upcoming Final / Third Place, but only when they are the next matches up (see below)
 //   5. Other past matches reverse-chronologically (so the team's most-recent KO round
 //      sits next to the celebrations rather than buried under group-stage history)
-//   6. Other upcoming matches chronologically
+//   6. Other upcoming matches chronologically, with any not-yet-imminent Final / Third Place
+//      sorted in by date at the tail
 // Within each segment the input order is preserved (callers feed chronological input);
 // the past segment is reversed at the end.
 private fun List<MatchCard>.orderedForPager(): List<MatchCard> {
@@ -167,11 +174,19 @@ private fun List<MatchCard>.orderedForPager(): List<MatchCard> {
         }
     }
 
+    // Pin the upcoming Final / Third Place to the front only when nothing earlier is still to
+    // be played — i.e. there are no other upcoming matches. While earlier rounds (e.g. the
+    // group stage) still have games to come, the finals are weeks away and belong in their
+    // natural chronological place at the tail, not ahead of the matches being played now.
+    val leadingBracket = if (upcomingOther.isEmpty()) upcomingBracket else emptyList()
+    val trailingBracket = if (upcomingOther.isEmpty()) emptyList() else upcomingBracket
+
     return live +
         listOfNotNull(champion, thirdPlace) +
-        upcomingBracket +
+        leadingBracket +
         past.reversed() +
-        upcomingOther
+        upcomingOther +
+        trailingBracket
 }
 
 private fun TournamentRound.isBracketFinishing(): Boolean =

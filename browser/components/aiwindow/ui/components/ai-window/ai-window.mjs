@@ -53,11 +53,11 @@ ChromeUtils.defineESModuleGetters(lazy, {
   MemoriesManager:
     "moz-src:///browser/components/aiwindow/models/memories/MemoriesManager.sys.mjs",
   getAllModelsData:
-    "moz-src:///browser/components/aiwindow/ui/modules/AIWindowConstants.sys.mjs",
+    "moz-src:///browser/components/aiwindow/models/Utils.sys.mjs",
   getCurrentModelChoiceId:
-    "moz-src:///browser/components/aiwindow/ui/modules/AIWindowConstants.sys.mjs",
+    "moz-src:///browser/components/aiwindow/models/Utils.sys.mjs",
   getCurrentModelName:
-    "moz-src:///browser/components/aiwindow/ui/modules/AIWindowConstants.sys.mjs",
+    "moz-src:///browser/components/aiwindow/models/Utils.sys.mjs",
   ToolUI: "moz-src:///browser/components/aiwindow/ui/modules/ToolUI.sys.mjs",
   ACTION_LOG_UI_TYPE:
     "moz-src:///browser/components/aiwindow/ui/modules/ToolActionLog.sys.mjs",
@@ -65,6 +65,8 @@ ChromeUtils.defineESModuleGetters(lazy, {
     "moz-src:///browser/components/aiwindow/ui/modules/ToolActionLog.sys.mjs",
   buildActionLogRow:
     "moz-src:///browser/components/aiwindow/ui/modules/ToolActionLog.sys.mjs",
+  UI_UPDATE_TYPES:
+    "moz-src:///browser/components/aiwindow/ui/modules/ToolUI.sys.mjs",
 });
 
 ChromeUtils.defineLazyGetter(lazy, "log", function () {
@@ -150,10 +152,10 @@ const ERROR_TELEMETRY_NAME_BY_CODE = {
   4: "maxUsersReached",
   5: "upstreamRateLimit",
   6: "fastlyWafRateLimit",
-  7: "invalidPageContent",
+  7: "fastlyBlocked",
 };
 
-// Fastly errors don't have the error attribute; map the 406 to invalidPageContent.
+// Fastly errors don't have the error attribute; map the 406 to fastlyBlocked.
 function getErrorCode(error) {
   return (
     error.error ??
@@ -201,8 +203,6 @@ export class AIWindow extends MozLitElement {
   #conversation = null;
   #memoriesButton = null;
   #memoriesToggled = null;
-  #reportLink =
-    "https://connect.mozilla.org/t5/discussions/smart-window-beta-feedback/td-p/122365";
   #visibilityChangeHandler;
   #abortController = null;
 
@@ -317,6 +317,15 @@ export class AIWindow extends MozLitElement {
     await this.#syncMemoriesButtonUI();
   }
 
+  async focusSmartbar() {
+    await this.#smartbarReadyPromise;
+    if (!this.#smartbar) {
+      return false;
+    }
+    this.#smartbar.focus();
+    return true;
+  }
+
   async #refreshHasMemories() {
     try {
       const memories = await lazy.MemoriesManager.getAllMemories();
@@ -424,6 +433,9 @@ export class AIWindow extends MozLitElement {
       "chat-conversation:seen-urls-updated",
       this.#onSeenUrlsUpdated
     );
+    this.#conversation.setHistoryResultsDispatcher(
+      this.#dispatchHistoryResults
+    );
   }
 
   #removeConversationListeners() {
@@ -443,6 +455,7 @@ export class AIWindow extends MozLitElement {
       "chat-conversation:seen-urls-updated",
       this.#onSeenUrlsUpdated
     );
+    this.#conversation.setHistoryResultsDispatcher(null);
   }
 
   #onSeenUrlsUpdated = () => {
@@ -451,6 +464,9 @@ export class AIWindow extends MozLitElement {
       this.#dispatchSeenUrls(actor);
     }
   };
+
+  #dispatchHistoryResults = payload =>
+    this.#getAIChatContentActor()?.dispatchHistoryResultsToChatContent(payload);
 
   #onMessageUpdate = (_event, message) => {
     // In fullpage, Kit must anchor to the chrome viewport (bottom of the
@@ -709,6 +725,9 @@ export class AIWindow extends MozLitElement {
     // does not prevent this window from being garbage collected.
     this.#starterPromptsAbortController?.abort();
     this.#starterPromptsAbortController = null;
+
+    this.#abortController?.abort();
+    this.#abortController = null;
 
     // Clean up visibility change handler
     if (this.#visibilityChangeHandler) {
@@ -1304,6 +1323,7 @@ export class AIWindow extends MozLitElement {
     this.#dispatchMessageToChatContent({
       role: "assistant-message-complete",
       content: { id: lastAssistant?.id },
+      historyResults: this.#conversation?.getHistoryResultsSnapshot() ?? [],
     });
   };
 
@@ -1460,6 +1480,13 @@ export class AIWindow extends MozLitElement {
       return;
     }
 
+    // Auto-cancel any active website confirmation when starting a new prompt
+    lazy.ToolUI.autoCancelActiveConfirmation(
+      this.#conversation,
+      this.#topChromeWindow,
+      this.mode
+    ).catch(e => lazy.log.error("Failed to auto-cancel confirmation:", e));
+
     Glean.smartWindow.chatSubmit.record({
       chat_id: this.conversationId,
       detected_intent: detectedIntent,
@@ -1471,6 +1498,10 @@ export class AIWindow extends MozLitElement {
       submit_type: submitType,
       tabs: contextMentions.length,
     });
+
+    if (this.#conversation) {
+      this.#conversation.lastSubmitType = submitType;
+    }
 
     this.#recordChatInteraction();
     this.#fetchAIResponse(trimmed, {
@@ -1731,6 +1762,9 @@ export class AIWindow extends MozLitElement {
     this.#abortController?.abort();
     this.#abortController = new AbortController();
     const { signal } = this.#abortController;
+    const stopWatchingTabClose =
+      this.#watchTabCloseForAbort(browsingContext, this.#abortController) ??
+      (() => {});
     this.isGenerating = true;
 
     const requestStart = ChromeUtils.now();
@@ -1769,9 +1803,9 @@ export class AIWindow extends MozLitElement {
           skipUserDispatch
         );
 
-        // @todo
-        // fill out these assistant message flags
-        const assistantRoleOpts = new lazy.AssistantRoleOpts();
+        const assistantRoleOpts = new lazy.AssistantRoleOpts(
+          engineInstance.model
+        );
         conversation.addAssistantMessage("text", "", assistantRoleOpts);
 
         this.#sendModelRequestTelemetryEvent();
@@ -1808,11 +1842,38 @@ export class AIWindow extends MozLitElement {
       }
       this.requestUpdate?.();
     } finally {
+      stopWatchingTabClose();
       if (this.#abortController?.signal === signal) {
         this.isGenerating = false;
         this.#abortController = null;
       }
     }
+  }
+
+  /**
+   * Aborts the given controller when the tab that owns the captured
+   * browsingContext is closed. Sidebar mode only — in fullpage mode the AI
+   * window itself owns the browsingContext, and tearing down the element
+   * already stops generation. Returns a cleanup function, or null if no
+   * watcher was installed.
+   *
+   * @param {BrowsingContext} browsingContext
+   * @param {AbortController} controller
+   * @returns {(() => void) | null}
+   */
+  #watchTabCloseForAbort(browsingContext, controller) {
+    if (this.mode != MODE.SIDEBAR || !browsingContext) {
+      return null;
+    }
+    const browser = browsingContext.embedderElement;
+    const chromeWin = window.browsingContext?.topChromeWindow;
+    const tab = browser && chromeWin?.gBrowser?.getTabForBrowser(browser);
+    if (!tab) {
+      return null;
+    }
+    const onTabClose = () => controller.abort();
+    tab.addEventListener("TabClose", onTabClose);
+    return () => tab.removeEventListener("TabClose", onTabClose);
   }
 
   updated(changedProps) {
@@ -1832,11 +1893,40 @@ export class AIWindow extends MozLitElement {
 
   #onMessageComplete = (_event, msg) => {
     this.#addConversationTitle(msg?.content?.body);
+
+    // Check if we need to inject retry toolUIData
+    // This handles the case where a user cancelled a website confirmation dialog
+    // and then submitted a new prompt. The cancelled confirmation's original prompt
+    // is stored in conversation.pendingRetry. When this new message completes,
+    // we inject a retry UI component at the top of the message, allowing the user
+    // to retry the previously cancelled action if they wish.
+    const retryInjected = lazy.ToolUI.injectRetryToolUIDataIfNeeded(
+      msg,
+      this.#conversation
+    );
+
+    // If retry toolUIData was injected, dispatch the updated message
+    if (retryInjected) {
+      this.#dispatchMessageToChatContent({
+        ...msg,
+        role: "assistant",
+        isPreviousMessage: false,
+        // Deep clone toolUIData to prevent UI mutations from affecting the conversation model
+        toolUIData: msg.toolUIData
+          ? structuredClone(msg.toolUIData)
+          : undefined,
+      });
+    }
+
     this.#dispatchMessageToChatContent({
       role: "assistant-message-complete",
       content: {
         id: msg?.id,
       },
+      // Carry the history results snapshot with completion so the content page
+      // renders the grid even if the streaming-time dispatch was delayed or
+      // missed (its delivery races the message lifecycle).
+      historyResults: this.#conversation?.getHistoryResultsSnapshot() ?? [],
     });
     const followupCount = msg?.tokens?.followup?.length;
     if (followupCount) {
@@ -2382,13 +2472,24 @@ export class AIWindow extends MozLitElement {
     }
   }
 
-  handleToolUIUpdate(data) {
-    lazy.ToolUI.handleUpdate(
+  async handleToolUIUpdate(data) {
+    const success = await lazy.ToolUI.handleUpdate(
       data,
       this.#conversation,
       this.#topChromeWindow,
       this.mode
     );
+
+    // Check if this was a retry prompt update
+    if (success && data?.updateType === lazy.UI_UPDATE_TYPES.RETRY_PROMPT) {
+      const retryPrompt = data?.updateData?.prompt;
+      if (retryPrompt) {
+        this.submitChatMessage({
+          text: retryPrompt,
+          submitType: "retry",
+        });
+      }
+    }
   }
 
   #openFeedbackModal(type) {
@@ -2608,13 +2709,10 @@ export class AIWindow extends MozLitElement {
               : ""}
           `}
       ${this.showDisclaimer
-        ? html`<div data-l10n-id="smartwindow-disclaimer" class="disclaimer">
-            <a
-              data-l10n-name="report-link"
-              href=${this.#reportLink}
-              target="_blank"
-            ></a>
-          </div>`
+        ? html`<div
+            data-l10n-id="smartwindow-disclaimer"
+            class="disclaimer"
+          ></div>`
         : ""}
       ${this.#footerTemplate()}
       <kit-mention variant="fullpage"></kit-mention>

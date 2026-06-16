@@ -29,7 +29,7 @@ const lazy = XPCOMUtils.declareLazy({
   MemoryStore:
     "moz-src:///browser/components/aiwindow/services/MemoryStore.sys.mjs",
   getCachedModelsData:
-    "moz-src:///browser/components/aiwindow/ui/modules/AIWindowConstants.sys.mjs",
+    "moz-src:///browser/components/aiwindow/models/Utils.sys.mjs",
 });
 
 let previousAssistantModel = "No model";

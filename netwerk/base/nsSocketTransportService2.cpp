@@ -1781,9 +1781,6 @@ PRStatus nsSocketTransportService::DiscoverMaxCount() {
 void nsSocketTransportService::AnalyzeConnection(nsTArray<SocketInfo>* data,
                                                  SocketContext* context,
                                                  bool aActive) {
-  if (context->mHandler->mOriginAttributes.IsPrivateBrowsing()) {
-    return;
-  }
   PRFileDesc* aFD = context->mFD;
 
   PRFileDesc* idLayer = PR_GetIdentitiesLayer(aFD, PR_NSPR_IO_LAYER);

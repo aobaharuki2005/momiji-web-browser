@@ -1459,18 +1459,6 @@ void EventStateManager::NotifyTargetUserActivation(WidgetEvent* aEvent,
     return;
   }
 
-  // Touch gestures that end outside the drag target were touches that turned
-  // into scroll/pan/swipe actions. We don't want to gesture activate on such
-  // actions, we want to only gesture activate on touches that are taps.
-  // That is, touches that end in roughly the same place that they started.
-  if ((aEvent->mMessage == eTouchEnd ||
-       (aEvent->mMessage == ePointerUp &&
-        aEvent->AsPointerEvent()->mInputSource ==
-            MouseEvent_Binding::MOZ_SOURCE_TOUCH)) &&
-      IsEventOutsideDragThreshold(*aEvent->AsInputEvent())) {
-    return;
-  }
-
   // Do not treat the click on scrollbar as a user interaction with the web
   // content.
   if (StaticPrefs::dom_user_activation_ignore_scrollbars() &&

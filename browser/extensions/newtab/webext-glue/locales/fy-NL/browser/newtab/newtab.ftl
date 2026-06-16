@@ -31,6 +31,127 @@ newtab-card-dismiss-button =
     .title = Slute
     .aria-label = Slute
 
+## Strings for "Homepage" and "Firefox Home" sections of about:settings#home.
+## Homepage panel
+
+home-homepage-title =
+    .label = Startside
+home-homepage-new-windows =
+    .label = Nije finsters
+home-homepage-new-tabs =
+    .label = Nije ljepblêden
+# This option leads to the "Custom Homepage" subpage
+home-homepage-custom-homepage-button =
+    .label = Kies in spesifike website
+
+## Custom URLs subpage
+
+# Subheader on the Custom Homepage subpage. Followed by a form to enter URLs and a list of URLs already saved, if any.
+home-custom-homepage-card-header =
+    .label = Websiteadres(sen)
+home-custom-homepage-address =
+    .placeholder = Fier adres yn
+home-custom-homepage-address-button =
+    .label = Adres tafoegje
+# Shown when no custom websites/URLs to use as a homepage have been added yet
+home-custom-homepage-no-results =
+    .label = Noch gjin websites tafoege.
+home-custom-homepage-delete-address-button =
+    .aria-label = Adres fuortsmite
+    .title = Adres fuortsmite
+# Further options to use when setting the home page. Two action buttons are placed in line with this prompt
+# to replace the current home page with a currently open page or bookmark.
+home-custom-homepage-replace-with-prompt =
+    .label = Ferfange troch
+# Button that appears in-line after text "Replace with" (home-custom-homepage-replace-with-prompt)
+home-custom-homepage-current-pages-button =
+    .label = Aktuele iepene siden
+# Button that appears in-line after text "Replace with" (home-custom-homepage-replace-with-prompt)
+home-custom-homepage-bookmarks-button =
+    .label = Blêdwizers…
+
+## Firefox Home content
+
+home-prefs-content-header =
+    .label = { -firefox-home-brand-name }
+home-prefs-search-header2 =
+    .label = Sykje
+home-prefs-stories-header2 =
+    .label = Ferhalen
+    .description = Utsûnderlike ynhâld, sammele troch de { -brand-product-name }-famylje
+home-prefs-widgets-header =
+    .label = Widgets
+# Lists is a widget on New Tab, similar to a to-do widget
+home-prefs-lists-header =
+    .label = Listen
+# Timer is a widget on New Tab, similar to the Pomodoro timer.
+home-prefs-timer-header =
+    .label = Timer
+# Sports is a widget on New Tab showing sports scores and schedules.
+home-prefs-sports-widget-header =
+    .label = Sport
+# Clock is a widget on New Tab that displays time zones around the world.
+home-prefs-clocks-header =
+    .label = Klok
+home-prefs-mission-message2 =
+    .message = Us sponsors stypje ús misje om in better web te bouwen.
+home-prefs-manage-topics-link2 =
+    .label = Underwerpen beheare
+home-prefs-choose-wallpaper-link2 =
+    .label = Kies in eftergrûn
+home-prefs-firefox-logo-header =
+    .label = { -brand-short-name }-logo
+# Informational message bar that appears in the Firefox Home section when the options are disabled.
+# The user must select Firefox Home as their homepage for either new tabs or new windows to enable
+# the features in settings.
+home-prefs-firefox-home-disabled-notice =
+    .message = Stel nije ljepblêden of nije finsters yn op { -firefox-home-brand-name } om dizze funksjes te brûken.
+# Variables:
+#   $num (number) - Number of rows displayed
+home-prefs-sections-rows-option-srd =
+    .label =
+        { $num ->
+            [one] { $num } rige
+           *[other] { $num } rigen
+        }
+# Dropdown option shown when an extension replaces the contents of new windows or tabs.
+# Variables:
+#   $extension (string) - Name of the extension
+home-prefs-homepage-extension-option =
+    .label = Utwreiding ({ $extension })
+home-restore-defaults-srd =
+    .label = Standert werstelle
+    .accesskey = w
+home-mode-choice-default-fx-srd =
+    .label = { -firefox-home-brand-name } (standert)
+home-mode-choice-custom-srd =
+    .label = Oanpaste URL’s
+home-mode-choice-blank-srd =
+    .label = Lege side
+home-prefs-shortcuts-header-srd =
+    .label = Fluchkeppelingen
+home-prefs-shortcuts-select =
+    .aria-label = Fluchkeppelingen
+home-prefs-shortcuts-by-option-sponsored-srd =
+    .label = Sponsore fluchkeppelingen
+home-prefs-recommended-by-option-sponsored-stories-srd =
+    .label = Sponsore ferhalen
+home-prefs-highlights-option-visited-pages-srd =
+    .label = Besochte siden
+home-prefs-highlights-options-bookmarks-srd =
+    .label = Blêdwizers
+home-prefs-highlights-option-most-recent-download-srd =
+    .label = Meast resinte download
+home-prefs-recent-activity-header-srd =
+    .label = Resinte aktiviteit
+home-prefs-recent-activity-select =
+    .aria-label = Resinte aktiviteit
+home-prefs-weather-header-srd =
+    .label = It waar
+home-prefs-support-firefox-header-srd =
+    .label = { -brand-product-name } stypje
+home-prefs-mission-message-learn-more-link-srd = Lês hjir hoe
+
 ## Search box component.
 
 # "Search" is a verb/action
@@ -151,6 +272,8 @@ newtab-menu-section-block = Blokkearje
 # "Follow", "unfollow", and "following" are social media terms that refer to subscribing to or unsubscribing from a section of stories.
 # e.g. Following the travel section of stories.
 newtab-menu-section-unfollow-topic = Untfolgje
+# Context menu option to open a support page explaining the New Tab personalization features and privacy controls.
+newtab-menu-section-learn-more = Mear ynfo
 # "Follow", "unfollow", and "following" are social media terms that refer to subscribing to or unsubscribing from a section of stories.
 # e.g. Following the travel section of stories.
 newtab-menu-section-unfollow = Underwerp net mear folgje
@@ -758,8 +881,6 @@ newtab-widget-lists-button-add-item = In item tafoegje
 newtab-widget-lists-input-add-an-item2 =
     .placeholder = In item tafoegje
     .aria-label = In item tafoegje
-newtab-widget-lists-input-add-an-item =
-    .placeholder = In item tafoegje
 newtab-widget-lists-input-error = Foegje tekst ta om in item ta te foegjen.
 newtab-widget-lists-input-menu-open-link = Keppeling iepenje
 newtab-widget-lists-input-menu-move-up = Omheech ferpleatse
@@ -787,11 +908,6 @@ newtab-widget-lists-name-placeholder-checklist2 =
 newtab-widget-lists-name-placeholder-new2 =
     .placeholder = Nije list
     .aria-label = Listnamme bewurkje
-newtab-widget-lists-name-placeholder-checklist =
-    .placeholder = Kontrôlelist
-# The placeholder value of the name field for a newly created list
-newtab-widget-lists-name-placeholder-new =
-    .placeholder = Nije list
 newtab-widget-section-title = Widgets
 newtab-widget-menu-hide = Widget ferstopje
 newtab-widget-menu-change-size = Grutte wizigje
@@ -1054,8 +1170,30 @@ newtab-sports-widget-world-cup-champions = Wrâldkampioen 2026
 newtab-sports-widget-match-time = { DATETIME($date, hour: "2-digit", minute: "2-digit") }
 newtab-sports-widget-match-full-time = Wedstriid ôfrûn
 newtab-sports-widget-match-halftime = Skoft
-newtab-sports-widget-match-extra-time = Ekstra tiid
+newtab-sports-widget-match-extra-time = Ferlinging
 newtab-sports-widget-match-penalties = Strafskoppen
+# Separator shown between two teams in a placeholder match row when no upcoming
+# match details are available yet.
+newtab-sports-widget-match-vs = tsjin
+# Note shown in the Upcoming tab when no match details are available yet.
+newtab-sports-widget-no-upcoming-matches = Sjoch regelmjittich foar details fan oankommende wedstriden
+
+## Sports widget live-games pagination. Shown when 2+ matches are live at the same time
+
+# arrow button that goes to the previous page of live matches.
+newtab-sports-widget-pagination-previous =
+    .aria-label = Foarige
+    .title = Foarige
+# arrow button that goes to the next page of live matches.
+newtab-sports-widget-pagination-next =
+    .aria-label = Folgjende
+    .title = Folgjende
+# Dot indicator that jumps directly to a given live match.
+# $index (number) - 1-based position of this dot in the list.
+# $total (number) - Total number of live matches.
+newtab-sports-widget-pagination-dot =
+    .aria-label = Livewedstriid { $index } fan { $total }
+    .title = Livewedstriid { $index } fan { $total }
 
 ## Accessible labels for match rows in the sports widget. These are read by
 ## screen readers to announce the match details and status.
@@ -1116,6 +1254,8 @@ newtab-sports-widget-team-name-label-eng =
     .label = Ingelân
 newtab-sports-widget-team-name-label-sco =
     .label = Skotlân
+# Placeholder used in a match row's aria-label for an undecided team (shown visually as "--").
+newtab-sports-widget-team-tbd = Noch te bepalen
 
 ## Sports widget OMC messages
 ## Shown as on-screen messages promoting the Sports widget and World Cup wallpapers.

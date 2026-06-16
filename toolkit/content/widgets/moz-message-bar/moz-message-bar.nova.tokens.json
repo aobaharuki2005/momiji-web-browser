@@ -3,84 +3,12 @@
     "color": {
       "@base": {
         "value": "{background.color.box.@base}"
-      },
-      "warning": {
-        "value": "{background.color.box.@base}"
-      },
-      "success": {
-        "value": "{background.color.box.@base}"
-      },
-      "critical": {
-        "value": "{background.color.box.@base}"
       }
     }
   },
   "border": {
-    "color": {
-      "value": "{border.color.deemphasized.@base}"
-    },
     "radius": {
-      "comment": "TODO: Update after bug 2030460 when border radius tokens include a 12px value",
-      "value": "12px"
-    }
-  },
-  "container": {
-    "padding": {
-      "inline": {
-        "comment": "Using rem-based space tokens ends up causing subpixel rendering issues that cause the icon to look uncentered",
-        "value": "8px"
-      }
-    }
-  },
-  "icon": {
-    "background": {
-      "color": {
-        "@base": {
-          "value": "{background.color.information}"
-        },
-        "warning": {
-          "value": "{background.color.warning}"
-        },
-        "success": {
-          "value": "{background.color.success}"
-        },
-        "critical": {
-          "value": "{background.color.critical}"
-        }
-      }
-    },
-    "container": {
-      "border": {
-        "@base": {
-          "value": "1px solid {message-bar.icon.container.border.color}"
-        },
-        "color": {
-          "value": {
-            "default": "transparent",
-            "forcedColors": "{message-bar.icon.color}"
-          }
-        }
-      },
-      "height": {
-        "value": "{message-bar.icon.size}"
-      },
-      "margin": {
-        "block-start": {
-          "value": "0"
-        }
-      },
-      "padding": {
-        "value": "calc({space.small} - 1px)"
-      }
-    }
-  },
-  "text": {
-    "container": {
-      "padding": {
-        "block": {
-          "value": "0"
-        }
-      }
+      "value": "{border.radius.large}"
     }
   }
 }

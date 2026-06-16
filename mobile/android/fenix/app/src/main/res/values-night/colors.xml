@@ -17,11 +17,11 @@
     <color name="fx_mobile_on_tertiary">@color/novaGray80</color>
     <color name="fx_mobile_tertiary_container">@color/novaVioletDesaturated90</color>
     <color name="fx_mobile_on_tertiary_container">@color/novaVioletDesaturated0</color>
-    <color name="fx_mobile_background">@color/novaGray80</color>
+    <color name="fx_mobile_background">@color/novaGray75</color>
     <color name="fx_mobile_on_background">@color/novaVioletDesaturated0</color>
-    <color name="fx_mobile_surface">@color/novaGray80</color>
+    <color name="fx_mobile_surface">@color/novaGray75</color>
     <color name="fx_mobile_on_surface">@color/novaVioletDesaturated0</color>
-    <color name="fx_mobile_surface_variant">@color/novaGray70</color>
+    <color name="fx_mobile_surface_variant">@color/novaGray65</color>
     <color name="fx_mobile_on_surface_variant">@color/novaVioletDesaturated0A70</color>
     <color name="fx_mobile_surface_inverse">@color/novaGray30</color>
     <color name="fx_mobile_on_surface_inverse">@color/novaGray80</color>
@@ -30,23 +30,27 @@
     <color name="fx_mobile_error_container">@color/novaRed70</color>
     <color name="fx_mobile_on_error_container">@color/novaVioletDesaturated0</color>
     <color name="fx_mobile_information">@color/novaBlue30</color>
+    <color name="fx_mobile_on_information">@color/novaGray80</color>
     <color name="fx_mobile_information_container">@color/novaBlue70</color>
     <color name="fx_mobile_on_information_container">@color/novaVioletDesaturated0</color>
     <color name="fx_mobile_success">@color/novaGreen30</color>
+    <color name="fx_mobile_on_success">@color/novaGray80</color>
     <color name="fx_mobile_warning">@color/novaYellow30</color>
+    <color name="fx_mobile_on_warning">@color/novaGray80</color>
     <color name="fx_mobile_warning_container">@color/novaYellow70</color>
     <color name="fx_mobile_on_warning_container">@color/novaVioletDesaturated0</color>
     <color name="fx_mobile_outline">@color/novaGray45</color>
     <color name="fx_mobile_outline_variant">@color/novaGray65</color>
-    <color name="fx_mobile_surface_bright">@color/novaGray70</color>
-    <color name="fx_mobile_surface_dim">@color/novaGray90</color>
-    <color name="fx_mobile_surface_container">@color/novaGray80</color>
-    <color name="fx_mobile_surface_container_high">@color/novaGray75</color>
-    <color name="fx_mobile_surface_container_highest">@color/novaGray70</color>
-    <color name="fx_mobile_surface_container_low">@color/novaGray85</color>
-    <color name="fx_mobile_surface_container_lowest">@color/novaGray90</color>
+    <color name="fx_mobile_surface_bright">@color/novaGray65</color>
+    <color name="fx_mobile_surface_dim">@color/novaGray85</color>
+    <color name="fx_mobile_surface_container">@color/novaGray75</color>
+    <color name="fx_mobile_surface_container_high">@color/novaGray70</color>
+    <color name="fx_mobile_surface_container_highest">@color/novaGray65</color>
+    <color name="fx_mobile_surface_container_low">@color/novaGray80</color>
+    <color name="fx_mobile_surface_container_lowest">@color/novaGray85</color>
     <color name="fx_mobile_autofill_text">@color/novaVioletDesaturated30A55</color>
     <color name="fx_mobile_selected_text">@color/novaGray45A80</color>
+    <color name="fx_mobile_scrim">@color/novaBlackA50</color>
 
     <color name="fx_mobile_splashscreen_background">#210340</color>
 
@@ -57,7 +61,6 @@
     <color name="fx_mobile_layer_color_2">@color/photonDarkGrey30</color>
     <!-- Search -->
     <color name="fx_mobile_layer_color_3">@color/photonDarkGrey80</color>
-    <color name="fx_mobile_layer_color_scrim">@color/photonDarkGrey90A95</color>
     <!-- Tooltip -->
     <color name="fx_mobile_layer_color_gradient_start">@color/photonViolet70</color>
     <!-- Tooltip -->
@@ -108,15 +111,11 @@
     <color name="search_suggestion_indicator_icon_bookmark_color_normal_theme">@color/photonBlue40</color>
 
     <!-- Protections Dashboard colors -->
-    <color name="protections_dashboard_background">#FF4B3974</color>
-    <color name="protections_dashboard_text_primary">#FFFBFBFE</color>
-    <color name="protections_dashboard_text_secondary">#FFFBFBFE</color>
-    <color name="protections_dashboard_text_accent">#FFE8CCFF</color>
     <color name="protections_dashboard_chip_background">#FF3D3264</color>
     <color name="protections_dashboard_chip_text">#FFD9D0F5</color>
-    <color name="protections_dashboard_progress_bar">#FFD9BFFF</color>
-    <color name="protections_dashboard_gradient_start">#80AB71FF</color>
-    <color name="protections_dashboard_gradient_end">#80FF8A50</color>
+    <color name="protections_dashboard_progress_bar">@color/novaViolet50</color>
+    <color name="protections_dashboard_gradient_start">@color/novaVioletDesaturated90</color>
+    <color name="protections_dashboard_gradient_end">@color/novaOrange70</color>
 
     <!-- Colors for Edge to Edge background  -->
     <color name="homepage_edge_to_edge_gradient_start">#FF0A1A3B</color>

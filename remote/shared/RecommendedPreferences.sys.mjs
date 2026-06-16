@@ -388,6 +388,9 @@ const COMMON_PREFERENCES = new Map([
   // Do not download intermediate certificates
   ["security.remote_settings.intermediates.enabled", false],
 
+  // Disable the WebAuthn consents prompt
+  ["security.webauthn.related_origin_requests_mode", 1],
+
   // Disable logging for remote settings
   ["services.settings.loglevel", "off"],
 

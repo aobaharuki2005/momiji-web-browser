@@ -73,6 +73,7 @@ internal fun iPProtectionReducer(
             accountState = state.accountState.copy(
                 status = newAccountStatus,
             ),
+            lastError = action.info.lastError,
             proxyActiveShown = newProxyActiveShown,
             activate = newActivate,
         )
@@ -97,13 +98,14 @@ internal fun iPProtectionReducer(
                         state.copy(activate = true)
                     }
 
-                    Authorized.Active -> {
+                    Authorized.ConnectionError,
+                    Authorized.Active,
+                    -> {
                         state.copy(activate = false)
                     }
 
                     Authorized.Activating,
                     Authorized.DataLimitReached,
-                    Authorized.ConnectionError,
                     Uninitialized,
                         -> state
                 }
@@ -149,6 +151,11 @@ internal fun iPProtectionReducer(
         state.copy(proxyActiveShown = true)
     }
 
+    is IPProtectionAction.ToggleFailed -> {
+        // Reset `activate` so the next Toggle reads as a fresh edge in observeToggle().
+        state.copy(activate = null)
+    }
+
     is InternalAction -> internalReducer(state, action)
 }
 
@@ -174,7 +181,6 @@ internal fun internalReducer(
             AccountStatus.AwaitingEnrollment,
                 -> state
 
-            AccountStatus.Uninitialized,
             AccountStatus.WarmingUp,
             AccountStatus.NeedsAuthentication,
             AccountStatus.NeedsAuthorization,
@@ -193,6 +199,8 @@ internal fun internalReducer(
                     ),
                 )
             }
+
+            AccountStatus.Uninitialized -> state.clearProfileData(action)
         }
     }
 
@@ -243,6 +251,17 @@ internal fun internalReducer(
     }
 
     is InternalAction.FinishingEnrollment -> state.handleFinishingEnrollment(action)
+}
+
+private fun IPProtectionState.clearProfileData(action: InternalAction.AccountManagerStateChanged): IPProtectionState {
+    return copy(
+        remainingDataBytes = -1L,
+        maxDataBytes = -1L,
+        resetDate = null,
+        proxyActiveShown = false,
+        activate = false,
+        accountState = accountState.copy(status = action.status),
+    )
 }
 
 private fun IPProtectionState.handleFinishingEnrollment(action: InternalAction.FinishingEnrollment): IPProtectionState {

@@ -220,6 +220,44 @@ perf:
           Process isolation category: 0=other, 1=shared_web, 2=site_isolated, 3=coop_isolated
         type: quantity
         unit: integer
+      interaction_count:
+        description: |
+          Number of distinct user interactions on the page, per the W3C event
+          timing spec (window.performance.interactionCount).
+        type: quantity
+        unit: integer
+      inp_longest:
+        description: |
+          Longest dispatch-to-next-paint duration among events with a
+          non-zero interactionId and duration >= 40 ms (matching the
+          web-vitals.js INP threshold for RUM comparability), in ms.
+          Candidate INP proxy.
+        type: quantity
+        unit: ms
+      inp_p98:
+        description: |
+          98th percentile of dispatch-to-next-paint durations across the
+          events used for inp_longest. Approximates Chrome's INP for pages
+          with >= 50 such events; collapses to inp_longest otherwise.
+        type: quantity
+        unit: ms
+      inp_p75:
+        description: |
+          75th percentile of the same set used for inp_p98.
+        type: quantity
+        unit: ms
+      keypress_max_duration:
+        description: |
+          Longest dispatch-to-next-paint duration among keydown, keypress,
+          or keyup events of at least 40 ms, in ms.
+        type: quantity
+        unit: ms
+      mouse_click:
+        description: |
+          Longest dispatch-to-next-paint duration among pointer click
+          events of at least 40 ms, in ms.
+        type: quantity
+        unit: ms
     send_in_pings:
       - pageload
   page_load_domain:

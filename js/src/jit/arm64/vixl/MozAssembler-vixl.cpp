@@ -528,17 +528,17 @@ BufferOffset Assembler::DataProcShiftedRegister(const Register& rd, const Regist
 
 
 void MozBaseAssembler::InsertIndexIntoTag(uint8_t* load, uint32_t index) {
-  // Store the js::jit::PoolEntry index into the instruction.
+  // Store the pool entry index into the instruction.
   // finishPool() will walk over all literal load instructions
   // and use PatchConstantPoolLoad() to patch to the final relative offset.
   *((uint32_t*)load) |= Assembler::ImmLLiteral(index);
 }
 
 
-bool MozBaseAssembler::PatchConstantPoolLoad(void* loadAddr, void* constPoolAddr) {
+void MozBaseAssembler::PatchConstantPoolLoad(void* loadAddr, void* constPoolAddr) {
   Instruction* load = reinterpret_cast<Instruction*>(loadAddr);
 
-  // The load currently contains the js::jit::PoolEntry's index,
+  // The load currently contains the pool entry's index,
   // as written by InsertIndexIntoTag().
   uint32_t index = load->ImmLLiteral();
 
@@ -548,7 +548,6 @@ bool MozBaseAssembler::PatchConstantPoolLoad(void* loadAddr, void* constPoolAddr
   Instruction* source = reinterpret_cast<Instruction*>(&constPool[index]);
 
   load->SetImmLLiteral(source);
-  return false; // Nothing uses the return value.
 }
 
 void

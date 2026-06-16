@@ -21,8 +21,8 @@
  */
 
 /**
- * pdfjsVersion = 6.0.243
- * pdfjsBuild = b43ef1c74
+ * pdfjsVersion = 6.0.346
+ * pdfjsBuild = e75a7cfd6
  */
 
 ;// ./src/scripting_api/constants.js
@@ -2321,7 +2321,7 @@ class PrintParams {
       suppressBG: 1 << 8,
       suppressCenter: 1 << 9,
       suppressCJKFontSubst: 1 << 10,
-      suppressCropClip: 1 << 1,
+      suppressCropClip: 1 << 11,
       suppressRotate: 1 << 12,
       suppressTransfer: 1 << 13,
       suppressUCR: 1 << 14,

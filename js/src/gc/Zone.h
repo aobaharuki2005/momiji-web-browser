@@ -816,8 +816,8 @@ class Zone : public js::ZoneAllocator, public js::gc::GraphNodeBase<JS::Zone> {
 
   void maybeWriteCoverageAndSpew();
 
-  // Remove dead weak maps from gcWeakMapList_ and remove entries from the
-  // remaining weak maps whose keys are dead.
+  // Remove dead weak maps from the zone weak map lists and remove entries from
+  // the remaining weak maps whose keys are dead.
   void sweepWeakMaps(JSTracer* trc);
 
   // Trace all weak maps in this zone. Used to update edges after a moving GC.

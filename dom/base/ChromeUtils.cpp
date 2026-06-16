@@ -75,6 +75,7 @@
 #include "nsIURIFixup.h"
 #include "nsIWidget.h"
 #include "nsNativeTheme.h"
+#include "nsPIDOMWindowInlines.h"
 #include "nsRFPTargetSetIDL.h"
 #include "nsString.h"
 #include "nsThreadUtils.h"

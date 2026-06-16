@@ -262,7 +262,7 @@ class DOMMatrixReadOnly : public nsWrapperCache {
 
   DOMMatrixReadOnly(nsISupports* aParent, bool is2D)
       : DOMMatrixReadOnly(do_AddRef(aParent), is2D) {}
-  DOMMatrixReadOnly(already_AddRefed<nsISupports>&& aParent, bool is2D)
+  DOMMatrixReadOnly(already_AddRefed<nsISupports> aParent, bool is2D)
       : mParent(std::move(aParent)) {
     if (is2D) {
       mMatrix2D = MakeUnique<gfx::MatrixDouble>();
@@ -339,7 +339,7 @@ class DOMMatrix : public DOMMatrixReadOnly {
  private:
   DOMMatrix(nsISupports* aParent, bool is2D)
       : DOMMatrixReadOnly(aParent, is2D) {}
-  DOMMatrix(already_AddRefed<nsISupports>&& aParent, bool is2D)
+  DOMMatrix(already_AddRefed<nsISupports> aParent, bool is2D)
       : DOMMatrixReadOnly(std::move(aParent), is2D) {}
 };
 

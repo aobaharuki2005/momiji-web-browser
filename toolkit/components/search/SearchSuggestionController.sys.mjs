@@ -471,7 +471,7 @@ export class SearchSuggestionController {
     let method = submission.postData ? "POST" : "GET";
     request.open(method, submission.uri.spec, true);
     // Don't set or store cookies or on-disk cache.
-    request.channel.loadFlags =
+    request.channel.loadFlags |=
       Ci.nsIChannel.LOAD_ANONYMOUS | Ci.nsIChannel.INHIBIT_PERSISTENT_CACHING;
 
     lazy.logConsole.debug(

@@ -704,6 +704,16 @@ class Value {
     asBits_ = tmp;
   }
 
+#if JS_BITS_PER_WORD == 64
+  // Relaxed atomic load and store operations on a Value.
+  Value atomicGet() const {
+    return fromRawBits(__atomic_load_n(&asBits_, __ATOMIC_RELAXED));
+  }
+  void atomicSet(const Value& value) {
+    __atomic_store_n(&asBits_, value.asBits_, __ATOMIC_RELAXED);
+  }
+#endif
+
  private:
   JSValueTag toTag() const { return JSValueTag(asBits_ >> JSVAL_TAG_SHIFT); }
 

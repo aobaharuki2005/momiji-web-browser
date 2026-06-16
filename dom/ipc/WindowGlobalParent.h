@@ -178,7 +178,7 @@ class WindowGlobalParent final : public WindowContext,
       bool aResetScrollPosition, mozilla::ErrorResult& aRv);
 
   static already_AddRefed<WindowGlobalParent> CreateDisconnected(
-      const WindowGlobalInit& aInit);
+      const WindowGlobalInit& aInit, ContentParent* aForProcess);
 
   // Initialize the mFrameLoader fields for a created WindowGlobalParent. Must
   // be called after setting the Manager actor.
@@ -239,8 +239,6 @@ class WindowGlobalParent final : public WindowContext,
   void AddSecurityState(uint32_t aStateFlags);
   uint32_t GetSecurityFlags() { return mSecurityState; }
 
-  nsITransportSecurityInfo* GetSecurityInfo() { return mSecurityInfo; }
-
   const nsACString& GetRemoteType() const override;
   void GetRemoteType(nsACString& aRemoteType) const;
 
@@ -259,6 +257,13 @@ class WindowGlobalParent final : public WindowContext,
 
   void SetShouldReportHasBlockedOpaqueResponse(
       nsContentPolicyType aContentPolicy);
+
+  // Get the nsIChannel which led to this document being loaded, if known.
+  already_AddRefed<nsIChannel> GetDocumentChannel();
+
+  // Get the nsIChannel which failed, leading to this error document being
+  // loaded, if known.
+  already_AddRefed<nsIChannel> GetFailedChannel();
 
  protected:
   already_AddRefed<JSActor> InitJSActor(JS::Handle<JSObject*> aMaybeActor,
@@ -298,8 +303,9 @@ class WindowGlobalParent final : public WindowContext,
     mIsUncommittedInitialDocument = false;
     return IPC_OK();
   }
-  mozilla::ipc::IPCResult RecvUpdateDocumentSecurityInfo(
-      nsITransportSecurityInfo* aSecurityInfo);
+  mozilla::ipc::IPCResult RecvUpdateChannels(
+      ParentProcessChannelHandle* aDocumentHandle,
+      ParentProcessChannelHandle* aFailedHandle);
   mozilla::ipc::IPCResult RecvSetClientInfo(
       const IPCClientInfo& aIPCClientInfo);
   mozilla::ipc::IPCResult RecvDestroy();
@@ -417,6 +423,8 @@ class WindowGlobalParent final : public WindowContext,
   nsCOMPtr<nsIURI> mDocumentURI;
   Maybe<nsString> mDocumentTitle;
 
+  RefPtr<WindowGlobalParent> mStaticCloneOf;
+
   Maybe<bool> mIsInitialDocument;
 
   bool mIsUncommittedInitialDocument;
@@ -434,7 +442,14 @@ class WindowGlobalParent final : public WindowContext,
   Maybe<ClientInfo> mClientInfo;
   // Fields being mirrored from the corresponding document
   nsCOMPtr<nsICookieJarSettings> mCookieJarSettings;
-  nsCOMPtr<nsITransportSecurityInfo> mSecurityInfo;
+
+  // The parent process channel which was used to create the current document.
+  // May not match the channel in the content process in some cases.
+  nsCOMPtr<nsIChannel> mDocumentChannel;
+
+  // The failed parent process channel which led to an error page load.
+  // May not match the channel in the content process in some cases.
+  nsCOMPtr<nsIChannel> mFailedChannel;
 
   uint32_t mSandboxFlags;
 

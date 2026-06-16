@@ -40,7 +40,7 @@ class HTMLTextAreaElement final : public TextControlElement,
   using ValueSetterOptions = TextControlState::ValueSetterOptions;
 
   explicit HTMLTextAreaElement(
-      already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo,
+      already_AddRefed<mozilla::dom::NodeInfo> aNodeInfo,
       FromParser aFromParser = NOT_FROM_PARSER);
 
   // nsISupports

@@ -494,7 +494,7 @@ void TaskController::RunPoolThread(PoolThread* aThread) {
   IOInterposer::UnregisterCurrentThread();
 }
 
-void TaskController::AddTask(already_AddRefed<Task>&& aTask) {
+void TaskController::AddTask(already_AddRefed<Task> aTask) {
   RefPtr<Task> task(aTask);
 
   if (task->GetKind() == Task::Kind::OffMainThreadOnly) {
@@ -711,7 +711,7 @@ void TaskController::ReprioritizeTask(Task* aTask, uint32_t aPriority) {
 // Task that wraps a runnable.
 class RunnableTask : public Task {
  public:
-  RunnableTask(already_AddRefed<nsIRunnable>&& aRunnable, int32_t aPriority,
+  RunnableTask(already_AddRefed<nsIRunnable> aRunnable, int32_t aPriority,
                Kind aKind)
       : Task(aKind, aPriority), mRunnable(aRunnable) {}
 
@@ -748,7 +748,7 @@ class RunnableTask : public Task {
   RefPtr<nsIRunnable> mRunnable;
 };
 
-void TaskController::DispatchRunnable(already_AddRefed<nsIRunnable>&& aRunnable,
+void TaskController::DispatchRunnable(already_AddRefed<nsIRunnable> aRunnable,
                                       uint32_t aPriority,
                                       TaskManager* aManager) {
   RefPtr task = MakeRefPtr<RunnableTask>(std::move(aRunnable), aPriority,

@@ -193,6 +193,10 @@ export class UrlbarProviderGlobalActions extends UrlbarProvider {
         btn.attributes["data-engine"] = action.engine;
       }
 
+      if (action.dataset?.immediateSearch) {
+        btn.attributes["data-immediate-search"] = "true";
+      }
+
       return btn;
     });
 

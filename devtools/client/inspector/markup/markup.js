@@ -1384,7 +1384,7 @@ class MarkupView extends EventEmitter {
           if (type === "uri") {
             openContentLink(url);
           } else if (type === "cssresource") {
-            return this.toolbox.viewGeneratedSourceInStyleEditor(url);
+            return this.toolbox.viewStyleGeneratedSource(url);
           } else if (type === "jsresource") {
             return this.toolbox.viewGeneratedSourceInDebugger(url);
           }

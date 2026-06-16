@@ -86,14 +86,18 @@ bool SerialPlatformService::IsShutdown() {
   return observerState->shutdown;
 }
 
-nsresult SerialPlatformService::EnumeratePorts(SerialPortList& aPorts) {
+nsresult SerialPlatformService::EnumeratePorts(SerialPortList& aPorts,
+                                               bool* aLikelyAccessDenied) {
+  if (aLikelyAccessDenied) {
+    *aLikelyAccessDenied = false;
+  }
   {
     auto observerState = mObserverState.Lock();
     if (observerState->shutdown) {
       return NS_ERROR_NOT_AVAILABLE;
     }
   }
-  return EnumeratePortsImpl(aPorts);
+  return EnumeratePortsImpl(aPorts, aLikelyAccessDenied);
 }
 
 nsresult SerialPlatformService::Open(const nsString& aPortId,

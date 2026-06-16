@@ -284,7 +284,12 @@ class BrowserToolbarSearchMiddleware(
         }
         is SearchSelectorItemClicked -> {
             appStore.dispatch(SearchEngineSelected(action.searchEngine, true))
-            appStore.dispatch(SearchStarted())
+            appStore.dispatch(
+                SearchStarted(
+                    tabId = appStore.state.searchState.sourceTabId,
+                    source = appStore.state.searchState.searchAccessPoint,
+                ),
+            )
             refreshConfigurationAfterSearchEngineChange(store, action.searchEngine)
             updateSearchEndPageActions(store) // to update the visibility of the qr scanner button
         }

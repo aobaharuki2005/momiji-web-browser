@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.aspectRatio
@@ -92,7 +93,8 @@ data class LensCameraState(
  * @param onModeChange Invoked when the user taps the mode toggle.
  * @param onClose Callback when the close button is tapped.
  * @param onShutter Callback when the shutter button is tapped (Lens mode only).
- * @param onGallery Callback when the gallery button is tapped (Lens mode only).
+ * @param onGallery Callback when the gallery button is tapped. Available in both Lens and
+ *   QR modes; the host distinguishes the two via the active camera mode at tap time.
  * @param textureViewProvider Factory that creates the [AutoFitTextureView]; the caller is
  *   responsible for retaining the returned reference for camera-session wiring.
  */
@@ -158,9 +160,12 @@ fun LensCameraScreen(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(BottomBarSpacing),
         ) {
-            if (state.mode == CameraMode.LENS) {
-                BottomControls(
+            when (state.mode) {
+                CameraMode.LENS -> BottomControls(
                     onShutter = onShutter,
+                    onGallery = onGallery,
+                )
+                CameraMode.QR -> QrBottomControls(
                     onGallery = onGallery,
                 )
             }
@@ -249,10 +254,10 @@ private fun QrViewfinderOverlay(modifier: Modifier = Modifier) {
 }
 
 @Composable
-private fun BottomControls(
-    onShutter: () -> Unit,
-    onGallery: () -> Unit,
+private fun BottomControlsScaffold(
     modifier: Modifier = Modifier,
+    horizontalArrangement: Arrangement.Horizontal = Arrangement.Start,
+    content: @Composable RowScope.() -> Unit,
 ) {
     Row(
         modifier = modifier
@@ -262,21 +267,56 @@ private fun BottomControls(
                 start = BottomControlsHorizontalPadding,
                 end = BottomControlsHorizontalPadding,
             ),
+        horizontalArrangement = horizontalArrangement,
         verticalAlignment = Alignment.CenterVertically,
+        content = content,
+    )
+}
+
+@Composable
+private fun GalleryButton(
+    onGallery: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    IconButton(
+        onClick = onGallery,
+        contentDescription = stringResource(R.string.content_description_gallery),
+        modifier = Modifier
+            .size(ButtonSize)
+            .then(modifier),
     ) {
-        IconButton(
-            onClick = onGallery,
-            contentDescription = stringResource(R.string.content_description_gallery),
-            modifier = Modifier
-                .size(ButtonSize)
-                .weight(1f),
-        ) {
-            Icon(
-                painter = painterResource(iconsR.drawable.mozac_ic_image_24),
-                contentDescription = null,
-                tint = Color.White,
-            )
-        }
+        Icon(
+            painter = painterResource(iconsR.drawable.mozac_ic_image_24),
+            contentDescription = null,
+            tint = Color.White,
+        )
+    }
+}
+
+@Composable
+private fun QrBottomControls(
+    onGallery: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    BottomControlsScaffold(
+        modifier = modifier,
+        horizontalArrangement = Arrangement.Center,
+    ) {
+        GalleryButton(onGallery = onGallery)
+    }
+}
+
+@Composable
+private fun BottomControls(
+    onShutter: () -> Unit,
+    onGallery: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    BottomControlsScaffold(modifier = modifier) {
+        GalleryButton(
+            onGallery = onGallery,
+            modifier = Modifier.weight(1f),
+        )
 
         IconButton(
             onClick = onShutter,

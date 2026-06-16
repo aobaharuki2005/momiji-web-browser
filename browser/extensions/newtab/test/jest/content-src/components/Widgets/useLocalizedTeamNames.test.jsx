@@ -3,7 +3,10 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 import { renderHook, waitFor } from "@testing-library/react";
-import { useLocalizedTeamNames } from "content-src/components/Widgets/SportsWidget/useLocalizedTeamNames.jsx";
+import {
+  useLocalizedTeamNames,
+  useTbdTeamName,
+} from "content-src/components/Widgets/SportsWidget/useLocalizedTeamNames.jsx";
 
 const FLUENT_LABELS = {
   "newtab-sports-widget-team-name-label-bih": "Bosnia and Herzegovina",
@@ -150,5 +153,28 @@ describe("useLocalizedTeamNames", () => {
     await waitFor(() => expect(result.current).not.toBeNull());
     expect(result.current.FRA).toBe("France");
     expect(result.current.SCO).toBe("Scotland");
+  });
+});
+
+describe("useTbdTeamName", () => {
+  beforeEach(mockDocumentL10n);
+  afterEach(() => {
+    delete document.l10n;
+  });
+
+  it("resolves the localized TBD placeholder", async () => {
+    document.l10n.formatValues = jest.fn(async () => ["To be determined"]);
+    const { result } = renderHook(() => useTbdTeamName());
+    await waitFor(() => expect(result.current).toBe("To be determined"));
+    expect(document.l10n.formatValues).toHaveBeenCalledWith([
+      { id: "newtab-sports-widget-team-tbd" },
+    ]);
+  });
+
+  it("returns an empty string when formatValues is unavailable", () => {
+    // mockDocumentL10n defines formatMessages but not formatValues; the hook
+    // must not throw on the partial l10n object.
+    const { result } = renderHook(() => useTbdTeamName());
+    expect(result.current).toBe("");
   });
 });

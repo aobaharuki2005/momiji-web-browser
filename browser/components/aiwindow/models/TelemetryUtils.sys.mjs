@@ -132,7 +132,6 @@ export class TelemetryPromptEngine {
       modelRevision: "main",
       taskName: "text-generation",
       serviceType: promptRecord.service_type ?? "ai",
-      purpose: promptRecord.purpose ?? "telemetry",
       extraHeaders,
     });
 
@@ -500,7 +499,7 @@ export async function runLLMaJTelemetry(conversation, engineInstance) {
         record_type: "midChat",
         uniform_sampling_probability: conversation._telemetryUniformProbability,
         triggers: triggers.map(t => t.name),
-        chat_version: engineInstance.getConfig(engineInstance.feature)?.version,
+        chat_version: conversation.chatPromptVersion,
       });
       const prompts = Object.fromEntries(
         results.map(r => [r.telemetry_name, turnIndex])

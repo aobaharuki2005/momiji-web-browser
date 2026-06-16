@@ -1504,7 +1504,10 @@ bool CacheIRWriter::stubDataEqualsIgnoringShapeAndOffset(
     if (offset == shapeFieldOffset) {
       // Don't compare shapeField.
     } else if (offsetFieldOffset.isSome() && offset == *offsetFieldOffset) {
-      // Skip offsetField, the "FromOffset" variant doesn't have this.
+      // Skip offsetField, the "FromOffset" variant doesn't have this. Assert
+      // the offset field is the last stub field: if that ever changes, we
+      // should make sure we handle trailing fields correctly.
+      MOZ_RELEASE_ASSERT(&field == &stubFields_.back());
       continue;
     } else {
       if (field.sizeIsWord()) {

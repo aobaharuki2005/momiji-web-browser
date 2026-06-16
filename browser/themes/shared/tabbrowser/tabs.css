@@ -104,6 +104,15 @@
     --tab-min-height: max(32px, calc(var(--tab-label-line-height) * 1em));
     --tab-block-margin: var(--tab-vertical-block-margin);
     --tab-inline-padding: var(--tab-vertical-inline-padding);
+
+    /* In compact mode, shrink the inline margin around vertical tabs and
+     * the new-tab button so they fit inside the (also shrunk) collapsed
+     * sidebar launcher. See browser.compactmode.auto.threshold and the
+     * matching launcher padding override in
+     * browser/themes/shared/sidebar.css. */
+    &[uidensity="compact"] {
+      --tab-inner-inline-margin: var(--space-xsmall);
+    }
   }
 }
 
@@ -922,10 +931,10 @@ tab-split-view-wrapper[dragtarget] {
     /* The below lines are required for dark, light, and
       system themes to achieve the gradient border appearance */
     @media (not (prefers-contrast)) and (-moz-pref("browser.nova.enabled")) {
-      :root:not([lwtheme]) & {
+      :root[theme-in-app] & {
         background:
-          image(var(--tab-background-color-selected)) padding-box,
-          var(--tab-border-color-accent) border-box;
+          var(--tab-border-color-accent) border-box border-area,
+          var(--tab-background-color-selected) padding-box;
       }
     }
   }
@@ -2687,8 +2696,8 @@ tab-group {
     :root:not([lwtheme]) & {
       border: 1px solid transparent;
       background:
-        image(var(--tab-background-color-selected)) padding-box,
-        var(--tab-border-color-accent) border-box;
+        var(--tab-border-color-accent) border-box border-area,
+        var(--tab-background-color-selected) padding-box;
     }
   }
 }

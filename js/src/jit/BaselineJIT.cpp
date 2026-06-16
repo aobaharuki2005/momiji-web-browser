@@ -1186,6 +1186,8 @@ static void ToggleProfilerInstrumentation(JitCode* code,
                                         CodeOffset(profilerEnterToggleOffset));
   CodeLocationLabel exitToggleLocation(code,
                                        CodeOffset(profilerExitToggleOffset));
+
+  code->setProfilerInstrumented(enable);
   if (enable) {
     Assembler::ToggleToCmp(enterToggleLocation);
     Assembler::ToggleToCmp(exitToggleLocation);
@@ -1196,21 +1198,11 @@ static void ToggleProfilerInstrumentation(JitCode* code,
 }
 
 void BaselineScript::toggleProfilerInstrumentation(bool enable) {
-  if (enable == isProfilerInstrumentationOn()) {
-    return;
-  }
-
   JitSpew(JitSpew_BaselineIC, "  toggling profiling %s for BaselineScript %p",
           enable ? "on" : "off", this);
 
   ToggleProfilerInstrumentation(method_, profilerEnterToggleOffset_,
                                 profilerExitToggleOffset_, enable);
-
-  if (enable) {
-    flags_ |= uint32_t(PROFILER_INSTRUMENTATION_ON);
-  } else {
-    flags_ &= ~uint32_t(PROFILER_INSTRUMENTATION_ON);
-  }
 }
 
 void BaselineInterpreter::toggleProfilerInstrumentation(bool enable) {
@@ -1317,8 +1309,11 @@ void jit::ToggleBaselineProfiling(JSContext* cx, bool enable) {
         jitScript->ensureProfilerScriptSource(cx, script);
       }
       if (script->hasBaselineScript()) {
-        AutoWritableJitCode awjc(script->baselineScript()->method());
-        script->baselineScript()->toggleProfilerInstrumentation(enable);
+        BaselineScript* baselineScript = script->baselineScript();
+        if (baselineScript->isProfilerInstrumentationOn() != enable) {
+          AutoWritableJitCode awjc(baselineScript->method());
+          baselineScript->toggleProfilerInstrumentation(enable);
+        }
       }
     });
   }

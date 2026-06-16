@@ -17,10 +17,10 @@
 
 // avoid redefined macro in unified build
 #undef LOG
-#define LOG(msg, ...)                                                    \
-  MOZ_LOG(gMediaControlLog, LogLevel::Debug,                             \
-          ("MediaController=%p, Id=%" PRId64 ", " msg, this, this->Id(), \
-           ##__VA_ARGS__))
+#define LOG(msg, ...)                                                        \
+  MOZ_LOG_FMT(gMediaControlLog, LogLevel::Debug,                             \
+              "MediaController={}, Id={}, " msg, fmt::ptr(this), this->Id(), \
+              ##__VA_ARGS__)
 
 namespace mozilla::dom {
 
@@ -91,7 +91,7 @@ MediaController::MediaController(uint64_t aBrowsingContextId)
     : MediaStatusManager(aBrowsingContextId), mAudioSessionManager(this) {
   MOZ_DIAGNOSTIC_ASSERT(XRE_IsParentProcess(),
                         "MediaController only runs on Chrome process!");
-  LOG("Create controller %" PRId64, Id());
+  LOG("Create controller {}", Id());
   GetDefaultSupportedKeys(mSupportedKeys);
   mSupportedActionsChangedListener = SupportedActionsChangedEvent().Connect(
       AbstractThread::MainThread(), this,
@@ -108,7 +108,7 @@ MediaController::MediaController(uint64_t aBrowsingContextId)
 }
 
 MediaController::~MediaController() {
-  LOG("Destroy controller %" PRId64, Id());
+  LOG("Destroy controller {}", Id());
   if (!mShutdown) {
     Shutdown();
   }
@@ -177,7 +177,7 @@ void MediaController::Stop() {
 
 void MediaController::SetVolume(double aVolume) {
   double volume = std::clamp(aVolume, 0.0, 1.0);
-  LOG("SetVolume: %f, ClampedVolume: %f", aVolume, volume);
+  LOG("SetVolume: {}, ClampedVolume: {}", aVolume, volume);
   UpdateMediaControlActionToContentMediaIfNeeded(
       MediaControlAction(MediaControlKey::Setvolume,
                          MediaControlActionParams::FromVolume(volume)));
@@ -444,7 +444,7 @@ void MediaController::SetIsInPictureInPictureMode(
   if (mIsInPictureInPictureMode == aIsInPictureInPictureMode) {
     return;
   }
-  LOG("Set IsInPictureInPictureMode to %s",
+  LOG("Set IsInPictureInPictureMode to {}",
       aIsInPictureInPictureMode ? "true" : "false");
   mIsInPictureInPictureMode = aIsInPictureInPictureMode;
   ForceToBecomeMainControllerIfNeeded();
@@ -457,7 +457,7 @@ void MediaController::NotifyMediaFullScreenState(uint64_t aBrowsingContextId,
   if (mIsInFullScreenMode == aIsInFullScreen) {
     return;
   }
-  LOG("%s fullscreen", aIsInFullScreen ? "Entered" : "Left");
+  LOG("{} fullscreen", aIsInFullScreen ? "Entered" : "Left");
   mIsInFullScreenMode = aIsInFullScreen;
   ForceToBecomeMainControllerIfNeeded();
   mFullScreenChangedEvent.Notify(mIsInFullScreenMode);
@@ -595,12 +595,12 @@ void MediaController::DispatchAsyncEvent(already_AddRefed<Event> aEvent) {
       }
     }
     if (!allowed) {
-      LOG("Dropping event '%s' on a deactivated controller",
+      LOG("Dropping event '{}' on a deactivated controller",
           NS_ConvertUTF16toUTF8(eventType).get());
       return;
     }
   }
-  LOG("Dispatch event %s", NS_ConvertUTF16toUTF8(eventType).get());
+  LOG("Dispatch event {}", NS_ConvertUTF16toUTF8(eventType).get());
   RefPtr<AsyncEventDispatcher> asyncDispatcher =
       new AsyncEventDispatcher(this, event.forget());
   asyncDispatcher->PostDOMEvent();

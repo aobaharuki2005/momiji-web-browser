@@ -46,6 +46,7 @@
 #include "nsDocShell.h"
 #include "nsGlobalWindowInner.h"
 #include "nsMixedContentBlocker.h"
+#include "nsPIDOMWindowInlines.h"
 #include "nsQueryObject.h"
 #include "nsRedirectHistoryEntry.h"
 #include "nsSandboxFlags.h"

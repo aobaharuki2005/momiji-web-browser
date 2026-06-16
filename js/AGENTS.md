@@ -64,11 +64,14 @@ In-tree docs are under `src/doc/`:
 - `MIR-optimizations/` — Ion MIR optimization reference
 - `bytecode_checklist.md`, `feature_checklist.md` — checklists when adding
   bytecodes or features
+- `how-we-optimize.md`: A guide to optimization techniques within SpiderMonkey.
 
 Build the rendered docs with `./mach doc --no-serve --no-open` from the repo
 root.
 
-Important in-source documentation comment blocks are tagged with '[SMDOC]'.
+Important in-source documentation comment blocks are tagged with `[SMDOC]`.
+When trying to learn something about the engine, search for a relevant
+`[SMDOC]` comment.
 
 ## Searching
 

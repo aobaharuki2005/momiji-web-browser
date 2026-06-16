@@ -428,7 +428,34 @@ EnterprisePoliciesManager.prototype = {
   },
 
   setExtensionSettings(extensionSettings) {
-    ExtensionSettings = extensionSettings;
+    // Filter blocked_permissions entries to the same shape Chrome's policy
+    // schema enforces:
+    //   "items": { "pattern": "^[a-z][a-zA-Z0-9._]*$", "type": "string" }
+    // This excludes:
+    //   - "internal:"-prefixed permissions (reserved, must not be controlled
+    //     via enterprise policy)
+    //   - match patterns and "<all_urls>" (host permissions are out of scope
+    //     for blocked_permissions; in Firefox, "<all_urls>" is stored under
+    //     the ExtensionPermissions "permissions" key so an unfiltered entry
+    //     would erroneously affect host permission semantics)
+    // Copies the input rather than mutating the caller's object.
+    // toolkit/components/extensions/test/xpcshell/test_ext_permissions.js
+    // asserts every API permission name matches this regex.
+    const VALID_PERM = /^[a-z][a-zA-Z0-9._]*$/;
+    const sanitized = {};
+    for (const [key, entry] of Object.entries(extensionSettings)) {
+      if (Array.isArray(entry?.blocked_permissions)) {
+        sanitized[key] = {
+          ...entry,
+          blocked_permissions: entry.blocked_permissions.filter(perm =>
+            VALID_PERM.test(perm)
+          ),
+        };
+      } else {
+        sanitized[key] = entry;
+      }
+    }
+    ExtensionSettings = sanitized;
     if (
       "*" in extensionSettings &&
       "install_sources" in extensionSettings["*"]
@@ -470,20 +497,35 @@ EnterprisePoliciesManager.prototype = {
     );
   },
 
+  // Note: addon parameter has different types (bug 2033101).
   mayInstallAddon(addon) {
     // See https://dev.chromium.org/administrators/policy-list-3/extension-settings-full
     if (!ExtensionSettings) {
       return true;
     }
+    // blocked_permissions takes precedence over installation_mode. Per Chrome,
+    // any per-id entry shadows "*" entirely; "*" only applies when there is no
+    // per-id entry. Host patterns and optional permissions are out of scope
+    // (host patterns are stripped in setExtensionSettings and optional perms
+    // are gated at permissions.request time).
+    let blockedPerms =
+      (addon.id in ExtensionSettings
+        ? ExtensionSettings[addon.id].blocked_permissions
+        : ExtensionSettings["*"]?.blocked_permissions) ?? [];
+    if (
+      blockedPerms.some(perm =>
+        addon.userPermissions?.permissions?.includes(perm)
+      )
+    ) {
+      return false;
+    }
+    // Match Chrome: any per-id ExtensionSettings entry (even empty) shadows
+    // the "*" defaults entirely.
     if (addon.id in ExtensionSettings) {
-      if ("installation_mode" in ExtensionSettings[addon.id]) {
-        switch (ExtensionSettings[addon.id].installation_mode) {
-          case "blocked":
-            return false;
-          default:
-            return true;
-        }
+      if (ExtensionSettings[addon.id].installation_mode === "blocked") {
+        return false;
       }
+      return true;
     }
     if ("*" in ExtensionSettings) {
       if (

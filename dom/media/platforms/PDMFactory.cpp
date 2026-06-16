@@ -67,7 +67,7 @@ using MCSInfo = mozilla::media::MCSInfo;
 namespace mozilla {
 
 #define PDM_INIT_LOG(msg, ...) \
-  MOZ_LOG(sPDMLog, LogLevel::Debug, ("PDMInitializer, " msg, ##__VA_ARGS__))
+  MOZ_LOG_FMT(sPDMLog, LogLevel::Debug, "PDMInitializer, " msg, ##__VA_ARGS__)
 
 extern already_AddRefed<PlatformDecoderModule> CreateNullDecoderModule();
 
@@ -588,7 +588,7 @@ void PDMFactory::CreateRddPDMs() {
   PDM_INIT_LOG("RDD PDM order:");
   int i = 0;
   for (const auto& pdm : mCurrentPDMs) {
-    PDM_INIT_LOG("%d: %s", i++, pdm->Name());
+    PDM_INIT_LOG("{}: {}", i++, pdm->Name());
   }
 }
 
@@ -634,7 +634,7 @@ void PDMFactory::CreateUtilityPDMs() {
   PDM_INIT_LOG("Utility PDM order:");
   int i = 0;
   for (const auto& pdm : mCurrentPDMs) {
-    PDM_INIT_LOG("%d: %s", i++, pdm->Name());
+    PDM_INIT_LOG("{}: {}", i++, pdm->Name());
   }
 }
 
@@ -724,7 +724,7 @@ void PDMFactory::CreateContentPDMs() {
   PDM_INIT_LOG("Content PDM order:");
   int i = 0;
   for (const auto& pdm : mCurrentPDMs) {
-    PDM_INIT_LOG("%d: %s", i++, pdm->Name());
+    PDM_INIT_LOG("{}: {}", i++, pdm->Name());
   }
 }
 
@@ -774,7 +774,7 @@ void PDMFactory::CreateDefaultPDMs() {
   PDM_INIT_LOG("Default PDM order:");
   int i = 0;
   for (const auto& pdm : mCurrentPDMs) {
-    PDM_INIT_LOG("%d: %s", i++, pdm->Name());
+    PDM_INIT_LOG("{}: {}", i++, pdm->Name());
   }
 }
 

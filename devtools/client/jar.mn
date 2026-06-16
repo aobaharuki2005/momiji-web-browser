@@ -162,6 +162,8 @@ devtools.jar:
     skin/images/rules-view-light-mode-simulation.svg (themes/images/rules-view-light-mode-simulation.svg)
     skin/images/rules-view-dark-mode-simulation.svg (themes/images/rules-view-dark-mode-simulation.svg)
     skin/images/rules-view-print-simulation.svg (themes/images/rules-view-print-simulation.svg)
+    skin/images/back.svg (themes/images/back.svg)
+    skin/images/forward.svg (themes/images/forward.svg)
     skin/markup.css (themes/markup.css)
 
     # shared

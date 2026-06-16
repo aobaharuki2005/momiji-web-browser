@@ -79,9 +79,7 @@ export class UrlbarView {
     this.resultMenu.addEventListener("command", this);
     this.resultMenu.addEventListener("popupshowing", this);
 
-    // `noresults` is used to style the one-offs without their usual top border
-    // when no results are present.
-    this.panel.setAttribute("noresults", "true");
+    this.input.toggleAttribute("noresults", true);
 
     this.controller.setView(this);
     this.controller.addListener(this);
@@ -92,12 +90,7 @@ export class UrlbarView {
     // We cache l10n strings to avoid Fluent's async lookup.
     this.#l10nCache = new lazy.L10nCache(this.document.l10n);
 
-    let contextMenu = this.document.querySelector("#urlbarView-context-menu");
-    if (contextMenu) {
-      contextMenu.addEventListener("command", this);
-      contextMenu.addEventListener("popupshowing", this);
-      contextMenu.addEventListener("popuphiding", this);
-    }
+    this.input.addEventListener("contextmenu", this);
   }
 
   get oneOffSearchButtons() {
@@ -511,7 +504,7 @@ export class UrlbarView {
 
   clear() {
     this.#rows.textContent = "";
-    this.panel.setAttribute("noresults", "true");
+    this.input.toggleAttribute("noresults", true);
     this.clearSelection();
     this.visibleResults = [];
   }
@@ -638,7 +631,7 @@ export class UrlbarView {
 
   #runTail150(canvas) {
     let S = this.window.getComputedStyle(canvas);
-    let AC = S.getPropertyValue("--color-gray-05");
+    let AC = S.getPropertyValue("--color-gray-0");
     let FD = S.getPropertyValue("--color-yellow-30");
     let SP = new this.window.Image();
     SP.src = "chrome://branding/content/icon48.png";
@@ -1045,7 +1038,7 @@ export class UrlbarView {
   // Private properties and methods below.
   #announceTabToSearchOnSelection;
   #blobUrlsByResultUrl = null;
-  #tail150 = null;
+  #contextMenu;
   #containerWidthOnLastClose = 0;
   #l10nCache;
   #mousedownSelectedElement;
@@ -1060,6 +1053,7 @@ export class UrlbarView {
   #resultMenuCommands;
   #rows;
   #rawSelectedElement;
+  #tail150 = null;
 
   /**
    * #rawSelectedElement may be disconnected from the DOM (e.g. it was remove()d)
@@ -2765,11 +2759,7 @@ export class UrlbarView {
       selectableElement = this.#getNextSelectableElement(selectableElement);
     }
 
-    if (this.visibleResults.length) {
-      this.panel.removeAttribute("noresults");
-    } else {
-      this.panel.setAttribute("noresults", "true");
-    }
+    this.input.toggleAttribute("noresults", !this.visibleResults.length);
   }
 
   /**
@@ -3465,12 +3455,14 @@ export class UrlbarView {
         let iconModeLabel = this.#createElement("div");
         iconModeLabel.classList.add("urlbarView-userContext-iconMode");
         actionNode.appendChild(iconModeLabel);
-        if (identity.icon) {
+        let iconURL = lazy.ContextualIdentityService.getContainerIconURL(
+          identity.icon
+        );
+        if (iconURL) {
           let userContextIcon = this.#createElement("img");
           userContextIcon.classList.add("urlbarView-userContext-icon");
           userContextIcon.setAttribute("alt", label);
-          userContextIcon.src =
-            "resource://usercontext-content/" + identity.icon + ".svg";
+          userContextIcon.src = iconURL;
           iconModeLabel.appendChild(userContextIcon);
         }
         actionNode.setAttribute("tooltiptext", label);
@@ -4201,6 +4193,42 @@ export class UrlbarView {
         .closest(".urlbarView-row")
         ?.toggleAttribute("context-menu-trigger", false);
     }
+  }
+
+  on_contextmenu(event) {
+    // The context menu associated with this event is either for something above
+    // the urlbar in the DOM, like the toolbar, or for something specific in the
+    // input, like the `<html:input>`. We want to suppress the former, propagate
+    // the latter, and open our own context menu for events on rows.
+    if (event.target.closest(".urlbar-input-container")) {
+      return;
+    }
+
+    event.preventDefault();
+
+    if (
+      !lazy.UrlbarPrefs.get("contextMenu.featureGate") ||
+      !event.target.closest(".urlbarView-row")
+    ) {
+      // Don't show the context menu from the background or the group label etc.
+      return;
+    }
+
+    if (!this.#contextMenu) {
+      this.#contextMenu = this.document.querySelector(
+        "#urlbarView-context-menu"
+      );
+      this.#contextMenu.addEventListener("command", this);
+      this.#contextMenu.addEventListener("popupshowing", this);
+      this.#contextMenu.addEventListener("popuphiding", this);
+    }
+
+    this.#contextMenu.openPopupAtScreen(
+      event.screenX,
+      event.screenY,
+      true,
+      event
+    );
   }
 }
 

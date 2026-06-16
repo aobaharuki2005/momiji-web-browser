@@ -185,8 +185,14 @@ export const SpecialMessageActions = {
    *
    * @param {Window} window Reference to a window object
    */
-  async setDefaultPDFHandler(window, onlyIfKnownBrowser = false) {
-    await window.getShellService().setAsDefaultPDFHandler(onlyIfKnownBrowser);
+  async setDefaultPDFHandler(
+    window,
+    onlyIfKnownBrowser = false,
+    openInFirefox = false
+  ) {
+    await window
+      .getShellService()
+      .setAsDefaultPDFHandler(onlyIfKnownBrowser, openInFirefox);
   },
 
   /**
@@ -815,7 +821,8 @@ export const SpecialMessageActions = {
       case "SET_DEFAULT_PDF_HANDLER":
         await this.setDefaultPDFHandler(
           window,
-          action.data?.onlyIfKnownBrowser ?? false
+          action.data?.onlyIfKnownBrowser ?? false,
+          action.data?.openInFirefox ?? false
         );
         break;
       case "DECLINE_DEFAULT_PDF_HANDLER":

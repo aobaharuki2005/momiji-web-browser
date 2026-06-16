@@ -16,8 +16,10 @@ import androidx.navigation.fragment.navArgs
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 import mozilla.components.lib.state.helpers.StoreProvider.Companion.fragmentStore
 import org.mozilla.fenix.R
+import org.mozilla.fenix.components.accounts.FenixFxAEntryPoint
 import org.mozilla.fenix.ext.nav
 import org.mozilla.fenix.ext.requireComponents
+import org.mozilla.fenix.ipprotection.helpers.formatPromoDateOrCatch
 import org.mozilla.fenix.ipprotection.store.IPProtectionPromptAction
 import org.mozilla.fenix.ipprotection.store.IPProtectionPromptPreferencesMiddleware
 import org.mozilla.fenix.ipprotection.store.IPProtectionPromptState
@@ -69,10 +71,14 @@ class IPProtectionBottomSheetFragment : BottomSheetDialogFragment() {
     ): View {
         isAlreadyShowing = savedInstanceState?.getBoolean(IS_ALREADY_SHOW_KEY) ?: false
         ipProtectionPromptStore.dispatch(IPProtectionPromptAction.OnPromptCreated)
+        val maxGib = FxNimbus.features.ipProtection.value().dataLimitGigabyte
+        val formattedPromoDate =
+            formatPromoDateOrCatch(maxGib) { requireComponents.analytics.crashReporter.submitCaughtException(it) }
         return content {
             FirefoxTheme {
                 IPProtectionBottomSheet(
-                    maxGib = FxNimbus.features.ipProtection.value().dataLimitGigabyte,
+                    maxGib = maxGib,
+                    formattedPromoDate = formattedPromoDate,
                     onDismiss = { dismiss() },
                     onDismissRequest = {
                         ipProtectionPromptStore.dispatch(
@@ -89,6 +95,7 @@ class IPProtectionBottomSheetFragment : BottomSheetDialogFragment() {
                             IPProtectionBottomSheetFragmentDirections
                                 .actionIpProtectionOnboardingDialogFragmentToIpProtectionFragment(
                                     startAuthFlow = true,
+                                    entrypoint = FenixFxAEntryPoint.IPProtectionOnboarding,
                                 ),
                         )
                         dismiss()

@@ -23,6 +23,9 @@ customkeys-history-reopen-window = Reopen Last Closed window
 customkeys-sidebar-toggle = Toggle Sidebar
 customkeys-view-bookmarks-toolbar = Toggle Bookmarks Toolbar
 customkeys-view-picture-in-picture = Picture-in-Picture
+customkeys-view-add-split-view = Add Split View
+# Separate is a verb
+customkeys-view-separate-split-view = Separate Split View
 customkeys-dev-tools = Web Developer Tools
 customkeys-dev-inspector = DOM and Style Inspector
 customkeys-dev-webconsole = Web Console

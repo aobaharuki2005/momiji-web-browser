@@ -26,14 +26,15 @@
 #include "mozilla/dom/power/PowerManagerService.h"
 #include "nsContentUtils.h"
 #include "nsGlobalWindowInner.h"
+#include "nsPIDOMWindowInlines.h"
 
 extern mozilla::LazyLogModule gAudioChannelLog;
 
 #define AUDIO_CHANNEL_LOG(msg, ...) \
-  MOZ_LOG(gAudioChannelLog, LogLevel::Debug, (msg, ##__VA_ARGS__))
+  MOZ_LOG_FMT(gAudioChannelLog, LogLevel::Debug, msg, ##__VA_ARGS__)
 
 #define MEDIA_CONTROL_LOG(msg, ...) \
-  MOZ_LOG(gMediaControlLog, LogLevel::Debug, (msg, ##__VA_ARGS__))
+  MOZ_LOG_FMT(gMediaControlLog, LogLevel::Debug, msg, ##__VA_ARGS__)
 
 namespace mozilla::dom {
 
@@ -302,21 +303,23 @@ class AudioDestinationNode::MediaSharedKeysListener final
     BrowsingContext* bc = window ? window->GetBrowsingContext() : nullptr;
     if (!bc) {
       MEDIA_CONTROL_LOG(
-          "MediaSharedKeysListener %p Start: no browsing context, skip", this);
+          "MediaSharedKeysListener {} Start: no browsing context, skip",
+          fmt::ptr(this));
       return;
     }
     mAgent = ContentMediaAgent::Get(bc);
     if (!mAgent) {
       MEDIA_CONTROL_LOG(
-          "MediaSharedKeysListener %p Start: no ContentMediaAgent, skip", this);
+          "MediaSharedKeysListener {} Start: no ContentMediaAgent, skip",
+          fmt::ptr(this));
       return;
     }
     mBrowsingContextId = bc->Id();
     mAgent->AddReceiver(this, ControlType::eUncontrollable);
     MEDIA_CONTROL_LOG(
-        "MediaSharedKeysListener %p Start: registered as uncontrollable "
-        "receiver in BC %" PRIu64,
-        this, mBrowsingContextId);
+        "MediaSharedKeysListener {} Start: registered as uncontrollable "
+        "receiver in BC {}",
+        fmt::ptr(this), mBrowsingContextId);
   }
 
   void NotifyAudibleChanged(bool aAudible) {
@@ -331,8 +334,8 @@ class AudioDestinationNode::MediaSharedKeysListener final
         mBrowsingContextId,
         aAudible ? MediaAudibleState::eAudible : MediaAudibleState::eInaudible,
         ControlType::eUncontrollable, kSessionType);
-    MEDIA_CONTROL_LOG("MediaSharedKeysListener %p Reported %s in BC %" PRIu64,
-                      this, aAudible ? "audible" : "inaudible",
+    MEDIA_CONTROL_LOG("MediaSharedKeysListener {} Reported {} in BC {}",
+                      fmt::ptr(this), aAudible ? "audible" : "inaudible",
                       mBrowsingContextId);
   }
 
@@ -343,7 +346,8 @@ class AudioDestinationNode::MediaSharedKeysListener final
     if (!mAgent) {
       // Start() bailed out (no BC or no agent at the time); nothing to undo.
       MEDIA_CONTROL_LOG(
-          "MediaSharedKeysListener %p Shutdown: never registered, skip", this);
+          "MediaSharedKeysListener {} Shutdown: never registered, skip",
+          fmt::ptr(this));
       return;
     }
     if (mIsAudible) {
@@ -355,8 +359,8 @@ class AudioDestinationNode::MediaSharedKeysListener final
     mAgent->RemoveReceiver(this, ControlType::eUncontrollable);
     mAgent = nullptr;
     MEDIA_CONTROL_LOG(
-        "MediaSharedKeysListener %p Shutdown: unregistered from BC %" PRIu64,
-        this, mBrowsingContextId);
+        "MediaSharedKeysListener {} Shutdown: unregistered from BC {}",
+        fmt::ptr(this), mBrowsingContextId);
   }
 
   bool IsPlaying() const override {
@@ -368,8 +372,8 @@ class AudioDestinationNode::MediaSharedKeysListener final
                       const MediaControlActionParams& aParams) override {
     MOZ_ASSERT(NS_IsMainThread());
     MOZ_ASSERT(!mShutdown, "HandleMediaKey must not be called after Shutdown");
-    MEDIA_CONTROL_LOG("MediaSharedKeysListener %p HandleMediaKey '%s'", this,
-                      GetEnumString(aKey).get());
+    MEDIA_CONTROL_LOG("MediaSharedKeysListener {} HandleMediaKey '{}'",
+                      fmt::ptr(this), GetEnumString(aKey).get());
     AudioContext* ctx = mDestination.Context();
     if (!ctx) {
       return;
@@ -646,9 +650,9 @@ AudioDestinationNode::WindowVolumeChanged(float aVolume, bool aMuted) {
   }
 
   AUDIO_CHANNEL_LOG(
-      "AudioDestinationNode %p WindowVolumeChanged, "
-      "aVolume = %f, aMuted = %s\n",
-      this, aVolume, aMuted ? "true" : "false");
+      "AudioDestinationNode {} WindowVolumeChanged, "
+      "aVolume = {}, aMuted = {}\n",
+      fmt::ptr(this), aVolume, aMuted ? "true" : "false");
 
   mAudioChannelVolume = aMuted ? 0.0f : aVolume;
   mTrack->SetAudioOutputVolume(nullptr, mAudioChannelVolume);
@@ -670,8 +674,8 @@ AudioDestinationNode::WindowSuspendChanged(nsSuspendedTypes aSuspend) {
   mAudioChannelDisabled = shouldDisable;
 
   AUDIO_CHANNEL_LOG(
-      "AudioDestinationNode %p WindowSuspendChanged, shouldDisable = %d\n",
-      this, mAudioChannelDisabled);
+      "AudioDestinationNode {} WindowSuspendChanged, shouldDisable = {}\n",
+      fmt::ptr(this), mAudioChannelDisabled);
 
   DisabledTrackMode disabledMode = mAudioChannelDisabled
                                        ? DisabledTrackMode::SILENCE_BLACK
@@ -746,8 +750,8 @@ void AudioDestinationNode::NotifyDataAudibleStateChanged(bool aAudible) {
   MOZ_ASSERT(!mIsOffline);
 
   AUDIO_CHANNEL_LOG(
-      "AudioDestinationNode %p NotifyDataAudibleStateChanged, audible=%d", this,
-      aAudible);
+      "AudioDestinationNode {} NotifyDataAudibleStateChanged, audible={}",
+      fmt::ptr(this), aAudible);
 
   mIsDataAudible = aAudible;
   UpdateFinalAudibleStateIfNeeded(AudibleChangedReasons::eDataAudibleChanged);
@@ -763,8 +767,8 @@ void AudioDestinationNode::UpdateFinalAudibleStateIfNeeded(
   if (mFinalAudibleState == newAudibleState) {
     return;
   }
-  AUDIO_CHANNEL_LOG("AudioDestinationNode %p Final audible state=%d", this,
-                    newAudibleState);
+  AUDIO_CHANNEL_LOG("AudioDestinationNode {} Final audible state={}",
+                    fmt::ptr(this), newAudibleState);
   mFinalAudibleState = newAudibleState;
   AudibleState state =
       mFinalAudibleState ? AudibleState::eAudible : AudibleState::eNotAudible;

@@ -46,7 +46,6 @@ import org.mozilla.fenix.components.appstate.AppAction.SearchAction.SearchEnded
 import org.mozilla.fenix.components.metrics.MetricsUtils
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.getRootView
-import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.home.toolbar.edgeToEdgeClipboardBarBackground
 import org.mozilla.fenix.search.BrowserStoreToFenixSearchMapperMiddleware
 import org.mozilla.fenix.search.BrowserToolbarToFenixSearchMapperMiddleware
@@ -162,15 +161,15 @@ class AwesomeBarComposable(
             if (state.showSearchSuggestionsHint) {
                 PrivateSuggestionsCard(
                     onSearchSuggestionsInPrivateModeAllowed = {
-                        activity.settings().shouldShowSearchSuggestionsInPrivate = true
-                        activity.settings().showSearchSuggestionsInPrivateOnboardingFinished = true
+                       components.settings.shouldShowSearchSuggestionsInPrivate = true
+                       components.settings.showSearchSuggestionsInPrivateOnboardingFinished = true
                         searchStore.dispatch(SearchFragmentAction.SetShowSearchSuggestions(true))
                         searchStore.dispatch(SearchFragmentAction.AllowSearchSuggestionsInPrivateModePrompt(false))
                         searchStore.dispatch(SearchFragmentAction.PrivateSuggestionsCardAccepted)
                     },
                     onSearchSuggestionsInPrivateModeBlocked = {
-                        activity.settings().shouldShowSearchSuggestionsInPrivate = false
-                        activity.settings().showSearchSuggestionsInPrivateOnboardingFinished = true
+                       components.settings.shouldShowSearchSuggestionsInPrivate = false
+                       components.settings.showSearchSuggestionsInPrivateOnboardingFinished = true
                         searchStore.dispatch(
                             SearchFragmentAction.AllowSearchSuggestionsInPrivateModePrompt(false),
                         )

@@ -8,6 +8,7 @@
 #include "AndroidRect.h"
 #include "KeyEvent.h"
 #include "PuppetWidget.h"
+#include "nsComponentManagerUtils.h"
 #include "nsIContent.h"
 #include "nsITransferable.h"
 #include "nsStringStream.h"

@@ -1,16 +1,16 @@
 {
   "background/color/box": {
     "light": "{Colors$color/white}",
-    "dark": "{Colors$color/gray/75}",
+    "dark": "{Colors$color/gray/70}",
     "forcedColors": "{Theme$background/color/canvas}"
   },
   "background/color/box/info": {
     "light": "{Colors$color/gray/15}",
-    "dark": "{Colors$color/gray/60}",
+    "dark": "{Colors$color/gray/65}",
     "forcedColors": "{Theme$background/color/canvas}"
   },
   "background/color/canvas": {
-    "light": "{Colors$color/gray/05}",
+    "light": "{Colors$color/gray/0}",
     "dark": "{Colors$color/gray/90}",
     "forcedColors": "{HCM Theme$Canvas}"
   },
@@ -36,7 +36,7 @@
   },
   "border/color": {
     "light": "{Colors$color/gray/30}",
-    "dark": "{Colors$color/gray/50}",
+    "dark": "{Colors$color/gray/45}",
     "forcedColors": "{HCM Theme$CanvasText}"
   },
   "border/color/transparent": {
@@ -46,17 +46,17 @@
   },
   "border/color/deemphasized": {
     "light": "{Colors$color/gray/20}",
-    "dark": "{Colors$color/gray/60}",
+    "dark": "{Colors$color/gray/55}",
     "forcedColors": "{HCM Theme$CanvasText}"
   },
   "border/color/interactive": {
-    "light": "{Colors$color/gray/40}",
-    "dark": "{Colors$color/gray/40}",
+    "light": "{Colors$color/gray/35}",
+    "dark": "{Colors$color/gray/45}",
     "forcedColors": "{HCM Theme$ButtonText}"
   },
   "border/color/interactive/disabled": {
     "light": "{Colors$color/gray/25}",
-    "dark": "{Colors$color/gray/50}",
+    "dark": "{Colors$color/gray/60}",
     "forcedColors": "{HCM Theme$GrayText}"
   },
   "border/color/error": {
@@ -524,50 +524,25 @@
     "dark": "{Theme$background/color/box}",
     "forcedColors": "{Theme$background/color/box}"
   },
-  "message-bar/background/color/warning": {
-    "light": "{Theme$background/color/box}",
-    "dark": "{Theme$background/color/box}",
-    "forcedColors": "{Theme$background/color/box}"
+  "promo/background/color": {
+    "light": "{Theme$background/color/box/info}",
+    "dark": "{Theme$background/color/box/info}",
+    "forcedColors": "{Theme$background/color/box/info}"
   },
-  "message-bar/background/color/success": {
-    "light": "{Theme$background/color/box}",
-    "dark": "{Theme$background/color/box}",
-    "forcedColors": "{Theme$background/color/box}"
+  "promo/background/color/vibrant": {
+    "light": "{Colors$color/violet-desaturated/10}",
+    "dark": "{Colors$color/violet-desaturated/70}",
+    "forcedColors": "{HCM Theme$Canvas}"
   },
-  "message-bar/background/color/critical": {
-    "light": "{Theme$background/color/box}",
-    "dark": "{Theme$background/color/box}",
-    "forcedColors": "{Theme$background/color/box}"
+  "promo/border/color": {
+    "light": "rgba(24, 14, 48, 0.12)",
+    "dark": "rgba(242, 240, 248, 0.12)",
+    "forcedColors": "{HCM Theme$CanvasText}"
   },
-  "message-bar/border/color": {
-    "light": "{Theme$border/color/deemphasized}",
-    "dark": "{Theme$border/color/deemphasized}",
-    "forcedColors": "{Theme$border/color/deemphasized}"
-  },
-  "message-bar/icon/background/color": {
-    "light": "{Theme$background/color/information}",
-    "dark": "{Theme$background/color/information}",
-    "forcedColors": "{Theme$background/color/information}"
-  },
-  "message-bar/icon/background/color/warning": {
-    "light": "{Theme$background/color/warning}",
-    "dark": "{Theme$background/color/warning}",
-    "forcedColors": "{Theme$background/color/warning}"
-  },
-  "message-bar/icon/background/color/success": {
-    "light": "{Theme$background/color/success}",
-    "dark": "{Theme$background/color/success}",
-    "forcedColors": "{Theme$background/color/success}"
-  },
-  "message-bar/icon/background/color/critical": {
-    "light": "{Theme$background/color/critical}",
-    "dark": "{Theme$background/color/critical}",
-    "forcedColors": "{Theme$background/color/critical}"
-  },
-  "message-bar/icon/container/border/color": {
-    "light": "transparent",
-    "dark": "transparent",
-    "forcedColors": "{Theme$message-bar/icon/color}"
+  "promo/border/color/vibrant": {
+    "light": "{Theme$promo/border/color}",
+    "dark": "{Theme$promo/border/color}",
+    "forcedColors": "{Theme$promo/border/color}"
   },
   "tab/border/color/selected/trailing": {
     "light": "{Colors$color/orange/30}",
@@ -578,10 +553,5 @@
     "light": "color-mix(in lch, var(--color-violet-desaturated-50) 25%, transparent)",
     "dark": "color-mix(in lch, var(--color-violet-desaturated-30) 40%, transparent)",
     "forcedColors": "transparent"
-  },
-  "tab/background/color/selected": {
-    "light": "var(--background-color-box)",
-    "dark": "var(--background-color-box)",
-    "forcedColors": "var(--background-color-box)"
   }
 }

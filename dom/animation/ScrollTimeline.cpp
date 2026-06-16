@@ -4,6 +4,7 @@
 
 #include "ScrollTimeline.h"
 
+#include "mozilla/AlreadyAddRefed.h"
 #include "mozilla/AnimationTarget.h"
 #include "mozilla/DisplayPortUtils.h"
 #include "mozilla/ElementAnimationData.h"
@@ -89,7 +90,12 @@ already_AddRefed<ScrollTimeline> ScrollTimeline::Constructor(
   }
 
   // Step 1 -- create the new ScrollTimeline object.
-  return MakeAndAddRef<ScrollTimeline>(doc, scroller, axis);
+  RefPtr<ScrollTimeline> result =
+      MakeAndAddRef<ScrollTimeline>(doc, scroller, axis);
+  if (source) {
+    result->UpdateCachedCurrentTime();
+  }
+  return result.forget();
 }
 
 Element* ScrollTimeline::GetSource() const { return SourceElement(); }
@@ -265,9 +271,7 @@ bool ScrollTimeline::UpdateIfStale() {
   // RenderingPhase::AnimationFrameCallbacks and RenderingPhase::Layout.
   // We have to check if the ranges are still valid.
   // https://drafts.csswg.org/scroll-animations-1/#event-loop
-  if (MOZ_LIKELY(!UpdateCachedCurrentTime())) {
-    return false;
-  }
+  const bool currentTimeUpdated = UpdateCachedCurrentTime();
 
   if (mAnimations.IsEmpty()) {
     return false;
@@ -276,8 +280,12 @@ bool ScrollTimeline::UpdateIfStale() {
   // Check all animations and request restyle.
   // NOTE: Even if the animation doesn't have the target, it would be okay to
   // post update. We can optimize the case later.
-  for (const auto& animation : mAnimations) {
-    animation->PostUpdate();
+  for (const auto& animation :
+       ToTArray<AutoTArray<RefPtr<Animation>, 32>>(mAnimationOrder)) {
+    const bool triggered = animation->MakeReadyAndMaybeTrigger();
+    if (currentTimeUpdated || triggered) {
+      animation->PostUpdate();
+    }
   }
   return true;
 }
@@ -363,7 +371,8 @@ void ScrollTimeline::ReplacePropertiesWith(
     MOZ_ASSERT(anim->GetTimeline() == this);
     MOZ_ASSERT(anim->GetTimelineName() == aName);
     // Set this so we just PostUpdate() for this animation.
-    anim->SetTimeline(this, aName);
+    // FIXME(dshin, bug 1737927): Mutation observer may need to be notified.
+    anim->SetTimeline(this, aName, Animation::FromJS::No);
   }
 }
 

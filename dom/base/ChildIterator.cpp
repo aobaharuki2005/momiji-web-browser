@@ -194,6 +194,13 @@ nsIContent* AllChildrenIterator::Get() const {
       return after;
     }
 
+    case Phase::AtPickerIconKid: {
+      Element* pickerIcon = nsLayoutUtils::GetPickerIconPseudo(Parent());
+      MOZ_ASSERT(pickerIcon,
+                 "No content picker-icon frame at AtPickerIconKid phase");
+      return pickerIcon;
+    }
+
     default:
       return nullptr;
   }
@@ -274,6 +281,12 @@ nsIContent* AllChildrenIterator::GetNextChild() {
       }
       [[fallthrough]];
     case Phase::AtAfterKid:
+      if (Element* pickerIcon = nsLayoutUtils::GetPickerIconPseudo(Parent())) {
+        mPhase = Phase::AtPickerIconKid;
+        return pickerIcon;
+      }
+      [[fallthrough]];
+    case Phase::AtPickerIconKid:
     case Phase::AtEnd:
       break;
   }
@@ -285,6 +298,12 @@ nsIContent* AllChildrenIterator::GetNextChild() {
 nsIContent* AllChildrenIterator::GetPreviousChild() {
   switch (mPhase) {
     case Phase::AtEnd:
+      if (Element* pickerIcon = nsLayoutUtils::GetPickerIconPseudo(Parent())) {
+        mPhase = Phase::AtPickerIconKid;
+        return pickerIcon;
+      }
+      [[fallthrough]];
+    case Phase::AtPickerIconKid:
       if (Element* afterContent = nsLayoutUtils::GetAfterPseudo(Parent())) {
         mPhase = Phase::AtAfterKid;
         return afterContent;

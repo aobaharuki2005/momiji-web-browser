@@ -199,8 +199,7 @@ PreloadService::PreloadOrCoalesceResult PreloadService::PreloadOrCoalesce(
     preloadKey = PreloadHashKey::CreateAsScript(uri, aCORS, aType);
   } else if (aAs.LowerCaseEqualsASCII("style")) {
     preloadKey = PreloadHashKey::CreateAsStyle(
-        uri, mDocument->NodePrincipal(), dom::Element::StringToCORSMode(aCORS),
-        css::eAuthorSheetFeatures /* see Loader::LoadSheet */);
+        uri, mDocument->NodePrincipal(), dom::Element::StringToCORSMode(aCORS));
   } else if (aAs.LowerCaseEqualsASCII("image")) {
     uri = mDocument->ResolvePreloadImage(BaseURIForPreload(), aURL, aSrcset,
                                          aSizes, &isImgSet);

@@ -158,6 +158,8 @@ skip-if = [
   "os == 'win' && os_version == '11.26200' && arch == 'x86_64' && ccov", # Bug 1817966
 ]
 
+["browser_dbg-pretty-print-stylesheet.js"]
+
 ["browser_dbg-pretty-print.js"]
 
 ["browser_dbg-preview-bucketed-array.js"]

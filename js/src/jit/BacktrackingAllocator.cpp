@@ -4976,8 +4976,9 @@ bool BacktrackingAllocator::go() {
       return false;
     }
 
-    QueueItem item = allocationQueue.removeHighest();
-    if (!processBundle(mir, item.bundle)) {
+    LiveBundle* bundle = allocationQueue.highest().bundle;
+    allocationQueue.popHighest();
+    if (!processBundle(mir, bundle)) {
       return false;
     }
   }

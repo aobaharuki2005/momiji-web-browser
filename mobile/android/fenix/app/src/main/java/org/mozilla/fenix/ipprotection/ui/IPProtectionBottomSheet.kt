@@ -59,6 +59,9 @@ private val sheetMaxWidth = 450.dp
  * The IP Protection onboarding prompt.
  *
  * @param maxGib The total monthly allowance in GB for unpaid users.
+ * @param formattedPromoDate Locale-formatted end date for the promo copy shown when [maxGib] is 0.
+ * `null` means the promo cannot be rendered (e.g. Nimbus shipped a malformed date) and the sheet
+ * should fall back to the standard onboarding copy.
  * @param onDismiss The callback to invoke when the prompt is dismissed.
  * @param onDismissRequest The callback to invoke when the user clicks outside of the bottom sheet,
  * after sheet animates to Hidden. See [ModalBottomSheet].
@@ -71,6 +74,7 @@ private val sheetMaxWidth = 450.dp
 @Composable
 fun IPProtectionBottomSheet(
     maxGib: Int,
+    formattedPromoDate: String?,
     onDismiss: () -> Unit,
     onDismissRequest: () -> Unit,
     onLearnMoreClicked: () -> Unit,
@@ -84,6 +88,7 @@ fun IPProtectionBottomSheet(
 
     BottomSheet(
         maxGib = maxGib,
+        formattedPromoDate = formattedPromoDate,
         sheetState = sheetState,
         onDismiss = onDismiss,
         onDismissRequest = onDismissRequest,
@@ -96,6 +101,7 @@ fun IPProtectionBottomSheet(
 @Composable
 private fun BottomSheet(
     maxGib: Int,
+    formattedPromoDate: String?,
     sheetState: SheetState,
     onDismiss: () -> Unit = {},
     onDismissRequest: () -> Unit = {},
@@ -110,6 +116,7 @@ private fun BottomSheet(
     ) {
         BottomSheetContent(
             maxGib = maxGib,
+            formattedPromoDate = formattedPromoDate,
             sheetState = sheetState,
             onDismiss = onDismiss,
             onLearnMoreClicked = onLearnMoreClicked,
@@ -122,6 +129,7 @@ private fun BottomSheet(
 @Composable
 private fun BottomSheetContent(
     maxGib: Int,
+    formattedPromoDate: String?,
     sheetState: SheetState,
     onDismiss: () -> Unit,
     onLearnMoreClicked: () -> Unit,
@@ -154,10 +162,21 @@ private fun BottomSheetContent(
 
                 Spacer(Modifier.height(16.dp))
 
-                IPProtectionContent(
-                    maxGib = maxGib,
-                    onLearnMoreClicked = onLearnMoreClicked,
-                )
+                if (maxGib > 0) {
+                    IPProtectionContent(
+                        maxGib = maxGib,
+                        onLearnMoreClicked = onLearnMoreClicked,
+                    )
+                } else if (formattedPromoDate != null) {
+                    IPProtectionPromoContent(
+                        formattedDate = formattedPromoDate,
+                        onLearnMoreClicked = onLearnMoreClicked,
+                    )
+                } else {
+                    // We don't want to render incorrect content if we don't have
+                    // these two data sources, so we fallback to nothing which is better
+                    // than promoting an incorrect metered or unmetered feature.
+                }
             }
         }
 
@@ -181,6 +200,28 @@ private fun BottomSheetContent(
             },
         )
     }
+}
+
+@Composable
+private fun IPProtectionPromoContent(
+    formattedDate: String,
+    onLearnMoreClicked: () -> Unit,
+) {
+    val learnMoreText = stringResource(R.string.ip_protection_onboarding_body_link_promo)
+    LinkText(
+        text = stringResource(id = R.string.ip_protection_onboarding_body_promo, formattedDate, learnMoreText),
+        linkTextStates = listOf(
+            LinkTextState(
+                text = learnMoreText,
+                url = "",
+                onClick = { onLearnMoreClicked() },
+            ),
+        ),
+        style = FirefoxTheme.typography.body2.copy(
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        ),
+        linkTextDecoration = TextDecoration.Underline,
+    )
 }
 
 @Composable
@@ -286,6 +327,7 @@ private fun IPProtectionBottomSheetPreview(
     FirefoxTheme(theme = theme) {
         IPProtectionBottomSheet(
             maxGib = 50,
+            formattedPromoDate = "Jun 9",
             onDismiss = {},
             onDismissRequest = {},
             onGetStartedClicked = {},

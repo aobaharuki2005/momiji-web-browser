@@ -638,3 +638,4 @@ fuzzy(0-1,0-230400) == 1630900-1.html 1630900-1-ref.html
 fuzzy-if(winWidget||cocoaWidget,0-1,0-6050) == rect-no-backgrounds-print.html rect-no-backgrounds-print-ref.html
 
 == bad-arc.html bad-arc-ref.html
+pref(layout.disable-pixel-alignment,true) == mask-image-at-fractional-position.html mask-image-at-fractional-position-ref.html

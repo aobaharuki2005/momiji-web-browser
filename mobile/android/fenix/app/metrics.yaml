@@ -139,7 +139,7 @@ events:
           A string containing the name of the item the user tapped. These items
           include:
           add_bookmark, add_to_homescreen, add_to_top_sites, addon_details, addons_manager,
-          back, back_long_press, bookmark, bookmarks, custom_back, custom_back_long_press,
+          back, back_long_press, bookmark, bookmarks, change_wallpaper, custom_back, custom_back_long_press,
           custom_desktop_view_off, custom_desktop_view_on, custom_find_in_page,
           custom_forward, custom_forward_long_press, custom_share, desktop_view_off,
           desktop_view_on, discover_more_extensions, dismiss_menu_banner, downloads,
@@ -154,6 +154,7 @@ events:
       - https://github.com/mozilla-mobile/fenix/issues/19923
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1808689
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1836780
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=2042794
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/1214#issue-264756708
       - https://github.com/mozilla-mobile/fenix/pull/5098#issuecomment-529658996
@@ -165,6 +166,7 @@ events:
       - https://github.com/mozilla-mobile/fenix/pull/27295
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1837517#c3
       - https://github.com/mozilla-mobile/firefox-android/pull/4039
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=2042794
     data_sensitivity:
       - interaction
     notification_emails:
@@ -6111,6 +6113,140 @@ settings:
     metadata:
       tags:
         - Settings
+  firefox_labs:
+    type: event
+    description: |
+      User has tapped Firefox Labs in settings menu.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=2032172
+    data_reviews:
+      - https://phabricator.services.mozilla.com/D305371
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - android-probes@mozilla.com
+    expires: never
+    metadata:
+      tags:
+        - Settings
+firefox_labs:
+  toggle_button_pressed:
+    type: event
+    description: |
+      The user toggled a Firefox Labs item switch.
+    extra_keys:
+      slug_id:
+        type: string
+        description: |
+          The Nimbus slug identifying the Labs item whose switch was tapped,
+          e.g., "homepage-as-new-tab". This is defined in the experimenter
+          setup and is not unique on a user basis.
+      enabled:
+        type: boolean
+        description: |
+          The new enabled state the user attempted to set.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=2035830
+    data_reviews:
+      - https://phabricator.services.mozilla.com/D305929
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - android-probes@mozilla.com
+    expires: never
+  toggled_dialog:
+    type: event
+    description: |
+      The user resolved the requires restart confirmation dialog for a Firefox Labs item (by confirming or cancelling).
+    extra_keys:
+      slug_id:
+        type: string
+        description: |
+          The Nimbus slug identifying the Labs item for the dialog,
+          e.g., "homepage-as-new-tab". This is defined in the experimenter
+          setup and is not unique on a user basis.
+      did_user_confirm:
+        type: boolean
+        description: |
+          True if the user confirmed the dialog to restart, false if the user dismissed it without restarting.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=2035830
+    data_reviews:
+      - https://phabricator.services.mozilla.com/D305929
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - android-probes@mozilla.com
+    expires: never
+  share_feedback_opened:
+    type: event
+    description: |
+      The user opened the share feedback link for a Firefox Labs item.
+    extra_keys:
+      slug_id:
+        type: string
+        description: |
+          The Nimbus slug identifying the Labs item whose feedback link
+          was tapped, e.g., "homepage-as-new-tab". This is defined in the experimenter
+          setup and is not unique on a user basis.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=2035830
+    data_reviews:
+      - https://phabricator.services.mozilla.com/D305730
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - android-probes@mozilla.com
+    expires: never
+  restore_defaults_button_pressed:
+    type: event
+    description: |
+      The user pressed the restore defaults button on the Firefox Labs screen.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=2035830
+    data_reviews:
+      - https://phabricator.services.mozilla.com/D305929
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - android-probes@mozilla.com
+    expires: never
+  restore_defaults_dialog:
+    type: event
+    description: |
+      The user resolved the restore defaults dialog on the Firefox Labs screen (by confirming or cancelling).
+    extra_keys:
+      items_changed_count:
+        type: quantity
+        description: |
+          Number of items flipped from on to off. Zero if the user cancelled the dialog.
+        unit: items
+      did_user_confirm:
+        type: boolean
+        description: |
+          True if the user confirmed the dialog to restore defaults, false if the user dismissed it without restoring.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=2035830
+    data_reviews:
+      - https://phabricator.services.mozilla.com/D305929
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - android-probes@mozilla.com
+    expires: never
+  empty_state_shown:
+    type: event
+    description: |
+      The Firefox Labs screen showed the empty state (no items available).
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=2035830
+    data_reviews:
+      - https://phabricator.services.mozilla.com/D305730
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - android-probes@mozilla.com
+    expires: never
 settings_search:
   opened:
     type: event
@@ -7906,27 +8042,6 @@ collections:
     type: event
     description: |
       A user tapped the "add tab" button in the three dot menu of collections
-    bugs:
-      - https://github.com/mozilla-mobile/fenix/issues/969
-      - https://github.com/mozilla-mobile/fenix/issues/19923
-    data_reviews:
-      - https://github.com/mozilla-mobile/fenix/pull/4358
-      - https://github.com/mozilla-mobile/fenix/pull/13958#issuecomment-676857877
-      - https://github.com/mozilla-mobile/fenix/pull/18143
-      - https://github.com/mozilla-mobile/fenix/pull/19924#issuecomment-861423789
-      - https://github.com/mozilla-mobile/fenix/pull/21038#issuecomment-906757301
-    data_sensitivity:
-      - interaction
-    notification_emails:
-      - android-probes@mozilla.com
-    expires: never
-    metadata:
-      tags:
-        - Collections
-  long_press:
-    type: event
-    description: |
-      A user long pressed on a tab, triggering the collection creation screen
     bugs:
       - https://github.com/mozilla-mobile/fenix/issues/969
       - https://github.com/mozilla-mobile/fenix/issues/19923
@@ -15885,6 +16000,20 @@ world_cup:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=2037817
     data_reviews:
       - https://phabricator.services.mozilla.com/D300279
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - android-probes@mozilla.com
+    expires: never
+  sports_widget_shared:
+    type: event
+    description: |
+      A user has tapped the "Share" menu item to share the World Cup schedule
+      from the sports widget menu.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=2044743
+    data_reviews:
+      - https://phabricator.services.mozilla.com/D305179
     data_sensitivity:
       - interaction
     notification_emails:

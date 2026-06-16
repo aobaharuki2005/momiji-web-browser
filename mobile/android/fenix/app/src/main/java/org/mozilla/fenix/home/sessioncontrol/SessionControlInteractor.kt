@@ -180,6 +180,11 @@ interface TrackingProtectionInteractor {
      * Invoked when the longfox entry point text is clicked.
      */
     fun onLongfoxEntryPointClicked()
+
+    /**
+     * Invoked when the longfox entry point is shown.
+     */
+    fun onLongfoxEntryPointShown()
 }
 
 /**
@@ -272,6 +277,10 @@ class SessionControlInteractor(
 
     override fun onShortcutsLibraryViewed() {
         topSiteController.handleShortcutsLibraryViewed()
+    }
+
+    override fun onSaveShortcut(title: String, url: String) {
+        topSiteController.handleSaveShortcut(title = title, url = url)
     }
 
     override fun showWallpapersOnboardingDialog(state: WallpaperState): Boolean {
@@ -452,8 +461,16 @@ class SessionControlInteractor(
         logoController.handleLongfoxEntryPointClicked()
     }
 
+    override fun onLongfoxEntryPointShown() {
+        logoController.handleLongfoxEntryPointShown()
+    }
+
     override fun onGetCustomWallpaperClicked() {
         sportsController.handleOnGetCustomWallpaperClicked()
+    }
+
+    override fun onSportsWidgetShareClicked() {
+        sportsController.handleSportsWidgetShareClicked()
     }
 
     override fun onMatchClicked(homeTeam: String?, awayTeam: String?, date: String?) {

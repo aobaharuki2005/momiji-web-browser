@@ -4,8 +4,10 @@
 
 package org.mozilla.fenix.settings
 
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.ui.test.assertIsNotEnabled
 import androidx.compose.ui.test.assertIsOff
+import androidx.compose.ui.test.hasContentDescription
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.isToggleable
 import androidx.compose.ui.test.junit4.v2.createComposeRule
@@ -24,6 +26,8 @@ import org.junit.runner.RunWith
 import org.mozilla.fenix.R
 import org.mozilla.fenix.theme.FirefoxTheme
 import org.mozilla.fenix.theme.Theme
+
+private const val PROMO_DATE = "September 30"
 
 @OptIn(ExperimentalAndroidComponentsApi::class)
 @RunWith(AndroidJUnit4::class)
@@ -46,8 +50,10 @@ class IPProtectionScreenTest {
             FirefoxTheme(theme = Theme.Light) {
                 IPProtectionScreen(
                     state = state,
+                    snackbarHostState = SnackbarHostState(),
                     readyToUse = true,
                     syncingData = false,
+                    promoDate = null,
                     onVpnToggle = {},
                     onLearnMoreClick = {},
                     onGetStartedClick = {},
@@ -83,5 +89,73 @@ class IPProtectionScreenTest {
         composeTestRule.onNodeWithText(
             testContext.getString(R.string.ip_protection_get_started),
         ).assertDoesNotExist()
+    }
+
+    @Test
+    fun `GIVEN an unlimited plan and a promo date WHEN rendering the screen THEN the promo description is shown`() {
+        val state = IPProtectionState(
+            eligibilityStatus = EligibilityStatus.Eligible,
+            proxyStatus = Authorized.Active,
+            maxDataBytes = 0L,
+            remainingDataBytes = 0L,
+        )
+
+        composeTestRule.setContent {
+            FirefoxTheme(theme = Theme.Light) {
+                IPProtectionScreen(
+                    state = state,
+                    snackbarHostState = SnackbarHostState(),
+                    readyToUse = true,
+                    syncingData = false,
+                    promoDate = PROMO_DATE,
+                    onVpnToggle = {},
+                    onLearnMoreClick = {},
+                    onGetStartedClick = {},
+                    showDebugAction = false,
+                    onDebugActionClick = {},
+                    onNavigateBack = {},
+                )
+            }
+        }
+
+        composeTestRule.onNode(
+            hasContentDescription("unlimited bandwidth through $PROMO_DATE", substring = true),
+        ).assertExists()
+        composeTestRule.onNode(
+            hasContentDescription("Browse with extra protection", substring = true),
+        ).assertDoesNotExist()
+    }
+
+    // Practically, we shouldn't need to rely on this behaviour - but this fallback is valuable in case of user-error.
+    @Test
+    fun `GIVEN an unlimited plan and a null promo date WHEN rendering the screen THEN the fallback description is shown`() {
+        val state = IPProtectionState(
+            eligibilityStatus = EligibilityStatus.Eligible,
+            proxyStatus = Authorized.Active,
+            maxDataBytes = 0L,
+            remainingDataBytes = 0L,
+        )
+
+        composeTestRule.setContent {
+            FirefoxTheme(theme = Theme.Light) {
+                IPProtectionScreen(
+                    state = state,
+                    snackbarHostState = SnackbarHostState(),
+                    readyToUse = true,
+                    syncingData = false,
+                    promoDate = null,
+                    onVpnToggle = {},
+                    onLearnMoreClick = {},
+                    onGetStartedClick = {},
+                    showDebugAction = false,
+                    onDebugActionClick = {},
+                    onNavigateBack = {},
+                )
+            }
+        }
+
+        composeTestRule.onNode(
+            hasContentDescription("Browse with extra protection", substring = true),
+        ).assertExists()
     }
 }

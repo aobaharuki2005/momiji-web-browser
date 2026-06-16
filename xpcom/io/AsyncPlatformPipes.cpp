@@ -164,10 +164,11 @@ void PlatformPipeLink::Close(nsresult aStatus, bool aInternal) {
     MOZ_ALWAYS_SUCCEEDS(mIOThread.Dispatch(NS_NewRunnableFunction(
         "PlatformPipeLink::CancelIO", [self = RefPtr{this}] {
           self->mIOThread.AssertOnCurrentThread();
+          RefPtr<PlatformPipeLink> pending;
           MutexAutoLock lock(self->mMutex);
           if (self->mPending) {
             self->mWatcher.StopWatchingFileDescriptor();
-            RefPtr<PlatformPipeLink> pending = self->TakePending();
+            pending = self->TakePending();
           }
         })));
 #endif
@@ -303,12 +304,13 @@ void PlatformPipeLink::AdvanceIOLocked() {
 void PlatformPipeLink::OnIOCompleted(MessageLoopForIO::IOContext* aContext,
                                      DWORD aBytesTransferred, DWORD aError) {
   mIOThread.AssertOnCurrentThread();
+  RefPtr<PlatformPipeLink> pending;
   MutexAutoLock lock(mMutex);
   if (aContext != &mIOContext) {
     return;
   }
 
-  RefPtr<PlatformPipeLink> pending = TakePending();
+  pending = TakePending();
   if (!pending) {
     return;
   }
@@ -341,8 +343,9 @@ void PlatformPipeLink::OnIOCompleted(MessageLoopForIO::IOContext* aContext,
 #else
 void PlatformPipeLink::OnFileCanReadWithoutBlocking(int fd) {
   mIOThread.AssertOnCurrentThread();
+  RefPtr<PlatformPipeLink> pending;
   MutexAutoLock lock(mMutex);
-  RefPtr<PlatformPipeLink> pending = TakePending();
+  pending = TakePending();
   AdvanceIOLocked();
 }
 

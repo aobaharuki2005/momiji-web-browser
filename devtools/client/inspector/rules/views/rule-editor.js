@@ -579,7 +579,7 @@ class RuleEditor extends EventEmitter {
 
     const { inspector } = this.ruleView;
     if (Tools.styleEditor.isToolSupported(inspector.toolbox)) {
-      inspector.toolbox.viewSourceInStyleEditorByResource(
+      inspector.toolbox.viewStyleSourceByResource(
         this.rule.sheet,
         this.rule.ruleLine,
         this.rule.ruleColumn

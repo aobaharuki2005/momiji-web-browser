@@ -35,6 +35,8 @@ support-files = [
 
 ["test_extensionsettings.js"]
 
+["test_extensionsettings_blocked_permissions.js"]
+
 ["test_import_enterprise_roots.js"]
 
 ["test_local_network_access.js"]

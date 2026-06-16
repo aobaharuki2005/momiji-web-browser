@@ -250,6 +250,14 @@ document.addEventListener("DOMContentLoaded", function () {
     window.PrivateBrowsingRecordClick("InfoLink");
   });
 
+  if (RPMGetBoolPref("browser.nova.enabled", false)) {
+    document.getElementById("info-title").hidden = true;
+    document.l10n.setAttributes(
+      document.getElementById("info-body"),
+      "about-private-browsing-nova-info-body"
+    );
+  }
+
   // We don't do this setup until now, because we don't want to record any impressions until we're
   // sure we're actually running a private window, not just about:privatebrowsing in a normal window.
   setupMessageConfig();

@@ -49,6 +49,8 @@ fail-if = [
   "a11y_checks", # Bug 1849028 clicked element may not be focusable and/or labeled
 ]
 
+["browser_dbg-features-stylesheets.js"]
+
 ["browser_dbg-features-tabs.js"]
 
 ["browser_dbg-features-wasm.js"]

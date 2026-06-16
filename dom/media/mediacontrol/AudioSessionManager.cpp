@@ -9,9 +9,9 @@
 #include "mozilla/Uptime.h"
 
 #undef LOG
-#define LOG(msg, ...)                        \
-  MOZ_LOG(gMediaControlLog, LogLevel::Debug, \
-          ("AudioSessionManager=%p, " msg, this, ##__VA_ARGS__))
+#define LOG(msg, ...)                            \
+  MOZ_LOG_FMT(gMediaControlLog, LogLevel::Debug, \
+              "AudioSessionManager={}, " msg, fmt::ptr(this), ##__VA_ARGS__)
 
 namespace mozilla::dom {
 
@@ -77,7 +77,7 @@ void AudioSessionManager::NotifyAudibilityChanged(uint64_t aBrowsingContextId) {
 
 void AudioSessionManager::NotifyBcDiscarded(uint64_t aBrowsingContextId) {
   if (mAudioSessions.Remove(aBrowsingContextId)) {
-    LOG("NotifyBcDiscarded bc=%" PRIu64, aBrowsingContextId);
+    LOG("NotifyBcDiscarded bc={}", aBrowsingContextId);
     UpdateSelectedAudioSession();
     MaybeFireEffectiveTypeChanged();
   }
@@ -88,7 +88,7 @@ void AudioSessionManager::InactivateAudioSession(uint64_t aBrowsingContextId) {
   auto entry = mAudioSessions.Lookup(aBrowsingContextId);
   if (!entry || entry.Data().GetState() == AudioSessionState::Inactive) {
     // §5.2 inactivate: if the record is absent or already Inactive, abort.
-    LOG("Inactivate bc=%" PRIu64 " aborted: %s", aBrowsingContextId,
+    LOG("Inactivate bc={} aborted: {}", aBrowsingContextId,
         !entry ? "no record" : "already inactive");
     return;
   }
@@ -101,7 +101,7 @@ void AudioSessionManager::TryActivateAudioSession(uint64_t aBrowsingContextId) {
   MOZ_ASSERT(entry, "TryActivate called without an existing record");
   if (!entry || entry.Data().GetState() == AudioSessionState::Active) {
     // §5.2 try activating: if the record is already Active, abort.
-    LOG("TryActivate bc=%" PRIu64 " aborted: %s", aBrowsingContextId,
+    LOG("TryActivate bc={} aborted: {}", aBrowsingContextId,
         !entry ? "no record" : "already active");
     return;
   }
@@ -114,7 +114,7 @@ void AudioSessionManager::SetAudioSessionState(uint64_t aBrowsingContextId,
   auto entry = mAudioSessions.Lookup(aBrowsingContextId);
   MOZ_ASSERT(entry, "SetAudioSessionState called without an existing record");
   if (!entry || entry.Data().GetState() == aNewState) {
-    LOG("SetAudioSessionState bc=%" PRIu64 " aborted: %s", aBrowsingContextId,
+    LOG("SetAudioSessionState bc={} aborted: {}", aBrowsingContextId,
         !entry ? "no record" : "state unchanged");
     return;
   }
@@ -132,11 +132,11 @@ void AudioSessionManager::SetAudioSessionState(uint64_t aBrowsingContextId,
 void AudioSessionManager::RemoveRecordIfEmpty(uint64_t aBrowsingContextId) {
   auto entry = mAudioSessions.Lookup(aBrowsingContextId);
   if (!entry || !entry.Data().IsEmpty()) {
-    LOG("RemoveRecordIfEmpty bc=%" PRIu64 " skipped: %s", aBrowsingContextId,
+    LOG("RemoveRecordIfEmpty bc={} skipped: {}", aBrowsingContextId,
         !entry ? "no record" : "record still occupied");
     return;
   }
-  LOG("Removing empty AudioSessionRecord bc=%" PRIu64, aBrowsingContextId);
+  LOG("Removing empty AudioSessionRecord bc={}", aBrowsingContextId);
   mAudioSessions.Remove(aBrowsingContextId);
 }
 
@@ -151,7 +151,7 @@ void AudioSessionManager::UpdateAllAudioSessionStates(uint64_t aUpdatedBcId) {
   // updated session.
   auto updatedEntry = mAudioSessions.Lookup(aUpdatedBcId);
   if (MOZ_UNLIKELY(!updatedEntry)) {
-    LOG("[warning] UpdateAllAudioSessionStates: no record for bc=%" PRIu64,
+    LOG("[warning] UpdateAllAudioSessionStates: no record for bc={}",
         aUpdatedBcId);
     return;
   }
@@ -262,7 +262,7 @@ void AudioSessionManager::UpdateSelectedAudioSession() {
   // Step 3: if there is only one audio session in activeAudioSessions, that
   // is the selected audio session.
   if (activeBcIds.Length() == 1) {
-    LOG("Selected audio session: bc=%" PRIu64, activeBcIds[0]);
+    LOG("Selected audio session: bc={}", activeBcIds[0]);
     mSelectedAudioSessionBcId = Some(activeBcIds[0]);
     return;
   }
@@ -283,7 +283,7 @@ void AudioSessionManager::UpdateSelectedAudioSession() {
 
   // Step 6: the selected audio session is the first audio session in
   // activeAudioSessions (after the optional step 5 reorder).
-  LOG("Selected audio session: bc=%" PRIu64, winnerBcId);
+  LOG("Selected audio session: bc={}", winnerBcId);
   mSelectedAudioSessionBcId = Some(winnerBcId);
 }
 
@@ -314,7 +314,7 @@ void AudioSessionManager::MaybeFireEffectiveTypeChanged() {
   if (newType == mLastDispatchedEffectiveType) {
     return;
   }
-  LOG("EffectiveAudioSessionType change %s -> %s",
+  LOG("EffectiveAudioSessionType change {} -> {}",
       GetEnumString(mLastDispatchedEffectiveType).get(),
       GetEnumString(newType).get());
   mLastDispatchedEffectiveType = newType;

@@ -28,6 +28,7 @@ import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.test.performTextInput
 import androidx.core.net.toUri
 import androidx.test.espresso.Espresso.closeSoftKeyboard
@@ -84,6 +85,7 @@ import org.mozilla.fenix.helpers.ext.waitNotNull
 import org.mozilla.fenix.home.ui.HomepageTestTag.HOMEPAGE
 import org.mozilla.fenix.settings.SupportUtils
 import org.mozilla.fenix.tabstray.TabsTrayTestTag
+import org.mozilla.fenix.webcompat.BrokenSiteReporterTestTags
 import org.mozilla.fenix.webcompat.BrokenSiteReporterTestTags.BROKEN_SITE_REPORTER_CHOOSE_REASON_BUTTON
 import org.mozilla.fenix.webcompat.BrokenSiteReporterTestTags.BROKEN_SITE_REPORTER_SEND_BUTTON
 import java.time.LocalDate
@@ -1235,7 +1237,7 @@ class BrowserRobot(private val composeTestRule: ComposeTestRule) {
                 appName,
                 getStringResource(R.string.webcompat_reporter_learn_more),
             ) + " " + getStringResource(composeBaseR.string.mozac_compose_base_link_text_links_available),
-        ).assertIsDisplayed()
+        ).performScrollTo().assertIsDisplayed()
         Log.i(TAG, "verifyWebCompatReporterViewItems: Verified that the report broken site description is displayed")
         Log.i(TAG, "verifyWebCompatReporterViewItems: Trying to verify that the \"URL\" header is displayed")
         this@BrowserRobot.composeTestRule.onNodeWithText(getStringResource(R.string.webcompat_reporter_label_url)).assertIsDisplayed()
@@ -1252,9 +1254,9 @@ class BrowserRobot(private val composeTestRule: ComposeTestRule) {
         Log.i(TAG, "verifyWebCompatReporterViewItems: Trying to verify that the \"Please choose a reason\" error message is displayed")
         this@BrowserRobot.composeTestRule.onNodeWithTag(BROKEN_SITE_REPORTER_CHOOSE_REASON_BUTTON).assertIsDisplayed()
         Log.i(TAG, "verifyWebCompatReporterViewItems: Verified that the \"Please choose a reason\" error message is displayed")
-        Log.i(TAG, "verifyWebCompatReporterViewItems: Trying to verify that the \"Describe the problem (optional)\" field is displayed")
-        this@BrowserRobot.composeTestRule.onNodeWithText(getStringResource(R.string.webcompat_reporter_label_description)).assertIsDisplayed()
-        Log.i(TAG, "verifyWebCompatReporterViewItems: Verified that the \"Describe the problem (optional)\" field is displayed")
+        Log.i(TAG, "verifyWebCompatReporterViewItems: Trying to verify that the \"Describe the problem in detail to help us investigate the issue (optional)\" field is displayed")
+        this@BrowserRobot.composeTestRule.onNodeWithText(getStringResource(R.string.webcompat_reporter_label_description_2)).assertIsDisplayed()
+        Log.i(TAG, "verifyWebCompatReporterViewItems: Verified that the \"Describe the problem in detail to help us investigate the issue (optional)\" field is displayed")
         if (appContext.components.core.engine.version.releaseChannel !== EngineReleaseChannel.RELEASE) {
             Log.i(
                 TAG,
@@ -1329,12 +1331,17 @@ class BrowserRobot(private val composeTestRule: ComposeTestRule) {
     }
 
     fun describeBrokenSiteProblem(problemDescription: String) {
-        Log.i(TAG, "describeBrokenSiteProblem: Trying to click the \"Describe the problem (optional)\" field")
-        this@BrowserRobot.composeTestRule.onNodeWithText(getStringResource(R.string.webcompat_reporter_label_description)).performClick()
-        Log.i(TAG, "describeBrokenSiteProblem: Clicked the \"Describe the problem (optional)\" field")
-        Log.i(TAG, "describeBrokenSiteProblem: Trying to set the text of the \"Describe the problem (optional)\" field to $problemDescription")
-        this@BrowserRobot.composeTestRule.onNode(hasText(getStringResource(R.string.webcompat_reporter_label_description))).performTextInput(problemDescription)
-        Log.i(TAG, "describeBrokenSiteProblem: Set the text of the \"Describe the problem (optional)\" field to $problemDescription")
+        Log.i(TAG, "describeBrokenSiteProblem: Trying to click the description field")
+        this@BrowserRobot.composeTestRule
+            .onNodeWithTag(BrokenSiteReporterTestTags.BROKEN_SITE_REPORTER_DESCRIPTION_INPUT)
+            .performClick()
+        Log.i(TAG, "describeBrokenSiteProblem: Clicked the description field")
+
+        Log.i(TAG, "describeBrokenSiteProblem: Trying to set the text to $problemDescription")
+        this@BrowserRobot.composeTestRule
+            .onNodeWithTag(BrokenSiteReporterTestTags.BROKEN_SITE_REPORTER_DESCRIPTION_INPUT)
+            .performTextInput(problemDescription)
+        Log.i(TAG, "describeBrokenSiteProblem: Set the text to $problemDescription")
     }
 
     fun verifyBrokenSiteProblem(problemDescription: String, isDisplayed: Boolean) {

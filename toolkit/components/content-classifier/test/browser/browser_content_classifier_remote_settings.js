@@ -520,3 +520,78 @@ add_task(async function test_rs_empty_collection() {
     "example.org should load when collection is empty"
   );
 });
+
+// Two RS sync events fired back-to-back drive two real UpdateFeatures
+// calls into the off-thread build pipeline. Unlike rapid pushPrefEnv
+// calls on the same pref — which the pref system coalesces, so they
+// don't reliably fire OnPrefChange twice — separate client.emit("sync")
+// calls always run their own JS onSync handler and call
+// service.onListsChanged independently. So this exercises the
+// back-to-back rebuild path the off-thread pipeline was built for:
+// two in-flight closures racing on mBuildThread, where the per-feature
+// version counter must ensure the older closure can't clobber the
+// newer install if their fetches resolve out of order.
+add_task(async function test_rs_back_to_back_sync_updates() {
+  let client = getRSClient();
+  let db = client.db;
+
+  // Start with rule A (blocks example.org) installed for trackers.
+  let recordA = await populateRS(db, "trackers", "disconnect-tracker-base", [
+    "||example.org^",
+  ]);
+  await pushEnginePrefs({ protection: "trackers" });
+  let tab = await openTestTab();
+  let browser = tab.linkedBrowser;
+  await syncAndWaitForLists(client, [recordA]);
+  await assertImageBlocked(
+    browser,
+    TEST_BLOCKED_3RD_PARTY_DOMAIN,
+    "example.org blocked under initial rule A"
+  );
+
+  // Replace the record (same Name, new rules pointing at a different
+  // third-party domain). After this populateRS the DB carries rule B
+  // and any subsequent fetch returns rule B.
+  let recordB = await populateRS(db, "trackers", "disconnect-tracker-base", [
+    "||example.com^",
+  ]);
+
+  // Two sync emits in a row. Both kick off UpdateFeatures(trackers)
+  // with fresh per-feature versions; both fetches read rule B from
+  // the local DB; both produce engine-with-rule-B. The older closure
+  // must not clobber the newer install — that's what per-feature
+  // versioning guarantees. waitForListsSettled drains both rebuilds
+  // before we sample state.
+  let settled = waitForListsSettled();
+  await client.emit("sync", {
+    data: {
+      created: [],
+      updated: [{ old: recordA, new: recordB }],
+      deleted: [],
+    },
+  });
+  await client.emit("sync", {
+    data: {
+      created: [],
+      updated: [{ old: recordA, new: recordB }],
+      deleted: [],
+    },
+  });
+  await settled;
+
+  BrowserTestUtils.startLoadingURIString(browser, TEST_TOP_PAGE);
+  await BrowserTestUtils.browserLoaded(browser);
+
+  // After both rebuilds settle, the surviving engine is rule B:
+  // example.org loads (no longer matched) and example.com is blocked.
+  await assertImageLoaded(
+    browser,
+    TEST_BLOCKED_3RD_PARTY_DOMAIN,
+    "example.org no longer blocked - rule A was superseded"
+  );
+  await assertImageBlocked(
+    browser,
+    TEST_ANNOTATED_3RD_PARTY_DOMAIN,
+    "example.com blocked - rule B is the final installed engine"
+  );
+});

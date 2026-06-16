@@ -1915,6 +1915,15 @@ void RuntimeService::PropagateStorageAccessPermissionGranted(
   }
 }
 
+void RuntimeService::UpdateTimezoneOverrideForWorkers(
+    const nsPIDOMWindowInner& aWindow, const nsAString& aTimezone) {
+  AssertIsOnMainThread();
+
+  for (WorkerPrivate* const worker : GetWorkersForWindow(aWindow)) {
+    worker->UpdateTimezoneOverride(aTimezone);
+  }
+}
+
 template <typename Func>
 void RuntimeService::BroadcastAllWorkers(const Func& aFunc) {
   AssertIsOnMainThread();
@@ -2493,6 +2502,15 @@ void PropagateStorageAccessPermissionGrantedToWorkers(
   RuntimeService* runtime = RuntimeService::GetService();
   if (runtime) {
     runtime->PropagateStorageAccessPermissionGranted(aWindow);
+  }
+}
+
+void UpdateTimezoneOverrideForWorkers(const nsPIDOMWindowInner& aWindow,
+                                      const nsAString& aTimezone) {
+  AssertIsOnMainThread();
+  RuntimeService* runtime = RuntimeService::GetService();
+  if (runtime) {
+    runtime->UpdateTimezoneOverrideForWorkers(aWindow, aTimezone);
   }
 }
 

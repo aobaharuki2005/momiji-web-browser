@@ -1876,6 +1876,11 @@ export class BackupService extends EventTarget {
             size: archiveSizeBytesNearestMebibyte,
           });
 
+          // It's possible that our profile was initially a legacy profile, but somewhere
+          // sometime got converted to a selectable one - lets start tracking its backup state
+          // in the group.
+          BackupService.maybeAddToEnabledListPref();
+
           // we should reset any values that were set for retry error handling
           Services.prefs.clearUserPref(DISABLED_ON_IDLE_RETRY_PREF_NAME);
           BackupService.#errorRetries = 0;
@@ -4283,11 +4288,7 @@ export class BackupService extends EventTarget {
       // flush the embedded component's persistent data
       this.setEmbeddedComponentPersistentData({});
 
-      if (lazy.SelectableProfileService.currentProfile) {
-        BackupService.addToEnabledListPref(
-          lazy.SelectableProfileService.currentProfile.id
-        );
-      }
+      BackupService.maybeAddToEnabledListPref();
     } else {
       // set user-disabled pref if backup is being disabled
       Services.prefs.setBoolPref(
@@ -4295,11 +4296,7 @@ export class BackupService extends EventTarget {
         true
       );
 
-      if (lazy.SelectableProfileService.currentProfile) {
-        BackupService.removeFromEnabledListPref(
-          lazy.SelectableProfileService.currentProfile.id
-        );
-      }
+      BackupService.maybeRemoveFromEnabledListPref();
     }
   }
 
@@ -5584,7 +5581,16 @@ export class BackupService extends EventTarget {
     return exists;
   }
 
-  static addToEnabledListPref(profileID) {
+  /**
+   * Adds a profile to the list of profiles with backup enabled. No-op if
+   * there is no current selectable profile. Defaults to the current profile's
+   * ID if none is provided.
+   *
+   * @param {string} [profileID]
+   */
+  static maybeAddToEnabledListPref(
+    profileID = lazy.SelectableProfileService.currentProfile?.id
+  ) {
     if (!lazy.SelectableProfileService.currentProfile) {
       lazy.logConsole.warn(
         "The enabled pref is only to be used for selectable profiles"
@@ -5604,7 +5610,16 @@ export class BackupService extends EventTarget {
     );
   }
 
-  static async removeFromEnabledListPref(profileID) {
+  /**
+   * Removes a profile from the list of profiles with backup enabled. No-op
+   * if there is no current selectable profile. Defaults to the current
+   * profile's ID if none is provided.
+   *
+   * @param {string} [profileID]
+   */
+  static async maybeRemoveFromEnabledListPref(
+    profileID = lazy.SelectableProfileService.currentProfile?.id
+  ) {
     if (!lazy.SelectableProfileService.currentProfile) {
       lazy.logConsole.warn(
         "The enabled pref is only to be used for selectable profiles"

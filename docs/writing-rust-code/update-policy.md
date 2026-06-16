@@ -180,7 +180,7 @@ Here are the Rust versions for each Firefox version.
 | Firefox 151 | Rust 1.90.0 | 1.90.0 | 2025 September 18 | 2026 April 16 | 2026 May 19
 | Firefox 152 | Rust 1.90.0 | 1.90.0 | 2025 September 18 | 2026 May 15 | 2026 June 16
 | **Estimated** | &nbsp; | &nbsp; | &nbsp; | &nbsp; | &nbsp;
-| Firefox 153 | Rust 1.92.0 | 1.90.0 | 2025 December 11 | 2026 June 10 | 2026 July 21
+| Firefox 153 | Rust 1.94.0 | 1.90.0 | 2026 March 5 | 2026 June 10 | 2026 July 21
 | Firefox 154 | ? | ? | ? | 2026 July 17 | 2026 August 18
 | Firefox 155 | ? | ? | ? | 2026 August 14 | 2026 September 15
 | Firefox 156 | ? | ? | ? | 2026 September 11 | 2026 October 13

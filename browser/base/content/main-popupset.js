@@ -441,6 +441,16 @@ document.addEventListener(
       }
     });
 
+    const userContextIcons = document.getElementById("userContext-icons");
+    userContextIcons.addEventListener("click", event => {
+      if (event.button !== 0) {
+        return;
+      }
+      document
+        .getElementById("userContext-indicator-menu")
+        .openPopup(userContextIcons, "after_start", 0, 0, false, false, event);
+    });
+
     const containerHistoryPopup = document.getElementById(
       "sidebar-history-context-menu-container-popup"
     );

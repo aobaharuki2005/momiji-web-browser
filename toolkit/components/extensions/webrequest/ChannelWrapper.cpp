@@ -739,6 +739,46 @@ int64_t ChannelWrapper::ParentFrameId() const {
   return -1;
 }
 
+uint64_t ChannelWrapper::DocumentInnerWindowId() const {
+  if (nsCOMPtr<nsILoadInfo> loadInfo = GetLoadInfo()) {
+    auto type = loadInfo->GetExternalContentPolicyType();
+    // Exclude document requests: innerWindowId is used to compute documentId,
+    // which reflects the document for which the request is made. When a
+    // navigation request is initiated, the target document is unknown. There
+    // is not even a guarantee for the received document to be rendering when
+    // webRequest.onCompleted is received!
+    if (type == ExtContentPolicy::TYPE_DOCUMENT ||
+        type == ExtContentPolicy::TYPE_SUBDOCUMENT) {
+      return 0;
+    }
+    // Note: we are intentionally not checking the associated browsing context,
+    // because requests from web workers are not made by documents.
+    return loadInfo->GetInnerWindowID();
+  }
+  return 0;
+}
+
+uint64_t ChannelWrapper::ParentDocumentInnerWindowId() const {
+  if (nsCOMPtr<nsILoadInfo> loadInfo = GetLoadInfo()) {
+    RefPtr<BrowsingContext> parentBC;
+    if (loadInfo->GetFrameBrowsingContextID()) {
+      parentBC = loadInfo->GetBrowsingContext();
+    } else {
+      RefPtr<BrowsingContext> bc = loadInfo->GetBrowsingContext();
+      if (bc) {
+        parentBC = bc->GetParent();
+      }
+    }
+    if (parentBC) {
+      // This is a live read that could race against a parent navigation, but
+      // Cached+Constant in the WebIDL ensures a consistent value across all
+      // events for the same channel.
+      return parentBC->GetCurrentInnerWindowId();
+    }
+  }
+  return 0;
+}
+
 void ChannelWrapper::GetFrameAncestors(
     dom::Nullable<nsTArray<dom::MozFrameAncestorInfo>>& aFrameAncestors,
     ErrorResult& aRv) const {

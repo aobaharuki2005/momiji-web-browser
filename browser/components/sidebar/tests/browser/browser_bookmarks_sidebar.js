@@ -605,6 +605,11 @@ add_task(async function test_bookmarks_context_menu_folder() {
     "Open all bookmarks is visible for a folder."
   );
   ok(
+    !document.getElementById("sidebar-bookmarks-context-open-all-bookmarks")
+      .disabled,
+    "Open all bookmarks is enabled for a folder with bookmark items."
+  );
+  ok(
     document.getElementById("sidebar-bookmarks-context-open-in-tab").hidden,
     "Open in tab is hidden for a folder."
   );
@@ -621,6 +626,60 @@ add_task(async function test_bookmarks_context_menu_folder() {
   await PlacesUtils.bookmarks.remove({ guid: folder.guid });
   SidebarTestUtils.closePanel(window);
 });
+
+add_task(
+  async function test_bookmarks_context_menu_folder_without_bookmark_items() {
+    const folder = await addFolder("Subfolders Only");
+    await addFolder("Nested Folder", folder.guid);
+
+    const { component } = await showBookmarksSidebar();
+    const tabList = component.bookmarkList;
+
+    await BrowserTestUtils.waitForMutationCondition(
+      tabList.shadowRoot,
+      { childList: true, subtree: true },
+      () => tabList.folderEls[0]
+    );
+
+    const toolbarDetails = tabList.folderEls[0];
+    if (!toolbarDetails.open) {
+      toolbarDetails.querySelector("summary").click();
+      await BrowserTestUtils.waitForMutationCondition(
+        toolbarDetails,
+        { attributes: true },
+        () => toolbarDetails.open
+      );
+    }
+
+    const nestedList = toolbarDetails.querySelector("sidebar-bookmark-list");
+    await BrowserTestUtils.waitForMutationCondition(
+      nestedList.shadowRoot,
+      { childList: true, subtree: true },
+      () => nestedList.folderEls[0]
+    );
+
+    const folderDetails = nestedList.folderEls[0];
+    const summary = folderDetails.querySelector("summary");
+
+    const contextMenu = SidebarController.currentContextMenu;
+    await openAndWaitForContextMenu(contextMenu, summary, () => {});
+
+    ok(
+      !document.getElementById("sidebar-bookmarks-context-open-all-bookmarks")
+        .hidden,
+      "Open all bookmarks is visible for a folder with only subfolders."
+    );
+    ok(
+      document.getElementById("sidebar-bookmarks-context-open-all-bookmarks")
+        .disabled,
+      "Open all bookmarks is disabled for a folder with no bookmark items."
+    );
+
+    contextMenu.hidePopup();
+    await PlacesUtils.bookmarks.remove({ guid: folder.guid });
+    SidebarTestUtils.closePanel(window);
+  }
+);
 
 add_task(async function test_add_folder_before_right_clicked_bookmark() {
   await addBookmark({ title: "Alpha", url: "https://example.com/a" });
@@ -1353,6 +1412,174 @@ add_task(async function test_bookmarks_smart_bookmark_renders_as_folder() {
   await PlacesUtils.bookmarks.remove(recentSmart.guid);
   await PlacesUtils.bookmarks.remove(recentBookmark.guid);
   SidebarController.hide();
+});
+
+add_task(async function test_bookmarks_smart_bookmark_drag_disabled() {
+  const recentBookmark = await addBookmark({
+    title: "Recent Page",
+    url: "https://example.com/recent-smart-drag",
+  });
+  const recentSmart = await PlacesUtils.bookmarks.insert({
+    parentGuid: PlacesUtils.bookmarks.toolbarGuid,
+    title: "Recently Bookmarked",
+    url: "place:queryType=1&sort=12&maxResults=10&excludeQueries=1&excludeItemIfParentHasAnnotation=livemark%2FfeedURI",
+  });
+
+  await PlacesUtils.tagging.tagURI(
+    Services.io.newURI("https://example.com/recent-smart-drag"),
+    ["regression-tag-drag"]
+  );
+  const tagsSmart = await PlacesUtils.bookmarks.insert({
+    parentGuid: PlacesUtils.bookmarks.toolbarGuid,
+    title: "Recent Tags",
+    url: `place:type=${Ci.nsINavHistoryQueryOptions.RESULTS_AS_TAGS_ROOT}&sort=1&maxResults=10`,
+  });
+
+  // A regular bookmark used as the drag source for the drop-into attempts.
+  const dragSource = await addBookmark({
+    title: "Drag Source For Smart",
+    url: "https://example.com/drag-source-smart",
+  });
+
+  const { component, contentWindow } = await showBookmarksSidebar();
+  const tabList = component.bookmarkList;
+
+  const toolbarDetails = await openToolbarFolder(tabList);
+  const toolbarList = toolbarDetails.querySelector("sidebar-bookmark-list");
+  await BrowserTestUtils.waitForMutationCondition(
+    toolbarList.shadowRoot,
+    { childList: true, subtree: true },
+    () =>
+      [...toolbarList.folderEls].some(d => d.guid === recentSmart.guid) &&
+      [...toolbarList.folderEls].some(d => d.guid === tagsSmart.guid) &&
+      [...toolbarList.rowEls].some(r => r.guid === dragSource.guid)
+  );
+
+  const dispatchDragStart = el => {
+    const event = new contentWindow.DragEvent("dragstart", {
+      bubbles: true,
+      cancelable: true,
+      composed: true,
+      dataTransfer: new contentWindow.DataTransfer(),
+    });
+    el.dispatchEvent(event);
+    return event;
+  };
+
+  info("A regular bookmark row can still be dragged.");
+  const sourceRow = [...toolbarList.rowEls].find(
+    r => r.guid === dragSource.guid
+  );
+  ok(
+    !dispatchDragStart(sourceRow).defaultPrevented,
+    "dragstart is allowed for a regular bookmark."
+  );
+
+  info("Items within Recently Bookmarked cannot be dragged.");
+  const recentFolder = [...toolbarList.folderEls].find(
+    d => d.guid === recentSmart.guid
+  );
+  if (!recentFolder.open) {
+    recentFolder.querySelector("summary").click();
+    await BrowserTestUtils.waitForMutationCondition(
+      recentFolder,
+      { attributes: true },
+      () => recentFolder.open
+    );
+  }
+  const recentList = recentFolder.querySelector("sidebar-bookmark-list");
+  await BrowserTestUtils.waitForMutationCondition(
+    recentList.shadowRoot,
+    { childList: true, subtree: true },
+    () => [...recentList.rowEls].length
+  );
+  ok(recentList.readOnly, "Recently Bookmarked contents are read-only.");
+  const recentChildRow = [...recentList.rowEls][0];
+  ok(
+    dispatchDragStart(recentChildRow).defaultPrevented,
+    "dragstart is blocked for an item within Recently Bookmarked."
+  );
+
+  info("Dropping onto Recently Bookmarked does not move the bookmark into it.");
+  const recentSummary = recentFolder.querySelector("summary");
+  const recentRect = recentSummary.getBoundingClientRect();
+  EventUtils.synthesizeDrop(
+    sourceRow,
+    recentSummary,
+    null,
+    "move",
+    contentWindow,
+    contentWindow,
+    {
+      clientX: recentRect.left + recentRect.width / 2,
+      clientY: recentRect.top + recentRect.height * 0.5,
+      _domDispatchOnly: true,
+    }
+  );
+  let sourceInfo = await PlacesUtils.bookmarks.fetch(dragSource.guid);
+  Assert.equal(
+    sourceInfo.parentGuid,
+    PlacesUtils.bookmarks.toolbarGuid,
+    "Bookmark is not moved into the Recently Bookmarked query folder."
+  );
+
+  info("Tag subfolders within Recent Tags cannot be dragged.");
+  const tagsFolder = [...toolbarList.folderEls].find(
+    d => d.guid === tagsSmart.guid
+  );
+  if (!tagsFolder.open) {
+    tagsFolder.querySelector("summary").click();
+    await BrowserTestUtils.waitForMutationCondition(
+      tagsFolder,
+      { attributes: true },
+      () => tagsFolder.open
+    );
+  }
+  const tagsList = tagsFolder.querySelector("sidebar-bookmark-list");
+  await BrowserTestUtils.waitForMutationCondition(
+    tagsList.shadowRoot,
+    { childList: true, subtree: true },
+    () => [...tagsList.folderEls].length
+  );
+  ok(tagsList.readOnly, "Recent Tags contents are read-only.");
+  const tagContainer = [...tagsList.folderEls][0];
+  ok(
+    dispatchDragStart(tagContainer.querySelector("summary")).defaultPrevented,
+    "dragstart is blocked for a tag subfolder within Recent Tags."
+  );
+
+  info("Dropping onto Recent Tags does not move the bookmark into it.");
+  const tagsSummary = tagsFolder.querySelector("summary");
+  const tagsRect = tagsSummary.getBoundingClientRect();
+  EventUtils.synthesizeDrop(
+    sourceRow,
+    tagsSummary,
+    null,
+    "move",
+    contentWindow,
+    contentWindow,
+    {
+      clientX: tagsRect.left + tagsRect.width / 2,
+      clientY: tagsRect.top + tagsRect.height * 0.5,
+      _domDispatchOnly: true,
+    }
+  );
+  sourceInfo = await PlacesUtils.bookmarks.fetch(dragSource.guid);
+  Assert.equal(
+    sourceInfo.parentGuid,
+    PlacesUtils.bookmarks.toolbarGuid,
+    "Bookmark is not moved into the Recent Tags query folder."
+  );
+
+  await PlacesUtils.tagging.untagURI(
+    Services.io.newURI("https://example.com/recent-smart-drag"),
+    ["regression-tag-drag"]
+  );
+  await PlacesUtils.bookmarks.remove(dragSource.guid);
+  await PlacesUtils.bookmarks.remove(tagsSmart.guid);
+  await PlacesUtils.bookmarks.remove(recentSmart.guid);
+  await PlacesUtils.bookmarks.remove(recentBookmark.guid);
+  SidebarTestUtils.closePanel(window);
 });
 
 add_task(async function test_bookmarks_smart_bookmark_context_menu() {

@@ -6,9 +6,10 @@ const { loadCallContext, loadPrompt, FEATURE_PURPOSES, DEFAULT_PURPOSE } =
   ChromeUtils.importESModule(
     "moz-src:///browser/components/aiwindow/models/PromptLoader.sys.mjs"
   );
-const { openAIEngine, MODEL_FEATURES } = ChromeUtils.importESModule(
-  "moz-src:///browser/components/aiwindow/models/Utils.sys.mjs"
-);
+const { openAIEngine, MODEL_FEATURES, FEATURE_MAJOR_VERSIONS } =
+  ChromeUtils.importESModule(
+    "moz-src:///browser/components/aiwindow/models/Utils.sys.mjs"
+  );
 
 const { sinon } = ChromeUtils.importESModule(
   "resource://testing-common/Sinon.sys.mjs"
@@ -35,7 +36,7 @@ add_task(async function test_loadCallContext_returns_expected_shape() {
     const fakeRecords = [
       {
         feature: MODEL_FEATURES.CHAT,
-        version: "5.0",
+        version: `${FEATURE_MAJOR_VERSIONS[MODEL_FEATURES.CHAT]}.0`,
         model_choice_id: "",
         model: "gpt-oss-120b",
         is_default: true,
@@ -76,7 +77,7 @@ add_task(async function test_loadCallContext_falls_back_to_defaults() {
     const fakeRecords = [
       {
         feature: MODEL_FEATURES.TITLE_GENERATION,
-        version: "1.0",
+        version: `${FEATURE_MAJOR_VERSIONS[MODEL_FEATURES.TITLE_GENERATION]}.0`,
         model: "some-model",
         is_default: true,
       },
@@ -138,7 +139,7 @@ add_task(async function test_loadPrompt_returns_prompt_text() {
     const fakeRecords = [
       {
         feature: MODEL_FEATURES.CHAT,
-        version: "5.0",
+        version: `${FEATURE_MAJOR_VERSIONS[MODEL_FEATURES.CHAT]}.0`,
         model_choice_id: "",
         model: "gpt-oss-120b",
         is_default: true,
@@ -149,11 +150,14 @@ add_task(async function test_loadPrompt_returns_prompt_text() {
       get: sb.stub().resolves(fakeRecords),
     });
 
-    const prompt = await loadPrompt(MODEL_FEATURES.CHAT);
+    const result = await loadPrompt(MODEL_FEATURES.CHAT);
 
-    Assert.equal(
-      prompt,
-      "You are a helpful assistant.",
+    Assert.deepEqual(
+      result,
+      {
+        prompt: "You are a helpful assistant.",
+        version: `${FEATURE_MAJOR_VERSIONS[MODEL_FEATURES.CHAT]}.0`,
+      },
       "loadPrompt should return the prompts field from the record"
     );
   } finally {
@@ -191,7 +195,7 @@ add_task(async function test_loadPrompt_honors_custom_prompt_pref() {
     const fakeRecords = [
       {
         feature: MODEL_FEATURES.CHAT,
-        version: "5.0",
+        version: `${FEATURE_MAJOR_VERSIONS[MODEL_FEATURES.CHAT]}.0`,
         model_choice_id: "",
         model: "gpt-oss-120b",
         is_default: true,
@@ -207,7 +211,7 @@ add_task(async function test_loadPrompt_honors_custom_prompt_pref() {
       JSON.stringify({ [MODEL_FEATURES.CHAT]: "OVERRIDE" })
     );
 
-    const prompt = await loadPrompt(MODEL_FEATURES.CHAT);
+    const { prompt } = await loadPrompt(MODEL_FEATURES.CHAT);
 
     Assert.equal(
       prompt,
@@ -275,7 +279,7 @@ add_task(async function test_loadPrompt_promptLoadFailure_clientReason() {
     const fakeRecords = [
       {
         feature: MODEL_FEATURES.CHAT,
-        version: "5.0",
+        version: `${FEATURE_MAJOR_VERSIONS[MODEL_FEATURES.CHAT]}.0`,
         model: "generic",
         is_default: true,
       },

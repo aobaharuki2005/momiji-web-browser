@@ -215,7 +215,7 @@ function run_test() {
       }
       refFile = do_get_file(refName);
       istream = getFileInputStream(refFile);
-      Assert.equal(istream.available(), AppConstants.USE_LIBZ_RS ? 938 : 945);
+      Assert.equal(istream.available(), AppConstants.USE_LIBZ_RS ? 938 : 955);
       referenceBytes = streamToArray(istream);
 
       // compare the encoder's output to the reference file.
@@ -284,7 +284,7 @@ function run_test() {
       : "image3ico32x32.png";
     refFile = do_get_file(refName);
     istream = getFileInputStream(refFile);
-    Assert.equal(istream.available(), AppConstants.USE_LIBZ_RS ? 2262 : 2261);
+    Assert.equal(istream.available(), AppConstants.USE_LIBZ_RS ? 2283 : 2280);
     referenceBytes = streamToArray(istream);
 
     // compare the encoder's output to the reference file.
@@ -570,7 +570,7 @@ function run_test() {
     refName = "image2jpg32x16scaled.jpg";
     refFile = do_get_file(refName);
     istream = getFileInputStream(refFile);
-    Assert.equal(istream.available(), 1224);
+    Assert.equal(istream.available(), 1227);
     referenceBytes = streamToArray(istream);
 
     // compare the encoder's output to the reference file.
@@ -588,7 +588,7 @@ function run_test() {
     refName = "image2jpg16x32scaled.jpg";
     refFile = do_get_file(refName);
     istream = getFileInputStream(refFile);
-    Assert.equal(istream.available(), 1217);
+    Assert.equal(istream.available(), 1219);
     referenceBytes = streamToArray(istream);
 
     // compare the encoder's output to the reference file.

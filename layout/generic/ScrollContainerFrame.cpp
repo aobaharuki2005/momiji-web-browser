@@ -279,6 +279,8 @@ ScrollContainerFrame::ScrollContainerFrame(ComputedStyle* aStyle,
       mUpdateScrollbarAttributes(false),
       mHasBeenScrolledRecently(false),
       mWillBuildScrollableLayer(false),
+      mInactiveWithActiveDescendantScrollFrames(false),
+      mScrollPortOrScrolledAreaBoundsChanged(false),
       mIsParentToActiveScrollFrames(false),
       mHasBeenScrolled(false),
       mIgnoreMomentumScroll(false),
@@ -294,6 +296,7 @@ ScrollContainerFrame::ScrollContainerFrame(ComputedStyle* aStyle,
       mApzAnimationTriggeredByScriptRequested(false),
       mReclampVVOffsetInReflowFinished(false),
       mMayScheduleScrollAnimations(false),
+      mScrollbarClickAndHoldScrollendPending(false),
       mForceDisableOverlayScrollbars(false),
 #ifdef MOZ_WIDGET_ANDROID
       mHasVerticalOverflowForDynamicToolbar(false),
@@ -1576,14 +1579,16 @@ void ScrollContainerFrame::Reflow(nsPresContext* aPresContext,
   const nsRect& newScrollPort = ScrollPort();
   nsRect newScrolledAreaBounds =
       mScrolledFrame->ScrollableOverflowRectRelativeToParent();
+  mScrollPortOrScrolledAreaBoundsChanged =
+      !oldScrollPort.IsEqualEdges(newScrollPort) ||
+      !oldScrolledAreaBounds.IsEqualEdges(newScrolledAreaBounds);
   if (mSkippedScrollbarLayout || reflowHScrollbar || reflowVScrollbar ||
       reflowScrollCorner || HasAnyStateBits(NS_FRAME_IS_DIRTY) ||
       didHaveHScrollbar != state.mShowHScrollbar ||
       didHaveVScrollbar != state.mShowVScrollbar ||
       didOnlyHScrollbar != mOnlyNeedHScrollbarToScrollVVInsideLV ||
       didOnlyVScrollbar != mOnlyNeedVScrollbarToScrollVVInsideLV ||
-      !oldScrollPort.IsEqualEdges(newScrollPort) ||
-      !oldScrolledAreaBounds.IsEqualEdges(newScrolledAreaBounds)) {
+      mScrollPortOrScrolledAreaBoundsChanged) {
     mSkippedScrollbarLayout = false;
     ScrollContainerFrame::SetScrollbarVisibility(mHScrollbarBox,
                                                  state.mShowHScrollbar);
@@ -3126,12 +3131,12 @@ void ScrollContainerFrame::ScrollToImpl(
     if (const auto& visualScrollUpdate = ps->GetPendingVisualScrollUpdate()) {
       if (visualScrollUpdate->mVisualScrollOffset != aPt) {
         // Only clobber if the scroll was originated by the main thread.
-        // Respect the priority of origins (an "eRestore" layout scroll should
-        // not clobber an "eMainThread" visual scroll.)
-        bool shouldClobber =
-            aOrigin == ScrollOrigin::Other ||
-            (aOrigin == ScrollOrigin::Restore &&
-             visualScrollUpdate->mUpdateType == FrameMetrics::eRestore);
+        // Respect the priority of origins (a "Restore" layout scroll should
+        // not clobber a "MainThread" visual scroll.)
+        bool shouldClobber = aOrigin == ScrollOrigin::Other ||
+                             (aOrigin == ScrollOrigin::Restore &&
+                              visualScrollUpdate->mUpdateType ==
+                                  ScrollOffsetUpdateType::Restore);
         if (shouldClobber) {
           ps->AcknowledgePendingVisualScrollUpdate();
           ps->ClearPendingVisualScrollUpdate();
@@ -3914,6 +3919,9 @@ void ScrollContainerFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
     return;
   }
 
+  const uint32_t numActiveScrollframesBefore =
+      aBuilder->GetNumActiveScrollframesEncountered();
+
   const bool isRootContent =
       mIsRoot && PresContext()->IsRootContentDocumentCrossProcess();
 
@@ -4370,6 +4378,13 @@ void ScrollContainerFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
   AppendScrollPartsTo(aBuilder, set, createLayersForScrollbars, true);
 
   set.MoveTo(aLists);
+
+  if (aBuilder->IsPaintingToWindow()) {
+    mInactiveWithActiveDescendantScrollFrames =
+        !mWillBuildScrollableLayer &&
+        aBuilder->GetNumActiveScrollframesEncountered() >
+            numActiveScrollframesBefore;
+  }
 }
 
 nsRect ScrollContainerFrame::RestrictToRootDisplayPort(
@@ -4550,6 +4565,10 @@ bool ScrollContainerFrame::DecideScrollableLayerEnsureDisplayport(
 bool ScrollContainerFrame::DecideScrollableLayer(
     nsDisplayListBuilder* aBuilder, nsRect* aVisibleRect, nsRect* aDirtyRect,
     bool aSetBase, bool* aDirtyRectHasBeenOverriden) {
+#ifdef DEBUG
+  const bool wasBuildingScrollableLayer = mWillBuildScrollableLayer;
+#endif
+
   if (aBuilder->IsInViewTransitionCapture()) {
     // If we're in a view transition, don't activate the scrollframe. We don't
     // create APZ data for those subtrees anyways and they can't scroll.
@@ -4666,6 +4685,20 @@ bool ScrollContainerFrame::DecideScrollableLayer(
   // If the element is marked 'scrollgrab', also force building of a layer
   // so that APZ can implement scroll grabbing.
   mWillBuildScrollableLayer = hasDisplayPort || mZoomableByAPZ;
+
+#ifdef DEBUG
+  // A scroll frame that was painted previously without a displayport and gains
+  // one now inserts a new ASR above its already active children, we must
+  // rebuild all child items so their ASRs get updated.
+  if (aBuilder->IsPaintingToWindow() && aBuilder->IsPartialUpdate() &&
+      !wasBuildingScrollableLayer && mWillBuildScrollableLayer &&
+      mInactiveWithActiveDescendantScrollFrames) {
+    MOZ_ASSERT(IsFrameModified() || aBuilder->InInvalidSubtree(),
+               "activating scroll frame with active descendant scroll frames "
+               "during a partial update should be marked modified");
+  }
+#endif
+
   return mWillBuildScrollableLayer;
 }
 
@@ -5378,7 +5411,8 @@ void ScrollContainerFrame::ScrollToRestoredPosition() {
         return;
       }
       if (mIsRoot) {
-        PresShell()->ScrollToVisual(visualScrollToPos, FrameMetrics::eRestore,
+        PresShell()->ScrollToVisual(visualScrollToPos,
+                                    ScrollOffsetUpdateType::Restore,
                                     ScrollMode::Instant);
       }
       if (state == LoadingState::Loading || IsSubtreeDirty()) {
@@ -6435,6 +6469,20 @@ bool ScrollContainerFrame::ReflowFinished() {
       // by ScrollBy as its starting position.
       mDestination = GetScrollPosition();
     }
+  }
+
+  // For a scroll frame that was painted previously without a displayport but
+  // with active child scrollframes we need to check if its scroll range is
+  // becoming non-zero and hence will be activated on the next paint so that we
+  // can mark it modified so that all of its children will get their display
+  // list rebuilt so their ASR is updated to this new parent ASR that is
+  // inserted by the activation. We use as many conditions as possible to try to
+  // limit potential performance decreases caused by HasDisplayPort,
+  // WantAsyncScroll, and MarkNeedsDisplayItemRebuild (the rebuild it triggers).
+  if (mScrollPortOrScrolledAreaBoundsChanged &&
+      mInactiveWithActiveDescendantScrollFrames && !IsFrameModified() &&
+      !DisplayPortUtils::HasDisplayPort(GetContent()) && WantAsyncScroll()) {
+    MarkNeedsDisplayItemRebuild();
   }
 
   if (!mUpdateScrollbarAttributes) {
@@ -8232,8 +8280,8 @@ bool ScrollContainerFrame::CanApzScrollInTheseDirections(
 }
 
 bool ScrollContainerFrame::SmoothScrollVisual(
-    const nsPoint& aVisualViewportOffset,
-    FrameMetrics::ScrollOffsetUpdateType aUpdateType, ScrollMode aMode) {
+    const nsPoint& aVisualViewportOffset, ScrollOffsetUpdateType aUpdateType,
+    ScrollMode aMode) {
   MOZ_ASSERT(aMode == ScrollMode::Smooth || aMode == ScrollMode::SmoothMsd);
 
   bool canDoApzSmoothScroll =
@@ -8263,7 +8311,7 @@ bool ScrollContainerFrame::SmoothScrollVisual(
   UniquePtr<ScrollSnapTargetIds> snapTargetIds;
   // Perform the scroll.
   ApzSmoothScrollTo(mDestination, aMode,
-                    aUpdateType == FrameMetrics::eRestore
+                    aUpdateType == ScrollOffsetUpdateType::Restore
                         ? ScrollOrigin::Restore
                         : ScrollOrigin::Other,
                     ScrollTriggeredByScript::No, std::move(snapTargetIds),

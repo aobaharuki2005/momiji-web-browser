@@ -9836,44 +9836,6 @@
       return null;
     },
 
-    /**
-     * Handles URIs when we want to deal with them in chrome code rather than pass
-     * them down to a content browser. This can avoid unnecessary process switching
-     * for the browser.
-     *
-     * @param aBrowser the browser that is attempting to load the URI
-     * @param aUri the nsIURI that is being loaded
-     * @returns true if the URI is handled, otherwise false
-     */
-    _handleUriInChrome(aBrowser, aUri) {
-      if (aUri.scheme == "file") {
-        try {
-          let mimeType = Cc["@mozilla.org/mime;1"]
-            .getService(Ci.nsIMIMEService)
-            .getTypeFromURI(aUri);
-          if (mimeType == "application/x-xpinstall") {
-            let systemPrincipal =
-              Services.scriptSecurityManager.getSystemPrincipal();
-            AddonManager.getInstallForURL(aUri.spec, {
-              telemetryInfo: { source: "file-url" },
-            }).then(install => {
-              AddonManager.installAddonFromWebpage(
-                mimeType,
-                aBrowser,
-                systemPrincipal,
-                install
-              );
-            });
-            return true;
-          }
-        } catch (e) {
-          return false;
-        }
-      }
-
-      return false;
-    },
-
     _updateTriggerMetadataForLoad(
       browser,
       uriString,
@@ -9946,11 +9908,6 @@
       if (!uri) {
         // Note: this may return null if we can't make a URI out of the input.
         uri = this._fixupURIString(browser, uriString, loadURIOptions);
-      }
-
-      if (uri && this._handleUriInChrome(browser, uri)) {
-        // If we've handled the URI in chrome, then just return here.
-        return;
       }
 
       this._updateTriggerMetadataForLoad(

@@ -4110,7 +4110,7 @@ class Document : public nsINode,
   void UpdateLastRememberedSizes();
 
   // Dispatch a runnable related to the document.
-  nsresult Dispatch(already_AddRefed<nsIRunnable>&& aRunnable) const;
+  nsresult Dispatch(already_AddRefed<nsIRunnable> aRunnable) const;
 
   // The URLs passed to this function should match what
   // JS::DescribeScriptedCaller() returns, since this API is used to
@@ -5002,7 +5002,8 @@ class Document : public nsINode,
 
   RefPtr<Promise> mReadyForIdle;
 
-  RefPtr<mozilla::dom::FeaturePolicy> mFeaturePolicy;
+  // Lazily created in FeaturePolicy().
+  mutable RefPtr<mozilla::dom::FeaturePolicy> mFeaturePolicy;
 
   // Permission Delegate Handler, lazily-initialized in
   // GetPermissionDelegateHandler

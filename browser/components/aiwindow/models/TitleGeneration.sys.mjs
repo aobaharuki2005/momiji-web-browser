@@ -61,7 +61,7 @@ export async function generateChatTitle(
 ) {
   try {
     // Build the OpenAI engine
-    const [callContext, rawPrompt] = await Promise.all([
+    const [callContext, { prompt: rawPrompt }] = await Promise.all([
       lazy.loadCallContext(MODEL_FEATURES.TITLE_GENERATION),
       lazy.loadPrompt(MODEL_FEATURES.TITLE_GENERATION),
     ]);

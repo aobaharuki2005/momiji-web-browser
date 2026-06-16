@@ -203,12 +203,6 @@ void nsFormFillController::AttributeWillChange(mozilla::dom::Element*, int32_t,
 
 void nsFormFillController::ParentChainChanged(nsIContent*) {}
 
-void nsFormFillController::ARIAAttributeDefaultWillChange(
-    mozilla::dom::Element*, nsAtom*, AttrModType) {}
-
-void nsFormFillController::ARIAAttributeDefaultChanged(mozilla::dom::Element*,
-                                                       nsAtom*, AttrModType) {}
-
 MOZ_CAN_RUN_SCRIPT_BOUNDARY
 void nsFormFillController::NodeWillBeDestroyed(nsINode* aNode) {
   MOZ_LOG(sLogger, LogLevel::Verbose, ("NodeWillBeDestroyed: %p", aNode));

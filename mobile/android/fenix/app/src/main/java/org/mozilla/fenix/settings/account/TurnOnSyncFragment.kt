@@ -34,7 +34,6 @@ import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.increaseTapArea
 import org.mozilla.fenix.ext.navigateWithBreadcrumb
 import org.mozilla.fenix.ext.requireComponents
-import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.ext.showToolbar
 
 /**
@@ -53,7 +52,7 @@ class TurnOnSyncFragment : Fragment(), AccountObserver, SystemInsetsPaddedFragme
     }
 
     private val paringClickListener = View.OnClickListener {
-        if (requireContext().settings().shouldShowCameraPermissionPrompt) {
+        if (requireComponents.settings.shouldShowCameraPermissionPrompt) {
             navigateToPairFragment()
         } else {
             if (requireContext().isPermissionGranted(Manifest.permission.CAMERA)) {
@@ -64,7 +63,7 @@ class TurnOnSyncFragment : Fragment(), AccountObserver, SystemInsetsPaddedFragme
             }
         }
         view?.hideKeyboard()
-        requireContext().settings().setCameraPermissionNeededState = false
+        requireComponents.settings.setCameraPermissionNeededState = false
     }
 
     private var _binding: FragmentTurnOnSyncBinding? = null
@@ -111,7 +110,7 @@ class TurnOnSyncFragment : Fragment(), AccountObserver, SystemInsetsPaddedFragme
     override fun onResume() {
         super.onResume()
 
-        if (requireContext().settings().useOnboardingRedesign) {
+        if (requireComponents.settings.useOnboardingRedesign) {
             activity?.tryDisableEdgeToEdge()
         }
 

@@ -21,6 +21,7 @@
 #include "nsGlobalWindowInner.h"
 #include "nsIScriptObjectPrincipal.h"
 #include "nsPIDOMWindow.h"
+#include "nsPIDOMWindowInlines.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;

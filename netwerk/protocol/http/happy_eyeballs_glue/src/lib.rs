@@ -39,6 +39,27 @@ impl From<IpPreference> for happy_eyeballs::IpPreference {
     }
 }
 
+/// Which HTTP versions Firefox is willing to use, derived from prefs such as
+/// `network.http.http2.enabled` and `network.http.http3.enable`. Mirrors
+/// `happy_eyeballs::HttpVersions` across the FFI boundary.
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub struct HttpVersions {
+    pub h1: bool,
+    pub h2: bool,
+    pub h3: bool,
+}
+
+impl From<HttpVersions> for happy_eyeballs::HttpVersions {
+    fn from(v: HttpVersions) -> Self {
+        happy_eyeballs::HttpVersions {
+            h1: v.h1,
+            h2: v.h2,
+            h3: v.h3,
+        }
+    }
+}
+
 #[no_mangle]
 pub unsafe extern "C" fn happy_eyeballs_create(
     result: &mut *const HappyEyeballs,
@@ -46,6 +67,7 @@ pub unsafe extern "C" fn happy_eyeballs_create(
     port: u16,
     alt_svc: *const ThinVec<AltSvc>,
     ip_preference: IpPreference,
+    http_versions: HttpVersions,
     resolution_delay_ms: u32,
     connection_attempt_delay_ms: u32,
 ) -> nsresult {
@@ -77,6 +99,7 @@ pub unsafe extern "C" fn happy_eyeballs_create(
     let network_config = happy_eyeballs::NetworkConfig {
         alt_svc: alt_svc_vec,
         ip: ip_preference.into(),
+        http_versions: http_versions.into(),
         resolution_delay: Duration::from_millis(resolution_delay_ms as u64),
         connection_attempt_delay: Duration::from_millis(connection_attempt_delay_ms as u64),
         ..Default::default()

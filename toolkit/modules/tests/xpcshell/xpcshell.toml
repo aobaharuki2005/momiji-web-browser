@@ -179,6 +179,8 @@ skip-if = [
   "os == 'android'",
 ]
 
+["test_sqlite_carray.js"]
+
 ["test_sqlite_shutdown.js"]
 
 ["test_timer.js"]

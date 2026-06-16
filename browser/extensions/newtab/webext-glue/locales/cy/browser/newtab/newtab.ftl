@@ -31,6 +31,131 @@ newtab-card-dismiss-button =
     .title = Cau
     .aria-label = Cau
 
+## Strings for "Homepage" and "Firefox Home" sections of about:settings#home.
+## Homepage panel
+
+home-homepage-title =
+    .label = Tudalen Cartref
+home-homepage-new-windows =
+    .label = Ffenestri newydd
+home-homepage-new-tabs =
+    .label = Tabiau newydd
+# This option leads to the "Custom Homepage" subpage
+home-homepage-custom-homepage-button =
+    .label = Dewis safle penodol
+
+## Custom URLs subpage
+
+# Subheader on the Custom Homepage subpage. Followed by a form to enter URLs and a list of URLs already saved, if any.
+home-custom-homepage-card-header =
+    .label = Cyfeiriad(au) gwefan
+home-custom-homepage-address =
+    .placeholder = Rhowch gyfeiriad
+home-custom-homepage-address-button =
+    .label = Ychwanegu cyfeiriad
+# Shown when no custom websites/URLs to use as a homepage have been added yet
+home-custom-homepage-no-results =
+    .label = Dim gwefannau wedi'u hychwanegu eto.
+home-custom-homepage-delete-address-button =
+    .aria-label = Dileu cyfeiriad
+    .title = Dileu cyfeiriad
+# Further options to use when setting the home page. Two action buttons are placed in line with this prompt
+# to replace the current home page with a currently open page or bookmark.
+home-custom-homepage-replace-with-prompt =
+    .label = Amnewid gyda
+# Button that appears in-line after text "Replace with" (home-custom-homepage-replace-with-prompt)
+home-custom-homepage-current-pages-button =
+    .label = Tudalennau ar agor nawr
+# Button that appears in-line after text "Replace with" (home-custom-homepage-replace-with-prompt)
+home-custom-homepage-bookmarks-button =
+    .label = Nodau Tudalen…
+
+## Firefox Home content
+
+home-prefs-content-header =
+    .label = { -firefox-home-brand-name }
+home-prefs-search-header2 =
+    .label = Chwilio
+home-prefs-stories-header2 =
+    .label = Straeon
+    .description = Cynnwys eithriadol wedi'i gasglu gan deulu { -brand-product-name }
+home-prefs-widgets-header =
+    .label = Teclynnau
+# Lists is a widget on New Tab, similar to a to-do widget
+home-prefs-lists-header =
+    .label = Rhestrau
+# Timer is a widget on New Tab, similar to the Pomodoro timer.
+home-prefs-timer-header =
+    .label = Amserydd
+# Sports is a widget on New Tab showing sports scores and schedules.
+home-prefs-sports-widget-header =
+    .label = Chwaraeon
+# Clock is a widget on New Tab that displays time zones around the world.
+home-prefs-clocks-header =
+    .label = Cloc
+home-prefs-mission-message2 =
+    .message = Mae ein noddwyr yn cefnogi ein cenhadaeth i adeiladu gwe well
+home-prefs-manage-topics-link2 =
+    .label = Rheoli pynciau
+home-prefs-choose-wallpaper-link2 =
+    .label = Dewis Papur Wal
+home-prefs-firefox-logo-header =
+    .label = Logo { -brand-short-name }
+# Informational message bar that appears in the Firefox Home section when the options are disabled.
+# The user must select Firefox Home as their homepage for either new tabs or new windows to enable
+# the features in settings.
+home-prefs-firefox-home-disabled-notice =
+    .message = I ddefnyddio'r nodweddion hyn, gosodwch dabiau newydd neu ffenestri newydd i { -firefox-home-brand-name }.
+# Variables:
+#   $num (number) - Number of rows displayed
+home-prefs-sections-rows-option-srd =
+    .label =
+        { $num ->
+            [zero] { $num } rhesi
+            [one] { $num } rhes
+            [two] { $num } res
+            [few] { $num } rhes
+            [many] { $num } rhes
+           *[other] { $num } rhes
+        }
+# Dropdown option shown when an extension replaces the contents of new windows or tabs.
+# Variables:
+#   $extension (string) - Name of the extension
+home-prefs-homepage-extension-option =
+    .label = Estyniad ( { $extension } )
+home-restore-defaults-srd =
+    .label = Adfer y Rhagosodiadau
+    .accesskey = A
+home-mode-choice-default-fx-srd =
+    .label = { -firefox-home-brand-name } (Rhagosodedig)
+home-mode-choice-custom-srd =
+    .label = URLau Cyfaddas...
+home-mode-choice-blank-srd =
+    .label = Tudalen Wag
+home-prefs-shortcuts-header-srd =
+    .label = Llwybrau Byr
+home-prefs-shortcuts-select =
+    .aria-label = Llwybrau Byr
+home-prefs-shortcuts-by-option-sponsored-srd =
+    .label = Llwybrau byr wedi'u noddi
+home-prefs-recommended-by-option-sponsored-stories-srd =
+    .label = Straeon wedi’u noddi
+home-prefs-highlights-option-visited-pages-srd =
+    .label = Tudalennau Ymwelwyd â Nhw
+home-prefs-highlights-options-bookmarks-srd =
+    .label = Nodau Tudalen
+home-prefs-highlights-option-most-recent-download-srd =
+    .label = Y Llwytho i Lawr Diweddaraf
+home-prefs-recent-activity-header-srd =
+    .label = Gweithgaredd diweddar
+home-prefs-recent-activity-select =
+    .aria-label = Gweithgaredd diweddar
+home-prefs-weather-header-srd =
+    .label = Y Tywydd
+home-prefs-support-firefox-header-srd =
+    .label = Cefnogi { -brand-product-name }
+home-prefs-mission-message-learn-more-link-srd = Dyma sut
+
 ## Search box component.
 
 # "Search" is a verb/action
@@ -151,6 +276,8 @@ newtab-menu-section-block = Rhwystro
 # "Follow", "unfollow", and "following" are social media terms that refer to subscribing to or unsubscribing from a section of stories.
 # e.g. Following the travel section of stories.
 newtab-menu-section-unfollow-topic = Dad-ddilyn
+# Context menu option to open a support page explaining the New Tab personalization features and privacy controls.
+newtab-menu-section-learn-more = Rhagor
 # "Follow", "unfollow", and "following" are social media terms that refer to subscribing to or unsubscribing from a section of stories.
 # e.g. Following the travel section of stories.
 newtab-menu-section-unfollow = Dad-ddilyn Pwnc
@@ -767,8 +894,6 @@ newtab-widget-lists-button-add-item = Ychwanegu eitem
 newtab-widget-lists-input-add-an-item2 =
     .placeholder = Ychwanegu eitem
     .aria-label = Ychwanegu eitem
-newtab-widget-lists-input-add-an-item =
-    .placeholder = Ychwanegu eitem
 newtab-widget-lists-input-error = Cynhwyswch destun i ychwanegu eitem.
 newtab-widget-lists-input-menu-open-link = Agor dolen
 newtab-widget-lists-input-menu-move-up = Symud i fyny
@@ -796,11 +921,6 @@ newtab-widget-lists-name-placeholder-checklist2 =
 newtab-widget-lists-name-placeholder-new2 =
     .placeholder = Rhestr newydd
     .aria-label = Golygu enw'r rhestr
-newtab-widget-lists-name-placeholder-checklist =
-    .placeholder = Rhestr wirio
-# The placeholder value of the name field for a newly created list
-newtab-widget-lists-name-placeholder-new =
-    .placeholder = Rhestr newydd
 newtab-widget-section-title = Teclynnau
 newtab-widget-menu-hide = Cuddio'r teclyn
 newtab-widget-menu-change-size = Newid maint
@@ -1077,6 +1197,28 @@ newtab-sports-widget-match-full-time = Amser llawn
 newtab-sports-widget-match-halftime = Hanner amser
 newtab-sports-widget-match-extra-time = Amser ychwanegol
 newtab-sports-widget-match-penalties = Ciciau cosb
+# Separator shown between two teams in a placeholder match row when no upcoming
+# match details are available yet.
+newtab-sports-widget-match-vs = vs
+# Note shown in the Upcoming tab when no match details are available yet.
+newtab-sports-widget-no-upcoming-matches = Cadwch olwg am fanylion gêm sydd i ddod
+
+## Sports widget live-games pagination. Shown when 2+ matches are live at the same time
+
+# arrow button that goes to the previous page of live matches.
+newtab-sports-widget-pagination-previous =
+    .aria-label = Blaenorol
+    .title = Blaenorol
+# arrow button that goes to the next page of live matches.
+newtab-sports-widget-pagination-next =
+    .aria-label = Nesaf
+    .title = Nesaf
+# Dot indicator that jumps directly to a given live match.
+# $index (number) - 1-based position of this dot in the list.
+# $total (number) - Total number of live matches.
+newtab-sports-widget-pagination-dot =
+    .aria-label = { $index }  gêm fyw o { $total }
+    .title = { $index }  gêm fyw o { $total }
 
 ## Accessible labels for match rows in the sports widget. These are read by
 ## screen readers to announce the match details and status.
@@ -1137,6 +1279,8 @@ newtab-sports-widget-team-name-label-eng =
     .label = Lloegr
 newtab-sports-widget-team-name-label-sco =
     .label = Yr Alban
+# Placeholder used in a match row's aria-label for an undecided team (shown visually as "--").
+newtab-sports-widget-team-tbd = I'w benderfynu
 
 ## Sports widget OMC messages
 ## Shown as on-screen messages promoting the Sports widget and World Cup wallpapers.

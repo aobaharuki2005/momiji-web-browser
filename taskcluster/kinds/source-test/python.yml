@@ -36,7 +36,6 @@ task-defaults:
     treeherder:
         kind: test
         tier: 1
-    run-on-repo-type: [hg]
     run:
         using: mach
         use-caches: [checkout, pip, uv]

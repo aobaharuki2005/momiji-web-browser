@@ -594,7 +594,7 @@ class MediaDecoder : public DecoderDoctorLifeLogger<MediaDecoder> {
 
   void FinishShutdown();
 
-  void ConnectMirrors(MediaDecoderStateMachineBase* aObject);
+  void ConnectMirrors();
   void DisconnectMirrors();
 #  ifdef MOZ_WMF_MEDIA_ENGINE
   // Return true if we switched to a new state machine.

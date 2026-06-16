@@ -482,6 +482,12 @@ skip-if = [
 
 ["test_cache2-34-overlimit-eviction-preserves-active.js"]
 
+["test_cache2-35-encryption-disabled.js"]
+prefs = ["browser.cache.disk.encryption.enabled=false"]
+
+["test_cache2-35-encryption.js"]
+prefs = ["browser.cache.disk.encryption.enabled=true"]
+
 ["test_cache2-35-racing-onCacheEntryCheck.js"]
 
 ["test_cache2_clear_with_principal.js"]
@@ -762,6 +768,9 @@ skip-if = [
   "os == 'win' && msix",
 ]
 
+["test_happy_eyeballs_dns_prefetch_reuse.js"]
+run-sequentially = ["true"] # node server exceptions dont replay well
+
 ["test_happy_eyeballs_h1_0rtt.js"]
 run-sequentially = ["true"] # TlsServer listens to the same port
 skip-if = [
@@ -821,6 +830,11 @@ run-sequentially = ["true"] # node server exceptions dont replay well
 skip-if = [
   "os == 'android'",
   "os == 'win'",
+]
+
+["test_he_client_auth_pause.js"]
+skip-if = [
+  "os == 'android'", # pkcs11testmodule isn't built/installed on Android
 ]
 
 ["test_head.js"]
@@ -1324,6 +1338,8 @@ skip-if = [
 
 ["test_mozTXTToHTMLConv.js"]
 
+["test_moz_http2_exception_handling.js"]
+
 ["test_multipart_byteranges.js"]
 
 ["test_multipart_byteranges_invalid.js"]
@@ -1762,6 +1778,7 @@ run-sequentially = ["true"] # We want to check performance
 ["test_trr_cname_chain.js"]
 
 ["test_trr_confirmation.js"]
+requesttimeoutfactor = 2
 run-if = [
   "!socketprocess_networking", # confirmation state isn't passed cross-process
 ]

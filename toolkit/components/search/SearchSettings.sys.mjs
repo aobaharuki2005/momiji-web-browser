@@ -331,13 +331,24 @@ export class SearchSettings {
     // will be restored. This can happen if a user switches between regions.
     if (this.#settings?.engines) {
       for (let engine of this.#settings.engines) {
-        // TODO: The line below should compare names instead of ids (bug 1973899).
-        let included = settings.engines.some(e => e._name == engine._name);
-        // If a config engine is user-installed and not included, it was
-        // explicitly removed by the user and we should not persist its metadata.
-        let userInstalled = engine._metaData["user-installed"];
-        if (engine._isConfigEngine && !userInstalled && !included) {
-          settings.engines.push(engine);
+        if (
+          engine._isConfigEngine &&
+          // If a config engine is user-installed and not included, it was
+          // explicitly removed by the user and we should not persist its metadata.
+          !engine._metaData["user-installed"]
+        ) {
+          // If the saved settings is already included in the settings, don't re-add it.
+          // TODO (Bug 2046142): Refactor settings updates for overridden engines.
+          // Checking the engine name as a fallback alongside the canonical ID is a temporary
+          // workaround to handle third-party overrides. We should remove this name check to
+          // rely strictly on IDs and prevent potential duplicates, which may require changing
+          // how we handle search engines with duplicate names first.
+          let included = settings.engines.some(
+            e => e.id == engine.id || e._name == engine._name
+          );
+          if (!included) {
+            settings.engines.push(engine);
+          }
         }
       }
     }

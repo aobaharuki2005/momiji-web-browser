@@ -175,8 +175,14 @@ tabbrowser-customizemode-tab-title = Customize { -brand-short-name }
 tabbrowser-context-mute-tab =
     .label = Mute Tab
     .accesskey = M
+tabbrowser-context-mute-tab2 =
+    .label = Mute
+    .accesskey = M
 tabbrowser-context-unmute-tab =
     .label = Unmute Tab
+    .accesskey = m
+tabbrowser-context-unmute-tab2 =
+    .label = Unmute
     .accesskey = m
 # The accesskey should match the accesskey for tabbrowser-context-mute-tab
 tabbrowser-context-mute-selected-tabs =

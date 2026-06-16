@@ -182,7 +182,7 @@ export var UITour = {
     [
       "urlbar",
       {
-        query: "#urlbar",
+        query: "#urlbar-container",
         widgetName: "urlbar-container",
       },
     ],

@@ -53,7 +53,6 @@ import org.mozilla.fenix.tabstray.data.createTab
 import org.mozilla.fenix.tabstray.redux.action.TabsTrayAction
 import org.mozilla.fenix.tabstray.redux.state.Page
 import org.mozilla.fenix.tabstray.redux.state.TabsTrayState
-import org.mozilla.fenix.tabstray.redux.state.TabsTrayState.Mode
 import org.mozilla.fenix.tabstray.redux.store.TabsTrayStore
 import org.mozilla.fenix.tabstray.syncedtabs.SyncedTabsListItem
 import org.mozilla.fenix.theme.FirefoxTheme
@@ -66,7 +65,6 @@ import mozilla.components.ui.icons.R as iconsR
  * @param tabsTrayStore [TabsTrayStore] used to listen for changes to [TabsTrayState].
  * @param isSignedIn Whether the user is signed into their Firefox account.
  * @param modifier The [Modifier] to be applied to this FAB.
- * @param pbmLocked Whether the private browsing mode is currently locked.
  * @param onOpenNewNormalTabClicked Invoked when the fab is clicked in [Page.NormalTabs].
  * @param onOpenNewPrivateTabClicked Invoked when the fab is clicked in [Page.PrivateTabs].
  * @param onSyncedTabsFabClicked Invoked when the fab is clicked in [Page.SyncedTabs].
@@ -81,7 +79,6 @@ internal fun TabManagerFloatingToolbar(
     tabsTrayStore: TabsTrayStore,
     isSignedIn: Boolean,
     modifier: Modifier = Modifier,
-    pbmLocked: Boolean = false,
     onOpenNewNormalTabClicked: () -> Unit,
     onOpenNewPrivateTabClicked: () -> Unit,
     onSyncedTabsFabClicked: () -> Unit,
@@ -91,11 +88,9 @@ internal fun TabManagerFloatingToolbar(
     onDeleteAllTabsClick: () -> Unit,
 ) {
     val state by tabsTrayStore.stateFlow.collectAsState()
-    val privateTabsLocked = pbmLocked && state.selectedPage == Page.PrivateTabs
-    val tabGroupsPageSelected = state.config.tabGroupsEnabled && state.selectedPage == Page.TabGroups
 
     AnimatedVisibility(
-        visible = state.mode is Mode.Normal && !privateTabsLocked && !tabGroupsPageSelected,
+        visible = state.isFloatingToolbarVisible,
         modifier = modifier,
         enter = fadeIn(),
         exit = fadeOut(),
@@ -492,7 +487,6 @@ private fun TabManagerFloatingToolbarPreview(
             TabManagerFloatingToolbar(
                 tabsTrayStore = remember { TabsTrayStore(initialState = previewDataModel.state) },
                 isSignedIn = previewDataModel.isSignedIn,
-                pbmLocked = false,
                 modifier = Modifier.padding(all = 16.dp),
                 onOpenNewNormalTabClicked = {},
                 onOpenNewPrivateTabClicked = {},

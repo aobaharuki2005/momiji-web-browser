@@ -3925,6 +3925,14 @@ export class Extension extends ExtensionData {
     pendingExtensions.delete(this.id);
     sharedData.set("extensions/pending", pendingExtensions);
 
+    if (!sharedData.has("extensions/documentIdKey")) {
+      // See ExtensionDocumentId.sys.mjs for an explanation of this.
+      sharedData.set(
+        "extensions/documentIdKey",
+        crypto.getRandomValues(new Uint8Array(16))
+      );
+    }
+
     Services.ppmm.sharedData.flush();
     this.broadcast("Extension:Startup", this.id);
 

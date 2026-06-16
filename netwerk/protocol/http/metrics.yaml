@@ -110,37 +110,49 @@ netwerk:
     expires: never
 
   happy_eyeballs_connection_attempt_count:
-    type: custom_distribution
+    type: labeled_custom_distribution
     description: >
       Happy Eyeballs: number of connection attempts started before one
-      succeeded or all failed.
+      succeeded or all failed, keyed by whether the algorithm ultimately
+      succeeded or failed.
     range_min: 1
     range_max: 50
     bucket_count: 50
     histogram_type: linear
     unit: attempts
+    labels:
+      - succeeded
+      - failed
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=2026606
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=2046018
     data_reviews:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=2026606
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=2046018
     notification_emails:
       - necko@mozilla.com
     expires: never
 
   happy_eyeballs_connection_establishment_time:
-    type: custom_distribution
+    type: labeled_custom_distribution
     description: >
       Happy Eyeballs: end-to-end time in milliseconds from algorithm start
-      to a successful connection or final failure.
+      to a successful connection or final failure, keyed by whether the
+      algorithm ultimately succeeded or failed.
     range_min: 1
     range_max: 10000
     bucket_count: 100
     histogram_type: exponential
     unit: ms
+    labels:
+      - succeeded
+      - failed
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=2026606
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=2046018
     data_reviews:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=2026606
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=2046018
     notification_emails:
       - necko@mozilla.com
     expires: never

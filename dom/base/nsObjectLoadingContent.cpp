@@ -421,7 +421,7 @@ class ObjectInterfaceRequestorShim final : public nsIInterfaceRequestor,
                                            public nsIChannelEventSink,
                                            public nsIStreamListener {
  public:
-  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
+  NS_DECL_CYCLE_COLLECTING_ISUPPORTS_FINAL
   NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(ObjectInterfaceRequestorShim,
                                            nsIInterfaceRequestor)
   NS_DECL_NSIINTERFACEREQUESTOR

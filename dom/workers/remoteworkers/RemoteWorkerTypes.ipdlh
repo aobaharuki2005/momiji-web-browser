@@ -103,6 +103,8 @@ struct RemoteWorkerData
 
   nsCString languageOverrideLocale;
   nsString[] languageOverride;
+
+  nsString timezoneOverride;
 };
 
 // ErrorData/ErrorDataNote correspond to WorkerErrorReport/WorkerErrorNote

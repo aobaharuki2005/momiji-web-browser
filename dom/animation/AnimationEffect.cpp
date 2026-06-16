@@ -56,6 +56,9 @@ bool AnimationEffect::IsCurrent() const {
   // monotonically increasing.
   // https://drafts.csswg.org/web-animations-1/#current (fourth bullet)
   const AnimationTimeline* timeline = mAnimation->GetTimeline();
+  if (timeline && timeline->IsInactiveTimeline()) {
+    return false;
+  }
   if (timeline && !timeline->IsMonotonicallyIncreasing() &&
       mAnimation->PlayState() != AnimationPlayState::Idle) {
     return true;
@@ -78,6 +81,10 @@ bool AnimationEffect::IsCurrent() const {
 
 // https://drafts.csswg.org/web-animations/#in-effect
 bool AnimationEffect::IsInEffect() const {
+  const auto* timeline = mAnimation ? mAnimation->GetTimeline() : nullptr;
+  if (timeline && timeline->IsInactiveTimeline()) {
+    return false;
+  }
   ComputedTiming computedTiming = GetComputedTiming();
   return !computedTiming.mProgress.IsNull();
 }

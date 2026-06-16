@@ -135,7 +135,7 @@ function WidgetsManagementPanel({
                   <moz-toggle
                     id="weather-toggle"
                     pressed={weatherEnabled || null}
-                    onToggle={onToggleWidget}
+                    ontoggle={onToggleWidget}
                     data-preference="widgets.weather.enabled"
                     data-event-source="WEATHER"
                     data-l10n-id="newtab-custom-widget-weather-toggle"
@@ -147,7 +147,7 @@ function WidgetsManagementPanel({
                   <moz-toggle
                     id="timer-toggle"
                     pressed={timerEnabled || null}
-                    onToggle={onToggleWidget}
+                    ontoggle={onToggleWidget}
                     data-preference="widgets.focusTimer.enabled"
                     data-event-source="WIDGET_TIMER"
                     data-l10n-id="newtab-custom-widget-timer-toggle"
@@ -159,7 +159,7 @@ function WidgetsManagementPanel({
                   <moz-toggle
                     id="lists-toggle"
                     pressed={listsEnabled || null}
-                    onToggle={onToggleWidget}
+                    ontoggle={onToggleWidget}
                     data-preference="widgets.lists.enabled"
                     data-event-source="WIDGET_LISTS"
                     data-l10n-id="newtab-custom-widget-lists-toggle"
@@ -168,12 +168,10 @@ function WidgetsManagementPanel({
               )}
               {mayHaveSportsWidget && (
                 <div id="sports-widget-section" className="section">
-                  {/** @backward-compat { version 150 } React 16 (cached page) uses ontoggle; React 19 uses onToggle. Remove onToggle once Firefox 150 reaches Release. */}
                   <moz-toggle
                     id="sports-widget-toggle"
                     pressed={sportsWidgetEnabled || null}
                     ontoggle={onToggleWidget}
-                    onToggle={onToggleWidget}
                     data-preference="widgets.sportsWidget.enabled"
                     data-event-source="WIDGET_SPORTS"
                     data-l10n-id="newtab-custom-widget-sports-toggle2"
@@ -182,12 +180,10 @@ function WidgetsManagementPanel({
               )}
               {mayHaveClocksWidget && (
                 <div id="clocks-widget-section" className="section">
-                  {/** @backward-compat { version 150 } React 16 (cached page) uses ontoggle; React 19 uses onToggle. Remove onToggle once Firefox 150 reaches Release. */}
                   <moz-toggle
                     id="clocks-toggle"
                     pressed={clocksEnabled || null}
                     ontoggle={onToggleWidget}
-                    onToggle={onToggleWidget}
                     data-preference="widgets.clocks.enabled"
                     data-event-source="WIDGET_CLOCKS"
                     data-l10n-id="newtab-custom-widget-clock-toggle"

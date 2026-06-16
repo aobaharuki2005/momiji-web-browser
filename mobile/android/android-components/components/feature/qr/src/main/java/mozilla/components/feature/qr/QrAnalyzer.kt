@@ -4,12 +4,14 @@
 
 package mozilla.components.feature.qr
 
+import android.graphics.Bitmap
 import android.media.Image
 import androidx.annotation.VisibleForTesting
 import com.google.zxing.BinaryBitmap
 import com.google.zxing.LuminanceSource
 import com.google.zxing.MultiFormatReader
 import com.google.zxing.PlanarYUVLuminanceSource
+import com.google.zxing.RGBLuminanceSource
 import com.google.zxing.common.HybridBinarizer
 
 /**
@@ -45,6 +47,29 @@ class QrAnalyzer {
         return decode(source) ?: decode(source.invert())
     }
 
+    /**
+     * Decodes a still [Bitmap] (e.g. picked from the system photo picker). Returns the
+     * QR string on success, or null if no QR is present.
+     *
+     * The bitmap must be software-backed and readable via [Bitmap.getPixels] — hardware
+     * bitmaps from [android.graphics.ImageDecoder] must be configured with a software
+     * allocator before being passed in.
+     *
+     * Still-image decoding is one-shot and does not participate in the streaming state
+     * machine used by [analyze]: the [state] field is neither read nor written here. The
+     * shared [reader] is reset after each call, but because [QrAnalyzer] is not thread-safe,
+     * callers feeding the YUV camera pipeline should still allocate a separate
+     * [QrAnalyzer] for bitmap decoding rather than reusing their camera instance.
+     */
+    fun analyze(bitmap: Bitmap): String? {
+        val width = bitmap.width
+        val height = bitmap.height
+        val pixels = IntArray(width * height)
+        bitmap.getPixels(pixels, 0, width, 0, 0, width, height)
+        val source = RGBLuminanceSource(width, height, pixels)
+        return decodeStateless(source) ?: decodeStateless(source.invert())
+    }
+
     @Suppress("TooGenericExceptionCaught")
     private fun decode(source: LuminanceSource): String? {
         return try {
@@ -58,6 +83,17 @@ class QrAnalyzer {
             }
         } catch (e: Exception) {
             state = STATE_FIND_QRCODE
+            null
+        } finally {
+            reader.reset()
+        }
+    }
+
+    @Suppress("TooGenericExceptionCaught")
+    private fun decodeStateless(source: LuminanceSource): String? {
+        return try {
+            reader.decodeWithState(BinaryBitmap(HybridBinarizer(source)))?.toString()
+        } catch (e: Exception) {
             null
         } finally {
             reader.reset()

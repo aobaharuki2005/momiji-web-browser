@@ -778,7 +778,9 @@ nsresult ServiceWorkerPrivate::Initialize() {
       OriginTrials(), std::move(serviceWorkerData), regInfo->AgentClusterId(),
       remoteType.unwrap(),
       // Bug 2040904. Add support for language override for service workers.
-      ""_ns, nsTArray<nsString>());
+      ""_ns, nsTArray<nsString>(),
+      // Bug 2039330. Add support for timezone override for service workers.
+      u""_ns);
 
   mRemoteWorkerData.referrerInfo() = MakeAndAddRef<ReferrerInfo>(nullptr);
 

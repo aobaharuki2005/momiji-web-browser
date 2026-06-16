@@ -1326,21 +1326,6 @@ FetchDriver::OnStartRequest(nsIRequest* aRequest) {
   // interception case.
   mRequest->MaybeIncreaseResponseTainting(loadInfo->GetTainting());
 
-  // https://fetch.spec.whatwg.org/#main-fetch step 20. An opaque ranged
-  // (206/416) response must not be exposed unless the request was itself a
-  // range request. This must run before BeginAndGetFilteredResponse() delivers
-  // the response to the observer, otherwise FailWithNetworkError() would
-  // deliver a second response.
-  if ((response->GetUnfilteredStatus() == 206 ||
-       response->GetUnfilteredStatus() == 416) &&
-      mRequest->GetResponseTainting() == LoadTainting::Opaque) {
-    IgnoredErrorResult rv;
-    if (!mRequest->Headers()->Has("Range"_ns, rv)) {
-      FailWithNetworkError(NS_ERROR_UNEXPECTED);
-      return NS_ERROR_UNEXPECTED;
-    }
-  }
-
   // Resolves fetch() promise which may trigger code running in a worker.  Make
   // sure the Response is fully initialized before calling this.
   mResponse =
@@ -1813,7 +1798,7 @@ void FetchDriver::SetController(
   mController = aController;
 }
 
-PerformanceTimingData* FetchDriver::GetPerformanceTimingData(
+UniquePtr<PerformanceTimingData> FetchDriver::GetPerformanceTimingData(
     nsAString& aInitiatorType, nsAString& aEntryName) {
   MOZ_ASSERT(XRE_IsParentProcess());
   if (!mChannel) {

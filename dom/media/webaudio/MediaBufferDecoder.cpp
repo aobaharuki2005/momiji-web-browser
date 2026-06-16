@@ -36,9 +36,9 @@ namespace mozilla {
 extern LazyLogModule gMediaDecoderLog;
 
 #define LOG(x, ...) \
-  MOZ_LOG(gMediaDecoderLog, LogLevel::Debug, (x, ##__VA_ARGS__))
+  MOZ_LOG_FMT(gMediaDecoderLog, LogLevel::Debug, x, ##__VA_ARGS__)
 #define LOGW(x, ...) \
-  MOZ_LOG(gMediaDecoderLog, LogLevel::Warning, (x, ##__VA_ARGS__))
+  MOZ_LOG_FMT(gMediaDecoderLog, LogLevel::Warning, x, ##__VA_ARGS__)
 
 using namespace dom;
 
@@ -395,11 +395,11 @@ void MediaDecodeTask::DoDecode() {
 void MediaDecodeTask::UpdateFromPacket(const AudioData& aData) {
   MOZ_ASSERT(OnPSupervisorTaskQueue());
   if (mMediaInfo.mAudio.mRate != 0 && mMediaInfo.mAudio.mRate != aData.mRate) {
-    LOGW("sample-rate drift %u -> %u", mMediaInfo.mAudio.mRate, aData.mRate);
+    LOGW("sample-rate drift {} -> {}", mMediaInfo.mAudio.mRate, aData.mRate);
   }
   mMediaInfo.mAudio.mRate = aData.mRate;
   if (aData.mChannels > mMaxChannels) {
-    LOG("max channel count increased from %u to %u", mMaxChannels,
+    LOG("max channel count increased from {} to {}", mMaxChannels,
         aData.mChannels);
     mMaxChannels = aData.mChannels;
   }
@@ -532,7 +532,7 @@ void MediaDecodeTask::FinishDecode() {
   }
 
   if (mMaxChannels != mMediaInfo.mAudio.mChannels) {
-    LOGW("channel-count drift declared=%u max=%u", mMediaInfo.mAudio.mChannels,
+    LOGW("channel-count drift declared={} max={}", mMediaInfo.mAudio.mChannels,
          mMaxChannels);
   }
 

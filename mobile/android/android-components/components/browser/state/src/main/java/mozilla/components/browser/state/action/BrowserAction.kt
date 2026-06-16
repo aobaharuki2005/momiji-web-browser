@@ -219,16 +219,24 @@ sealed class TabListAction : BrowserAction() {
      * @property tabId the ID of the tab to remove.
      * @property selectParentIfExists whether or not a parent tab should be
      * selected if one exists, defaults to true.
+     * @property excludedTabIds a list of tab IDs that should be ignored when selecting a fallback tab.
      */
-    data class RemoveTabAction(val tabId: String, val selectParentIfExists: Boolean = true) :
-        TabListAction()
+    data class RemoveTabAction(
+        val tabId: String,
+        val selectParentIfExists: Boolean = true,
+        val excludedTabIds: Set<String> = emptySet(),
+    ) : TabListAction()
 
     /**
      * Removes the [TabSessionState]s with the given [tabId]s from the list of sessions.
      *
      * @property tabIds the IDs of the tabs to remove.
+     * @property excludedTabIds a list of tab IDs that should be ignored when selecting a fallback tab.
      */
-    data class RemoveTabsAction(val tabIds: List<String>) : TabListAction()
+    data class RemoveTabsAction(
+        val tabIds: List<String>,
+        val excludedTabIds: Set<String> = emptySet(),
+    ) : TabListAction()
 
     /**
      * Restores state from a (partial) previous state.

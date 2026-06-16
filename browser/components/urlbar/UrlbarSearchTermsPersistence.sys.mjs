@@ -7,6 +7,7 @@ const lazy = {};
 import { UrlbarUtils } from "moz-src:///browser/components/urlbar/UrlbarUtils.sys.mjs";
 
 ChromeUtils.defineESModuleGetters(lazy, {
+  BrowserWindowTracker: "resource:///modules/BrowserWindowTracker.sys.mjs",
   ConfigSearchEngine:
     "moz-src:///toolkit/components/search/ConfigSearchEngine.sys.mjs",
   RemoteSettings: "resource://services-settings/remote-settings.sys.mjs",
@@ -69,6 +70,11 @@ class _UrlbarSearchTermsPersistence {
       return;
     }
 
+    this.QueryInterface = ChromeUtils.generateQI([
+      "nsIObserver",
+      "nsISupportsWeakReference",
+    ]);
+
     this.#urlbarSearchTermsPersistenceSettings = lazy.RemoteSettings(
       URLBAR_PERSISTENCE_SETTINGS_KEY
     );
@@ -88,6 +94,8 @@ class _UrlbarSearchTermsPersistence {
 
     this.#originalProviderInfo = rawProviderInfo;
     this.#setSearchProviderInfo(rawProviderInfo);
+
+    Services.obs.addObserver(this, "urlbar-searchmodechanged", true);
 
     this.#initialized = true;
   }
@@ -111,7 +119,18 @@ class _UrlbarSearchTermsPersistence {
     this.#urlbarSearchTermsPersistenceSettings = null;
     this.#urlbarSearchTermsPersistenceSettingsSync = null;
 
+    Services.obs.removeObserver(this, "urlbar-searchmodechanged");
+
     this.#initialized = false;
+  }
+
+  observe(_subject, topic, _data) {
+    switch (topic) {
+      case "urlbar-searchmodechanged": {
+        this.onSearchModeChanged();
+        break;
+      }
+    }
   }
 
   getSearchProviderInfo() {
@@ -359,7 +378,8 @@ class _UrlbarSearchTermsPersistence {
     return false;
   }
 
-  onSearchModeChanged(window) {
+  onSearchModeChanged() {
+    let window = lazy.BrowserWindowTracker.getTopWindow();
     let urlbar = window.gURLBar;
     if (!urlbar) {
       return;

@@ -97,7 +97,7 @@ std::unique_ptr<webrtc::VideoDecoder> WebrtcVideoDecoderFactory::Create(
   auto type = webrtc::PayloadStringToCodecType(aFormat.name);
 
   // Attempt to create a decoder using MediaDataDecoder.
-  decoder.reset(MediaDataCodec::CreateDecoder(type, mTrackingId));
+  decoder = MediaDataCodec::CreateDecoder(type, mTrackingId);
   if (decoder) {
     return decoder;
   }
@@ -105,14 +105,13 @@ std::unique_ptr<webrtc::VideoDecoder> WebrtcVideoDecoderFactory::Create(
   switch (type) {
     case webrtc::VideoCodecType::kVideoCodecH264: {
       // Get an external decoder
-      auto gmpDecoder =
-          WrapUnique(GmpVideoCodec::CreateDecoder(mPCHandle, mTrackingId));
+      auto gmpDecoder = GmpVideoCodec::CreateDecoder(mPCHandle, mTrackingId);
       {
         MutexAutoLock lock(mGmpPluginMutex);
         mCreatedGmpPluginEvent.Forward(*gmpDecoder->InitPluginEvent());
         mReleasedGmpPluginEvent.Forward(*gmpDecoder->ReleasePluginEvent());
       }
-      decoder.reset(gmpDecoder.release());
+      decoder = std::move(gmpDecoder);
       break;
     }
 
@@ -191,9 +190,7 @@ WebrtcVideoEncoderFactory::InternalFactory::Create(
   std::unique_ptr<webrtc::VideoEncoder> platformEncoder;
 
   auto createPlatformEncoder = [&]() -> std::unique_ptr<webrtc::VideoEncoder> {
-    std::unique_ptr<webrtc::VideoEncoder> platformEncoder;
-    platformEncoder.reset(MediaDataCodec::CreateEncoder(aFormat));
-    return platformEncoder;
+    return MediaDataCodec::CreateEncoder(aFormat);
   };
 
   auto createWebRTCEncoder =
@@ -202,14 +199,13 @@ WebrtcVideoEncoderFactory::InternalFactory::Create(
     switch (webrtc::PayloadStringToCodecType(aFormat.name)) {
       case webrtc::VideoCodecType::kVideoCodecH264: {
         // get an external encoder
-        auto gmpEncoder =
-            WrapUnique(GmpVideoCodec::CreateEncoder(aFormat, mPCHandle));
+        auto gmpEncoder = GmpVideoCodec::CreateEncoder(aFormat, mPCHandle);
         {
           MutexAutoLock lock(mGmpPluginMutex);
           mCreatedGmpPluginEvent.Forward(*gmpEncoder->InitPluginEvent());
           mReleasedGmpPluginEvent.Forward(*gmpEncoder->ReleasePluginEvent());
         }
-        encoder.reset(gmpEncoder.release());
+        encoder = std::move(gmpEncoder);
         break;
       }
       // libvpx fallbacks.

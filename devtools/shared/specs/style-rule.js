@@ -68,6 +68,16 @@ const styleRuleSpec = generateActorSpec({
       },
       response: RetVal("domstylerule.queryContainerForNodeReturn"),
     },
+    getCssExplainersData: {
+      request: {
+        expression: Arg(0, "string"),
+        pseudo: Arg(1, "nullable:string"),
+        inheritedNode: Arg(2, "nullable:domnode"),
+      },
+      response: {
+        steps: RetVal("array:string"),
+      },
+    },
   },
 });
 

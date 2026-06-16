@@ -496,6 +496,9 @@ inline constexpr auto ParamTraitsReadUsesOutParam()
 
 template <typename P>
 [[nodiscard]] inline bool ReadParam(MessageReader* reader, P* p) {
+  static_assert(!std::is_const_v<P>,
+                "ReadParam may only be used with const types when returning a "
+                "ReadResult (call as ReadParam<T>(reader)).");
   if constexpr (!detail::ParamTraitsReadUsesOutParam<P>()) {
     auto maybe = ParamTraits<P>::Read(reader);
     if (maybe) {
@@ -509,12 +512,14 @@ template <typename P>
 }
 
 template <typename P>
-[[nodiscard]] inline ReadResult<P> ReadParam(MessageReader* reader) {
-  if constexpr (!detail::ParamTraitsReadUsesOutParam<P>()) {
-    return ParamTraits<P>::Read(reader);
+[[nodiscard]] inline ReadResult<std::remove_cv_t<P>> ReadParam(
+    MessageReader* reader) {
+  using ReadType = std::remove_cv_t<P>;
+  if constexpr (!detail::ParamTraitsReadUsesOutParam<ReadType>()) {
+    return ParamTraits<ReadType>::Read(reader);
   } else {
-    ReadResult<P> p;
-    p.SetOk(ParamTraits<P>::Read(reader, &p.GetStorage()));
+    ReadResult<ReadType> p;
+    p.SetOk(ParamTraits<ReadType>::Read(reader, &p.GetStorage()));
     return p;
   }
 }
@@ -1117,13 +1122,14 @@ struct ParamTraitsStd<std::tuple<Ts...>> {
   }
 };
 
-template <class C, class E>
+template <class C>
 struct ParamTraitsStlCollectionHelper {
   using param_type = C;
+  using value_type = typename C::value_type;
 
   static void Write(MessageWriter* writer, const param_type& p) {
     WriteParam(writer, static_cast<uint64_t>(p.size()));
-    for (const E& elt : p) {
+    for (const value_type& elt : p) {
       WriteParam(writer, elt);
     }
   }
@@ -1134,7 +1140,7 @@ struct ParamTraitsStlCollectionHelper {
       return false;
     }
     for (uint64_t i = 0; i < size; ++i) {
-      auto elt = ReadParam<E>(reader);
+      auto elt = ReadParam<value_type>(reader);
       if (!elt) {
         return false;
       }
@@ -1146,21 +1152,19 @@ struct ParamTraitsStlCollectionHelper {
 
 template <class K, class V, class C>
 struct ParamTraitsStd<std::map<K, V, C>>
-    : public ParamTraitsStlCollectionHelper<std::map<K, V, C>,
-                                            std::pair<K, V>> {};
+    : public ParamTraitsStlCollectionHelper<std::map<K, V, C>> {};
 
 template <class K, class V, class H, class P>
 struct ParamTraitsStd<std::unordered_map<K, V, H, P>>
-    : public ParamTraitsStlCollectionHelper<std::unordered_map<K, V, H, P>,
-                                            std::pair<K, V>> {};
+    : public ParamTraitsStlCollectionHelper<std::unordered_map<K, V, H, P>> {};
 
 template <class K, class C>
 struct ParamTraitsStd<std::set<K, C>>
-    : public ParamTraitsStlCollectionHelper<std::set<K, C>, K> {};
+    : public ParamTraitsStlCollectionHelper<std::set<K, C>> {};
 
 template <class K, class H, class P>
 struct ParamTraitsStd<std::unordered_set<K, H, P>>
-    : public ParamTraitsStlCollectionHelper<std::unordered_set<K, H, P>, K> {};
+    : public ParamTraitsStlCollectionHelper<std::unordered_set<K, H, P>> {};
 
 template <>
 struct ParamTraitsStd<std::monostate> {

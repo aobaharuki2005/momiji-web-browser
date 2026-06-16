@@ -70,3 +70,7 @@ about-private-browsing-cookie-banners-promo-body = We now automatically refuse m
 about-private-browsing-felt-privacy-v1-info-header = Leave no traces on this device
 about-private-browsing-felt-privacy-v1-info-body = { -brand-short-name} deletes your cookies, history, and site data when you close all your private windows.
 about-private-browsing-felt-privacy-v1-info-link = Who might be able to see my activity?
+
+## Strings for the Nova redesign of about:privatebrowsing
+
+about-private-browsing-nova-info-body = Closing all your private windows deletes your cookies, history and site data.

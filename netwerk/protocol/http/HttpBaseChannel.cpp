@@ -37,6 +37,7 @@
 #include "mozilla/dom/BrowsingContext.h"
 #include "mozilla/dom/CanonicalBrowsingContext.h"
 #include "mozilla/dom/Document.h"
+#include "mozilla/dom/ParentProcessChannelHandle.h"
 #include "mozilla/dom/FetchPriority.h"
 #include "mozilla/dom/LoadURIOptionsBinding.h"
 #include "mozilla/dom/nsHTTPSOnlyUtils.h"
@@ -835,6 +836,26 @@ HttpBaseChannel::Open(nsIInputStream** aStream) {
   }
 
   return NS_ImplementChannelOpen(this, aStream);
+}
+
+NS_IMETHODIMP
+HttpBaseChannel::GetParentProcessChannelHandle(
+    mozilla::dom::ParentProcessChannelHandle** aValue) {
+  *aValue = do_AddRef(mParentProcessChannelHandle).take();
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+HttpBaseChannel::SetParentProcessChannelHandle(
+    mozilla::dom::ParentProcessChannelHandle* aValue) {
+  if (XRE_IsParentProcess()) {
+    MOZ_ASSERT_UNREACHABLE(
+        "SetParentProcessChannelHandle in the parent process would leak");
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
+  mParentProcessChannelHandle = aValue;
+  return NS_OK;
 }
 
 //-----------------------------------------------------------------------------

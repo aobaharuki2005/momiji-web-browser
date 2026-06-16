@@ -213,7 +213,7 @@ const CanonicalBrowsingContext* CanonicalBrowsingContext::Cast(
 }
 
 already_AddRefed<CanonicalBrowsingContext> CanonicalBrowsingContext::Cast(
-    already_AddRefed<BrowsingContext>&& aContext) {
+    already_AddRefed<BrowsingContext> aContext) {
   MOZ_RELEASE_ASSERT(XRE_IsParentProcess());
   return aContext.downcast<CanonicalBrowsingContext>();
 }

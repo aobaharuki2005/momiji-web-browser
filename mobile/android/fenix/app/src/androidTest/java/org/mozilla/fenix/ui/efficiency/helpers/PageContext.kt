@@ -48,6 +48,7 @@ import org.mozilla.fenix.ui.efficiency.pageObjects.ShareOverlayPage
 import org.mozilla.fenix.ui.efficiency.pageObjects.ShortcutsPage
 import org.mozilla.fenix.ui.efficiency.pageObjects.TabDrawerPage
 import org.mozilla.fenix.ui.efficiency.pageObjects.ToolbarComponent
+import org.mozilla.fenix.ui.efficiency.pageObjects.UnifiedTrustPanelPage
 import androidx.compose.ui.test.junit4.v2.AndroidComposeTestRule as AndroidComposeTestRuleV2
 
 class PageContext(val composeRule: AndroidComposeTestRule<HomeActivityIntentTestRule, *>) {
@@ -94,6 +95,7 @@ class PageContext(val composeRule: AndroidComposeTestRule<HomeActivityIntentTest
     val shortcuts = ShortcutsPage(composeRule)
     val tabDrawer = TabDrawerPage(composeRule)
     val toolbar = ToolbarComponent(composeRule)
+    val unifiedTrustPanel = UnifiedTrustPanelPage(composeRule)
 
     fun initTestRule(
         skipOnboarding: Boolean = true,

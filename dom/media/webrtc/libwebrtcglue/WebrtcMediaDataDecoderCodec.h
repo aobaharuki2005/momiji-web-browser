@@ -35,6 +35,7 @@ class WebrtcMediaDataDecoder : public WebrtcVideoDecoder {
   static bool IsCodecEnabled(webrtc::VideoCodecType aCodecType);
 
   WebrtcMediaDataDecoder(nsACString& aCodecMimeType, TrackingId aTrackingId);
+  ~WebrtcMediaDataDecoder();
 
   bool Configure(const webrtc::VideoDecoder::Settings& settings) override;
 
@@ -47,7 +48,6 @@ class WebrtcMediaDataDecoder : public WebrtcVideoDecoder {
   int32_t Release() override;
 
  private:
-  ~WebrtcMediaDataDecoder();
   void QueueFrame(MediaRawData* aFrame);
   bool OnTaskQueue() const;
   int32_t CreateDecoder();

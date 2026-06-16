@@ -68,7 +68,16 @@ try { rec(0); } catch (e) { assertEq(countFrames(e), 0); }
 
 Error.stackTraceLimit = undefined;
 assertEq(Error.stackTraceLimit, undefined);
-try { rec(0); } catch (e) { assertEq(countFrames(e), 0); }
+try { rec(0); } catch (e) {
+  assertEq(typeof e.stack, "undefined");
+  assertEq("stack" in e, true);
+}
+assertEq(typeof new Error("test").stack, "undefined");
+assertEq("stack" in new Error("test"), true);
+const captureObj = {};
+Error.captureStackTrace(captureObj);
+assertEq(typeof captureObj.stack, "undefined");
+assertEq("stack" in captureObj, true);
 
 Error.stackTraceLimit = -0;
 assertEq(Error.stackTraceLimit, -0);
@@ -118,9 +127,19 @@ function deep(n) {
 function caller() { return deep(5); }
 assertEq(countFrames(caller()), 1);
 
+// With stackTraceLimit=1 and a constructorOpt that skips the topmost
+// JS frame, we must still capture one frame (the global frame).
+Error.stackTraceLimit = 1;
+function smallLimitCaller() {
+    const target = {};
+    Error.captureStackTrace(target, smallLimitCaller);
+    return target;
+}
+assertEq(countFrames(smallLimitCaller()), 1);
+
 delete Error.stackTraceLimit;
 assertEq("stackTraceLimit" in Error, false);
-try { rec(0); } catch (e) { assertEq(countFrames(e), 0); }
+try { rec(0); } catch (e) { assertEq(typeof e.stack, "undefined"); }
 
 let getterCalled = false;
 Object.defineProperty(Error, "stackTraceLimit", {
@@ -144,5 +163,23 @@ assertEq(getterCalled, false);
 Object.defineProperty(Error, "stackTraceLimit", {
     value: 3, writable: true, enumerable: true, configurable: true
 });
+
+// Exercise JSContext::setPendingException's stack capture path with
+// non-Error throws across different stackTraceLimit values. The realm
+// captures stacks for the first ~50 throws, so these all go through
+// CaptureStack with the resolved limit.
+Error.stackTraceLimit = undefined;
+try { throw "string error"; } catch (e) { assertEq(e, "string error"); }
+try { throw 42; } catch (e) { assertEq(e, 42); }
+try { throw null; } catch (e) { assertEq(e, null); }
+try { throw { value: 1 }; } catch (e) { assertEq(e.value, 1); }
+
+Error.stackTraceLimit = 0;
+try { throw "string error"; } catch (e) { assertEq(e, "string error"); }
+
+Error.stackTraceLimit = 5;
+try { throw "string error"; } catch (e) { assertEq(e, "string error"); }
+
+Error.stackTraceLimit = 3;
 Error = "";
 try { rec(0); } catch (e) { assertEq(countFrames(e), 3); }

@@ -63,6 +63,46 @@ template struct StyleStrong<StyleLockedPositionTryRule>;
 template struct StyleStrong<StyleLockedNestedDeclarationsRule>;
 template struct StyleStrong<StyleViewTransitionRule>;
 
+template <typename T, size_t N>
+inline StyleOwnedArray<T, N>::StyleOwnedArray(const StyleOwnedArray& aOther)
+    : ptr(static_cast<T*>(moz_xmalloc(N * sizeof(T)))) {
+  for (size_t i = 0; i < N; ++i) {
+    new (&ptr[i]) T(aOther.ptr[i]);
+  }
+}
+
+template <typename T, size_t N>
+template <typename... Args>
+  requires(sizeof...(Args) == N)
+inline StyleOwnedArray<T, N>::StyleOwnedArray(Args&&... aArgs)
+    : ptr(static_cast<T*>(malloc(N * sizeof(T)))) {
+  size_t i = 0;
+  (new (&ptr[i++]) T(std::forward<Args>(aArgs)), ...);
+}
+
+template <typename T, size_t N>
+inline StyleOwnedArray<T, N>& StyleOwnedArray<T, N>::operator=(
+    const StyleOwnedArray& aOther) {
+  if (this == &aOther) {
+    return *this;
+  }
+  for (size_t i = 0; i < N; ++i) {
+    ptr[i].~T();
+  }
+  for (size_t i = 0; i < N; ++i) {
+    new (&ptr[i]) T(aOther.ptr[i]);
+  }
+  return *this;
+}
+
+template <typename T, size_t N>
+inline StyleOwnedArray<T, N>::~StyleOwnedArray() {
+  for (size_t i = 0; i < N; ++i) {
+    ptr[i].~T();
+  }
+  free(ptr);
+}
+
 template <typename T>
 inline void StyleOwnedSlice<T>::Clear() {
   if (!len) {
@@ -532,6 +572,7 @@ using LengthOrAuto = StyleLengthOrAuto;
 using NonNegativeLength = StyleNonNegativeLength;
 using NonNegativeLengthOrAuto = StyleNonNegativeLengthOrAuto;
 using BorderRadius = StyleBorderRadius;
+using CornerShapeRect = StyleCornerShapeRect;
 
 bool StyleCSSPixelLength::IsZero() const { return _0 == 0.0f; }
 
@@ -1490,6 +1531,9 @@ inline Span<const mozilla::StyleAtom>
 StyleTreeScoped<StyleAnchorNameIdent>::AsSpan() const {
   return value.AsSpan();
 }
+
+inline StyleNumericType::StyleNumericType()
+    : exponents{}, percent_hint(StyleOptional<StyleNumericBaseType>::None()) {}
 
 }  // namespace mozilla
 

@@ -463,9 +463,9 @@ mozilla::ipc::IPCResult BackgroundParentImpl::RecvCreateFileSystemManagerParent(
 
 mozilla::ipc::IPCResult BackgroundParentImpl::RecvCreateWebTransportParent(
     const nsAString& aURL, nsIPrincipal* aPrincipal,
-    const uint64_t& aBrowsingContextID,
-    const mozilla::Maybe<IPCClientInfo>& aClientInfo, const bool& aDedicated,
-    const bool& aRequireUnreliable, const uint32_t& aCongestionControl,
+    const uint64_t& aBrowsingContextID, const IPCClientInfo& aClientInfo,
+    const bool& aDedicated, const bool& aRequireUnreliable,
+    const uint32_t& aCongestionControl,
     nsTArray<WebTransportHash>&& aServerCertHashes,
     Endpoint<PWebTransportParent>&& aParentEndpoint,
     CreateWebTransportParentResolver&& aResolver) {

@@ -16,7 +16,7 @@
 #include "nsGkAtoms.h"
 
 nsGenericHTMLElement* NS_NewHTMLSlotElement(
-    already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo,
+    already_AddRefed<mozilla::dom::NodeInfo> aNodeInfo,
     mozilla::dom::FromParser aFromParser) {
   RefPtr<mozilla::dom::NodeInfo> nodeInfo(std::move(aNodeInfo));
   auto* nim = nodeInfo->NodeInfoManager();
@@ -26,7 +26,7 @@ nsGenericHTMLElement* NS_NewHTMLSlotElement(
 namespace mozilla::dom {
 
 HTMLSlotElement::HTMLSlotElement(
-    already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo)
+    already_AddRefed<mozilla::dom::NodeInfo> aNodeInfo)
     : nsGenericHTMLElement(std::move(aNodeInfo)) {}
 
 HTMLSlotElement::~HTMLSlotElement() {

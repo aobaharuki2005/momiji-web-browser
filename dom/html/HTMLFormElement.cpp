@@ -95,7 +95,7 @@ static constexpr const nsAttrValue::EnumTableEntry* kFormDefaultAutocomplete =
     &kFormAutocompleteTable[0];
 
 HTMLFormElement::HTMLFormElement(
-    already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo)
+    already_AddRefed<mozilla::dom::NodeInfo> aNodeInfo)
     : nsGenericHTMLElement(std::move(aNodeInfo)),
       mControls(new HTMLFormControlsCollection(this)),
       mPendingSubmission(nullptr),

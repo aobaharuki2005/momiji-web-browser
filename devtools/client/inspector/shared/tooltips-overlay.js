@@ -12,6 +12,7 @@
 const flags = require("resource://devtools/shared/flags.js");
 const {
   VIEW_NODE_ATTR_TYPE,
+  VIEW_NODE_CSS_EXPLAINERS,
   VIEW_NODE_CSS_QUERY_CONTAINER,
   VIEW_NODE_CSS_SELECTOR_WARNINGS,
   VIEW_NODE_FONT_TYPE,
@@ -59,6 +60,12 @@ loader.lazyRequireGetter(
 );
 loader.lazyRequireGetter(
   this,
+  "CssExplainersTooltipHelper",
+  "resource://devtools/client/shared/widgets/tooltip/css-explainers-tooltip-helper.js",
+  false
+);
+loader.lazyRequireGetter(
+  this,
   "CssQueryContainerTooltipHelper",
   "resource://devtools/client/shared/widgets/tooltip/css-query-container-tooltip-helper.js",
   false
@@ -81,6 +88,7 @@ const PREF_IMAGE_TOOLTIP_SIZE = "devtools.inspector.imagePreviewTooltipSize";
 // Types of existing tooltips
 const TOOLTIP_ATTR_TYPE = "attr";
 const TOOLTIP_CSS_COMPATIBILITY = "css-compatibility";
+const TOOLTIP_CSS_EXPLAINERS = "css-explainers";
 const TOOLTIP_CSS_QUERY_CONTAINER = "css-query-info";
 const TOOLTIP_CSS_SELECTOR_WARNINGS = "css-selector-warnings";
 const TOOLTIP_FONTFAMILY_TYPE = "font-family";
@@ -135,6 +143,7 @@ class TooltipsOverlay {
 
     this.inactiveCssTooltipHelper = new InactiveCssTooltipHelper();
     this.compatibilityTooltipHelper = new CssCompatibilityTooltipHelper();
+    this.cssExplainersTooltipHelper = new CssExplainersTooltipHelper();
     this.cssQueryContainerTooltipHelper = new CssQueryContainerTooltipHelper();
     this.cssSelectorWarningsTooltipHelper =
       new CssSelectorWarningsTooltipHelper();
@@ -278,6 +287,11 @@ class TooltipsOverlay {
     // Variable preview tooltip
     if (type === VIEW_NODE_VARIABLE_TYPE) {
       tooltipType = TOOLTIP_VARIABLE_TYPE;
+    }
+
+    // Css Explainers tooltip
+    if (type === VIEW_NODE_CSS_EXPLAINERS) {
+      tooltipType = TOOLTIP_CSS_EXPLAINERS;
     }
 
     // Container info tooltip
@@ -483,6 +497,23 @@ class TooltipsOverlay {
       // to the condition element as we're using the .tooltip-anchor class to style the
       // condition when showing the tooltip
       return conditionEl;
+    }
+
+    if (type === TOOLTIP_CSS_EXPLAINERS) {
+      const functionEl = target.closest(
+        "[data-function-expression]:has(.css-explainers-function-name)"
+      );
+      if (!functionEl) {
+        return false;
+      }
+
+      await this.cssExplainersTooltipHelper.setContent(
+        nodeInfo.value,
+        this.getTooltip("interactiveTooltip")
+      );
+
+      this.sendOpenScalarToTelemetry(type);
+      return functionEl;
     }
 
     if (type === TOOLTIP_CSS_SELECTOR_WARNINGS) {

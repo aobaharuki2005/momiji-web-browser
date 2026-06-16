@@ -2060,7 +2060,7 @@ nsStyleImageLayers::Layer::Layer()
       mSize(StyleBackgroundSize::ExplicitSize(LengthPercentageOrAuto::Auto(),
                                               LengthPercentageOrAuto::Auto())),
 
-      mClip(StyleGeometryBox::BorderBox),
+      mClip(StyleBackgroundClip::BorderBox),
       mAttachment(StyleImageLayerAttachment::Scroll),
       mBlendMode(StyleBlend::Normal),
       mComposite(StyleMaskComposite::Add),

@@ -31,6 +31,9 @@
 #  include <sys/ioccom.h>
 #endif
 #include <sys/ioctl.h>
+#ifdef MOZ_LOGGING
+#  include "gfxUtils.h"
+#endif
 
 // DMABufDevice defines its own version of this which collides with the
 // official version in drm_fourcc.h
@@ -1470,6 +1473,14 @@ nsresult DMABufSurface::BuildSurfaceDescriptorBuffer(
 }
 
 #ifdef MOZ_LOGGING
+// Universal OpenGL version but needs GL/textures.
+void DMABufSurfaceRGBA::DumpToFile(const char* aFile) {
+  RefPtr<gfx::DataSourceSurface> surf = GetAsSourceSurface();
+  gfxUtils::WriteAsPNG(surf, aFile);
+}
+
+#  if 0
+// A direct mapping version without GL.
 void DMABufSurfaceRGBA::DumpToFile(const char* pFile) {
   uint32_t stride;
 
@@ -1492,6 +1503,7 @@ void DMABufSurfaceRGBA::DumpToFile(const char* pFile) {
     cairo_surface_write_to_png(surface, pFile);
   }
 }
+#  endif
 #endif
 
 #if 0
@@ -2592,9 +2604,9 @@ void DMABufSurfaceYUV::ClearPlane(int aPlane) {
          mMappedRegionStride[aPlane] * mHeight[aPlane]);
   Unmap(aPlane);
 }
+#endif
 
-#  include "gfxUtils.h"
-
+#ifdef MOZ_LOGGING
 void DMABufSurfaceYUV::DumpToFile(const char* aFile) {
   RefPtr<gfx::DataSourceSurface> surf = GetAsSourceSurface();
   gfxUtils::WriteAsPNG(surf, aFile);

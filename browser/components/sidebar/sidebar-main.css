@@ -85,7 +85,13 @@
   }
 
   > moz-button:not(.tools-overflow) {
-    --button-outer-padding-inline: var(--space-medium);
+    /* --sidebar-launcher-button-padding-inline is set in the parent doc
+     * (browser/themes/shared/sidebar.css) so it can react to the document's
+     * uidensity attribute; falls back to --space-medium for any context
+     * that doesn't set it. The auto-compact width check uses a fixed
+     * reference width matching the non-compact value, so the launcher must
+     * visibly shrink in compact mode to keep the trigger stable. */
+    --button-outer-padding-inline: var(--sidebar-launcher-button-padding-inline, var(--space-medium));
     --button-outer-padding-block: var(--space-xxsmall);
 
     &:first-of-type {

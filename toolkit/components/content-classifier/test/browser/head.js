@@ -106,12 +106,36 @@ async function populateRS(db, id, name, rules) {
   return record;
 }
 
+// Wait until no LISTS_LOADED_TOPIC notification has arrived for
+// `quietMs`. Used to drain in-flight rebuilds: with the off-thread
+// UpdateFeatures pipeline, several closures may dispatch Notifies
+// asynchronously, and the *last* one carries the settled state. A
+// plain TestUtils.topicObserved would resolve on whichever Notify
+// happens to fire first, which can be a stale-snapshot rebuild that
+// hasn't been superseded yet. Polling for a quiet window is the
+// pragmatic equivalent of "wait until mBuildThread is drained".
+async function waitForListsSettled(quietMs = 200) {
+  return new Promise(resolve => {
+    let timer;
+    let observer = () => {
+      clearTimeout(timer);
+      timer = setTimeout(done, quietMs);
+    };
+    function done() {
+      Services.obs.removeObserver(observer, LISTS_LOADED_TOPIC);
+      resolve();
+    }
+    Services.obs.addObserver(observer, LISTS_LOADED_TOPIC);
+    timer = setTimeout(done, quietMs);
+  });
+}
+
 async function syncAndWaitForLists(client, records) {
-  let listsLoaded = TestUtils.topicObserved(LISTS_LOADED_TOPIC);
+  let settled = waitForListsSettled();
   await client.emit("sync", {
     data: { created: records, updated: [], deleted: [] },
   });
-  await listsLoaded;
+  await settled;
 }
 
 // Get the RS client and register cleanup to clear its DB and disable
@@ -208,6 +232,12 @@ async function pushEnginePrefs({
       ["privacy.trackingprotection.content.annotation.test_list_urls", ""],
     ],
   });
+  // Drain any rebuild(s) triggered by the pref callbacks before
+  // returning. Without this, a Notify from this pref change can be
+  // caught by a subsequent test observer (set up after pushEnginePrefs
+  // returns), making the test miss its own Notify and run assertions
+  // while a rebuild is still in flight.
+  await waitForListsSettled();
 }
 
 // Inspect a content-blocking log dump and assert that `origin` has an

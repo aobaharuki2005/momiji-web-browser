@@ -7,6 +7,7 @@
 
 #include "nsHttpHeaderArray.h"
 #include "nsHttp.h"
+#include "nsISupportsImpl.h"
 #include "nsString.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/RecursiveMutex.h"
@@ -256,6 +257,27 @@ class nsHttpResponseHead {
   bool mInVisitHeaders MOZ_GUARDED_BY(mRecursiveMutex){false};
 
   friend struct IPC::ParamTraits<nsHttpResponseHead>;
+};
+
+// Refcounted, immutable wrapper around the HTTP CONNECT response head. It lets
+// the connection, transaction and channel share a single head by pointer
+// instead of deep-copying the header array on every request, which used to be
+// a measurable per-request cost on proxied loads. See bug 2045419.
+class ProxyConnectResponseHead final {
+ public:
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(ProxyConnectResponseHead)
+
+  explicit ProxyConnectResponseHead(const nsHttpResponseHead& aHead)
+      : mHead(aHead) {}
+  explicit ProxyConnectResponseHead(nsHttpResponseHead&& aHead)
+      : mHead(std::move(aHead)) {}
+
+  const nsHttpResponseHead& Head() const { return mHead; }
+
+ private:
+  ~ProxyConnectResponseHead() = default;
+
+  const nsHttpResponseHead mHead;
 };
 
 }  // namespace net

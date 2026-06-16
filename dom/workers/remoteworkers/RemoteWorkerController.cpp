@@ -294,6 +294,14 @@ void RemoteWorkerController::SetLocaleOverride(
   MaybeStartSharedWorkerOp(aLanguageOverride, aLanguages);
 }
 
+void RemoteWorkerController::UpdateTimezoneOverride(
+    const nsAString& aTimezoneOverride) {
+  AssertIsOnBackgroundThread();
+
+  MaybeStartSharedWorkerOp(PendingSharedWorkerOp::eUpdateTimezoneOverride,
+                           aTimezoneOverride);
+}
+
 RefPtr<ServiceWorkerOpPromise> RemoteWorkerController::ExecServiceWorkerOp(
     ServiceWorkerOpArgs&& aArgs) {
   AssertIsOnBackgroundThread();
@@ -375,6 +383,13 @@ RemoteWorkerController::PendingSharedWorkerOp::PendingSharedWorkerOp(
   AssertIsOnBackgroundThread();
 }
 
+RemoteWorkerController::PendingSharedWorkerOp::PendingSharedWorkerOp(
+    Type aType, const nsAString& aTimezoneOverride)
+    : mType(aType), mTimezoneOverride(aTimezoneOverride) {
+  AssertIsOnBackgroundThread();
+  MOZ_ASSERT(aType == eUpdateTimezoneOverride);
+}
+
 RemoteWorkerController::PendingSharedWorkerOp::~PendingSharedWorkerOp() {
   AssertIsOnBackgroundThread();
   MOZ_DIAGNOSTIC_ASSERT(mCompleted);
@@ -438,6 +453,10 @@ bool RemoteWorkerController::PendingSharedWorkerOp::MaybeStart(
     case eSetLocaleOverride:
       (void)aOwner->mActor->SendExecOp(
           SharedWorkerSetLocaleOverrideOpArgs(mLanguageOverride, mLanguages));
+      break;
+    case eUpdateTimezoneOverride:
+      (void)aOwner->mActor->SendExecOp(
+          SharedWorkerUpdateTimezoneOverrideOpArgs(mTimezoneOverride));
       break;
     default:
       MOZ_CRASH("Unknown op.");

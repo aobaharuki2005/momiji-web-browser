@@ -140,7 +140,7 @@ export async function loadPrompt(feature, opts = {}) {
     try {
       const override = JSON.parse(customPromptsRaw)?.[feature];
       if (override) {
-        return override;
+        return { prompt: override, version: "" };
       }
     } catch (_e) {
       // invalid JSON — fall through to RS
@@ -153,5 +153,5 @@ export async function loadPrompt(feature, opts = {}) {
     err.clientReason = "promptLoadFailure";
     throw err;
   }
-  return mainConfig.prompts;
+  return { prompt: mainConfig.prompts, version: mainConfig.version };
 }

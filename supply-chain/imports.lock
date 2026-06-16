@@ -36,13 +36,6 @@ user-id = 1258
 user-login = "padenot"
 user-name = "Paul Adenot"
 
-[[publisher.authenticator]]
-version = "0.5.0"
-when = "2025-10-22"
-user-id = 175410
-user-login = "jschanck"
-user-name = "John Schanck"
-
 [[publisher.bhttp]]
 version = "0.7.2"
 when = "2025-12-11"
@@ -128,15 +121,15 @@ user-login = "epage"
 user-name = "Ed Page"
 
 [[publisher.clubcard]]
-version = "0.3.2"
-when = "2024-10-08"
+version = "0.3.3"
+when = "2026-03-21"
 user-id = 175410
 user-login = "jschanck"
 user-name = "John Schanck"
 
 [[publisher.clubcard-crlite]]
-version = "0.3.0"
-when = "2024-10-14"
+version = "0.4.0"
+when = "2026-06-12"
 user-id = 175410
 user-login = "jschanck"
 user-name = "John Schanck"
@@ -460,13 +453,6 @@ when = "2025-12-19"
 user-id = 83100
 user-login = "mxinden"
 user-name = "Max Inden"
-
-[[publisher.nss-gk-api]]
-version = "0.3.0"
-when = "2023-06-14"
-user-id = 175410
-user-login = "jschanck"
-user-name = "John Schanck"
 
 [[publisher.num]]
 version = "0.4.3"

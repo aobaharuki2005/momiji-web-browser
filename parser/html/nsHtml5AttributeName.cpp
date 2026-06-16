@@ -37,14 +37,14 @@
 
 #include "nsHtml5AttributeName.h"
 
-int32_t* nsHtml5AttributeName::ALL_NO_NS = 0;
-int32_t* nsHtml5AttributeName::XMLNS_NS = 0;
-int32_t* nsHtml5AttributeName::XML_NS = 0;
-int32_t* nsHtml5AttributeName::XLINK_NS = 0;
-nsStaticAtom** nsHtml5AttributeName::ALL_NO_PREFIX = 0;
-nsStaticAtom** nsHtml5AttributeName::XMLNS_PREFIX = 0;
-nsStaticAtom** nsHtml5AttributeName::XLINK_PREFIX = 0;
-nsStaticAtom** nsHtml5AttributeName::XML_PREFIX = 0;
+int32_t* nsHtml5AttributeName::ALL_NO_NS = nullptr;
+int32_t* nsHtml5AttributeName::XMLNS_NS = nullptr;
+int32_t* nsHtml5AttributeName::XML_NS = nullptr;
+int32_t* nsHtml5AttributeName::XLINK_NS = nullptr;
+nsStaticAtom** nsHtml5AttributeName::ALL_NO_PREFIX = nullptr;
+nsStaticAtom** nsHtml5AttributeName::XMLNS_PREFIX = nullptr;
+nsStaticAtom** nsHtml5AttributeName::XLINK_PREFIX = nullptr;
+nsStaticAtom** nsHtml5AttributeName::XML_PREFIX = nullptr;
 
 nsHtml5AttributeName::nsHtml5AttributeName(int32_t* uri, nsStaticAtom* html,
                                            nsStaticAtom* mathml,
@@ -613,7 +613,7 @@ nsHtml5AttributeName* nsHtml5AttributeName::ATTR_DY = nullptr;
 nsHtml5AttributeName* nsHtml5AttributeName::ATTR_FY = nullptr;
 nsHtml5AttributeName* nsHtml5AttributeName::ATTR_RY = nullptr;
 nsHtml5AttributeName* nsHtml5AttributeName::ATTR_REFY = nullptr;
-nsHtml5AttributeName** nsHtml5AttributeName::ATTRIBUTE_NAMES = 0;
+nsHtml5AttributeName** nsHtml5AttributeName::ATTRIBUTE_NAMES = nullptr;
 static int32_t const ATTRIBUTE_HASHES_DATA[] = {
     1854474395, 1747792072, 1941409583, 1680446153, 1772032615, 1910507338,
     2001634458, 1680165421, 1720503541, 1754645079, 1804978712, 1894552650,

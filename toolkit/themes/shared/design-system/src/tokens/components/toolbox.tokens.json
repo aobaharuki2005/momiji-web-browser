@@ -36,7 +36,7 @@
       "@base": {
         "value": {
           "light": "{color.gray.100}",
-          "dark": "{color.gray.05}",
+          "dark": "{color.gray.0}",
           "nativeTheme": "-moz-headerbartext"
         }
       },

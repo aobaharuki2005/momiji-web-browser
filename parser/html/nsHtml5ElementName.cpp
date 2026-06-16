@@ -271,7 +271,7 @@ nsHtml5ElementName* nsHtml5ElementName::ELT_FEMORPHOLOGY = nullptr;
 nsHtml5ElementName* nsHtml5ElementName::ELT_RUBY = nullptr;
 nsHtml5ElementName* nsHtml5ElementName::ELT_SUMMARY = nullptr;
 nsHtml5ElementName* nsHtml5ElementName::ELT_TBODY = nullptr;
-nsHtml5ElementName** nsHtml5ElementName::ELEMENT_NAMES = 0;
+nsHtml5ElementName** nsHtml5ElementName::ELEMENT_NAMES = nullptr;
 static int32_t const ELEMENT_HASHES_DATA[] = {
     1914900309, 1749715159, 2001349720, 943718402,  1805647874, 1971465813,
     2008125638, 60347747,   1733890180, 1757146773, 1881498736, 1967128578,

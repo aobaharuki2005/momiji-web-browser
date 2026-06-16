@@ -591,9 +591,9 @@ static void ReleaseValue(T* aPropertyValue) {
     return nsQueryFrame::class##_id;                                           \
   }
 
-#define NS_IMPL_FRAMEARENA_HELPERS(class)                             \
-  void* class ::operator new(size_t sz, mozilla::PresShell* aShell) { \
-    return aShell->AllocateFrame(nsQueryFrame::class##_id, sz);       \
+#define NS_IMPL_FRAMEARENA_HELPERS(class)                              \
+  void* class ::operator new(size_t sz, mozilla::PresShell * aShell) { \
+    return aShell->AllocateFrame(nsQueryFrame::class##_id, sz);        \
   }
 
 #define NS_DECL_ABSTRACT_FRAME(class)                                         \
@@ -616,7 +616,7 @@ namespace mozilla {
 struct MOZ_RAII FrameDestroyContext {
   explicit FrameDestroyContext(PresShell* aPs) : mPresShell(aPs) {}
 
-  void AddAnonymousContent(already_AddRefed<nsIContent>&& aContent) {
+  void AddAnonymousContent(already_AddRefed<nsIContent> aContent) {
     if (RefPtr<nsIContent> content = aContent) {
       mAnonymousContent.AppendElement(std::move(content));
     }
@@ -1672,6 +1672,7 @@ class nsIFrame : public nsQueryFrame {
    * Return whether any radii are nonzero.
    */
   static bool ComputeBorderRadii(const mozilla::BorderRadius&,
+                                 const mozilla::CornerShapeRect&,
                                  const nsSize& aFrameSize,
                                  const nsSize& aBorderArea, Sides aSkipSides,
                                  nsRectCornerRadii&);

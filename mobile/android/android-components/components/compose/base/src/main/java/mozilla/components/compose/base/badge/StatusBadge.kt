@@ -24,6 +24,8 @@ import androidx.compose.ui.tooling.preview.PreviewLightDark
 import mozilla.components.compose.base.theme.AcornTheme
 import mozilla.components.compose.base.theme.acornPrivateColorScheme
 import mozilla.components.compose.base.theme.information
+import mozilla.components.compose.base.theme.onInformation
+import mozilla.components.compose.base.theme.onSuccess
 import mozilla.components.compose.base.theme.success
 
 /**
@@ -170,32 +172,32 @@ private data class StatusPreviewParameter(
                 StatusPreviewParameter(
                     status = "New",
                     containerColor = MaterialTheme.colorScheme.information,
-                    contentColor = MaterialTheme.colorScheme.onPrimary,
+                    contentColor = MaterialTheme.colorScheme.onInformation,
                 ),
                 StatusPreviewParameter(
                     status = "In flight",
                     containerColor = MaterialTheme.colorScheme.information,
-                    contentColor = MaterialTheme.colorScheme.onPrimary,
+                    contentColor = MaterialTheme.colorScheme.onInformation,
                 ),
                 StatusPreviewParameter(
                     status = "Arrived",
                     containerColor = MaterialTheme.colorScheme.success,
-                    contentColor = MaterialTheme.colorScheme.onPrimary,
+                    contentColor = MaterialTheme.colorScheme.onSuccess,
                 ),
                 StatusPreviewParameter(
                     status = "On time",
                     containerColor = MaterialTheme.colorScheme.success,
-                    contentColor = MaterialTheme.colorScheme.onPrimary,
+                    contentColor = MaterialTheme.colorScheme.onSuccess,
                 ),
                 StatusPreviewParameter(
                     status = "Delayed",
                     containerColor = MaterialTheme.colorScheme.error,
-                    contentColor = MaterialTheme.colorScheme.onPrimary,
+                    contentColor = MaterialTheme.colorScheme.onError,
                 ),
                 StatusPreviewParameter(
                     status = "Cancelled",
                     containerColor = MaterialTheme.colorScheme.error,
-                    contentColor = MaterialTheme.colorScheme.onPrimary,
+                    contentColor = MaterialTheme.colorScheme.onError,
                 ),
             )
         }

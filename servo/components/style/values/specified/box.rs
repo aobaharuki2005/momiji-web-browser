@@ -557,7 +557,7 @@ impl ToTyped for Display {
         }
 
         let keyword = self.to_css_cssstring();
-        debug_assert!(!keyword.as_ref().contains(&b' '));
+        debug_assert!(!AsRef::<[u8]>::as_ref(&keyword).contains(&b' '));
 
         dest.push(TypedValue::Keyword(KeywordValue(keyword)));
         return Ok(());
@@ -746,18 +746,23 @@ pub enum AlignmentBaseline {
     /// Use the text-under baseline.
     TextBottom,
     /// Use the alphabetic baseline.
+    #[cfg(feature = "gecko")]
     Alphabetic,
     /// Use the ideographic-under baseline.
+    #[cfg(feature = "gecko")]
     Ideographic,
     /// In general, use the x-middle baselines; except under text-orientation: upright
     /// (where the alphabetic and x-height baselines are essentially meaningless) use
     /// the central baseline instead.
     Middle,
     /// Use the central baseline.
+    #[cfg(feature = "gecko")]
     Central,
     /// Use the math baseline.
+    #[cfg(feature = "gecko")]
     Mathematical,
     /// Use the hanging baseline.
+    #[cfg(feature = "gecko")]
     Hanging,
     /// Use the text-over baseline.
     TextTop,

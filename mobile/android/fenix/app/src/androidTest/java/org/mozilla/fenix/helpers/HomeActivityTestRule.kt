@@ -16,7 +16,6 @@ import androidx.test.espresso.intent.rule.IntentsTestRule
 import androidx.test.rule.ActivityTestRule
 import mozilla.components.feature.sitepermissions.SitePermissionsRules
 import mozilla.components.support.base.log.logger.Logger
-import org.junit.rules.TestRule
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.components.initializeGlean
 import org.mozilla.fenix.ext.components
@@ -37,7 +36,7 @@ import org.mozilla.fenix.settings.PhoneFeature
 class HomeActivityTestRule(
     initialTouchMode: Boolean = false,
     launchActivity: Boolean = true,
-    private val skipOnboarding: Boolean = false,
+    private val skipOnboarding: Boolean = true,
 ) : ActivityTestRule<HomeActivity>(HomeActivity::class.java, initialTouchMode, launchActivity),
     FeatureSettingsHelper by FeatureSettingsHelperDelegate() {
 
@@ -47,7 +46,7 @@ class HomeActivityTestRule(
     constructor(
         initialTouchMode: Boolean = false,
         launchActivity: Boolean = true,
-        skipOnboarding: Boolean = false,
+        skipOnboarding: Boolean = true,
         isPocketEnabled: Boolean = settings.showPocketRecommendationsFeature,
         isRecentTabsFeatureEnabled: Boolean = settings.showRecentTabsFeature,
         isRecentlyVisitedFeatureEnabled: Boolean = settings.historyMetadataUIFeature,
@@ -56,6 +55,7 @@ class HomeActivityTestRule(
         isDeleteSitePermissionsEnabled: Boolean = settings.deleteSitePermissions,
         isOpenInAppBannerEnabled: Boolean = settings.shouldShowOpenInAppBanner,
         isUnifiedTrustPanelEnabled: Boolean = false,
+        isHomepageSportsWidgetVisible: Boolean = false,
         etpPolicy: ETPPolicy = getETPPolicy(settings),
         isLocationPermissionEnabled: SitePermissionsRules.Action = getFeaturePermission(PhoneFeature.LOCATION, settings),
         isMenuRedesignCFREnabled: Boolean = false,
@@ -81,6 +81,7 @@ class HomeActivityTestRule(
         this.isDeleteSitePermissionsEnabled = isDeleteSitePermissionsEnabled
         this.isOpenInAppBannerEnabled = isOpenInAppBannerEnabled
         this.isUnifiedTrustPanelEnabled = isUnifiedTrustPanelEnabled
+        this.isHomepageSportsWidgetVisible = isHomepageSportsWidgetVisible
         this.etpPolicy = etpPolicy
         this.isLocationPermissionEnabled = isLocationPermissionEnabled
         this.isMenuRedesignCFREnabled = isMenuRedesignCFREnabled
@@ -142,7 +143,7 @@ class HomeActivityTestRule(
         fun withDefaultSettingsOverrides(
             initialTouchMode: Boolean = false,
             launchActivity: Boolean = true,
-            skipOnboarding: Boolean = false,
+            skipOnboarding: Boolean = true,
             useNewCrashReporterFlow: Boolean = false,
         ) = HomeActivityTestRule(
             initialTouchMode = initialTouchMode,
@@ -176,7 +177,7 @@ class HomeActivityTestRule(
 class HomeActivityIntentTestRule internal constructor(
     initialTouchMode: Boolean = false,
     launchActivity: Boolean = true,
-    private val skipOnboarding: Boolean = false,
+    private val skipOnboarding: Boolean = true,
 ) : IntentsTestRule<HomeActivity>(HomeActivity::class.java, initialTouchMode, launchActivity),
     FeatureSettingsHelper by FeatureSettingsHelperDelegate() {
     // Using a secondary constructor allows us to easily delegate the settings to FeatureSettingsHelperDelegate.
@@ -185,7 +186,7 @@ class HomeActivityIntentTestRule internal constructor(
     constructor(
         initialTouchMode: Boolean = false,
         launchActivity: Boolean = true,
-        skipOnboarding: Boolean = false,
+        skipOnboarding: Boolean = true,
         isPocketEnabled: Boolean = settings.showPocketRecommendationsFeature,
         isRecentTabsFeatureEnabled: Boolean = settings.showRecentTabsFeature,
         isRecentlyVisitedFeatureEnabled: Boolean = settings.historyMetadataUIFeature,
@@ -194,6 +195,7 @@ class HomeActivityIntentTestRule internal constructor(
         isDeleteSitePermissionsEnabled: Boolean = settings.deleteSitePermissions,
         isOpenInAppBannerEnabled: Boolean = settings.shouldShowOpenInAppBanner,
         isUnifiedTrustPanelEnabled: Boolean = false,
+        isHomepageSportsWidgetVisible: Boolean = false,
         etpPolicy: ETPPolicy = getETPPolicy(settings),
         isLocationPermissionEnabled: SitePermissionsRules.Action = getFeaturePermission(PhoneFeature.LOCATION, settings),
         isMenuRedesignCFREnabled: Boolean = false,
@@ -220,6 +222,7 @@ class HomeActivityIntentTestRule internal constructor(
         this.isDeleteSitePermissionsEnabled = isDeleteSitePermissionsEnabled
         this.isOpenInAppBannerEnabled = isOpenInAppBannerEnabled
         this.isUnifiedTrustPanelEnabled = isUnifiedTrustPanelEnabled
+        this.isHomepageSportsWidgetVisible = isHomepageSportsWidgetVisible
         this.etpPolicy = etpPolicy
         this.isLocationPermissionEnabled = isLocationPermissionEnabled
         this.isMenuRedesignCFREnabled = isMenuRedesignCFREnabled
@@ -300,6 +303,7 @@ class HomeActivityIntentTestRule internal constructor(
         isDeleteSitePermissionsEnabled = settings.deleteSitePermissions
         isOpenInAppBannerEnabled = settings.shouldShowOpenInAppBanner
         isUnifiedTrustPanelEnabled = settings.enableUnifiedTrustPanel
+        isHomepageSportsWidgetVisible = settings.showHomepageSportsWidget
         etpPolicy = getETPPolicy(settings)
         isLocationPermissionEnabled = getFeaturePermission(PhoneFeature.LOCATION, settings)
         isMenuRedesignCFREnabled = settings.shouldShowMenuCFR
@@ -326,7 +330,7 @@ class HomeActivityIntentTestRule internal constructor(
         fun withDefaultSettingsOverrides(
             initialTouchMode: Boolean = false,
             launchActivity: Boolean = true,
-            skipOnboarding: Boolean = false,
+            skipOnboarding: Boolean = true,
         ) = HomeActivityIntentTestRule(
             initialTouchMode = initialTouchMode,
             launchActivity = launchActivity,

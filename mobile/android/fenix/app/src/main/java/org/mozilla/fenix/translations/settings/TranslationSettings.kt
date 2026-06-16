@@ -175,6 +175,7 @@ private fun TranslationsControlSwitchItem(
         description = stringResource(R.string.translation_settings_control_description),
         checked = enabled,
         maxLabelLines = Int.MAX_VALUE,
+        maxDescriptionLines = Int.MAX_VALUE,
         showSwitchAfter = true,
         onClick = onFeatureControlToggled,
     )

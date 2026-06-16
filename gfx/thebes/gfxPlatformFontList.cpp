@@ -844,6 +844,9 @@ bool gfxPlatformFontList::InitFontList() {
   FontFamily fam = GetDefaultFontLocked(nullptr, &defStyle);
   gfxFontEntry* fe;
   if (fam.mShared) {
+    if (!fam.mShared->IsInitialized()) {
+      (void)InitializeFamily(fam.mShared);
+    }
     auto face = fam.mShared->FindFaceForStyle(SharedFontList(), defStyle);
     fe = face ? GetOrCreateFontEntryLocked(face, fam.mShared) : nullptr;
   } else {
@@ -1054,7 +1057,7 @@ gfxFontEntry* gfxPlatformFontList::LookupInFaceNameLists(
   return lookup;
 }
 
-gfxFontEntry* gfxPlatformFontList::LookupInSharedFaceNameList(
+already_AddRefed<gfxFontEntry> gfxPlatformFontList::LookupInSharedFaceNameList(
     FontVisibilityProvider* aFontVisibilityProvider,
     const nsACString& aFaceName, WeightRange aWeightForEntry,
     StretchRange aStretchForEntry, SlantStyleRange aStyleForEntry) {
@@ -1087,14 +1090,14 @@ gfxFontEntry* gfxPlatformFontList::LookupInSharedFaceNameList(
     }
     return nullptr;
   }
-  gfxFontEntry* fe = CreateFontEntry(face, family);
+  RefPtr<gfxFontEntry> fe = CreateFontEntry(face, family);
   if (fe) {
     fe->mIsLocalUserFont = true;
     fe->mWeightRange = aWeightForEntry;
     fe->mStretchRange = aStretchForEntry;
     fe->mStyleRange = aStyleForEntry;
   }
-  return fe;
+  return fe.forget();
 }
 
 void gfxPlatformFontList::MaybeAddToLocalNameTable(

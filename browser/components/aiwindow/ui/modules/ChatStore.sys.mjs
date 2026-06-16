@@ -7,6 +7,7 @@ const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
   Sqlite: "resource://gre/modules/Sqlite.sys.mjs",
+  UI_TYPES: "moz-src:///browser/components/aiwindow/ui/modules/ToolUI.sys.mjs",
 });
 
 ChromeUtils.defineLazyGetter(lazy, "log", function () {
@@ -46,6 +47,7 @@ import {
   getConversationMessagesSql,
   getDeleteMessagesByIdsSql,
   getDeleteEmptyConversationsSql,
+  getUniformSamplingByConvIdsSql,
   LLM_TELEMETRY_TABLE,
   GET_LLM_TELEMETRY_BY_CONV_ID,
   GET_LLM_TELEMETRY_DATA_BY_CONV_ID,
@@ -888,6 +890,9 @@ class ChatStore {
     parseMessageRows(rows).forEach(message => {
       const conversation = convs[message.convId];
       if (conversation) {
+        if (message.toolUIData?.uiType === lazy.UI_TYPES.WEBSITE_CONFIRMATION) {
+          message.isRestored = true;
+        }
         conversation.messages.push(message);
       }
     });
@@ -1104,7 +1109,53 @@ class ChatStore {
 
     const conversations = rows.map(parseConversationRow);
 
-    return await this.#getMessagesForConversations(conversations);
+    await this.#getMessagesForConversations(conversations);
+    await this.#hydrateTelemetryState(conversations);
+    return conversations;
+  }
+
+  /**
+   * Restores in-memory telemetry sampling state from the llm_telemetry table.
+   * _telemetryUniformSample and _telemetryUniformProbability are set when the
+   * uniform_sample trigger fires on turn 0, but only live in memory; without
+   * this hydration, reloaded conversations lose the flag and dependent
+   * triggers (e.g. uniform_sample_turn2) never fire.
+   *
+   * @param {Array<ChatConversation>} conversations
+   */
+  async #hydrateTelemetryState(conversations) {
+    if (!conversations.length) {
+      return;
+    }
+
+    const rows = await this.#conn
+      .executeCached(
+        getUniformSamplingByConvIdsSql(conversations.length),
+        conversations.map(c => c.id)
+      )
+      .catch(e => {
+        lazy.log.error(
+          "Could not retrieve telemetry state for conversations",
+          e.message,
+          e.stack
+        );
+        return [];
+      });
+
+    const probByConvId = new Map(
+      rows.map(row => [
+        row.getResultByName("conv_id"),
+        row.getResultByName("uniform_sampling_probability"),
+      ])
+    );
+
+    for (const conversation of conversations) {
+      const prob = probByConvId.get(conversation.id);
+      if (prob > 0) {
+        conversation._telemetryUniformSample = true;
+        conversation._telemetryUniformProbability = prob;
+      }
+    }
   }
 
   /**

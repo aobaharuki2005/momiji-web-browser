@@ -1579,11 +1579,13 @@ class Client:
         coords = self.get_element_screen_position(img)
         coords = [coords[0] + 50, coords[1] + 100]
         await self.apz_move(coords=coords)
-        for _ in range(5):
+        for _ in range(20):
             try:
                 old_x = float(get_zoom_x())
                 break
-            except TypeError:
+            except TypeError as e:
+                if _ == 20:
+                    raise e
                 await self.stall(0.5)
 
         for i in range(20):

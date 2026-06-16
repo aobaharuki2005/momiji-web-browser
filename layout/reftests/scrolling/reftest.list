@@ -1,4 +1,3 @@
-HTTP == deferred-anchor.xhtml#d deferred-anchor-ref.xhtml#d
 fuzzy-if(gtkWidget,0-1,0-23) fails-if(useDrawSnapshot) == deferred-anchor2.xhtml deferred-anchor-ref.xhtml#d # bug 1182632
 HTTP == fixed-1.html fixed-1.html?ref
 fuzzy(0-1,0-32200) HTTP == fixed-table-1.html fixed-table-1.html?ref

@@ -282,6 +282,7 @@ nsresult RemoteWorkerChild::ExecWorkerOnMainThread(
   info.mIsOn3PCBExceptionList = aData.isOn3PCBExceptionList();
   info.mLanguageOverrideLocale = aData.languageOverrideLocale();
   info.mLanguageOverride = aData.languageOverride().Clone();
+  info.mTimezoneOverride = aData.timezoneOverride();
   info.mSecureContext = aData.isSecureContext()
                             ? WorkerLoadInfo::eSecureContext
                             : WorkerLoadInfo::eInsecureContext;

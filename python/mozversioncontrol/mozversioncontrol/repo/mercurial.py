@@ -323,7 +323,7 @@ class HgRepository(Repository):
             self.stage_changes(changed_files)
 
         try:
-            cmd = (str(self._tool), "push-to-try", "-m", message)
+            cmd = (str(self._tool), "push-to-try", "--message", message)
             if allow_log_capture:
                 self._push_to_try_with_log_capture(
                     cmd,
@@ -346,7 +346,7 @@ class HgRepository(Repository):
             self.raise_for_missing_extension("push-to-try")
             raise
         finally:
-            self._run("revert", "-a")
+            self._run("revert", "--all")
 
     def get_commits(
         self,

@@ -10,7 +10,6 @@
 #include "nsCOMPtr.h"
 #include "nsProxyRelease.h"
 #include "prinrval.h"
-#include "mozilla/Maybe.h"
 #include "mozilla/Mutex.h"
 #include "ARefBase.h"
 #include "TimingStruct.h"
@@ -196,7 +195,7 @@ class HttpConnectionBase : public nsSupportsWeakReference {
                                       HttpConnectionBase** aHttpConnection,
                                       bool aIsExtendedCONNECT = false) = 0;
   virtual void SetInTunnel() {};
-  const Maybe<nsHttpResponseHead>& GetProxyConnectResponseHead() const {
+  const RefPtr<ProxyConnectResponseHead>& GetProxyConnectResponseHead() const {
     return mProxyConnectResponseHead;
   }
 
@@ -254,7 +253,9 @@ class HttpConnectionBase : public nsSupportsWeakReference {
   virtual void SetTunnelSetupDone() {}
   virtual nsresult SetupProxyConnectStream() { return NS_OK; }
   nsresult CheckTunnelIsNeeded(nsAHttpTransaction* aTransaction);
-  Maybe<nsHttpResponseHead> mProxyConnectResponseHead;
+  // Built once when the CONNECT tunnel is established and then shared by
+  // pointer with the transaction and channel. See bug 2045419.
+  RefPtr<ProxyConnectResponseHead> mProxyConnectResponseHead;
 };
 
 #define NS_DECL_HTTPCONNECTIONBASE                                             \

@@ -27,6 +27,7 @@ enum class CSSAnimationProperties {
   Effect = Keyframes | Duration | IterationCount | Direction | Delay |
            FillMode | Composition,
   PlayState = 1 << 7,
+  Timeline = 1 << 8,
 };
 MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS(CSSAnimationProperties)
 
@@ -144,6 +145,15 @@ class CSSAnimation final : public Animation {
   }
   void AddOverriddenProperties(CSSAnimationProperties aProperties) {
     mOverriddenProperties |= aProperties;
+  }
+
+  void TimelineWillSetFromJS() override {
+    AddOverriddenProperties(CSSAnimationProperties::Timeline);
+  }
+
+  bool TimelineOverridenByJS() const override {
+    return static_cast<bool>(GetOverriddenProperties() &
+                             CSSAnimationProperties::Timeline);
   }
 
  protected:

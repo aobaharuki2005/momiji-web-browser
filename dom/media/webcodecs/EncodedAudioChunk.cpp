@@ -27,7 +27,7 @@ namespace mozilla::dom {
 #  undef LOG_INTERNAL
 #endif  // LOG_INTERNAL
 #define LOG_INTERNAL(level, msg, ...) \
-  MOZ_LOG(gWebCodecsLog, LogLevel::level, (msg, ##__VA_ARGS__))
+  MOZ_LOG_FMT(gWebCodecsLog, LogLevel::level, msg, ##__VA_ARGS__)
 
 #ifdef LOGW
 #  undef LOGW
@@ -64,20 +64,20 @@ EncodedAudioChunkData::EncodedAudioChunkData(
 
 UniquePtr<EncodedAudioChunkData> EncodedAudioChunkData::Clone() const {
   if (!mBuffer) {
-    LOGE("No buffer in EncodedAudioChunkData %p to clone!", this);
+    LOGE("No buffer in EncodedAudioChunkData {} to clone!", fmt::ptr(this));
     return nullptr;
   }
 
   // Since EncodedAudioChunkData can be zero-sized, cloning a zero-sized chunk
   // is allowed.
   if (mBuffer->Size() == 0) {
-    LOGW("Cloning an empty EncodedAudioChunkData %p", this);
+    LOGW("Cloning an empty EncodedAudioChunkData {}", fmt::ptr(this));
   }
 
   auto buffer =
       MakeRefPtr<MediaAlignedByteBuffer>(mBuffer->Data(), mBuffer->Length());
   if (!buffer || buffer->Size() != mBuffer->Size()) {
-    LOGE("OOM to copy EncodedAudioChunkData %p", this);
+    LOGE("OOM to copy EncodedAudioChunkData {}", fmt::ptr(this));
     return nullptr;
   }
 
@@ -87,7 +87,7 @@ UniquePtr<EncodedAudioChunkData> EncodedAudioChunkData::Clone() const {
 
 already_AddRefed<MediaRawData> EncodedAudioChunkData::TakeData() {
   if (!mBuffer || !(*mBuffer)) {
-    LOGE("EncodedAudioChunkData %p has no data!", this);
+    LOGE("EncodedAudioChunkData {} has no data!", fmt::ptr(this));
     return nullptr;
   }
 
@@ -99,8 +99,8 @@ already_AddRefed<MediaRawData> EncodedAudioChunkData::TakeData() {
   if (mDuration) {
     CheckedInt64 duration(*mDuration);
     if (!duration.isValid()) {
-      LOGE("EncodedAudioChunkData %p 's duration exceeds TimeUnit's limit",
-           this);
+      LOGE("EncodedAudioChunkData {} 's duration exceeds TimeUnit's limit",
+           fmt::ptr(this));
       return nullptr;
     }
     sample->mDuration = TimeUnit::FromMicroseconds(duration.value());
@@ -222,6 +222,7 @@ already_AddRefed<EncodedAudioChunk> EncodedAudioChunk::Constructor(
       return nullptr;
     }
   } else {
+    bool isInputBufferEmpty = false;
     buffer = ProcessTypedArrays(
         data,
         [&](const Span<uint8_t>& aData,
@@ -232,9 +233,7 @@ already_AddRefed<EncodedAudioChunk> EncodedAudioChunk::Constructor(
             aRv.Throw(NS_ERROR_INVALID_ARG);
             return nullptr;
           }
-          if (aData.Length() == 0) {
-            LOGW("Buffer for constructing EncodedAudioChunk is empty!");
-          }
+          isInputBufferEmpty = aData.Length() == 0;
           RefPtr<MediaAlignedByteBuffer> buf =
               MakeRefPtr<MediaAlignedByteBuffer>(aData.Elements(),
                                                  aData.Length());
@@ -249,6 +248,9 @@ already_AddRefed<EncodedAudioChunk> EncodedAudioChunk::Constructor(
         });
     if (aRv.Failed()) {
       return nullptr;
+    }
+    if (isInputBufferEmpty) {
+      LOGW("Buffer for constructing EncodedAudioChunk is empty!");
     }
   }
 

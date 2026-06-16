@@ -163,6 +163,8 @@ export class UrlbarProviderAiChat extends UrlbarProvider {
       let searchResult = new lazy.UrlbarResult({
         type: UrlbarUtils.RESULT_TYPE.SEARCH,
         source: UrlbarUtils.RESULT_SOURCE.SEARCH,
+        // Pin below the heuristic result.
+        suggestedIndex: 1,
         payload: {
           engine: engine.name,
           query: queryContext.searchString,

@@ -228,6 +228,8 @@ skip-if = [
   "os == 'linux' && os_version == '24.04' && arch == 'x86_64' && display == 'x11' && debug", # Bug 1915078
 ]
 
+["test_group_touchevents-7.html"]
+
 ["test_group_touchevents.html"]
 
 ["test_group_wheelevents.html"]

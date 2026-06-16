@@ -29,13 +29,13 @@ class MediaRawDataQueue {
 
   void Push(MediaRawData* aItem) { mQueue.push_back(aItem); }
 
-  void Push(already_AddRefed<MediaRawData>&& aItem) {
+  void Push(already_AddRefed<MediaRawData> aItem) {
     mQueue.push_back(std::move(aItem));
   }
 
   void PushFront(MediaRawData* aItem) { mQueue.push_front(aItem); }
 
-  void PushFront(already_AddRefed<MediaRawData>&& aItem) {
+  void PushFront(already_AddRefed<MediaRawData> aItem) {
     mQueue.push_front(std::move(aItem));
   }
 

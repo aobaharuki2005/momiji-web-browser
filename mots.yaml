@@ -8,7 +8,7 @@
 # documentation and how to modify this file.
 repo: mozilla-central
 created_at: '2021-10-14T12:50:40.073465'
-updated_at: '2026-05-28T12:18:25.446819+00:00'
+updated_at: '2026-06-09T08:28:44.783016+00:00'
 export:
   path: ./docs/mots/index.rst
   format: rst
@@ -949,6 +949,10 @@ people:
     bmo_id: 697076
     name: Perry McManis
     nick: perry.mcmanis
+  - &polly
+    bmo_id: 750904
+    name: Polly McEldowney
+    nick: polly
   - &prathiksha
     bmo_id: 580428
     name: ''
@@ -989,8 +993,7 @@ people:
     bmo_id: 11099
     name: Robert Relyea
     nick: rrelyea
-  - &rsainani
-    bmo_id: 718207
+  - bmo_id: 718207
     name: Rahul Sainani
     nick: rsainani
   - &ryansleevi
@@ -1908,7 +1911,7 @@ modules:
         - Aaron Klotz
         - Jim Chen
         - Randall E. Barker
-        - Jon Almeida
+        - Jonathan Almeida
       url: https://wiki.mozilla.org/Mobile/GeckoView
       components:
         - GeckoView::General
@@ -4167,8 +4170,10 @@ modules:
       - *gl
     peers:
       - *royang
-      - *rsainani
+      - *polly
     meta:
+      peers_emeritus:
+        - Rahul Sainani
     submodules:
 
       - machine_name: fenix_addons
@@ -4785,5 +4790,5 @@ modules:
         - Ryan Tilder
       group: dev-platform
 hashes:
-  config: 8c51e4588c2d6a74ccf6004f3a2eaef626855de8
-  export: dc30a84e1d8578e63bbf52343b6516e9524f3504
+  config: 69d925ebf8f8be63bc3e43a14bf9c7e8c4f6c49c
+  export: 776a9abcd4f21f0524f9436b80892ca4f7783868

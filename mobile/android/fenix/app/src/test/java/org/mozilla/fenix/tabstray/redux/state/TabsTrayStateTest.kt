@@ -4,16 +4,30 @@
 
 package org.mozilla.fenix.tabstray.redux.state
 
+import androidx.compose.ui.test.junit4.v2.createComposeRule
+import androidx.compose.ui.test.onNodeWithTag
+import androidx.test.ext.junit.runners.AndroidJUnit4
+import org.junit.Rule
+import org.junit.Test
+import org.junit.runner.RunWith
+import org.mozilla.fenix.tabstray.TabsTrayTestTag
 import org.mozilla.fenix.tabstray.data.createTab
 import org.mozilla.fenix.tabstray.data.createTabGroup
 import org.mozilla.fenix.tabstray.navigation.TabManagerNavDestination
 import org.mozilla.fenix.tabstray.redux.state.TabsTrayState.Mode
-import kotlin.test.Test
+import org.mozilla.fenix.tabstray.redux.store.TabsTrayStore
+import org.mozilla.fenix.tabstray.ui.fab.TabManagerFloatingToolbar
+import org.mozilla.fenix.theme.FirefoxTheme
+import org.mozilla.fenix.theme.Theme
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
+@RunWith(AndroidJUnit4::class)
 class TabsTrayStateTest {
+
+    @get:Rule
+    val composeTestRule = createComposeRule()
 
     @Test
     fun `GIVEN tabs are selected WHEN fetching the selected tab IDs from State THEN the IDs of the selected tabs are returned`() {
@@ -209,6 +223,101 @@ class TabsTrayStateTest {
             ),
         )
         assertFalse(state.shouldShowTabGroupOnboarding)
+    }
+
+    @Test
+    fun `GIVEN mode is Normal and PBM is not locked WHEN on Normal tabs THEN toolbar visibility is true`() {
+        val state = TabsTrayState(
+            mode = Mode.Normal,
+            selectedPage = Page.NormalTabs,
+            privateBrowsing = TabsTrayState.PrivateBrowsingState(isLocked = false),
+        )
+        assert(state.isFloatingToolbarVisible)
+    }
+
+    @Test
+    fun `GIVEN mode is Select WHEN on Normal tabs THEN toolbar visibility is false`() {
+        val state = TabsTrayState(
+            mode = Mode.Select(),
+            selectedPage = Page.NormalTabs,
+            privateBrowsing = TabsTrayState.PrivateBrowsingState(isLocked = false),
+        )
+        assert(!state.isFloatingToolbarVisible)
+    }
+
+    @Test
+    fun `GIVEN PBM is locked WHEN on Private tabs THEN toolbar visibility is false`() {
+        val state = TabsTrayState(
+            mode = Mode.Normal,
+            selectedPage = Page.PrivateTabs,
+            privateBrowsing = TabsTrayState.PrivateBrowsingState(isLocked = true),
+        )
+        assert(!state.isFloatingToolbarVisible)
+    }
+
+    @Test
+    fun `GIVEN PBM is not locked WHEN on Private tabs THEN toolbar visibility is true`() {
+        val state = TabsTrayState(
+            mode = Mode.Normal,
+            selectedPage = Page.PrivateTabs,
+            privateBrowsing = TabsTrayState.PrivateBrowsingState(isLocked = false),
+        )
+        assert(state.isFloatingToolbarVisible)
+    }
+
+    @Test
+    fun `GIVEN Tab Groups is enabled and selected WHEN in Normal mode THEN toolbar visibility is false`() {
+        val state = TabsTrayState(
+            mode = Mode.Normal,
+            selectedPage = Page.TabGroups,
+            config = TabsTrayState.TabsTrayConfig(tabGroupsEnabled = true),
+            privateBrowsing = TabsTrayState.PrivateBrowsingState(isLocked = false),
+        )
+        assert(!state.isFloatingToolbarVisible)
+    }
+
+    @Test
+    fun `GIVEN mode is Normal WHEN on Synced tabs THEN toolbar visibility is true`() {
+        val state1 = TabsTrayState(
+            mode = Mode.Normal,
+            selectedPage = Page.SyncedTabs,
+            privateBrowsing = TabsTrayState.PrivateBrowsingState(isLocked = false),
+        )
+        assert(state1.isFloatingToolbarVisible)
+
+        val state2 = TabsTrayState(
+            mode = Mode.Normal,
+            selectedPage = Page.SyncedTabs,
+            privateBrowsing = TabsTrayState.PrivateBrowsingState(isLocked = true),
+        )
+        assert(state2.isFloatingToolbarVisible)
+    }
+
+    @Test
+    fun `GIVEN mode is Select WHEN toolbar is rendered THEN it is hidden`() {
+        val initialState = TabsTrayState(
+            mode = Mode.Select(),
+            selectedPage = Page.NormalTabs,
+        )
+        val tabsTrayStore = TabsTrayStore(initialState = initialState)
+
+        composeTestRule.setContent {
+            FirefoxTheme(theme = Theme.Light) {
+                TabManagerFloatingToolbar(
+                    tabsTrayStore = tabsTrayStore,
+                    isSignedIn = true,
+                    onOpenNewNormalTabClicked = {},
+                    onOpenNewPrivateTabClicked = {},
+                    onSyncedTabsFabClicked = {},
+                    onTabSettingsClick = {},
+                    onAccountSettingsClick = {},
+                    onDeleteAllTabsClick = {},
+                    onRecentlyClosedClick = {},
+                )
+            }
+        }
+
+        composeTestRule.onNodeWithTag(TabsTrayTestTag.FAB).assertDoesNotExist()
     }
 
     private fun onboardingEligibleState(): TabsTrayState = TabsTrayState(

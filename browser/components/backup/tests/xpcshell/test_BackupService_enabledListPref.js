@@ -17,43 +17,95 @@ add_setup(async function () {
   });
 });
 
-add_task(async function test_addToEnabledListPref() {
+add_task(async function test_maybeAddToEnabledListPref() {
   Services.prefs.clearUserPref(ENABLED_ON_PROFILES_PREF);
 
-  BackupService.addToEnabledListPref("profile-1");
+  BackupService.maybeAddToEnabledListPref("profile-1");
   let value = JSON.parse(
     Services.prefs.getStringPref(ENABLED_ON_PROFILES_PREF, "[]")
   );
   Assert.ok(value.includes("profile-1"), "profile-1 should be in the pref");
 
-  BackupService.addToEnabledListPref("profile-2");
+  BackupService.maybeAddToEnabledListPref("profile-2");
   value = JSON.parse(
     Services.prefs.getStringPref(ENABLED_ON_PROFILES_PREF, "[]")
   );
   Assert.ok(value.includes("profile-1"), "profile-1 should still be present");
   Assert.ok(value.includes("profile-2"), "profile-2 should also be present");
 
+  // Calling add again for an existing profile should not create duplicates
+  BackupService.maybeAddToEnabledListPref("profile-1");
+  BackupService.maybeAddToEnabledListPref("profile-1");
+  value = JSON.parse(
+    Services.prefs.getStringPref(ENABLED_ON_PROFILES_PREF, "[]")
+  );
+  Assert.equal(
+    value.filter(id => id === "profile-1").length,
+    1,
+    "profile-1 should not be duplicated"
+  );
+
   Services.prefs.clearUserPref(ENABLED_ON_PROFILES_PREF);
 });
 
-add_task(async function test_removeFromEnabledListPref() {
-  Services.prefs.clearUserPref(ENABLED_ON_PROFILES_PREF);
+add_task(async function test_maybeRemoveFromEnabledListPref() {
+  Services.prefs.setStringPref(
+    ENABLED_ON_PROFILES_PREF,
+    JSON.stringify(["profile-1", "profile-2"])
+  );
 
-  BackupService.addToEnabledListPref("profile-1");
-  BackupService.addToEnabledListPref("profile-2");
-
-  BackupService.removeFromEnabledListPref("profile-1");
+  await BackupService.maybeRemoveFromEnabledListPref("profile-1");
   let value = JSON.parse(
     Services.prefs.getStringPref(ENABLED_ON_PROFILES_PREF, "[]")
   );
   Assert.ok(!value.includes("profile-1"), "profile-1 should have been removed");
   Assert.ok(value.includes("profile-2"), "profile-2 should still be present");
 
-  BackupService.removeFromEnabledListPref("profile-2");
+  await BackupService.maybeRemoveFromEnabledListPref("profile-2");
   value = JSON.parse(
     Services.prefs.getStringPref(ENABLED_ON_PROFILES_PREF, "[]")
   );
   Assert.deepEqual(value, [], "Pref should be an empty array");
+
+  // Removing a profile not in the list should be a no-op
+  Services.prefs.setStringPref(
+    ENABLED_ON_PROFILES_PREF,
+    JSON.stringify(["profile-1"])
+  );
+
+  await BackupService.maybeRemoveFromEnabledListPref("profile-nonexistent");
+  value = JSON.parse(
+    Services.prefs.getStringPref(ENABLED_ON_PROFILES_PREF, "[]")
+  );
+  Assert.ok(value.includes("profile-1"), "profile-1 should still be present");
+  Assert.equal(value.length, 1, "No entry should have been removed");
+
+  Services.prefs.clearUserPref(ENABLED_ON_PROFILES_PREF);
+});
+
+add_task(async function test_defaults_to_current_profile() {
+  Services.prefs.clearUserPref(ENABLED_ON_PROFILES_PREF);
+
+  const SelectableProfileService = getSelectableProfileService();
+  let currentProfile = SelectableProfileService.currentProfile;
+
+  BackupService.maybeAddToEnabledListPref();
+  let value = JSON.parse(
+    Services.prefs.getStringPref(ENABLED_ON_PROFILES_PREF, "[]")
+  );
+  Assert.ok(
+    value.includes(currentProfile.id),
+    "Should default to current profile ID on add"
+  );
+
+  await BackupService.maybeRemoveFromEnabledListPref();
+  value = JSON.parse(
+    Services.prefs.getStringPref(ENABLED_ON_PROFILES_PREF, "[]")
+  );
+  Assert.ok(
+    !value.includes(currentProfile.id),
+    "Should default to current profile ID on remove"
+  );
 
   Services.prefs.clearUserPref(ENABLED_ON_PROFILES_PREF);
 });
@@ -61,25 +113,31 @@ add_task(async function test_removeFromEnabledListPref() {
 add_task(async function test_no_op_without_selectable_profiles() {
   Services.prefs.clearUserPref(ENABLED_ON_PROFILES_PREF);
 
-  const SelectableProfileService = getSelectableProfileService();
-
   let sandbox = sinon.createSandbox();
-  sandbox.stub(SelectableProfileService, "currentProfile").get(() => null);
+  sandbox.stub(getSelectableProfileService(), "currentProfile").get(() => null);
 
-  BackupService.addToEnabledListPref("profile-1");
-  let value = Services.prefs.getStringPref(ENABLED_ON_PROFILES_PREF, "[]");
-  Assert.equal(value, "[]", "Pref should be unchanged when no current profile");
+  let valueBefore = Services.prefs.getStringPref(
+    ENABLED_ON_PROFILES_PREF,
+    "[]"
+  );
+  BackupService.maybeAddToEnabledListPref();
+  let valueAfter = Services.prefs.getStringPref(ENABLED_ON_PROFILES_PREF, "[]");
+  Assert.equal(
+    valueAfter,
+    valueBefore,
+    "Pref should be unchanged when no current profile"
+  );
 
   Services.prefs.setStringPref(
     ENABLED_ON_PROFILES_PREF,
     JSON.stringify(["profile-1"])
   );
-  BackupService.removeFromEnabledListPref("profile-1");
-  value = JSON.parse(
+  await BackupService.maybeRemoveFromEnabledListPref();
+  let removeValue = JSON.parse(
     Services.prefs.getStringPref(ENABLED_ON_PROFILES_PREF, "[]")
   );
   Assert.ok(
-    value.includes("profile-1"),
+    removeValue.includes("profile-1"),
     "profile-1 should still be present after no-op remove"
   );
 
@@ -87,13 +145,13 @@ add_task(async function test_no_op_without_selectable_profiles() {
   Services.prefs.clearUserPref(ENABLED_ON_PROFILES_PREF);
 });
 
-add_task(async function test_addToEnabledListPref_migrates_object() {
+add_task(async function test_maybeAddToEnabledListPref_migrates_object() {
   Services.prefs.setStringPref(
     ENABLED_ON_PROFILES_PREF,
     JSON.stringify({ "profile-1": true })
   );
 
-  BackupService.addToEnabledListPref("profile-2");
+  BackupService.maybeAddToEnabledListPref("profile-2");
   let value = JSON.parse(
     Services.prefs.getStringPref(ENABLED_ON_PROFILES_PREF, "[]")
   );
@@ -104,13 +162,13 @@ add_task(async function test_addToEnabledListPref_migrates_object() {
   Services.prefs.clearUserPref(ENABLED_ON_PROFILES_PREF);
 });
 
-add_task(async function test_removeFromEnabledListPref_migrates_object() {
+add_task(async function test_maybeRemoveFromEnabledListPref_migrates_object() {
   Services.prefs.setStringPref(
     ENABLED_ON_PROFILES_PREF,
     JSON.stringify({ "profile-1": true, "profile-2": true })
   );
 
-  await BackupService.removeFromEnabledListPref("profile-1");
+  await BackupService.maybeRemoveFromEnabledListPref("profile-1");
   let value = JSON.parse(
     Services.prefs.getStringPref(ENABLED_ON_PROFILES_PREF, "[]")
   );
@@ -127,7 +185,7 @@ add_task(async function test_enabledListPref_shared_across_profiles() {
   const SelectableProfileService = getSelectableProfileService();
   let currentProfile = SelectableProfileService.currentProfile;
 
-  BackupService.addToEnabledListPref(currentProfile.id);
+  BackupService.maybeAddToEnabledListPref();
   await updateNotified();
 
   let dbValue = await SelectableProfileService.getDBPref(

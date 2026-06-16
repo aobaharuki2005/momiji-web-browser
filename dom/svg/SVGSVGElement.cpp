@@ -83,9 +83,8 @@ SVGView::SVGView() {
 //----------------------------------------------------------------------
 // Implementation
 
-SVGSVGElement::SVGSVGElement(
-    already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo,
-    FromParser aFromParser)
+SVGSVGElement::SVGSVGElement(already_AddRefed<mozilla::dom::NodeInfo> aNodeInfo,
+                             FromParser aFromParser)
     : SVGSVGElementBase(std::move(aNodeInfo)),
       mStartAnimationOnBindToTree(aFromParser == NOT_FROM_PARSER ||
                                   aFromParser == FROM_PARSER_FRAGMENT ||

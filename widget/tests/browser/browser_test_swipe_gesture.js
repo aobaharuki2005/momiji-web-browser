@@ -881,8 +881,19 @@ add_task(async () => {
     await content.wrappedJSObject.promiseApzFlushedRepaints();
   });
 
+  await SpecialPowers.spawn(tab.linkedBrowser, [], () => {
+    content.wrappedJSObject.scrollEndPromise = new Promise(resolve => {
+      content.document
+        .getElementById("container")
+        ?.addEventListener("scrollend", resolve, { once: true });
+    });
+  });
+
   await panRightToLeft(tab.linkedBrowser, 100, 100, 1);
-  await waitForWhile();
+
+  await SpecialPowers.spawn(tab.linkedBrowser, [], async () => {
+    await content.wrappedJSObject.scrollEndPromise;
+  });
 
   const currentURI = tab.linkedBrowser.currentURI.spec;
   is(

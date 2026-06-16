@@ -579,12 +579,19 @@ class GeckoEngine(
             }
 
             override fun onReady(extension: org.mozilla.geckoview.WebExtension) {
-                webExtensionDelegate.onReady(
-                    GeckoWebExtension(
-                        nativeExtension = extension,
-                        runtime = runtime,
-                    ),
+                val readyExtension = GeckoWebExtension(
+                    nativeExtension = extension,
+                    runtime = runtime,
                 )
+                webExtensionDelegate.onReady(readyExtension)
+
+                // registerTabHandler() must be called again in order to get
+                // its onOpenOptionsPage handler to pick up the optionsPageUrl
+                // that is only available at onReady (bug 2046177).
+                // registerActionHandler() is not strictly necessary at the
+                // time of writing, but also called to mirror onInstalled.
+                readyExtension.registerActionHandler(webExtensionActionHandler)
+                readyExtension.registerTabHandler(webExtensionTabHandler, defaultSettings)
             }
 
             override fun onUninstalled(extension: org.mozilla.geckoview.WebExtension) {

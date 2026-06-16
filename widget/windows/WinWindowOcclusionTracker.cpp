@@ -413,8 +413,12 @@ void WinWindowOcclusionTracker::ShutDown() {
     TimeStamp timeStart = TimeStamp::NowLoRes();
     do {
       sShutdownMonitor.Wait(TIMEOUT);
-    } while (!(shutdownComplete = sShutdownComplete) &&
+    } while (!sShutdownComplete &&
              ((TimeStamp::NowLoRes() - timeStart) < TIMEOUT));
+
+    // Make a local copy of sShutdownComplete, for use outside of
+    // the lock.
+    shutdownComplete = sShutdownComplete;
   }
 
   if (shutdownComplete) {
@@ -1407,6 +1411,28 @@ bool WinWindowOcclusionTracker::WindowOcclusionCalculator::
 
 Maybe<bool> WinWindowOcclusionTracker::WindowOcclusionCalculator::
     IsWindowOnCurrentVirtualDesktop(HWND aHwnd) {
+  // If the window is not cloaked, it is not on another desktop. Matches
+  // Chromium's NativeWindowOcclusionTrackerWin, which added this fast-path in
+  // https://chromium-review.googlesource.com/c/chromium/src/+/3783127
+  // (crbug.com/1346717) primarily to avoid the cross-process COM call to
+  // explorer.exe that IVirtualDesktopManager::IsWindowOnCurrentVirtualDesktop
+  // performs (it can hang the calc thread), and reaffirmed in
+  // https://chromium-review.googlesource.com/c/chromium/src/+/7018677
+  // (crbug.com/450046609) which notes the cloak check "handles the vast
+  // majority of cases".
+  //
+  // Checking if it is cloaked also fixes a separate failure mode on Win11 25H2
+  // (bug 2046002): IVirtualDesktopManager is racy for newly-created visible
+  // windows and briefly reports them as not on the current desktop with a
+  // real (non-null) GUID -- the existing GUID_NULL workaround below misses
+  // this case.
+  BOOL isCloaked = FALSE;
+  if (FAILED(::DwmGetWindowAttribute(aHwnd, DWMWA_CLOAKED, &isCloaked,
+                                     sizeof(isCloaked))) ||
+      !isCloaked) {
+    return Some(true);
+  }
+
   if (!mVirtualDesktopManager) {
     return Some(true);
   }

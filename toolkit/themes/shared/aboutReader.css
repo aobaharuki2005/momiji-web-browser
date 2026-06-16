@@ -48,7 +48,7 @@ body {
   --popup-shadow: rgba(49, 49, 49, 0.3);
   --popup-button-background: rgba(207, 207, 216, 0.33);
   --popup-button-foreground: var(--main-foreground);
-  --popup-button-selected-foreground: var(--color-gray-05);
+  --popup-button-selected-foreground: var(--color-gray-0);
   --popup-button-background-hover: var(--toolbar-button-background-hover);
   --popup-button-foreground-hover: var(--main-foreground);
   --popup-button-background-active: var(--toolbar-button-background-active);

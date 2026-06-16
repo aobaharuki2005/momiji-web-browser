@@ -17,6 +17,14 @@
 #include <windef.h>
 #include <winspool.h>
 
+// winspool.h pollutes the global namespace, failing unified builds in e.g.
+// nsIFormControl::SetForm. Undo the damage.
+#undef AddForm
+#undef DeleteForm
+#undef EnumForms
+#undef GetForm
+#undef SetForm
+
 #include "nsIWidget.h"
 
 #include "nsTArray.h"

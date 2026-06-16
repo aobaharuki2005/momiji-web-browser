@@ -99,6 +99,7 @@
 #include "ContentChild.h"
 #include "nsXULAppAPI.h"
 #include "nsPIDOMWindow.h"
+#include "nsPIDOMWindowInlines.h"
 #include "ExternalHelperAppChild.h"
 
 #include "mozilla/dom/nsHTTPSOnlyUtils.h"

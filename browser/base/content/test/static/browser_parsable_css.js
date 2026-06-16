@@ -163,6 +163,13 @@ let propNameAllowlist = [
   { propName: "--panel-border-color", isFromDevTools: true },
   { propName: "--panel-box-shadow", isFromDevTools: true },
 
+  // This is a semantic panel design token provided by the design system that
+  // currently has no chrome CSS consumer, so it isn't referenced via var().
+  {
+    propName: "--panel-background-color-dimmed-further",
+    isFromDevTools: false,
+  },
+
   // These variables are set in host CSS but consumed in shadow DOM CSS
   // (content-search-handoff-ui component), which confuses the test.
   { propName: /^--content-search-handoff-ui-/, isFromDevTools: false },

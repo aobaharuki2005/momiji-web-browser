@@ -1258,6 +1258,35 @@ class TestRecursiveMakeBackend(BackendTester):
         found = [str for str in lines if "DIST_FILES" in str]
         self.assertEqual(found, expected)
 
+    def test_pp_files_extra_deps(self):
+        """Ensure PP_FILES_EXTRA_DEPS is written to backend.mk correctly."""
+        env = self._consume("pp-files-extra-deps", RecursiveMakeBackend)
+
+        backend_path = mozpath.join(env.topobjdir, "subdir", "backend.mk")
+        lines = [l.strip() for l in open(backend_path).readlines()[2:]]
+
+        expected = [
+            "DIST_FILES_0 += $(srcdir)/install.rdf",
+            "DIST_FILES_0 += $(srcdir)/main.js",
+            "DIST_FILES_0_PATH := $(DEPTH)/dist/bin/",
+            "DIST_FILES_0_TARGET := misc",
+            "DIST_FILES_0_EXTRA_DEPS := $(DEPTH)/generated-header.h "
+            "$(srcdir)/source-extra",
+            "PP_TARGETS += DIST_FILES_0",
+        ]
+
+        found = [str for str in lines if "DIST_FILES" in str]
+        self.assertEqual(found, expected)
+
+    def test_pp_files_extra_deps_post_process(self):
+        """PP_FILES_EXTRA_DEPS pointing at a generated file in another
+        directory adds a cross-directory build-order dependency."""
+        env = self._consume("pp-files-extra-deps-generated", RecursiveMakeBackend)
+
+        root_deps_path = mozpath.join(env.topobjdir, "root-deps.mk")
+        lines = [l.strip() for l in open(root_deps_path).readlines()]
+        self.assertIn("consumer/misc: export", lines)
+
     def test_localized_files(self):
         """Test that LOCALIZED_FILES is written to backend.mk correctly."""
         env = self._consume("localized-files", RecursiveMakeBackend)

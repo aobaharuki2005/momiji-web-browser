@@ -1020,21 +1020,97 @@ add_task(async function search_engines_with_accel_updown() {
 
   EventUtils.sendString("test", win);
 
+  let searchModeEngineName = win.gURLBar.searchMode?.engineName;
+  while (searchModeEngineName != "MozSearch") {
+    let searchmodeChanged = TestUtils.topicObserved("urlbar-searchmodechanged");
+    EventUtils.synthesizeKey("KEY_ArrowDown", { accelKey: true }, win);
+    await searchmodeChanged;
+    await BrowserTestUtils.waitForCondition(async () => {
+      let complete = win.gURLBar.searchMode?.engineName != searchModeEngineName;
+      if (complete) {
+        searchModeEngineName = win.gURLBar.searchMode?.engineName;
+        return true;
+      }
+      return false;
+    });
+  }
+
+  Assert.equal(
+    win.gURLBar.searchMode?.engineName,
+    "MozSearch",
+    "Selected extension engine"
+  );
+
   let loaded = BrowserTestUtils.browserLoaded(
     win.gBrowser.selectedBrowser,
     false,
     "https://example.com/?q=test"
   );
-
-  await BrowserTestUtils.waitForCondition(async () => {
-    EventUtils.synthesizeKey("KEY_ArrowDown", { accelKey: true }, win);
-    return win.gURLBar.searchMode?.engineName == "MozSearch";
-  }, "Selected extension engine");
-
   EventUtils.synthesizeKey("KEY_Enter", {}, win);
   await loaded;
 
   Assert.ok(true, "We navigated to the correct SERP");
 
   await BrowserTestUtils.closeWindow(win);
+});
+
+add_task(async function footer_separator_visibility() {
+  if (!Services.prefs.getBoolPref("browser.nova.enabled", false)) {
+    // Proton has only one separator, so ignore this test.
+    info("Skipping because Nova is disabled");
+    return;
+  }
+
+  let popup = await UrlbarTestUtils.openSearchModeSwitcher(window);
+  let installedSeparator = popup.querySelector(
+    ".searchmode-switcher-panel-installed-engine-separator"
+  );
+  let footerSeparator = popup.querySelector(
+    ".searchmode-switcher-panel-footer-separator"
+  );
+  Assert.notEqual(
+    footerSeparator.previousElementSibling,
+    installedSeparator,
+    "There are items between the separators"
+  );
+  Assert.ok(
+    BrowserTestUtils.isVisible(footerSeparator),
+    "Footer separator is visible when there are items between the separators"
+  );
+
+  let onClose = UrlbarTestUtils.searchModeSwitcherPopupClosed(window);
+  EventUtils.synthesizeKey("KEY_Escape");
+  await onClose;
+
+  info("Disable all local search modes");
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      ["browser.urlbar.shortcuts.bookmarks", false],
+      ["browser.urlbar.shortcuts.tabs", false],
+      ["browser.urlbar.shortcuts.history", false],
+      ["browser.urlbar.shortcuts.actions", false],
+    ],
+  });
+
+  popup = await UrlbarTestUtils.openSearchModeSwitcher(window);
+  installedSeparator = popup.querySelector(
+    ".searchmode-switcher-panel-installed-engine-separator"
+  );
+  footerSeparator = popup.querySelector(
+    ".searchmode-switcher-panel-footer-separator"
+  );
+  Assert.equal(
+    footerSeparator.previousElementSibling,
+    installedSeparator,
+    "There are no items between the separators"
+  );
+  Assert.ok(
+    BrowserTestUtils.isHidden(footerSeparator),
+    "Footer separator is hidden when there are no items between the separators"
+  );
+
+  onClose = UrlbarTestUtils.searchModeSwitcherPopupClosed(window);
+  EventUtils.synthesizeKey("KEY_Escape");
+  await onClose;
+  await SpecialPowers.popPrefEnv();
 });

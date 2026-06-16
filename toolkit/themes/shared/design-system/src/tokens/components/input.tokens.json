@@ -12,16 +12,17 @@
   "height": {
     "value": "{size.item.small}"
   },
-  "swatch": {
-    "size": {
-      "value": "{size.item.medium}"
-    }
-  },
   "text": {
     "background": {
       "color": {
         "@base": {
-          "value": "Field"
+          "value": {
+            "nativeTheme": "Field",
+            "platform": {
+              "light": "{color.white.@base}",
+              "dark": "#42414d"
+            }
+          }
         },
         "disabled": {
           "value": "{button.background.color.disabled}"
@@ -46,7 +47,13 @@
     },
     "color": {
       "@base": {
-        "value": "FieldText"
+        "value": {
+          "nativeTheme": "FieldText",
+          "platform": {
+            "light": "rgb(21, 20, 26)",
+            "dark": "rgb(251, 251, 254)"
+          }
+        }
       },
       "disabled": {
         "value": {

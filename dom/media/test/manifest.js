@@ -399,6 +399,8 @@ var gPlayTests = [
     duration: 0.27,
     contentDuration: 0.267,
   },
+  // Two adjacent colr boxes in the video sample entry (bug 2044320).
+  { name: "two-colr.mp4", type: "video/mp4", duration: 0.512 },
   // Test playback of a MP4 file with a non-zero start time (and audio starting
   // a second later).
   { name: "bipbop-lateaudio.mp4", type: "video/mp4" },

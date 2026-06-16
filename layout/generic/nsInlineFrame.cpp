@@ -378,10 +378,33 @@ void nsInlineFrame::Reflow(nsPresContext* aPresContext,
     // This is the legacy, spec-incompatible behavior to reflow abspos children
     // using only the first inline fragment's rect.
     ReflowAbsoluteFrames(aPresContext, aReflowOutput, aReflowInput, aStatus);
+  } else {
+    MarkBlockAncestorHavingAbsoluteDescendants(aReflowInput);
   }
 
   // Note: the line layout code will properly compute our
   // overflow-rect state for us.
+}
+
+void nsInlineFrame::MarkBlockAncestorHavingAbsoluteDescendants(
+    const ReflowInput& aReflowInput) const {
+  if (!HasAbsolutelyPositionedChildren()) {
+    return;
+  }
+
+  // The line container is usually the block ancestor that will run
+  // ReflowAbsoluteDescendantsInInlineFrame(). Ruby is the exception, whose
+  // content is reflowed in a nested line layout with nsRubyTextContainerFrame
+  // as the line container. In that case, keep finding the nearest block
+  // ancestor.
+  nsIFrame* lineContainer = aReflowInput.mLineLayout->LineContainerFrame();
+  nsBlockFrame* block = do_QueryFrame(lineContainer);
+  if (!block) {
+    block = nsLayoutUtils::FindNearestBlockAncestor(lineContainer);
+  }
+  MOZ_ASSERT(block,
+             "An inline absolute containing block must have a block ancestor!");
+  block->AddStateBits(NS_BLOCK_HAS_INLINE_ABSPOS_DESCENDANT);
 }
 
 nsresult nsInlineFrame::AttributeChanged(int32_t aNameSpaceID,

@@ -449,10 +449,11 @@ mozilla::ipc::IPCResult MediaTransportChild::RecvOnEncryptedSending(
 }
 
 mozilla::ipc::IPCResult MediaTransportChild::RecvOnStateChange(
-    const string& transportId, const TransportLayer::State& state) {
+    const string& transportId, const TransportLayer::State& state,
+    nsTArray<nsTArray<uint8_t>>&& remoteCerts) {
   MutexAutoLock lock(mMutex);
   if (mUser) {
-    mUser->OnStateChange(transportId, state);
+    mUser->OnStateChange(transportId, state, std::move(remoteCerts));
   }
   return ipc::IPCResult::Ok();
 }

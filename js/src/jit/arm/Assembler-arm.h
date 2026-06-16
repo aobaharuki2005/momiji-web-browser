@@ -1203,8 +1203,7 @@ class Assembler : public AssemblerShared {
   // Shim around AssemblerBufferWithConstantPools::allocEntry.
   BufferOffset allocLiteralLoadEntry(size_t numInst, unsigned numPoolEntries,
                                      PoolHintPun& php, uint8_t* data,
-                                     const LiteralDoc& doc = LiteralDoc(),
-                                     ARMBuffer::PoolEntry* pe = nullptr,
+                                     const LiteralDoc& doc,
                                      bool loadToPC = false);
 
   Instruction* editSrc(BufferOffset bo) { return m_buffer.getInst(bo); }

@@ -153,6 +153,8 @@ run-if = [
 
 ["test_storage.js"]
 
+["test_storage_rust_shutdown.js"]
+
 ["test_telemetry.js"]
 
 ["test_vulnerable_passwords.js"]

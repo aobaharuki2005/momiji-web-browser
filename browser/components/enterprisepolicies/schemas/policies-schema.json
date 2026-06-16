@@ -320,14 +320,15 @@
                 "type": "string",
                 "enum": [
                   "blue",
-                  "turquoise",
+                  "cyan",
                   "green",
                   "yellow",
                   "orange",
                   "red",
                   "pink",
                   "purple",
-                  "toolbar"
+                  "violet",
+                  "gray"
                 ]
               }
             },
@@ -886,6 +887,12 @@
             },
             "temporarily_allow_weak_signatures": {
               "type": "boolean"
+            },
+            "blocked_permissions": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
             }
           }
         }
@@ -936,6 +943,12 @@
             },
             "private_browsing": {
               "type": "boolean"
+            },
+            "blocked_permissions": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
             }
           }
         }

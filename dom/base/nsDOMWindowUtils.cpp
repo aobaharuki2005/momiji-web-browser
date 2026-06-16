@@ -67,6 +67,7 @@
 #include "nsJSUtils.h"
 #include "nsLayoutUtils.h"
 #include "nsMenuPopupFrame.h"
+#include "nsPIDOMWindowInlines.h"
 #include "nsPresContext.h"
 #include "nsQueryContentEventResult.h"
 #include "nsQueryObject.h"
@@ -198,21 +199,21 @@ class OldWindowSize : public LinkedListElement<OldWindowSize> {
 namespace {
 
 class NativeInputRunnable final : public PrioritizableRunnable {
-  explicit NativeInputRunnable(already_AddRefed<nsIRunnable>&& aEvent);
+  explicit NativeInputRunnable(already_AddRefed<nsIRunnable> aEvent);
   ~NativeInputRunnable() = default;
 
  public:
   static already_AddRefed<nsIRunnable> Create(
-      already_AddRefed<nsIRunnable>&& aEvent);
+      already_AddRefed<nsIRunnable> aEvent);
 };
 
-NativeInputRunnable::NativeInputRunnable(already_AddRefed<nsIRunnable>&& aEvent)
+NativeInputRunnable::NativeInputRunnable(already_AddRefed<nsIRunnable> aEvent)
     : PrioritizableRunnable(std::move(aEvent),
                             nsIRunnablePriority::PRIORITY_INPUT_HIGH) {}
 
 /* static */
 already_AddRefed<nsIRunnable> NativeInputRunnable::Create(
-    already_AddRefed<nsIRunnable>&& aEvent) {
+    already_AddRefed<nsIRunnable> aEvent) {
   MOZ_ASSERT(NS_IsMainThread());
   nsCOMPtr<nsIRunnable> event(new NativeInputRunnable(std::move(aEvent)));
   return event.forget();
@@ -1599,13 +1600,13 @@ nsDOMWindowUtils::ScrollToVisual(float aOffsetX, float aOffsetY,
       presContext->PresShell()->GetRootScrollContainerFrame();
   NS_ENSURE_TRUE(sf, NS_ERROR_NOT_AVAILABLE);
 
-  FrameMetrics::ScrollOffsetUpdateType updateType;
+  ScrollOffsetUpdateType updateType;
   switch (aUpdateType) {
     case UPDATE_TYPE_RESTORE:
-      updateType = FrameMetrics::eRestore;
+      updateType = ScrollOffsetUpdateType::Restore;
       break;
     case UPDATE_TYPE_MAIN_THREAD:
-      updateType = FrameMetrics::eMainThread;
+      updateType = ScrollOffsetUpdateType::MainThread;
       break;
     default:
       return NS_ERROR_INVALID_ARG;
@@ -1748,6 +1749,20 @@ Result<mozilla::LayoutDeviceRect, nsresult> nsDOMWindowUtils::ConvertTo(
       break;
   }
   return devPixelsRect;
+}
+
+NS_IMETHODIMP
+nsDOMWindowUtils::GetElementBoundingScreenRect(Element* aElement,
+                                               DOMRect** aResult) {
+  NS_ENSURE_ARG_POINTER(aElement);
+
+  CSSRect rect;
+  if (nsIFrame* frame = aElement->GetPrimaryFrame(FlushType::Layout)) {
+    rect = CSSRect::FromAppUnits(frame->GetBoundingClientRect());
+  }
+
+  return ToScreenRectInCSSUnits(rect.x, rect.y, rect.width, rect.height,
+                                aResult);
 }
 
 NS_IMETHODIMP

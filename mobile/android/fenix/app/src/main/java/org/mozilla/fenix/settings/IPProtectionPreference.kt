@@ -59,7 +59,10 @@ internal fun IPProtectionPreferenceRow(
         modifier = Modifier
             .fillMaxWidth()
             .semantics(mergeDescendants = true) {}
-            .padding(horizontal = 16.dp, vertical = 14.dp),
+            .padding(
+                horizontal = FirefoxTheme.layout.space.dynamic200,
+                vertical = FirefoxTheme.layout.space.static200,
+            ),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Text(

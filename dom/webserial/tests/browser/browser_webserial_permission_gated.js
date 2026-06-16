@@ -328,6 +328,18 @@ add_task(async function testRequestPort() {
     ["site_warning", "cancelled"],
     "sitepermission"
   );
+
+  Assert.deepEqual(
+    Array.from(
+      new Set(
+        AddonTestUtils.getAMGleanEvents("install").map(
+          evt => evt.site_permission
+        )
+      )
+    ),
+    ["serial"],
+    "Each install telemetry event records the serial site permission"
+  );
 });
 
 add_task(async function testIframeRequestPort() {

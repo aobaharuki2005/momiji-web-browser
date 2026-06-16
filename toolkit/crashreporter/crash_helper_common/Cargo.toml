@@ -21,7 +21,7 @@ mach2 = "0.4"
 log = "0.4"
 
 [target."cfg(any(target_os = \"android\", target_os = \"linux\"))".dependencies]
-minidump-writer = "0.11"
+minidump-writer = { git = "https://github.com/rust-minidump/minidump-writer.git", rev = "107e531a7a06f8e886ffcee13eb07e9ded43473b" }
 
 [target."cfg(target_os = \"windows\")".dependencies]
 getrandom = { version = "0.3" }

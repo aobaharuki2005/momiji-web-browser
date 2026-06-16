@@ -48,11 +48,10 @@ class IMEContentObserver final : public nsStubMutationObserver,
   using IMENotificationRequest = widget::IMENotificationRequest;
   using IMENotificationRequests = widget::IMENotificationRequests;
   using IMEMessage = widget::IMEMessage;
-  enum class ForRemoval : bool { No, Yes };
 
   IMEContentObserver();
 
-  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
+  NS_DECL_CYCLE_COLLECTING_ISUPPORTS_FINAL
   NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(IMEContentObserver,
                                            nsIReflowObserver)
   NS_DECL_NSIMUTATIONOBSERVER_CHARACTERDATAWILLCHANGE
@@ -486,7 +485,7 @@ class IMEContentObserver final : public nsStubMutationObserver,
     }
 
     NS_DECL_CYCLE_COLLECTION_CLASS(DocumentObserver)
-    NS_DECL_CYCLE_COLLECTING_ISUPPORTS
+    NS_DECL_CYCLE_COLLECTING_ISUPPORTS_FINAL
     NS_DECL_NSIDOCUMENTOBSERVER_BEGINUPDATE
     NS_DECL_NSIDOCUMENTOBSERVER_ENDUPDATE
 
@@ -600,11 +599,9 @@ class IMEContentObserver final : public nsStubMutationObserver,
      *                          For avoiding to generate a redundant line break
      *                          at open tag of this element, this is required
      *                          to call methods of ContentEventHandler.
-     * @param aForRemoval       Whether aContent is about to be removed.
      */
     [[nodiscard]] static Result<uint32_t, nsresult> ComputeTextLengthOfContent(
-        const nsIContent& aContent, const dom::Element* aRootElement,
-        ForRemoval = ForRemoval::No);
+        const nsIContent& aContent, const dom::Element* aRootElement);
 
     /**
      * Return flattened text length of starting from first content of
@@ -680,8 +677,7 @@ class IMEContentObserver final : public nsStubMutationObserver,
      * of aContent in such case.
      */
     [[nodiscard]] Maybe<uint32_t> GetFlatTextLengthBeforeContent(
-        const nsIContent& aContent, const dom::Element* aRootElement,
-        ForRemoval = ForRemoval::No) const;
+        const nsIContent& aContent, const dom::Element* aRootElement) const;
 
     /**
      * Return text length before aFirstContent if it's exactly cached or can

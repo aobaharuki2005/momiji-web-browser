@@ -6,6 +6,7 @@
 
 const {
   VIEW_NODE_ATTR_TYPE,
+  VIEW_NODE_CSS_EXPLAINERS,
   VIEW_NODE_CSS_QUERY_CONTAINER,
   VIEW_NODE_CSS_SELECTOR_WARNINGS,
   VIEW_NODE_FONT_TYPE,
@@ -138,6 +139,18 @@ function getNodeInfo(node, elementStyle) {
   ) {
     type = VIEW_NODE_INACTIVE_CSS;
     value = declaration.getInactiveCssData();
+  } else if (
+    node.classList.contains("css-explainers-function-name") &&
+    node.closest("[data-function-expression")
+  ) {
+    type = VIEW_NODE_CSS_EXPLAINERS;
+    value = {
+      expression: node
+        .closest("[data-function-expression")
+        .getAttribute("data-function-expression"),
+      pseudoElement: rule.pseudoElement,
+      rule,
+    };
   } else if (node.closest(".container-condition")) {
     type = VIEW_NODE_CSS_QUERY_CONTAINER;
     value = {

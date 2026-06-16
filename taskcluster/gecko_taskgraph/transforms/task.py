@@ -45,7 +45,7 @@ from gecko_taskgraph.optimize.schema import (
 )
 from gecko_taskgraph.transforms.job.common import get_expiration
 from gecko_taskgraph.util import docker as dockerutil
-from gecko_taskgraph.util.attributes import TRUNK_PROJECTS, is_try, release_level
+from gecko_taskgraph.util.attributes import TRUNK_PROJECTS, release_level
 from gecko_taskgraph.util.chunking import TEST_VARIANTS
 from gecko_taskgraph.util.hash import hash_path
 from gecko_taskgraph.util.partners import get_partners_to_be_published
@@ -676,12 +676,10 @@ def build_docker_worker_payload(config, task, task_def):
         else:
             suffix = cache_version
 
-        skip_untrusted = is_try(config.params) or level == 1
-
         for cache in worker["caches"]:
             # Some caches aren't enabled in environments where we can't
             # guarantee certain behavior. Filter those out.
-            if cache.get("skip-untrusted") and skip_untrusted:
+            if cache.get("skip-untrusted") and level == 1:
                 continue
 
             name = "{trust_domain}-level-{level}-{name}-{suffix}".format(
@@ -704,7 +702,7 @@ def build_docker_worker_payload(config, task, task_def):
     if run_task and worker.get("volumes"):
         payload["env"]["TASKCLUSTER_VOLUMES"] = ";".join(sorted(worker["volumes"]))
 
-    if payload.get("cache") and skip_untrusted:
+    if payload.get("cache") and level == 1:
         payload["env"]["TASKCLUSTER_UNTRUSTED_CACHES"] = "1"
 
     if features:
@@ -2268,11 +2266,7 @@ def set_task_and_artifact_expiry(config, jobs):
     now = datetime.datetime.utcnow()
     # We don't want any configuration leading to anything with an expiry longer
     # than 28 days on try.
-    cap = (
-        "28 days"
-        if is_try(config.params) and int(config.params["level"]) == 1
-        else None
-    )
+    cap = "28 days" if config.params["level"] == "1" else None
     cap_from_now = fromNow(cap, now) if cap else None
     for job in jobs:
         expires = get_expiration(config, job.get("expiration-policy", "default"))

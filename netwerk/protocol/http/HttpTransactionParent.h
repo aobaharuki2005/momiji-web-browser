@@ -155,7 +155,7 @@ class HttpTransactionParent final : public PHttpTransactionParent,
   nsIRequest::TRRMode mEffectiveTRRMode{nsIRequest::TRR_DEFAULT_MODE};
   TRRSkippedReason mTRRSkipReason{nsITRRSkipReason::TRR_UNSET};
   bool mEchConfigUsed = false;
-  Maybe<nsHttpResponseHead> mProxyConnectResponseHead;
+  RefPtr<ProxyConnectResponseHead> mProxyConnectResponseHead;
   uint64_t mChannelId{0};
   bool mDataSentToChildProcess{false};
   bool mIsDocumentLoad;

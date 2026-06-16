@@ -51,6 +51,7 @@ DIRS += [
     "newtab",
     "originattributes",
     "pagedata",
+    "passwordmgr",
     "permissions",
     "pictureinpicture",
     "places",

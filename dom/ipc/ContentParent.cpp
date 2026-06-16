@@ -105,6 +105,7 @@
 #include "mozilla/dom/MemoryReportRequest.h"
 #include "mozilla/dom/PContentPermissionRequestParent.h"
 #include "mozilla/dom/PCycleCollectWithLogsParent.h"
+#include "mozilla/dom/ParentProcessChannelHandle.h"
 #include "mozilla/dom/ParentProcessMessageManager.h"
 #include "mozilla/dom/PermissionObserver.h"
 #include "mozilla/dom/PermissionStatusBinding.h"
@@ -1494,7 +1495,8 @@ already_AddRefed<RemoteBrowser> ContentParent::CreateBrowser(
       aBrowsingContext, initialPrincipal);
 
   RefPtr<WindowGlobalParent> windowParent =
-      WindowGlobalParent::CreateDisconnected(windowInit);
+      WindowGlobalParent::CreateDisconnected(windowInit,
+                                             constructorSender.get());
   if (NS_WARN_IF(!windowParent)) {
     return nullptr;
   }
@@ -2134,6 +2136,7 @@ void ContentParent::ActorDestroy(ActorDestroyReason why) {
   MOZ_DIAGNOSTIC_ASSERT(mGroups.IsEmpty());
 
   mPendingLoadStates.Clear();
+  mPendingParentProcessChannelHandles.Clear();
 }
 
 UniqueContentParentKeepAlive ContentParent::TryAddKeepAlive(
@@ -3634,6 +3637,26 @@ mozilla::ipc::IPCResult ContentParent::RecvCleanupPendingLoadState(
   return IPC_OK();
 }
 
+nsID ContentParent::AddParentProcessChannelHandle(
+    ParentProcessChannelHandle* aHandle) {
+  nsID uuid = nsID::GenerateUUID();
+  mPendingParentProcessChannelHandles.InsertOrUpdate(uuid, aHandle);
+  return uuid;
+}
+
+already_AddRefed<ParentProcessChannelHandle>
+ContentParent::ReadParentProcessChannelHandle(const nsID& aUuid) {
+  RefPtr<ParentProcessChannelHandle> handle =
+      mPendingParentProcessChannelHandles.Get(aUuid);
+  return handle.forget();
+}
+
+mozilla::ipc::IPCResult ContentParent::RecvDropParentProcessChannelHandle(
+    const nsID& aUuid) {
+  mPendingParentProcessChannelHandles.Remove(aUuid);
+  return IPC_OK();
+}
+
 // We want ContentParent to show up in CC logs for debugging purposes, but we
 // don't actually cycle collect it.
 NS_IMPL_CYCLE_COLLECTION_0(ContentParent)
@@ -4319,7 +4342,7 @@ mozilla::ipc::IPCResult ContentParent::RecvConstructPopupBrowser(
   MOZ_ASSERT(tc.IsValid());
 
   RefPtr<WindowGlobalParent> initialWindow =
-      WindowGlobalParent::CreateDisconnected(aInitialWindowInit);
+      WindowGlobalParent::CreateDisconnected(aInitialWindowInit, this);
   if (!initialWindow) {
     return IPC_FAIL(this, "Failed to create WindowGlobalParent");
   }

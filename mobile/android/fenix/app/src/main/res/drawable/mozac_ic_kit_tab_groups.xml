@@ -1,14 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
 <!-- This Source Code Form is subject to the terms of the Mozilla Public
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
 <vector xmlns:android="http://schemas.android.com/apk/res/android" xmlns:aapt="http://schemas.android.com/aapt"
-    android:viewportWidth="114"
+    android:viewportWidth="144"
     android:viewportHeight="80"
-    android:width="114dp"
+    android:width="144dp"
     android:height="80dp">
     <group>
         <clip-path
-            android:pathData="M0 0H114V80H0V0Z" />
+            android:pathData="M0 0H144V80H0V0Z" />
         <path
             android:pathData="M8.8871 15.1015C7.13265 17.1341 5.32319 19.1942 4.54989 20.0347C4.54989 19.1972 4.48266 18.3017 4.45209 17.5161C4.37874 15.6761 4.45514 14.6644 4.4368 11.5529C4.42151 9.08318 4.72718 6.34453 5.86421 5.70266C6.91871 5.10358 8.62119 6.26812 11.0389 8.49021C12.3868 9.73116 13.2732 10.801 14.1963 11.5651C13.0959 11.9594 10.6996 13.0017 8.8871 15.1015Z">
             <aapt:attr

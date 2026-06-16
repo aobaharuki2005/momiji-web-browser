@@ -351,11 +351,6 @@ NetworkGeolocationProvider.prototype = {
     lazy.log.info(
       `Sending IP-address-based geolocation request${logStr} to network service: ${url}`
     );
-    if (data.wifiAccessPoints) {
-      Glean.geolocation.geolocationService.network_wifi_and_ip.add();
-    } else {
-      Glean.geolocation.geolocationService.network_ip.add();
-    }
 
     let result;
     try {
@@ -405,10 +400,21 @@ NetworkGeolocationProvider.prototype = {
       Services.prefs.getIntPref("geo.provider.network.timeout", 60000)
     );
 
+    if (wifiData && wifiData.length >= 2) {
+      Glean.geolocation.geolocationService.network_wifi_and_ip.add();
+    } else {
+      Glean.geolocation.geolocationService.network_ip.add();
+    }
+
     let response = await fetch(url, fetchOpts);
     lazy.clearTimeout(timeoutId);
 
     if (!response.ok) {
+      if (wifiData && wifiData.length >= 2) {
+        Glean.geolocation.networkFailures.network_wifi_and_ip.add();
+      } else {
+        Glean.geolocation.networkFailures.network_ip.add();
+      }
       throw new Error(
         `The geolocation provider returned a non-ok status ${response.status}`,
         { cause: await response.text() }

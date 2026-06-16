@@ -1547,6 +1547,9 @@ async function deleteNodeWithContextMenu(node, inspector) {
 
 /**
  * Forces the content page to reflow and waits for the next repaint.
+ *
+ * This is often used by highlighter test to wait for AutoRefreshHighlighter logic
+ * using requestAnimationFrame to update highlighter coordinates.
  */
 function reflowContentPage() {
   return SpecialPowers.spawn(gBrowser.selectedBrowser, [], async function () {

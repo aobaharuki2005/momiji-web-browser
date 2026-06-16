@@ -9,3 +9,7 @@
   padding-block: var(--space-small);
   padding-inline: var(--space-small);
 }
+
+.sidebar-panel .sidebar-panel-scrollable-content {
+  padding-inline: 0;
+}

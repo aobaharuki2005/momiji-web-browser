@@ -147,6 +147,21 @@ this.permissions = class extends ExtensionAPIPersistent {
             }
           }
 
+          // Per Chrome, a per-addon ExtensionSettings entry overrides the
+          // global "*" blocked_permissions even if it doesn't set its own.
+          // Chrome throws "Permissions are blocked by enterprise policy" when
+          // any requested permission is blocked, so we match that contract
+          // (extensions can distinguish admin-block from user-deny in catch).
+          if (
+            Services.policies
+              ?.getExtensionSettings(extension.id)
+              ?.blocked_permissions?.some(p => permissions.includes(p))
+          ) {
+            throw new ExtensionError(
+              "Permissions are blocked by enterprise policy."
+            );
+          }
+
           if (promptsEnabled) {
             permissions = permissions.filter(
               perm => !context.extension.hasPermission(perm)

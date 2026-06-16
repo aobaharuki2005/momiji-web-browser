@@ -427,7 +427,7 @@ class BackupTest(MarionetteTestCase):
           let [outerResolve] = arguments;
           (async () => {
             // Let's start with adding a single password
-            Services.logins.removeAllLogins();
+            await Services.logins.removeAllLoginsAsync();
 
             const nsLoginInfo = new Components.Constructor(
               "@mozilla.org/login-manager/loginInfo;1",

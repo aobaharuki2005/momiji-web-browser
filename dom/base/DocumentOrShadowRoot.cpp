@@ -794,21 +794,17 @@ void DocumentOrShadowRoot::Unlink(DocumentOrShadowRoot* tmp) {
   tmp->mIdentifierMap.Clear();
 }
 
-void DocumentOrShadowRoot::SetCustomElementRegistry(
-    CustomElementRegistry& aRegistry) {
-  MOZ_ASSERT(StaticPrefs::dom_scoped_custom_element_registries_enabled());
-  MOZ_ASSERT(mKind == Kind::ShadowRoot,
-             "SetCustomElementRegistry should only be called on ShadowRoots");
-  ShadowRoot& root = static_cast<ShadowRoot&>(AsNode());
-  root.SetCustomElementRegistry(&aRegistry);
-}
-
 /* https://dom.spec.whatwg.org/#dom-documentorshadowroot-customelementregistry
  */
 CustomElementRegistry* DocumentOrShadowRoot::GetCustomElementRegistry() {
   // Step 1. If this is a document, then return this's custom element registry.
-  // TODO(2021247): Per document registries
   if (mKind == Kind::Document) {
+    if (StaticPrefs::dom_scoped_custom_element_registries_enabled()) {
+      if (RefPtr<CustomElementRegistry> registry =
+              CustomElementRegistry::GetScopedRegistry(AsNode())) {
+        return registry;
+      }
+    }
     Document* doc = AsNode().AsDocument();
     nsPIDOMWindowInner* window = doc->GetInnerWindow();
     if (!window) {

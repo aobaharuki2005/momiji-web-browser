@@ -34,6 +34,7 @@ FEATURE_CHECK_NEEDED = {
     "immutable-arraybuffer": "!ArrayBuffer.prototype.sliceToImmutable",  # Bug 1952253
     "await-dictionary": "!Promise.allKeyed",
     "source-phase-imports": "!(this.hasOwnProperty('getBuildConfiguration')&&getBuildConfiguration('source-phase-imports'))",
+    "source-phase-imports-module-source": "!(this.hasOwnProperty('wasmIsSupported')&&wasmIsSupported())",
     "Intl.Locale-info": "!this.hasOwnProperty('Intl')||!this.Intl.Locale.prototype.hasOwnProperty('firstDayOfWeek')",
 }
 RELEASE_OR_BETA = set([

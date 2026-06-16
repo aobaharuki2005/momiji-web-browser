@@ -1,0 +1,18 @@
+{
+  "label": "Google Search World Cup widget",
+  "bugs": {
+    "2046875": {
+      "issue": "broken-layout",
+      "matches": ["*://www.google.com/*"]
+    }
+  },
+  "css": {
+    "fix_mute_and_close_buttons_on_football_minigame": "#topstuff > .YUQsT[data-team-a-name] { overflow: clip; }"
+  },
+  "interventions": [
+    {
+      "platforms": ["android"],
+      "css": ["fix_mute_and_close_buttons_on_football_minigame"]
+    }
+  ]
+}

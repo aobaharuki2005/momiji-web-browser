@@ -62,7 +62,7 @@ class OverOutElementsWrapper final : public nsISupports {
   enum class BoundaryEventType : bool { Mouse, Pointer };
   explicit OverOutElementsWrapper(BoundaryEventType aType) : mType(aType) {}
 
-  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
+  NS_DECL_CYCLE_COLLECTING_ISUPPORTS_FINAL
   NS_DECL_CYCLE_COLLECTION_CLASS(OverOutElementsWrapper)
 
   already_AddRefed<nsIWidget> GetLastOverWidget() const;

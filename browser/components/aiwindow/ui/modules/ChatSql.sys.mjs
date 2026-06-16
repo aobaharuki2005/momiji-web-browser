@@ -392,7 +392,7 @@ DELETE FROM conversation WHERE conv_id = :conv_id;
 
 export const CONVERSATION_HISTORY = `
 SELECT c.conv_id, c.title, c.created_date, c.updated_date, (
-  SELECT group_concat(t.page_url)
+  SELECT json_group_array(t.page_url)
   FROM (
     SELECT
       m.page_url
@@ -481,6 +481,21 @@ FROM llm_telemetry
 WHERE conv_id = :conv_id
 `;
 
+/**
+ * Get uniform_sampling_probability for multiple conversations. Used on
+ * conversation reload to rehydrate the in-memory telemetry sampling state
+ * (_telemetryUniformSample / _telemetryUniformProbability).
+ *
+ * @param {number} amount - The number of conversation IDs to look up
+ */
+export function getUniformSamplingByConvIdsSql(amount) {
+  return `
+    SELECT conv_id, uniform_sampling_probability
+    FROM llm_telemetry
+    WHERE conv_id IN(${new Array(amount).fill("?").join(",")});
+  `;
+}
+
 export const GET_CONVERSATIONS_FOR_TELEMETRY = `
 SELECT
   m.conv_id,
@@ -493,7 +508,7 @@ FROM llm_telemetry t
 JOIN (
   SELECT conv_id, MAX(created_date) AS last_message_time
   FROM message
-  WHERE role = 1 -- assistant 
+  WHERE role = 1 -- assistant
   GROUP BY conv_id
 ) lm
   ON t.conv_id = lm.conv_id

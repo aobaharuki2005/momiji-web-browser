@@ -4529,7 +4529,7 @@
   arguments:
     isSigned: bool
 #ifdef JS_CODEGEN_X64
-  num_temps: 1
+  num_temps: 2
 #endif
   mir_op: WasmMulI64WideHI64
 #endif

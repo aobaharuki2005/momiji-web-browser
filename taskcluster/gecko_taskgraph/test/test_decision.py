@@ -119,6 +119,7 @@ def test_write_artifact_yml():
         pytest.param(
             {
                 "project": "try",
+                "allow_parameter_override": True,
             },
             "Fuzzy query=foo",
             {"tasks": ["a", "b"]},
@@ -160,6 +161,97 @@ def test_get_decision_parameters(
 
     for key in expected:
         assert params[key] == expected[key], f"key {key} does not match!"
+
+
+def _note_mock_repo(
+    mock_get_repository, mock_get_hg_revision_info, mock_get_hg_revision_branch, note
+):
+    mock_get_hg_revision_info.return_value = "bcde"
+    mock_get_hg_revision_branch.return_value = "default"
+    mock_repo = MagicMock()
+    mock_repo.default_branch = "baseref"
+    mock_repo.get_commit_message.return_value = "commit message"
+    mock_repo.get_note.return_value = note
+    mock_get_repository.return_value = mock_repo
+    return mock_repo
+
+
+@patch("gecko_taskgraph.decision.get_hg_revision_info")
+@patch("gecko_taskgraph.decision.get_hg_revision_branch")
+@patch("gecko_taskgraph.decision.get_repository")
+@patch("gecko_taskgraph.decision.get_changed_files")
+def test_decision_parameters_note(
+    mock_get_changed_files,
+    mock_get_repository,
+    mock_get_hg_revision_branch,
+    mock_get_hg_revision_info,
+    options,
+):
+    mock_get_changed_files.return_value = []
+    mock_repo = _note_mock_repo(
+        mock_get_repository,
+        mock_get_hg_revision_info,
+        mock_get_hg_revision_branch,
+        note=json.dumps({"build_number": 99}),
+    )
+    opts = {**options, "allow_parameter_override": True}
+    with MockedOpen({TTC_FILE: None}):
+        params = decision.get_decision_parameters(FAKE_GRAPH_CONFIG, opts)
+    mock_repo.get_note.assert_called_once_with(
+        "refs/notes/decision-parameters", options["head_repository"]
+    )
+    assert params["build_number"] == 99
+
+
+@patch("gecko_taskgraph.decision.get_hg_revision_info")
+@patch("gecko_taskgraph.decision.get_hg_revision_branch")
+@patch("gecko_taskgraph.decision.get_repository")
+@patch("gecko_taskgraph.decision.get_changed_files")
+def test_decision_parameters_note_disallow_override(
+    mock_get_changed_files,
+    mock_get_repository,
+    mock_get_hg_revision_branch,
+    mock_get_hg_revision_info,
+    options,
+):
+    mock_get_changed_files.return_value = []
+    mock_repo = _note_mock_repo(
+        mock_get_repository,
+        mock_get_hg_revision_info,
+        mock_get_hg_revision_branch,
+        note=json.dumps({"build_number": 99}),
+    )
+    opts = {**options, "allow_parameter_override": False}
+    with MockedOpen({TTC_FILE: None}):
+        params = decision.get_decision_parameters(FAKE_GRAPH_CONFIG, opts)
+    mock_repo.get_note.assert_not_called()
+    assert params["build_number"] == 1
+
+
+@patch("gecko_taskgraph.decision.get_hg_revision_info")
+@patch("gecko_taskgraph.decision.get_hg_revision_branch")
+@patch("gecko_taskgraph.decision.get_repository")
+@patch("gecko_taskgraph.decision.get_changed_files")
+def test_decision_parameters_note_invalid_json(
+    mock_get_changed_files,
+    mock_get_repository,
+    mock_get_hg_revision_branch,
+    mock_get_hg_revision_info,
+    options,
+):
+    mock_get_changed_files.return_value = []
+    _note_mock_repo(
+        mock_get_repository,
+        mock_get_hg_revision_info,
+        mock_get_hg_revision_branch,
+        note="not valid json {",
+    )
+    opts = {**options, "allow_parameter_override": True}
+    with MockedOpen({TTC_FILE: None}):
+        with pytest.raises(
+            Exception, match="Failed to parse refs/notes/decision-parameters as JSON"
+        ):
+            decision.get_decision_parameters(FAKE_GRAPH_CONFIG, opts)
 
 
 if __name__ == "__main__":

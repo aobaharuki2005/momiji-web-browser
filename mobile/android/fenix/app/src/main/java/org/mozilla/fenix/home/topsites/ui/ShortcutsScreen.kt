@@ -33,6 +33,7 @@ import org.mozilla.fenix.R
 import org.mozilla.fenix.home.fake.FakeHomepagePreview
 import org.mozilla.fenix.home.topsites.interactor.TopSiteInteractor
 import org.mozilla.fenix.home.topsites.store.DialogState
+import org.mozilla.fenix.home.topsites.store.PopularSite
 import org.mozilla.fenix.home.topsites.store.ShortcutsAction
 import org.mozilla.fenix.home.topsites.store.ShortcutsState
 import org.mozilla.fenix.home.topsites.store.ShortcutsStore
@@ -100,10 +101,14 @@ fun ShortcutsScreen(
 
     ShortcutsDialog(
         dialogState = state.dialogState,
+        popularSites = state.popularSites,
         onDismiss = { store.dispatch(ShortcutsAction.CloseDialog) },
         onAddWebsiteClicked = { store.dispatch(ShortcutsAction.ShowAddShortcutDialog) },
         onSaveShortcut = { title, url ->
             store.dispatch(ShortcutsAction.SaveShortcut(title = title, url = url))
+        },
+        onAddPopularSiteClick = { site ->
+            store.dispatch(ShortcutsAction.SaveShortcut(title = site.title, url = site.url))
         },
     )
 }
@@ -133,15 +138,19 @@ private fun ShortcutsScreenContent(
 @Composable
 private fun ShortcutsDialog(
     dialogState: DialogState,
+    popularSites: List<PopularSite>,
     onDismiss: () -> Unit,
     onAddWebsiteClicked: () -> Unit,
     onSaveShortcut: (title: String, url: String) -> Unit,
+    onAddPopularSiteClick: (PopularSite) -> Unit,
 ) {
     when (dialogState) {
         DialogState.AddShortcutBottomSheet -> {
             AddShortcutBottomSheet(
+                popularSites = popularSites,
                 onDismiss = onDismiss,
                 onAddWebsiteClicked = onAddWebsiteClicked,
+                onAddPopularSiteClick = onAddPopularSiteClick,
             )
         }
 

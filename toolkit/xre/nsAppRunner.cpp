@@ -4933,6 +4933,10 @@ int XREMain::XRE_mainStartup(bool* aExitFlag,
       if (!disableWaylandProxy && XRE_IsParentProcess() && waylandEnabled) {
         auto* proxyLog = getenv("WAYLAND_PROXY_LOG");
         WaylandProxy::SetVerbose(proxyLog && *proxyLog);
+        WaylandProxy::SetThreadStartCallback(
+            [] { PROFILER_REGISTER_THREAD("WaylandProxy"); });
+        WaylandProxy::SetThreadStopCallback(
+            [] { PROFILER_UNREGISTER_THREAD(); });
         WaylandProxy::SetCompositorUnavailableHandler(
             WlCompositorUnavailableHandler);
         WaylandProxy::SetCompositorSilentDisconnectHandler(

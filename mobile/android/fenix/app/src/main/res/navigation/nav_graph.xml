@@ -59,6 +59,11 @@
       app:launchSingleTop="true" />
 
     <action
+      android:id="@+id/action_global_ip_protection_unavailable_dialog"
+      app:destination="@+id/ipProtectionUnavailableDialogFragment"
+      app:launchSingleTop="true" />
+
+    <action
         android:id="@+id/action_global_recently_closed"
         app:destination="@id/recentlyClosedFragment" />
 
@@ -122,6 +127,9 @@
     <action
         android:id="@+id/action_global_downloadsFragment"
         app:destination="@id/downloadsFragment" />
+    <action
+      android:id="@+id/action_global_IpProtectionFragment"
+      app:destination="@id/ipProtectionFragment" />
     <action
         android:id="@+id/action_global_accountProblemFragment"
         app:destination="@id/accountProblemFragment" />
@@ -362,6 +370,10 @@
             app:argType="org.mozilla.fenix.ipprotection.store.Surface"
             app:nullable="false" />
     </dialog>
+
+    <dialog
+      android:id="@+id/ipProtectionUnavailableDialogFragment"
+      android:name="org.mozilla.fenix.ipprotection.ui.IPProtectionUnavailableDialogFragment" />
 
     <fragment
         android:id="@+id/recentlyClosedFragment"
@@ -655,13 +667,6 @@
             app:popEnterAnim="@anim/slide_in_left"
             app:popExitAnim="@anim/slide_out_right" />
         <action
-            android:id="@+id/action_settingsFragment_to_secretInfoSettingsFragment"
-            app:destination="@id/secretInfoSettingsFragment"
-            app:enterAnim="@anim/slide_in_right"
-            app:exitAnim="@anim/slide_out_left"
-            app:popEnterAnim="@anim/slide_in_left"
-            app:popExitAnim="@anim/slide_out_right" />
-        <action
             android:id="@+id/action_settingsFragment_to_nimbusExperimentsFragment"
             app:destination="@id/nimbus_experiment_graph"
             app:enterAnim="@anim/slide_in_right"
@@ -849,7 +854,7 @@
     <fragment
         android:id="@+id/settingsSearchFragment"
         android:name="org.mozilla.fenix.settings.settingssearch.SettingsSearchFragment"
-        android:label="@string/settings_search_title" />
+        android:label="@string/settings_title" />
     <fragment
         android:id="@+id/tabsSettingsFragment"
         android:name="org.mozilla.fenix.settings.TabsSettingsFragment"
@@ -889,6 +894,9 @@
             android:name="start_auth_flow"
             android:defaultValue="false"
             app:argType="boolean" />
+        <argument
+            android:name="entrypoint"
+            app:argType="org.mozilla.fenix.components.accounts.FenixFxAEntryPoint" />
     </fragment>
     <fragment
         android:id="@+id/aiControlsFragment"
@@ -1070,10 +1078,6 @@
         android:id="@+id/secretSettingsSearchFragment"
         android:name="org.mozilla.fenix.settings.settingssearch.secretsettings.SecretSettingsSearchFragment"
         android:label="@string/settings_search_title" />
-    <fragment
-        android:id="@+id/secretInfoSettingsFragment"
-        android:name="org.mozilla.fenix.settings.SecretDebugSettingsFragment"
-        android:label="@string/preferences_debug_info" />
     <fragment
         android:id="@+id/remoteSettingsServerFragment"
         android:name="org.mozilla.fenix.settings.RemoteSettingsServerFragment"
@@ -2000,8 +2004,12 @@
     </navigation>
 
     <dialog
-      android:id="@+id/global_protections_dashboard"
-      android:name="org.mozilla.fenix.trackingprotection.ProtectionsDashboard">
+        android:id="@+id/global_protections_dashboard"
+        android:name="org.mozilla.fenix.trackingprotection.ProtectionsDashboardFragment">
+        <argument
+            android:name="customTabSessionId"
+            app:argType="string"
+            app:nullable="true" />
     </dialog>
 
     <dialog

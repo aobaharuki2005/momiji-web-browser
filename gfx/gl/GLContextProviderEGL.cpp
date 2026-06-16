@@ -33,14 +33,9 @@
 #    include "mozilla/widget/AndroidCompositorWidget.h"
 #  endif
 
-#  define GLES2_LIB "libGLESv2.so"
-#  define GLES2_LIB2 "libGLESv2.so.2"
-
 #elif defined(XP_WIN)
 #  include "mozilla/widget/WinCompositorWidget.h"
 #  include "nsIFile.h"
-
-#  define GLES2_LIB "libGLESv2.dll"
 
 #  ifndef WIN32_LEAN_AND_MEAN
 #    define WIN32_LEAN_AND_MEAN 1

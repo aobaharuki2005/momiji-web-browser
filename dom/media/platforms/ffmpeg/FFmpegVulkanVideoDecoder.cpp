@@ -285,7 +285,7 @@ void FFmpegVideoDecoder<LIBAV_VER>::FFmpegVulkanVideoDecoder::InitDrmModifiers(
   mDrmModifiers.clear();
   mExportRequiresDedicatedByModifier.Clear();
 
-  FFMPEGV_LOG("[VULKAN] Compositor %zu modifier(s) for intersection",
+  FFMPEGV_LOG("[VULKAN] Compositor {} modifier(s) for intersection",
               aCompositorMods ? aCompositorMods->Length() : 0);
   const bool isCompositorSupportsOnlyLinear =
       !aCompositorMods || aCompositorMods->IsEmpty() ||
@@ -337,13 +337,13 @@ void FFmpegVideoDecoder<LIBAV_VER>::FFmpegVulkanVideoDecoder::InitDrmModifiers(
         if (aCompositorMods) {
           if (!aCompositorMods->Contains(modProps[i].drmFormatModifier)) {
             FFMPEGV_LOG(
-                "[VULKAN]   modifier 0x%llx: not supported by compositor",
+                "[VULKAN]   modifier 0x{:x}: not supported by compositor",
                 (unsigned long long)modProps[i].drmFormatModifier);
             continue;
           }
         } else if (modProps[i].drmFormatModifier != DRM_FORMAT_MOD_LINEAR) {
           FFMPEGV_LOG(
-              "[VULKAN]   modifier 0x%llx: skipped without compositor list",
+              "[VULKAN]   modifier 0x{:x}: skipped without compositor list",
               (unsigned long long)modProps[i].drmFormatModifier);
           continue;
         }
@@ -351,7 +351,7 @@ void FFmpegVideoDecoder<LIBAV_VER>::FFmpegVulkanVideoDecoder::InitDrmModifiers(
               (VK_FORMAT_FEATURE_TRANSFER_SRC_BIT |
                VK_FORMAT_FEATURE_TRANSFER_DST_BIT))) {
           FFMPEGV_LOG(
-              "[VULKAN]   modifier 0x%llx: skipped, missing transfer "
+              "[VULKAN]   modifier 0x{:x}: skipped, missing transfer "
               "src/dst tiling features",
               (unsigned long long)modProps[i].drmFormatModifier);
           continue;
@@ -395,18 +395,18 @@ void FFmpegVideoDecoder<LIBAV_VER>::FFmpegVulkanVideoDecoder::InitDrmModifiers(
           const bool exportRequiresDedicated =
               !!(extProps2.externalMemoryProperties.externalMemoryFeatures &
                  VK_EXTERNAL_MEMORY_FEATURE_DEDICATED_ONLY_BIT);
-          FFMPEGV_LOG("modifier 0x%llx: DEDICATED_ONLY_BIT: %s",
+          FFMPEGV_LOG("modifier 0x{:x}: DEDICATED_ONLY_BIT: {}",
                       (unsigned long long)modProps[i].drmFormatModifier,
                       exportRequiresDedicated ? "YES" : "NO");
-          FFMPEGV_LOG("modifier 0x%llx: DMA_BUF_BIT_EXT: %s",
+          FFMPEGV_LOG("modifier 0x{:x}: DMA_BUF_BIT_EXT: {}",
                       (unsigned long long)modProps[i].drmFormatModifier,
                       extProps2.externalMemoryProperties.compatibleHandleTypes &
                               VK_EXTERNAL_MEMORY_HANDLE_TYPE_DMA_BUF_BIT_EXT
                           ? "YES"
                           : "NO");
           FFMPEGV_LOG(
-              "[VULKAN]   modifier 0x%llx: image format props supported for "
-              "usage 0x%x? %s",
+              "[VULKAN]   modifier 0x{:x}: image format props supported for "
+              "usage 0x{:x}? {}",
               (unsigned long long)modProps[i].drmFormatModifier,
               (unsigned)aImageUsages,
               isFormatPropsSupported == VK_SUCCESS ? "YES" : "NO");
@@ -434,8 +434,8 @@ void FFmpegVideoDecoder<LIBAV_VER>::FFmpegVulkanVideoDecoder::InitDrmModifiers(
     mDrmModifiers[0] = DRM_FORMAT_MOD_NVIDIA_BLOCK_LINEAR_2D(0, 1, 2, 6, 4);
   }
 
-  FFMPEGV_LOG("[VULKAN] Using %zu modifiers, first=0x%llx",
-              mDrmModifiers.size(), (unsigned long long)mDrmModifiers[0]);
+  FFMPEGV_LOG("[VULKAN] Using {} modifiers, first=0x{:x}", mDrmModifiers.size(),
+              (unsigned long long)mDrmModifiers[0]);
 }
 
 static void* sVulkanLib = nullptr;
@@ -467,7 +467,7 @@ static bool PhysicalDeviceHasVulkanVideoDecodeStack(
       }
     }
     if (!found) {
-      FFMPEGV_LOG("Skipping %s: missing required extension %s", aDeviceName,
+      FFMPEGV_LOG("Skipping {}: missing required extension {}", aDeviceName,
                   req);
       return false;
     }
@@ -485,10 +485,10 @@ bool FFmpegVideoDecoder<LIBAV_VER>::FFmpegVulkanVideoDecoder::
     if (stat(aRendererNode.get(), &st) == 0) {
       rendererDrmMajor = major(st.st_rdev);
       rendererDrmMinor = minor(st.st_rdev);
-      FFMPEGV_LOG("Renderer device from GPU: %s (major=%u, minor=%u)",
+      FFMPEGV_LOG("Renderer device from GPU: {} (major={}, minor={})",
                   aRendererNode.get(), rendererDrmMajor, rendererDrmMinor);
     } else {
-      FFMPEGV_LOG("Renderer device from GPU: %s - stat() failed (errno=%d)",
+      FFMPEGV_LOG("Renderer device from GPU: {} - stat() failed (errno={})",
                   aRendererNode.get(), errno);
     }
   } else {
@@ -648,8 +648,8 @@ bool FFmpegVideoDecoder<LIBAV_VER>::FFmpegVulkanVideoDecoder::
     mNegotiatedCompositorDecoderDeviceID = validDevices[0].first.deviceID;
     mDecoderMatchesCompositor = validDevices[0].second;
     FFMPEGV_LOG(
-        "Selected Vulkan device for video decoding: %s (vendorID=0x%x, "
-        "deviceID=0x%x), matches renderer: %s",
+        "Selected Vulkan device for video decoding: {} (vendorID=0x{:x}, "
+        "deviceID=0x{:x}), matches renderer: {}",
         mNegotiatedVulkanDeviceName, mNegotiatedCompositorDecoderVendorID,
         mNegotiatedCompositorDecoderDeviceID,
         mDecoderMatchesCompositor ? "true" : "false");
@@ -743,7 +743,7 @@ bool FFmpegVideoDecoder<LIBAV_VER>::FFmpegVulkanVideoDecoder::InitCtx(
             mCreateCommandPool(aDevice, &poolInfo, nullptr, &mCopyCmdPool[qi]);
       }
       if (poolRes != VK_SUCCESS) {
-        FFMPEGV_LOG("Failed to create Vulkan command pool for queue %u", qi);
+        FFMPEGV_LOG("Failed to create Vulkan command pool for queue {}", qi);
         return false;
       }
       mGetDeviceQueue(aDevice, mQueueFamilyIndex, qi, &mCopyQueue[qi]);
@@ -754,7 +754,7 @@ bool FFmpegVideoDecoder<LIBAV_VER>::FFmpegVulkanVideoDecoder::InitCtx(
       cmdAllocInfo.commandBufferCount = 1;
       if (mAllocateCommandBuffers(aDevice, &cmdAllocInfo, &mCopyCmdBuf[qi]) !=
           VK_SUCCESS) {
-        FFMPEGV_LOG("Failed to allocate Vulkan command buffer for queue %u",
+        FFMPEGV_LOG("Failed to allocate Vulkan command buffer for queue {}",
                     qi);
         return false;
       }
@@ -763,7 +763,7 @@ bool FFmpegVideoDecoder<LIBAV_VER>::FFmpegVulkanVideoDecoder::InitCtx(
       fenceInfo.flags = VK_FENCE_CREATE_SIGNALED_BIT;
       if (mCreateFence(aDevice, &fenceInfo, nullptr, &mCopyFence[qi]) !=
           VK_SUCCESS) {
-        FFMPEGV_LOG("Failed to create Vulkan copy fence for queue %u", qi);
+        FFMPEGV_LOG("Failed to create Vulkan copy fence for queue {}", qi);
         return false;
       }
     }
@@ -1128,7 +1128,7 @@ FFmpegVideoDecoder<LIBAV_VER>::FFmpegVulkanVideoDecoder::PrepareImageToDRM(
     if (++i >= kNumBuffers) {
       i = 0;
       if (retries++ >= kMaxRetries) {
-        FFMPEGV_LOG("No free Vulkan frame copy slot after %d retries",
+        FFMPEGV_LOG("No free Vulkan frame copy slot after {} retries",
                     kMaxRetries);
         return NS_ERROR_DOM_MEDIA_DECODE_ERR;
       }

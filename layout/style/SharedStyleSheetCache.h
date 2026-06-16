@@ -10,19 +10,12 @@
 
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/SharedSubResourceCache.h"
+#include "mozilla/StyleSheet.h"
 #include "mozilla/css/Loader.h"
 #include "nsIMemoryReporter.h"
 #include "nsIObserver.h"
 
 namespace mozilla {
-
-class StyleSheet;
-class SheetLoadDataHashKey;
-
-namespace css {
-class SheetLoadData;
-class Loader;
-}  // namespace css
 
 struct SharedStyleSheetCacheTraits {
   using Loader = css::Loader;

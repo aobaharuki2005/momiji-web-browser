@@ -97,11 +97,36 @@ group on Phabricator. This should generally only be used if:
    you would like the accessibility team to confirm whether it has been
    implemented correctly.
 
+We recommend using the automated review tool described below before submitting
+to the review group.
+
 If you would instead like the accessibility team to assess **whether a feature
 or change is sufficiently accessible**, please request an accessibility
 **engineering** review as described above. Without this, the accessibility team
 will not have sufficient context or understanding of the change or how to test
 it, which is necessary to thoroughly assess its accessibility.
+
+## Automated Accessibility Review Skill
+
+The accessibility team maintains a frontend accessibility review skill for
+Claude Code and other LLM agents, available in the Firefox repository. You can
+invoke it via `/accessibility-frontend-review` in your LLM environment.
+
+This skill accepts either a Phabricator patch reference (URL or `D####`) or a
+local changeset, and performs static analysis to catch common issues before
+review. Specifically, it checks for:
+
+- Inappropriate ARIA roles
+- Missing required ARIA states or properties
+- Missing labels that screen reader users depend on
+- High Contrast Mode (HCM) coverage and design token usage, with recommendations
+  for improvements
+
+**This skill does not perform live, automated testing with assistive
+technologies (ATs).** It is a supplement to, not a replacement for, a full
+accessibility review. You should continue to test your patches with ATs on your
+own machine, and to request accessibility engineering review for features or
+changes involving UI or UX work.
 
 ## Questions?
 

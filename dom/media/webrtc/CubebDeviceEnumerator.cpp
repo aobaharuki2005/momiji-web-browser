@@ -211,7 +211,7 @@ static int GetDevicePriority(const RefPtr<AudioDeviceInfo>& device) {
 }
 
 static RefPtr<AudioDeviceSet> GetDeviceCollection(Side aSide) {
-  RefPtr set = new AudioDeviceSet();
+  RefPtr set = MakeRefPtr<AudioDeviceSet>();
   RefPtr<CubebHandle> handle = GetCubeb();
   if (handle) {
     cubeb_device_collection collection = {nullptr, 0};
@@ -277,7 +277,7 @@ RefPtr<const AudioDeviceSet> CubebDeviceEnumerator::EnumerateAudioDevices(
   }
 
   if (!GetCubeb()) {
-    return new AudioDeviceSet();
+    return MakeRefPtr<AudioDeviceSet>();
   }
   if (!manualInvalidation) {
     MutexAutoLock lock(mMutex);
@@ -300,7 +300,7 @@ RefPtr<const AudioDeviceSet> CubebDeviceEnumerator::EnumerateAudioDevices(
     channels = 2;
     name = u"Default audio output device"_ns;
   }
-  RefPtr devices = new AudioDeviceSet();
+  RefPtr devices = MakeRefPtr<AudioDeviceSet>();
   // Bug 1473346: enumerating devices is not supported on Android in cubeb,
   // simply state that there is a single sink, that it is the default, and has
   // a single channel. All the other values are made up and are not to be used.

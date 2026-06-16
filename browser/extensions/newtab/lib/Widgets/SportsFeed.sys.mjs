@@ -24,11 +24,27 @@ const PREF_SYSTEM_SPORTS_ENABLED = "widgets.system.sportsWidget.enabled";
 const FOLLOW_STATE = "sports-follow-state";
 const CACHE_KEY = "sports_feed";
 const MERINO_CLIENT_KEY = "HNT_SPORTS_FEED";
+// Floor for how long a just-ended match's endedAt timestamp is retained before
+// being pruned. The effective retention is max(this, the configured celebration
+// window) so a window configured larger than this can't have its stamps pruned
+// before it expires; this only caps unbounded growth of the persisted map.
+const CELEBRATION_RETENTION_FLOOR_MS = 7 * 24 * 60 * 60 * 1000;
+// Default "recently ended" window; mirrors DEFAULT_CELEBRATION_WINDOW_MS in
+// SportsWidget.jsx (the content side owns the celebration-firing decision).
+const DEFAULT_CELEBRATION_WINDOW_MS = 24 * 60 * 60 * 1000;
+// Cap the persisted `celebrated` id list so it can't grow without bound over a
+// long tournament; only the most recent ids matter (the window is hours, not
+// the whole list). FIFO-trim the oldest.
+const MAX_CELEBRATED_IDS = 100;
 // SAP source string passed to BrowserSearchTelemetry — must be a key in
 // BrowserSearchTelemetry.KNOWN_SEARCH_SOURCES. Today this widget reports under
 // the generic newtab source; the search team may ask us to switch to a
 // widget-specific source later.
 const SEARCH_SAP_SOURCE = "about_newtab";
+// Status types that count as in-progress for the Now tab. Mirrors the keys in
+// LIVE_STATUS_L10N_MAP in SportsMatchRow.jsx plus the catch-all "live"; keep
+// the two in sync when new live sub-statuses are added.
+const LIVE_STATUS_TYPES = new Set(["live", "halftime", "extra time"]);
 
 // Adaptive live-polling prefs and constants
 const PREF_SPORTS_LIVE_ENABLED = "widgets.sportsWidget.live.enabled";
@@ -37,6 +53,8 @@ const PREF_POLL_IDLE_MS = "widgets.sportsWidget.pollIdleMs";
 const PREF_POLL_MATCH_DAY_MS = "widgets.sportsWidget.pollMatchDayMs";
 const PREF_POLL_LIVE_MS = "widgets.sportsWidget.pollLiveMs";
 const PREF_POLL_PREGAME_LEAD_MS = "widgets.sportsWidget.pollPregameLeadMs";
+const PREF_CELEBRATIONS_WINDOW_MS =
+  "widgets.sportsWidget.celebrations.windowMs";
 
 const POLLING_STATE_IDLE = "IDLE";
 const POLLING_STATE_MATCH_DAY = "MATCH_DAY";
@@ -48,6 +66,10 @@ const MAX_RETRY_DELAY_MS = 300000; // 5 minutes
 // value from producing a tight network loop. Pregame lead allows 0 (= disabled)
 // but no negatives.
 const MIN_POLL_INTERVAL_MS = 10000; // 10 seconds
+// Capping the time between /live refreshes to 15 seconds.
+// The button will also be disabled for this duration on the client side
+// but enforcing the cap here keeps a user from spamming from the endpoint regardless of UI state.
+const MIN_MANUAL_REFRESH_MS = 15000; // 15 seconds
 const MS_PER_DAY = 24 * 60 * 60 * 1000;
 
 /**
@@ -104,7 +126,23 @@ export class SportsFeed {
       pollIdleMs: widgets.sportsWidgetPollIdleMs ?? legacy.pollIdleMs,
       pollPregameLeadMs:
         widgets.sportsWidgetPollPregameLeadMs ?? legacy.pollPregameLeadMs,
+      celebrationsWindowMs:
+        widgets.sportsWidgetCelebrationsWindowMs ?? legacy.celebrationsWindowMs,
     };
+  }
+
+  // Effective "recently ended" celebration window (trainhop > pref > default),
+  // mirroring SportsWidget.jsx; the dedicated sportsCelebrations namespace wins.
+  // Used as a floor for endedAt retention so a configured window longer than the
+  // default retention floor doesn't get its stamps pruned before it expires.
+  resolveCelebrationWindowMs() {
+    const prefs = this.store.getState()?.Prefs.values ?? {};
+    return (
+      prefs.trainhopConfig?.sportsCelebrations?.windowMs ??
+      this._trainhopSports(prefs).celebrationsWindowMs ??
+      prefs[PREF_CELEBRATIONS_WINDOW_MS] ??
+      DEFAULT_CELEBRATION_WINDOW_MS
+    );
   }
 
   get enabled() {
@@ -182,8 +220,21 @@ export class SportsFeed {
       matchesTab,
       followedOnly,
       liveIndex,
+      celebrations,
     } = cachedData;
     const { teams, matches, live } = sportsData || {};
+
+    if (celebrations) {
+      this.store.dispatch(
+        ac.BroadcastToContent({
+          type: at.WIDGETS_SPORTS_SET_CELEBRATIONS,
+          data: {
+            endedAt: celebrations.endedAt || {},
+            celebrated: celebrations.celebrated || [],
+          },
+        })
+      );
+    }
 
     if (widgetState) {
       this.store.dispatch(
@@ -347,10 +398,14 @@ export class SportsFeed {
     const liveData = liveResult.data;
     const liveMatchesValid = Array.isArray(liveData?.matches);
     // The /live endpoint is meant to be pre-filtered to in-progress games,
-    // but we re-filter on `status_type === "live"` as a defensive guard so
-    // the Now tab only ever surfaces actually-live matches.
+    // but we re-filter against LIVE_STATUS_TYPES as a defensive guard so the
+    // Now tab only ever surfaces actually-live matches. Keep the set in sync
+    // with LIVE_STATUS_L10N_MAP in SportsMatchRow.jsx when new live
+    // sub-statuses are introduced.
     const liveMatches = liveMatchesValid
-      ? liveData.matches.filter(match => match?.status_type === "live")
+      ? liveData.matches.filter(match =>
+          LIVE_STATUS_TYPES.has(match?.status_type?.toLowerCase())
+        )
       : [];
 
     // Report the first failure only. Order: teams, then matches, then live,
@@ -398,6 +453,69 @@ export class SportsFeed {
           data: clampedLiveIndex,
         })
       );
+    }
+  }
+
+  // End-of-match celebration bookkeeping, persisted so a celebration fires at
+  // most once per match even across reloads. `endedAt` maps a just-ended
+  // match's global_event_id to the ms it dropped out of /live; `celebrated`
+  // lists ids that have already been shown.
+  async getCelebrations() {
+    const cached = (await this.cache.get()) || {};
+    const celebrations = cached.celebrations || {};
+    return {
+      endedAt: celebrations.endedAt || {},
+      celebrated: celebrations.celebrated || [],
+    };
+  }
+
+  async setCelebrations(celebrations) {
+    await this.cache.set("celebrations", celebrations);
+    this.store.dispatch(
+      ac.BroadcastToContent({
+        type: at.WIDGETS_SPORTS_SET_CELEBRATIONS,
+        data: celebrations,
+      })
+    );
+  }
+
+  // Stamps newly-ended matches with the current time (unless already recorded
+  // or already celebrated) and prunes stale entries. Called when the live poll
+  // shows matches that just dropped out of /live.
+  async recordEndedMatches(endedIds) {
+    if (!endedIds.length) {
+      return;
+    }
+    const { endedAt, celebrated } = await this.getCelebrations();
+    const celebratedSet = new Set(celebrated);
+    const now = Date.now();
+    // Never prune a stamp before its celebration window expires.
+    const retentionMs = Math.max(
+      this.resolveCelebrationWindowMs(),
+      CELEBRATION_RETENTION_FLOOR_MS
+    );
+    const nextEndedAt = { ...endedAt };
+    let changed = false;
+    for (const id of endedIds) {
+      if (
+        id === null ||
+        id === undefined ||
+        celebratedSet.has(id) ||
+        nextEndedAt[id] !== undefined
+      ) {
+        continue;
+      }
+      nextEndedAt[id] = now;
+      changed = true;
+    }
+    for (const [id, ts] of Object.entries(nextEndedAt)) {
+      if (now - ts > retentionMs) {
+        delete nextEndedAt[id];
+        changed = true;
+      }
+    }
+    if (changed) {
+      await this.setCelebrations({ endedAt: nextEndedAt, celebrated });
     }
   }
 
@@ -538,8 +656,13 @@ export class SportsFeed {
       const prevLive = this.store.getState()?.SportsWidget?.data?.live ?? [];
       const prevLiveIds = new Set(prevLive.map(ev => ev.global_event_id));
       const newLiveIds = new Set(liveEvents.map(ev => ev.global_event_id));
-      const someEnded = [...prevLiveIds].some(id => !newLiveIds.has(id));
+      const endedIds = [...prevLiveIds].filter(id => !newLiveIds.has(id));
+      const someEnded = !!endedIds.length;
       const someStarted = [...newLiveIds].some(id => !prevLiveIds.has(id));
+
+      // Stamp the just-ended matches so the content side can celebrate them
+      // once, within the celebration window.
+      await this.recordEndedMatches(endedIds);
 
       this.dispatchLive(liveEvents);
       if (!liveEvents.length || someEnded || someStarted) {
@@ -847,6 +970,25 @@ export class SportsFeed {
         }
         break;
       }
+      // User clicked the refresh button on a live match row, this will pull data from the /live endpoint
+      // while enforcing a hard-coded MIN_MANUAL_REFRESH_MS cap between successive manual fetches.
+      case at.WIDGETS_SPORTS_LIVE_REFRESH: {
+        if (
+          !this.liveEnabled ||
+          this.pollingState !== POLLING_STATE_LIVE ||
+          this.ticking
+        ) {
+          break;
+        }
+        if (
+          this.lastLiveUpdated !== null &&
+          Date.now() - this.lastLiveUpdated < MIN_MANUAL_REFRESH_MS
+        ) {
+          break;
+        }
+        this.fetchNow();
+        break;
+      }
       // User clicked a match row — run a search for the match's `query` using
       // their default search engine via SearchUIUtils.loadSearch.
       case at.WIDGETS_SPORTS_OPEN_MATCH_SEARCH:
@@ -916,6 +1058,22 @@ export class SportsFeed {
             data: action.data,
           })
         );
+        break;
+      }
+      // Content fired a celebration for a match — record it so it never fires
+      // again (across reloads/tabs) and drop its pending endedAt stamp.
+      case at.WIDGETS_SPORTS_MARK_CELEBRATED: {
+        const id = action.data;
+        const { endedAt, celebrated } = await this.getCelebrations();
+        if (id === null || id === undefined || celebrated.includes(id)) {
+          break;
+        }
+        const nextEndedAt = { ...endedAt };
+        delete nextEndedAt[id];
+        await this.setCelebrations({
+          endedAt: nextEndedAt,
+          celebrated: [...celebrated, id].slice(-MAX_CELEBRATED_IDS),
+        });
         break;
       }
       case at.WIDGETS_SPORTS_WATCH_LIVE_REQUEST:

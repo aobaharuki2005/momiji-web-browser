@@ -393,11 +393,8 @@ class gfxFontEntry {
   };
 
   // Return a font instance for a particular style. This may be a newly-
-  // created instance, or a font already in the global cache.
-  // We can't return a UniquePtr here, because we may be returning a shared
-  // cached instance; but we also don't return already_AddRefed, because
-  // the caller may only need to use the font temporarily and doesn't need
-  // a strong reference.
+  // created instance, or a font already in the global cache. We need a
+  // strong reference because this may be called on DOM worker threads.
   already_AddRefed<gfxFont> FindOrMakeFont(
       const gfxFontStyle* aStyle, gfxCharacterMap* aUnicodeRangeMap = nullptr);
 

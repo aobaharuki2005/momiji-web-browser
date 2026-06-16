@@ -476,6 +476,10 @@ struct ModuleMetadata : public ShareableBase<ModuleMetadata> {
                       bool declareForRef = false,
                       mozilla::Maybe<CacheableName>&& optionalExportedName =
                           mozilla::Nothing());
+  bool addDefinedFuncWithType(uint32_t funcTypeIndex,
+                              bool declareForRef = false,
+                              mozilla::Maybe<CacheableName>&&
+                                  optionalExportedName = mozilla::Nothing());
   bool addImportedFunc(ValTypeVector&& params, ValTypeVector&& results,
                        CacheableName&& importModName,
                        CacheableName&& importFieldName);

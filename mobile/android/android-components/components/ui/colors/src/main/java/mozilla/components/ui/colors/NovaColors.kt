@@ -12,7 +12,7 @@ import androidx.compose.ui.graphics.Color
 object NovaColors {
     val White = Color(0xFFFFFFFF)
     val Black = Color(0xFF000000)
-    val BlackA32 = Color(0x52000000)
+    val BlackA50 = Color(0x80000000)
 
     val Gray0 = Color(0xFFFCFBFF)
     val Gray5 = Color(0xFFF7F6FB)
@@ -44,6 +44,7 @@ object NovaColors {
     val VioletDesaturated30A55 = Color(0x8CB0A3D2)
     val VioletDesaturated40 = Color(0xFF9484BD)
     val VioletDesaturated50 = Color(0xFF75669F)
+    val VioletDesaturated50A86 = Color(0xDB75669F)
     val VioletDesaturated60 = Color(0xFF584A7D)
     val VioletDesaturated70 = Color(0xFF3E315F)
     val VioletDesaturated80 = Color(0xFF281D44)

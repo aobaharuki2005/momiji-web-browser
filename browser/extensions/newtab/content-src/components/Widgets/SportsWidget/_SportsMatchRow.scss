@@ -24,6 +24,11 @@
     background: var(--button-background-color-hover);
   }
 
+  // The placeholder row isn't interactive, so suppress the hover link styling.
+  &.sports-match-row-placeholder:hover {
+    background: none;
+  }
+
   .sports-match-team {
     display: flex;
     flex-direction: column;
@@ -52,6 +57,19 @@
       display: block;
     }
 
+    .sports-match-flag-tbd {
+      --sports-tbd-placeholder-color: light-dark(
+        var(--color-gray-15),
+        var(--color-gray-75)
+      );
+
+      box-sizing: border-box;
+      /* stylelint-disable-next-line stylelint-plugin-mozilla/use-design-tokens */
+      background-color: var(--sports-tbd-placeholder-color);
+      border: var(--border-width) solid var(--border-color);
+      border-radius: var(--border-radius-small);
+    }
+
     .sports-match-flag-check {
       position: absolute;
       inset-block-start: calc(var(--space-xsmall) * -1);
@@ -71,7 +89,8 @@
   }
 
   .sports-match-upcoming,
-  .sports-match-result {
+  .sports-match-result,
+  .sports-match-live {
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -84,10 +103,15 @@
     .sports-match-date {
       color: var(--text-color-deemphasized);
     }
+
+    .sports-match-vs {
+      font-size: var(--font-size-xxlarge);
+    }
   }
 
-  .sports-match-result {
-    gap: var(--space-xsmall);
+  .sports-match-result,
+  .sports-match-live {
+    gap: var(--space-small);
   }
 
   .sports-score-pill {
@@ -111,7 +135,12 @@
     }
   }
 
-  .sports-match-result-footer {
+  .sports-match-live > .sports-score-pill-now {
+    align-self: center;
+  }
+
+  .sports-match-result-footer,
+  .sports-match-live-footer {
     display: flex;
     flex-wrap: wrap;
     justify-content: center;
@@ -145,15 +174,19 @@
 
     .sports-match-code {
       width: 35px; /* stylelint-disable-line stylelint-plugin-mozilla/use-design-tokens */
+      text-align: center;
     }
 
-    .sports-match-result-footer {
+    .sports-match-result-footer,
+    .sports-match-live-footer {
       font-size: var(--font-size-small);
       column-gap: var(--space-xsmall);
     }
   }
 
   &.sports-match-row-medium {
+    padding: var(--space-xsmall);
+
     .sports-match-upcoming {
       .sports-match-time {
         font-size: var(--font-size-root);
@@ -161,6 +194,10 @@
 
       .sports-match-date {
         font-size: var(--font-size-small);
+      }
+
+      .sports-match-vs {
+        font-size: var(--font-size-xlarge);
       }
     }
 

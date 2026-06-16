@@ -327,8 +327,6 @@
     <ID>HardcodedPaddingUsage:SearchEngineShortcuts.kt$(start = 4.dp)</ID>
     <ID>HardcodedPaddingUsage:SearchEngineShortcuts.kt$(vertical = 8.dp)</ID>
     <ID>HardcodedPaddingUsage:SearchOptimizationFragment.kt$SearchOptimizationFragment$(horizontal = 16.dp, vertical = 24.dp)</ID>
-    <ID>HardcodedPaddingUsage:SecretDebugSettingsFragment.kt$(4.dp)</ID>
-    <ID>HardcodedPaddingUsage:SecretDebugSettingsFragment.kt$(8.dp)</ID>
     <ID>HardcodedPaddingUsage:SecretSettingsFragment.kt$SecretSettingsFragment$(horizontal = 16.dp, vertical = 24.dp)</ID>
     <ID>HardcodedPaddingUsage:SelectFolderScreen.kt$(start = if (!showPadding) folder.startPadding else 0.dp)</ID>
     <ID>HardcodedPaddingUsage:SelectFolderScreen.kt$(vertical = 16.dp)</ID>

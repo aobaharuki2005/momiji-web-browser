@@ -16,6 +16,14 @@ android {
     }
 
     namespace = 'mozilla.components.ui.tabcounter'
+
+    testOptions {
+        animationsDisabled = true
+        execution = 'ANDROIDX_TEST_ORCHESTRATOR'
+        unitTests {
+            includeAndroidResources = true
+        }
+    }
 }
 
 dependencies {

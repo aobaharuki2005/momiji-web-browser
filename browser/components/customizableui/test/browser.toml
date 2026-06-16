@@ -371,6 +371,8 @@ tags = "fullscreen"
 
 ["browser_panel_menulist.js"]
 
+["browser_panel_role_and_label.js"]
+
 ["browser_panel_toggle.js"]
 
 ["browser_proton_moreTools_panel.js"]
@@ -449,6 +451,8 @@ skip-if = [
   "os == 'linux' && os_version == '24.04' && arch == 'x86_64' && display == 'x11'",
   "os == 'win'",
 ]
+
+["browser_uidensity_auto_compact.js"]
 
 ["browser_unified_extensions_reset.js"]
 

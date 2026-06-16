@@ -2949,7 +2949,8 @@ void JSObject::traceChildren(JSTracer* trc) {
       MOZ_ASSERT(nobj->hasDynamicSlots());
       GetObjectSlotNameFunctor func(nobj, SlotsKind::Dynamic);
       JS::AutoTracingDetails ctx(trc, func);
-      TraceRange(trc, nslots - nfixed, nobj->slots_, "objectDynamicSlots");
+      TraceRange(trc, nslots - nfixed, nobj->slots_.get(),
+                 "objectDynamicSlots");
 
 #if defined(JS_GC_CONCURRENT_MARKING) && defined(DEBUG)
       // Any unused dynamic slots that should be undefined.

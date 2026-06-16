@@ -75,6 +75,7 @@
 #include "nsIOService.h"
 #include "nsIPrincipal.h"
 #include "nsIXPConnect.h"
+#include "nsPIDOMWindowInlines.h"
 #include "nsPrintfCString.h"
 #include "nsReadableUtils.h"
 #include "nsUTF8Utils.h"

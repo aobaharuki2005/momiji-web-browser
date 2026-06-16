@@ -266,15 +266,18 @@ class MatchesResponseMapperTest {
     }
 
     @Test
-    fun `GIVEN status_type live and null period and clock WHEN mapped THEN Live has empty strings`() {
+    fun `GIVEN status_type live and null period and clock WHEN mapped THEN Live has empty period and null clock`() {
         val dto = minimalEvent().copy(statusType = "live", period = null, clock = null)
-        assertEquals(MatchStatus.Live(period = "", clock = ""), mapSingle(dto).matchStatus)
+        assertEquals(MatchStatus.Live(period = "", clock = null), mapSingle(dto).matchStatus)
     }
 
     @Test
-    fun `GIVEN status_type live and Break period WHEN mapped THEN MatchStatus is Live (halftime collapsed)`() {
-        val dto = minimalEvent().copy(statusType = "live", period = "Break", clock = "45")
-        assertEquals(MatchStatus.Live(period = "Break", clock = "45"), mapSingle(dto).matchStatus)
+    fun `GIVEN status_type live and status Break WHEN mapped THEN Live is halftime`() {
+        val dto = minimalEvent().copy(statusType = "live", status = "Break", period = "1", clock = null)
+        assertEquals(
+            MatchStatus.Live(period = "1", clock = null, isHalftime = true),
+            mapSingle(dto).matchStatus,
+        )
     }
 
     @Test
@@ -284,10 +287,10 @@ class MatchesResponseMapperTest {
     }
 
     @Test
-    fun `GIVEN status_type live and period P WHEN mapped THEN MatchStatus is Penalties`() {
+    fun `GIVEN status_type live and period PEN WHEN mapped THEN MatchStatus is Penalties`() {
         val dto = minimalEvent().copy(
             statusType = "live",
-            period = "P",
+            period = "PEN",
             homePenalty = 3,
             awayPenalty = 2,
         )
@@ -295,14 +298,26 @@ class MatchesResponseMapperTest {
     }
 
     @Test
-    fun `GIVEN status_type live and period P with null penalty scores WHEN mapped THEN Penalties preserves nulls`() {
+    fun `GIVEN status_type live and period PEN with null penalty scores WHEN mapped THEN Penalties preserves nulls`() {
         val dto = minimalEvent().copy(
             statusType = "live",
-            period = "P",
+            period = "PEN",
             homePenalty = null,
             awayPenalty = null,
         )
         assertEquals(MatchStatus.Penalties(homePenalty = null, awayPenalty = null), mapSingle(dto).matchStatus)
+    }
+
+    @Test
+    fun `GIVEN status_type live and period PenaltyShootout WHEN mapped THEN MatchStatus is Penalties`() {
+        // The documented spelling; matched case-insensitively alongside the "PEN" abbreviation.
+        val dto = minimalEvent().copy(
+            statusType = "live",
+            period = "PenaltyShootout",
+            homePenalty = 1,
+            awayPenalty = 0,
+        )
+        assertEquals(MatchStatus.Penalties(homePenalty = 1, awayPenalty = 0), mapSingle(dto).matchStatus)
     }
 
     @Test
@@ -335,10 +350,10 @@ class MatchesResponseMapperTest {
     }
 
     @Test
-    fun `GIVEN status_type past and period FT_P WHEN mapped THEN MatchStatus is FinalAfterPenalties`() {
+    fun `GIVEN status_type past and period PEN WHEN mapped THEN MatchStatus is FinalAfterPenalties`() {
         val dto = minimalEvent().copy(
             statusType = "past",
-            period = "FT(P)",
+            period = "PEN",
             homePenalty = 5,
             awayPenalty = 3,
         )
@@ -349,15 +364,33 @@ class MatchesResponseMapperTest {
     }
 
     @Test
-    fun `GIVEN past period FT_P with one-sided penalty WHEN mapped THEN FinalAfterPenalties keeps nulls`() {
+    fun `GIVEN past period PEN with one-sided penalty WHEN mapped THEN FinalAfterPenalties keeps nulls`() {
         val dto = minimalEvent().copy(
             statusType = "past",
-            period = "FT(P)",
+            period = "PEN",
             homePenalty = 4,
             awayPenalty = null,
         )
         assertEquals(
             MatchStatus.FinalAfterPenalties(homePenalty = 4, awayPenalty = null),
+            mapSingle(dto).matchStatus,
+        )
+    }
+
+    @Test
+    fun `GIVEN a completed shootout with period FT and penalty scores WHEN mapped THEN FinalAfterPenalties`() {
+        // Real feed shape for a finished penalty match: the period flips back to "FT" once the
+        // game is final, so the shootout is only recoverable from the penalty fields.
+        val dto = minimalEvent().copy(
+            statusType = "past",
+            period = "FT",
+            homeScore = 2,
+            awayScore = 2,
+            homePenalty = 5,
+            awayPenalty = 6,
+        )
+        assertEquals(
+            MatchStatus.FinalAfterPenalties(homePenalty = 5, awayPenalty = 6),
             mapSingle(dto).matchStatus,
         )
     }

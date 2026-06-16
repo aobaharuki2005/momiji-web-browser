@@ -273,3 +273,80 @@ add_task(
     }
   }
 );
+
+add_task(
+  {
+    skip_if: () =>
+      AppConstants.MOZ_SYSTEM_NSS ||
+      !gServerStarted ||
+      mozinfo.os == "android" ||
+      mozinfo.socketprocess_networking,
+  },
+  async function test_he_0rtt_h2_txn_gone_closes_connection() {
+    const host = "0rtt-reject-h2.example.com";
+    const TLS_PORT = 8443;
+    const url = `https://${host}:${TLS_PORT}/`;
+
+    let nss = Cc["@mozilla.org/psm;1"].getService(Ci.nsINSSComponent);
+    await nss.asyncClearSSLExternalAndInternalSessionCache();
+
+    override.clearOverrides();
+    override.addIPOverride(host, "127.0.0.1");
+    Services.prefs.setBoolPref("network.dns.disableIPv6", true);
+
+    try {
+      // ── Warm-up: full H2 handshake, session ticket issued ──────────────
+      const wu = fetchNoThrow(url);
+      const wuResult = await wu.promise;
+      Assert.ok(wuResult.ok, "H2 warm-up must succeed");
+
+      // Wait for the session ticket to arrive and be cached.
+      // eslint-disable-next-line mozilla/no-arbitrary-setTimeout
+      await new Promise(r => setTimeout(r, 1000));
+
+      // Wait for the H2 idle timeout (2 s, set in add_setup) to reclaim the
+      // warm-up session so the next connection is forced to race fresh.
+      // eslint-disable-next-line mozilla/no-arbitrary-setTimeout
+      await new Promise(r => setTimeout(r, 3000));
+
+      // ── Test: H2 0-RTT rejected, pref forces the null-realTxn path ────
+      Services.prefs.setBoolPref(
+        "network.http.0rtt_force_txn_gone_for_testing",
+        true
+      );
+
+      const f = fetchNoThrow(url);
+      const result = await f.promise;
+
+      Assert.ok(!result.ok, "request should fail when null-txn path fires");
+      Assert.equal(
+        result.error,
+        Cr.NS_ERROR_ABORT,
+        "TCP connection should be closed cleanly with NS_ERROR_ABORT"
+      );
+
+      Services.prefs.clearUserPref(
+        "network.http.0rtt_force_txn_gone_for_testing"
+      );
+
+      // ── Recovery: networking stack must still be functional ────────────
+      Services.obs.notifyObservers(null, "net:cancel-all-connections");
+      // eslint-disable-next-line mozilla/no-arbitrary-setTimeout
+      await new Promise(r => setTimeout(r, 200));
+
+      const r3 = fetchNoThrow(url);
+      const r3Result = await r3.promise;
+      Assert.ok(r3Result.ok, "recovery request should succeed");
+      Assert.equal(r3Result.status, 200, "recovery request should return 200");
+    } finally {
+      Services.prefs.clearUserPref(
+        "network.http.0rtt_force_txn_gone_for_testing"
+      );
+      Services.prefs.clearUserPref("network.dns.disableIPv6");
+      Services.obs.notifyObservers(null, "net:cancel-all-connections");
+      // eslint-disable-next-line mozilla/no-arbitrary-setTimeout
+      await new Promise(r => setTimeout(r, 200));
+      override.clearOverrides();
+    }
+  }
+);

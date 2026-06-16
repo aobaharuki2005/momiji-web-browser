@@ -68,7 +68,13 @@ details summary,
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  padding-inline: var(--space-small);
+  /* Reserve a leading gutter for the expand/collapse chevron so the folder icon
+     stays aligned whether or not the folder has children. The gutter is the
+     leading inset (--space-small, where the chevron sits), plus the chevron width
+     (--space-medium), plus the gap between the chevron and the folder icon
+     (--space-large). The custom chevron is drawn in this gutter for expandable
+     folders below. */
+  padding-inline: calc(var(--space-small) + var(--space-medium) + var(--space-large)) var(--space-small);
   border-radius: var(--border-radius-small);
   grid-column: span 9;
 
@@ -100,6 +106,26 @@ details summary,
     background-size: contain;
     background-repeat: no-repeat;
   }
+}
+
+details > summary {
+  /* Replace the native <details> triangle with a custom chevron drawn in the
+     reserved leading gutter, so folder icons stay vertically aligned. */
+  list-style: none;
+  background-image: url("chrome://global/skin/icons/arrow-right-12.svg");
+  background-position: var(--space-small) center;
+  background-repeat: no-repeat;
+  -moz-context-properties: fill;
+  fill: currentColor;
+}
+
+details > summary:dir(rtl) {
+  background-image: url("chrome://global/skin/icons/arrow-left-12.svg");
+  background-position-x: right var(--space-small);
+}
+
+details[open] > summary {
+  background-image: url("chrome://global/skin/icons/arrow-down-12.svg");
 }
 
 details[data-folder-kind="place-container"] > summary,

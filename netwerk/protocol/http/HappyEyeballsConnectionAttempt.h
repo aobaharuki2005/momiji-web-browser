@@ -206,9 +206,15 @@ class HappyEyeballsConnectionAttempt final : public ConnectionAttempt,
   // Connection Attempt
   // Build a per-establisher HappyEyeballsTransaction wired up to forward
   // its OnTransportStatus events back through MaybeSendTransportStatus
-  // for dedup + propagation to the real transaction.
+  // for dedup + propagation to the real transaction. aEstablisherId lets the
+  // client-auth forwarders identify which racer.
   already_AddRefed<HappyEyeballsTransaction> CreateAttemptTransaction(
-      nsHttpConnectionInfo* aInfo);
+      nsHttpConnectionInfo* aInfo, uint64_t aEstablisherId);
+
+  // TLS handshake saw a CertificateRequest: pause polling (no new attempts)
+  // until the prompt resolves. Selected clears the pause.
+  void OnClientAuthCertificateRequested(uint64_t aEstablisherId);
+  void OnClientAuthCertificateSelected(uint64_t aEstablisherId);
 
   nsresult EstablishTCPConnection(NetAddr aAddr, uint16_t aPort,
                                   nsTArray<uint8_t>&& aEchConfig, uint64_t aId,
@@ -300,6 +306,11 @@ class HappyEyeballsConnectionAttempt final : public ConnectionAttempt,
   TimeStamp mFirstTcpConnectEnd;
   TimeStamp mFirstSecureConnectionStart;
   TimeStamp mFirstConnectEnd;
+
+  // While set, attempt mClientAuthHolderId is on the cert prompt and
+  // ProcessHappyEyeballsOutput stops polling so no new attempts start.
+  bool mPausedForClientAuth = false;
+  uint64_t mClientAuthHolderId = 0;
 };
 
 }  // namespace net

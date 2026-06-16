@@ -44,7 +44,7 @@
   @media not (forced-colors) {
     --aiwindow-text-accent: light-dark(var(--color-violet-90), var(--color-white));
 
-    --aiwindow-memory-item-bg: light-dark(var(--color-gray-05), var(--color-gray-80));
+    --aiwindow-memory-item-bg: light-dark(var(--color-gray-0), var(--color-gray-80));
     --aiwindow-memory-item-border: none;
 
     --aiwindow-memories-icon-fill: light-dark(var(--color-gray-70), var(--color-white));
@@ -219,7 +219,7 @@ moz-button.memories-trigger {
   pointer-events: none;
   position: absolute;
   /* stylelint-disable-next-line stylelint-plugin-mozilla/use-design-tokens */
-  width: 318px;
+  width: min(318px, 100%);
   /* stylelint-disable-next-line stylelint-plugin-mozilla/use-design-tokens */
   bottom: 40px;
   left: 0;

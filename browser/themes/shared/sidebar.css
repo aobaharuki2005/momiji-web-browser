@@ -31,7 +31,7 @@
   }
 }
 
-#sidebar-main,
+#sidebar-container,
 #sidebar-box {
   text-shadow: none;
   max-width: 75vw;
@@ -138,7 +138,7 @@
   @media not (-moz-platform: linux) {
     margin-inline-start: calc(-1 * var(--splitter-width));
 
-    #sidebar-main[sidebar-positionend] + & {
+    #sidebar-container[sidebar-positionend] + & {
       margin-inline: 0 calc(-1 * var(--splitter-width));
     }
   }
@@ -149,7 +149,7 @@
      * and the splitter's own width. */
     margin-inline-start: calc(-2 * var(--splitter-width));
 
-    #sidebar-main[sidebar-positionend] + & {
+    #sidebar-container[sidebar-positionend] + & {
       margin-inline: 0 calc(-2 * var(--splitter-width));
     }
   }
@@ -164,7 +164,7 @@
      * the splitter sits entirely within the gap rather than adding to it. */
     margin-inline-end: calc(-1 * var(--chrome-window-gap));
 
-    #sidebar-main[sidebar-positionend] + & {
+    #sidebar-container[sidebar-positionend] + & {
       margin-inline-start: calc(-1 * var(--chrome-window-gap));
     }
   }
@@ -264,7 +264,7 @@ menuseparator + #sidebar-extensions-separator {
 
 /* Sidebar animation */
 
-#sidebar-main,
+#sidebar-container,
 sidebar-main,
 #sidebar-box,
 #sidebar-splitter,
@@ -275,7 +275,7 @@ sidebar-main,
   translate: 0;
 }
 
-#sidebar-main {
+#sidebar-container {
   /* Prevent overflow during sidebar animation when the sidebar is reordered */
   overflow: clip;
 
@@ -284,10 +284,21 @@ sidebar-main,
   }
 }
 
+/* Drive the sidebar-main shadow DOM's launcher button inline padding from the
+ * document's uidensity. Custom properties inherit across shadow boundaries,
+ * so this value is consumed by sidebar-main.css. */
+:root {
+  --sidebar-launcher-button-padding-inline: var(--space-medium);
+
+  &[uidensity="compact"] {
+    --sidebar-launcher-button-padding-inline: var(--space-xsmall);
+  }
+}
+
 /* Expand on hover */
 
 :root[sidebar-expand-on-hover] {
-  #sidebar-main {
+  #sidebar-container {
     border-radius: inherit;
     background-color: inherit;
     position: relative;
@@ -483,7 +494,7 @@ sidebar-main,
   /* When no panel is open, the launcher splitter sits between sidebar-main and
    * the content area. Match the in-gap layout of #sidebar-splitter so the gap
    * between sidebar-main and the content area matches the sidebar-box case. */
-  #sidebar-main:not([sidebar-panel-open]) + #sidebar-launcher-splitter {
+  #sidebar-container:not([sidebar-panel-open]) + #sidebar-launcher-splitter {
     margin-inline: calc(-1 * var(--chrome-window-gap) + 1px);
   }
 
@@ -494,21 +505,21 @@ sidebar-main,
    * column-1 when the sidebar is on the inline-end side. */
   :root:has(#tabbrowser-tabpanels[splitview] .split-view-panel[column="0"].deck-selected) #sidebar-box:not([sidebar-positionend]) + #sidebar-splitter,
   :root:has(#tabbrowser-tabpanels[splitview] .split-view-panel[column="0"].deck-selected)
-    #sidebar-main:not([sidebar-panel-open]):not([sidebar-positionend])
+    #sidebar-container:not([sidebar-panel-open]):not([sidebar-positionend])
     + #sidebar-launcher-splitter {
     margin-inline-end: calc(-1 * var(--chrome-window-gap) + 3px);
   }
 
   :root:has(#tabbrowser-tabpanels[splitview] .split-view-panel[column="1"].deck-selected) #sidebar-box[sidebar-positionend] + #sidebar-splitter,
   :root:has(#tabbrowser-tabpanels[splitview] .split-view-panel[column="1"].deck-selected)
-    #sidebar-main[sidebar-positionend]:not([sidebar-panel-open])
+    #sidebar-container[sidebar-positionend]:not([sidebar-panel-open])
     + #sidebar-launcher-splitter {
     margin-inline-start: calc(-1 * var(--chrome-window-gap) + 3px);
   }
 
   /* When a panel is open, square the corners where sidebar-main and sidebar-box
    * meet so they read as one continuous surface. */
-  #sidebar-main[sidebar-panel-open] {
+  #sidebar-container[sidebar-panel-open] {
     &:not([sidebar-positionend]) {
       border-start-end-radius: 0;
       border-end-end-radius: 0;

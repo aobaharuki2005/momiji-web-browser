@@ -17,6 +17,7 @@ HOST_SOURCES += [
     "EnumSerializerChecker.cpp",
     "ExplicitImplicitChecker.cpp",
     "ExplicitOperatorBoolChecker.cpp",
+    "FinalCycleCollectingIsupportsChecker.cpp",
     "GlobalVariableInitializationChecker.cpp",
     "IntToEnumCastChecker.cpp",
     "JSHandleRootedTypedefChecker.cpp",

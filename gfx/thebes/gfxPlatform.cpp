@@ -1921,7 +1921,7 @@ bool gfxPlatform::IsKnownIconFontFamily(const nsAtom* aFamilyName) const {
       aFamilyName);
 }
 
-gfxFontEntry* gfxPlatform::LookupLocalFont(
+already_AddRefed<gfxFontEntry> gfxPlatform::LookupLocalFont(
     FontVisibilityProvider* aFontVisibilityProvider,
     const nsACString& aFontName, const WeightRange& aWeightForEntry,
     const StretchRange& aStretchForEntry,
@@ -1931,7 +1931,7 @@ gfxFontEntry* gfxPlatform::LookupLocalFont(
       aStyleForEntry);
 }
 
-gfxFontEntry* gfxPlatform::MakePlatformFont(
+already_AddRefed<gfxFontEntry> gfxPlatform::MakePlatformFont(
     const nsACString& aFontName, const WeightRange& aWeightForEntry,
     const StretchRange& aStretchForEntry, const SlantStyleRange& aStyleForEntry,
     const uint8_t* aFontData, uint32_t aLength) {
@@ -3853,10 +3853,9 @@ void gfxPlatform::GetDisplayInfo(mozilla::widget::InfoObject& aObj) {
   for (auto& screen : screens) {
     const LayoutDeviceIntRect rect = screen->GetRect();
     nsPrintfCString value(
-        "%dx%d@%dHz scales:%f|%f desktop:%s:video:%s", rect.width, rect.height,
+        "%dx%d@%dHz scales:%f|%f %s", rect.width, rect.height,
         screen->GetRefreshRate(), screen->GetContentsScaleFactor(),
-        screen->GetDefaultCSSScaleFactor(), screen->GetIsHDR() ? "HDR" : "SDR",
-        screen->GetIsVideoHDR() ? "HDR" : "SDR");
+        screen->GetDefaultCSSScaleFactor(), screen->GetIsHDR() ? "HDR" : "SDR");
 
     aObj.DefineProperty(nsPrintfCString("Display%zu", i++).get(),
                         NS_ConvertUTF8toUTF16(value));

@@ -27,7 +27,7 @@ class TextEditor;
  */
 class TextControlElement : public nsGenericHTMLFormControlElementWithState {
  public:
-  TextControlElement(already_AddRefed<dom::NodeInfo>&& aNodeInfo,
+  TextControlElement(already_AddRefed<dom::NodeInfo> aNodeInfo,
                      dom::FromParser aFromParser, FormControlType aType)
       : nsGenericHTMLFormControlElementWithState(std::move(aNodeInfo),
                                                  aFromParser, aType) {};

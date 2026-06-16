@@ -1,10 +1,6 @@
 {
   "gray": {
     "0": {
-      "override": true,
-      "value": "unset"
-    },
-    "05": {
       "value": "#fbfbfe"
     },
     "10": {
@@ -482,48 +478,6 @@
       }
     }
   },
-  "purple-desaturated": {
-    "0": {
-      "override": true,
-      "value": "unset"
-    },
-    "10": {
-      "override": true,
-      "value": "unset"
-    },
-    "20": {
-      "override": true,
-      "value": "unset"
-    },
-    "30": {
-      "override": true,
-      "value": "unset"
-    },
-    "40": {
-      "override": true,
-      "value": "unset"
-    },
-    "50": {
-      "override": true,
-      "value": "unset"
-    },
-    "60": {
-      "override": true,
-      "value": "unset"
-    },
-    "70": {
-      "override": true,
-      "value": "unset"
-    },
-    "80": {
-      "override": true,
-      "value": "unset"
-    },
-    "90": {
-      "override": true,
-      "value": "unset"
-    }
-  },
   "violet-desaturated": {
     "0": {
       "override": true,
@@ -576,7 +530,9 @@
             "dark": "{color.cyan.30}"
           },
           "platform": {
-            "default": "AccentColor"
+            "nativeTheme": "AccentColor",
+            "light": "{color.blue.60}",
+            "dark": "{color.cyan.30}"
           }
         }
       },
@@ -619,10 +575,12 @@
     },
     "attention": {
       "value": {
-        "platform": {
-          "default": "AccentColor"
-        },
         "brand": {
+          "light": "#2ac3a2",
+          "dark": "#54ffbd"
+        },
+        "platform": {
+          "nativeTheme": "AccentColor",
           "light": "#2ac3a2",
           "dark": "#54ffbd"
         },

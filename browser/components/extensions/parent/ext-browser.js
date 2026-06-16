@@ -76,9 +76,14 @@ global.openOptionsPage = extension => {
     return Promise.reject({ message: "No options page" });
   }
   if (optionsPageProperties.open_in_tab) {
-    window.switchToTabHavingURI(optionsPageProperties.page, true, {
-      triggeringPrincipal: extension.principal,
-    });
+    window.switchToTabHavingURI(
+      optionsPageProperties.page,
+      true,
+      {
+        triggeringPrincipal: extension.principal,
+      },
+      0
+    );
     return Promise.resolve();
   }
 

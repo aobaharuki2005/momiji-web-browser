@@ -28,7 +28,9 @@
 #include "nsIWeakReferenceUtils.h"
 #include "nsQueryObject.h"
 
+#include "nsGlobalWindowOuter.h"
 #include "nsPIDOMWindow.h"
+#include "nsPIDOMWindowInlines.h"
 
 #include "nsIStringBundle.h"
 

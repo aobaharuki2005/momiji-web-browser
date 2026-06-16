@@ -207,10 +207,15 @@ class IPProtectionFeature(
             .distinctUntilChanged()
             .filterNotNull()
             .collect { activate ->
+                val onResult: (Throwable?) -> Unit = { err ->
+                    if (err != null) {
+                        store.dispatch(IPProtectionAction.ToggleFailed)
+                    }
+                }
                 if (activate) {
-                    handler?.activate()
+                    handler?.activate(onResult)
                 } else {
-                    handler?.deactivate()
+                    handler?.deactivate(onResult)
                 }
             }
     }

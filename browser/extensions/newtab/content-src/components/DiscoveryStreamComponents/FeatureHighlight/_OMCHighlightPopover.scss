@@ -1,6 +1,15 @@
 .nova-enabled {
   .omc-highlight-slot {
     grid-column: 1 / -1;
+
+    // The popover floats up out of the widgets section toward the search bar,
+    // so it needs to sit above the search bar (z-index 3) to stay fully
+    // visible. Known edge case: on taller screens (height > 700px) the search
+    // bar becomes sticky, and the popover will render over it rather than
+    // tucking underneath as the page scrolls.
+    .feature-highlight {
+      z-index: 4;
+    }
   }
 
   .feature-highlight .widgets-callout {

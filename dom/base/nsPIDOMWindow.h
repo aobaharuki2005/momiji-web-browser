@@ -881,7 +881,8 @@ class nsPIDOMWindowOuter : public mozIDOMWindowProxy {
   // Set the window up with an about:blank document with the given principal.
   // Base URI, COEP and PolicyContainer of the current document will be
   // retained.
-  virtual void SetInitialPrincipal(nsIPrincipal* aNewWindowPrincipal) = 0;
+  MOZ_CAN_RUN_SCRIPT virtual void SetInitialPrincipal(
+      nsIPrincipal* aNewWindowPrincipal) = 0;
 
   // Fire any DOM notification events related to things that happened while
   // the window was frozen.
@@ -1156,7 +1157,5 @@ class nsPIDOMWindowOuter : public mozIDOMWindowProxy {
 
   uint32_t mMarkedCCGeneration;
 };
-
-#include "nsPIDOMWindowInlines.h"
 
 #endif  // nsPIDOMWindow_h_

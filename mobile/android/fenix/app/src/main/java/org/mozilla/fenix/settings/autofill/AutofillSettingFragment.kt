@@ -45,7 +45,6 @@ import org.mozilla.fenix.ext.hideToolbar
 import org.mozilla.fenix.ext.requireComponents
 import org.mozilla.fenix.ext.runIfFragmentIsAttached
 import org.mozilla.fenix.ext.secure
-import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.ext.showToolbar
 import org.mozilla.fenix.settings.SharedPreferenceUpdater
 import org.mozilla.fenix.settings.SyncPreferenceView
@@ -99,7 +98,7 @@ class AutofillSettingFragment : BiometricPromptPreferenceFragment(), SystemInset
         container: ViewGroup?,
         savedInstanceState: Bundle?,
     ): View {
-        if (requireContext().settings().enableComposeAutofillSettings) {
+        if (requireComponents.settings.enableComposeAutofillSettings) {
             return autofillSettingsComposeView()
         }
 
@@ -111,7 +110,7 @@ class AutofillSettingFragment : BiometricPromptPreferenceFragment(), SystemInset
     }
 
     override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
-        if (requireContext().settings().enableComposeAutofillSettings) {
+        if (requireComponents.settings.enableComposeAutofillSettings) {
             return
         }
 
@@ -136,7 +135,7 @@ class AutofillSettingFragment : BiometricPromptPreferenceFragment(), SystemInset
      */
     internal fun updateSaveAndAutofillCardsSwitch() {
         requirePreference<SwitchPreferenceCompat>(R.string.pref_key_credit_cards_save_and_autofill_cards).apply {
-            isChecked = context.settings().shouldAutofillCreditCardDetails
+            isChecked = context.components.settings.shouldAutofillCreditCardDetails
             onPreferenceChangeListener = SharedPreferenceUpdater()
         }
     }
@@ -146,7 +145,7 @@ class AutofillSettingFragment : BiometricPromptPreferenceFragment(), SystemInset
      */
     internal fun updateSaveAndAutofillAddressesSwitch() {
         requirePreference<SwitchPreferenceCompat>(R.string.pref_key_addresses_save_and_autofill_addresses).apply {
-            isChecked = context.settings().shouldAutofillAddressDetails
+            isChecked = context.components.settings.shouldAutofillAddressDetails
             onPreferenceChangeListener = SharedPreferenceUpdater()
         }
     }
@@ -159,11 +158,11 @@ class AutofillSettingFragment : BiometricPromptPreferenceFragment(), SystemInset
                 val syncEnginesStatus = SyncEnginesStorage(requireContext()).getStatus()
                 val autofillStore by fragmentStore(
                     AutofillSettingsState.default.copy(
-                        saveFillAddresses = requireContext().settings().shouldAutofillAddressDetails,
-                        saveFillCards = requireContext().settings().shouldAutofillCreditCardDetails,
+                        saveFillAddresses = requireComponents.settings.shouldAutofillAddressDetails,
+                        saveFillCards = requireComponents.settings.shouldAutofillCreditCardDetails,
                         syncAddresses = syncEnginesStatus.getOrElse(SyncEngine.Addresses) { false },
                         syncCreditCards = syncEnginesStatus.getOrElse(SyncEngine.CreditCards) { false },
-                        accountAuthState = if (requireContext().settings().signedInFxaAccount) {
+                        accountAuthState = if (requireComponents.settings.signedInFxaAccount) {
                             AccountAuthState.Authenticated
                         } else {
                             AccountAuthState.LoggedOut
@@ -214,7 +213,7 @@ class AutofillSettingFragment : BiometricPromptPreferenceFragment(), SystemInset
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        if (requireContext().settings().enableComposeAutofillSettings) {
+        if (requireComponents.settings.enableComposeAutofillSettings) {
             return
         }
 
@@ -239,7 +238,7 @@ class AutofillSettingFragment : BiometricPromptPreferenceFragment(), SystemInset
     override fun onResume() {
         super.onResume()
 
-        if (requireContext().settings().enableComposeAutofillSettings) {
+        if (requireComponents.settings.enableComposeAutofillSettings) {
             hideToolbar()
             return
         }
@@ -435,7 +434,7 @@ class AutofillSettingFragment : BiometricPromptPreferenceFragment(), SystemInset
 
             create().withCenterAlignedButtons()
         }.show().secure(activity)
-        context.settings().incrementSecureWarningCount()
+        context.components.settings.incrementSecureWarningCount()
     }
 
     /**
@@ -525,11 +524,11 @@ class AutofillSettingFragment : BiometricPromptPreferenceFragment(), SystemInset
     private fun updateSaveFillStatus(destination: String, newValue: Boolean) {
         when (destination) {
             AutofillScreenDestination.ADDRESS -> {
-                requireContext().settings().shouldAutofillAddressDetails = newValue
+                requireComponents.settings.shouldAutofillAddressDetails = newValue
             }
 
             AutofillScreenDestination.CREDIT_CARD -> {
-                requireContext().settings().shouldAutofillCreditCardDetails = newValue
+                requireComponents.settings.shouldAutofillCreditCardDetails = newValue
             }
         }
     }

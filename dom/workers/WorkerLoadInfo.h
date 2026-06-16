@@ -144,6 +144,11 @@ struct WorkerLoadInfoData {
   // related SharedWorkers.
   nsCString mLanguageOverrideLocale;
   nsTArray<nsString> mLanguageOverride;
+  // mTimezoneOverride is used to propagate JS timezone override in workers
+  // if the override is set on a related browsing context via
+  // browsingContext.timezoneOverride. It's applied the same was as for
+  // mLanguageOverrideLocale and mLanguageOverride.
+  nsString mTimezoneOverride;
 
   nsCOMPtr<nsIReferrerInfo> mReferrerInfo;
   OriginTrials mTrials;

@@ -83,6 +83,8 @@ https_first_disabled = true
 
 ["browser_html_detail_permissions_file_access.js"]
 
+["browser_html_detail_permissions_policy_blocked.js"]
+
 ["browser_html_detail_permissions_userScripts.js"]
 
 ["browser_html_detail_view.js"]

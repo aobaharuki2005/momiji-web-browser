@@ -27,3 +27,12 @@
     grid-row: span 4;
   }
 }
+
+// When a widget throws, its ErrorBoundary renders this fallback in place of the
+// widget article. Fill the grid cell so the message centers in the slot instead
+// of collapsing to its text height.
+.widget-error-fallback {
+  block-size: 100%;
+  padding: var(--space-large);
+  text-align: center;
+}

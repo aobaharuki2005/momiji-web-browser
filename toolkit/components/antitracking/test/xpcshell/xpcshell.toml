@@ -12,6 +12,7 @@ skip-if = [
 ]
 
 ["test_purge_trackers.js"]
+requesttimeoutfactor = 2
 
 ["test_purge_trackers_telemetry.js"]
 

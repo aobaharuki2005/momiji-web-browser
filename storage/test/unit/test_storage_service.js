@@ -117,7 +117,7 @@ function test_read_gooddb() {
 
   Assert.throws(
     () => db.executeSimpleSQL("INSERT INTO Foo (rowid) VALUES ('test');"),
-    /NS_ERROR_FAILURE/,
+    /NS_ERROR_UNEXPECTED/,
     "Executing sql should fail."
   );
   Assert.equal(
@@ -155,13 +155,6 @@ function test_read_baddb() {
 }
 
 function test_busy_telemetry() {
-  // Thunderbird doesn't have one or more of the probes used in this test.
-  // Ensure the data is collected anyway.
-  Services.prefs.setBoolPref(
-    "toolkit.telemetry.testing.overrideProductsCheck",
-    true
-  );
-
   let file = do_get_file("goodDB.sqlite");
   let conn1 = Services.storage.openUnsharedDatabase(file);
   let conn2 = Services.storage.openUnsharedDatabase(file);
@@ -196,13 +189,6 @@ var tests = [
 ];
 
 function run_test() {
-  // Thunderbird doesn't have one or more of the probes used in this test.
-  // Ensure the data is collected anyway.
-  Services.prefs.setBoolPref(
-    "toolkit.telemetry.testing.overrideProductsCheck",
-    true
-  );
-
   for (var i = 0; i < tests.length; i++) {
     tests[i]();
     Services.fog.testResetFOG();

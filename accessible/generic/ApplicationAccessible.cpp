@@ -15,6 +15,7 @@
 #include "mozilla/Components.h"
 #include "nsGlobalWindowOuter.h"
 #include "nsIStringBundle.h"
+#include "nsPIDOMWindowInlines.h"
 
 using namespace mozilla::a11y;
 

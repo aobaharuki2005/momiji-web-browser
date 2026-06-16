@@ -474,41 +474,12 @@ class Rule {
     property.value = value;
     property.priority = priority;
 
+    this.elementStyle.ruleView.emitForTests("start-set-property-value");
+
     const index = this.textProps.indexOf(property);
     return this.applyProperties(modifications => {
       modifications.setProperty(index, property.name, value, priority);
     });
-  }
-
-  /**
-   * Just sets the value and priority of a property, in order to preview its
-   * effect on the content document.
-   *
-   * @param {TextProperty} property
-   *        The property which value will be previewed
-   * @param {string} value
-   *        The value to be used for the preview
-   * @param {string} priority
-   *        The property's priority (either "important" or an empty string).
-   * @return {Promise}
-   */
-  async previewPropertyValue(property, value, priority) {
-    this.elementStyle.ruleView.emitForTests("start-preview-property-value");
-    const modifications = this.domRule.startModifyingProperties(
-      this.inspector.panelWin,
-      this.cssProperties
-    );
-    modifications.setProperty(
-      this.textProps.indexOf(property),
-      property.name,
-      value,
-      priority
-    );
-    await modifications.apply();
-
-    // Ensure dispatching a ruleview-changed event
-    // also for previews
-    this.elementStyle.notifyChanged();
   }
 
   /**

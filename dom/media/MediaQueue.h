@@ -16,9 +16,9 @@ namespace mozilla {
 
 extern LazyLogModule gMediaDecoderLog;
 
-#  define QLOG(msg, ...)                       \
-    MOZ_LOG(gMediaDecoderLog, LogLevel::Debug, \
-            ("MediaQueue=%p " msg, this, ##__VA_ARGS__))
+#  define QLOG(msg, ...)                                                 \
+    MOZ_LOG_FMT(gMediaDecoderLog, LogLevel::Debug, "MediaQueue={} " msg, \
+                fmt::ptr(this), ##__VA_ARGS__)
 
 class AudioData;
 class VideoData;
@@ -81,8 +81,7 @@ class MediaQueue : private nsRefPtrDeque<T> {
         NS_WARNING("Reverting timestamp adjustment due to sample overflow!");
         aItem->mTime = prev;
       } else {
-        QLOG("adjusted %s sample [%" PRId64 ",%" PRId64 "] -> [%" PRId64
-             ",%" PRId64 "]",
+        QLOG("adjusted {} sample [{},{}] -> [{},{}]",
              std::is_same_v<U, AudioData> ? "audio" : "video",
              prev.ToMicroseconds(), prevEndTime.ToMicroseconds(),
              aItem->mTime.ToMicroseconds(),
@@ -247,7 +246,7 @@ class MediaQueue : private nsRefPtrDeque<T> {
     }
     RecursiveMutexAutoLock lock(mRecursiveMutex);
     mOffset = aOffset;
-    QLOG("Set media queue offset %" PRId64, mOffset.ToMicroseconds());
+    QLOG("Set media queue offset {}", mOffset.ToMicroseconds());
     return true;
   }
 

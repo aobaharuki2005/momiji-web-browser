@@ -6,19 +6,36 @@
 import React from "react";
 import { actionCreators as ac, actionTypes as at } from "common/Actions.mjs";
 
-// Pager for the Now tab when 2+ live games are happening at once. Chevron
-// buttons step through the live matches (already sorted followed-first); dot
-// indicators show position and let the user jump directly to a match.
-// Chevron icon direction is mirrored under RTL via CSS (`:dir(rtl)`).
+const USER_ACTION_TYPES = {
+  CHANGE_LIVE_MATCH: "change_live_match",
+};
+
+// Arrow icons are mirrored under RTL via :dir(rtl) CSS.
 function LivePagination({
   dispatch,
   liveIndex,
   liveCount,
   size,
+  widgetSize,
   handleInteraction,
 }) {
   const buttonSize = size === "medium" ? "small" : undefined;
   const goTo = nextIndex => {
+    if (nextIndex === liveIndex) {
+      return;
+    }
+    dispatch(
+      ac.OnlyToMain({
+        type: at.WIDGETS_USER_EVENT,
+        data: {
+          widget_name: "sports",
+          widget_source: "widget",
+          user_action: USER_ACTION_TYPES.CHANGE_LIVE_MATCH,
+          action_value: String(nextIndex + 1),
+          widget_size: widgetSize,
+        },
+      })
+    );
     dispatch(
       ac.AlsoToMain({
         type: at.WIDGETS_SPORTS_CHANGE_LIVE_INDEX,

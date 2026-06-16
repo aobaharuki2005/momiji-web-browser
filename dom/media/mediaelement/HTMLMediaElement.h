@@ -172,8 +172,7 @@ class HTMLMediaElement : public nsGenericHTMLElement,
 
   CORSMode GetCORSMode() { return mCORSMode; }
 
-  explicit HTMLMediaElement(
-      already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo);
+  explicit HTMLMediaElement(already_AddRefed<mozilla::dom::NodeInfo> aNodeInfo);
   void Init();
 
   virtual HTMLVideoElement* AsHTMLVideoElement() { return nullptr; };
@@ -655,7 +654,10 @@ class HTMLMediaElement : public nsGenericHTMLElement,
 
   void SetVolume(double aVolume, ErrorResult& aRv);
 
-  bool Muted() const { return mMuted & MUTED_BY_CONTENT; }
+  bool Muted() const {
+    // https://html.spec.whatwg.org/multipage/media.html#concept-media-muted
+    return !!(mMuted & (MUTED_BY_CONTENT | MUTED_BY_INVALID_PLAYBACK_RATE));
+  }
   void SetMuted(bool aMuted);
 
   bool DefaultMuted() const { return GetBoolAttr(nsGkAtoms::muted); }
@@ -1606,6 +1608,14 @@ class HTMLMediaElement : public nsGenericHTMLElement,
   };
 
   uint32_t mMuted = 0;
+
+  // The tristate "muted state". While Default, the muted content attribute is a
+  // fallback that determines whether the element is muted; once the muted
+  // setter latches the state to True or False, the content attribute no longer
+  // applies.
+  // https://html.spec.whatwg.org/multipage/media.html#concept-media-muted-state
+  enum class MutedState : uint8_t { Default, True, False };
+  MutedState mMutedState = MutedState::Default;
 
   UniquePtr<const MetadataTags> mTags;
 

@@ -11,11 +11,13 @@ import mozilla.components.lib.state.State
  * The UI state of the shortcuts.
  *
  * @property topSites The list of [TopSite] to display.
+ * @property popularSites The list of [PopularSite] to suggest when adding a shortcut.
  * @property showAddShortcut Whether to show the "Add shortcut" button.
  * @property dialogState The current dialog being displayed.
  */
 data class ShortcutsState(
     val topSites: List<TopSite>,
+    val popularSites: List<PopularSite> = emptyList(),
     val showAddShortcut: Boolean = false,
     val dialogState: DialogState = DialogState.Closed,
 ) : State {

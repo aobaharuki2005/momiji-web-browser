@@ -5964,14 +5964,14 @@ void AsyncPanZoomController::NotifyMainThreadTransaction(
     // If the layout update is of a higher priority than the visual update, then
     // we don't want to apply the visual update.
     // If the layout update is of a clobbering type (or a smooth scroll request,
-    // which is handled above) then it takes precedence over an eRestore visual
+    // which is handled above) then it takes precedence over a Restore visual
     // update. But we also allow the possibility for the main thread to ask us
     // to scroll both the layout and visual viewports to distinct (but
     // compatible) locations (via e.g. both updates being of a non-clobbering/
-    // eRestore type).
+    // Restore type).
     if (nsLayoutUtils::CanScrollOriginClobberApz(scrollUpdate.GetOrigin()) &&
         aLayerMetrics.GetVisualScrollUpdateType() !=
-            FrameMetrics::eMainThread) {
+            ScrollOffsetUpdateType::MainThread) {
       ignoreVisualUpdate = true;
     }
 
@@ -6141,8 +6141,8 @@ void AsyncPanZoomController::NotifyMainThreadTransaction(
   // the visual update with a layout update.
   bool visualScrollOffsetUpdated =
       !ignoreVisualUpdate &&
-      (isDefault ||
-       aLayerMetrics.GetVisualScrollUpdateType() != FrameMetrics::eNone);
+      (isDefault || aLayerMetrics.GetVisualScrollUpdateType() !=
+                        ScrollOffsetUpdateType::None);
 
   if (visualScrollOffsetUpdated) {
     APZC_LOG("%p updating visual scroll offset from %s to %s (updateType %d)\n",
@@ -6157,7 +6157,8 @@ void AsyncPanZoomController::NotifyMainThreadTransaction(
     // to do anything. This is important because we don't want to request
     // repaint on the initial NotifyMainThreadTransaction for every content and
     // thus set a full display port.
-    if (aLayerMetrics.GetVisualScrollUpdateType() == FrameMetrics::eNone &&
+    if (aLayerMetrics.GetVisualScrollUpdateType() ==
+            ScrollOffsetUpdateType::None &&
         !offsetChanged) {
       visualScrollOffsetUpdated = false;
     }
@@ -6188,11 +6189,11 @@ void AsyncPanZoomController::NotifyMainThreadTransaction(
     // visual offset, so we need to ask it to repaint. We need to set the
     // contentRepaintType to something other than eNone, otherwise the main
     // thread will short-circuit the repaint request.
-    // Don't do this for eRestore visual updates as a repaint coming from APZ
+    // Don't do this for Restore visual updates as a repaint coming from APZ
     // breaks the scroll offset restoration mechanism.
     needContentRepaint = true;
     if (aLayerMetrics.GetVisualScrollUpdateType() ==
-        FrameMetrics::eMainThread) {
+        ScrollOffsetUpdateType::MainThread) {
       contentRepaintType = RepaintUpdateType::eVisualUpdate;
     }
     ScheduleComposite();

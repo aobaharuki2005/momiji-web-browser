@@ -158,6 +158,11 @@ run-if = [
   "crashreporter",
 ]
 
+["browser_clientAuth_he.js"]
+skip-if = [
+  "socketprocess_networking",
+]
+
 ["browser_cookie_filtering_basic.js"]
 
 ["browser_cookie_filtering_cross_origin.js"]

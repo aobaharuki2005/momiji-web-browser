@@ -448,8 +448,8 @@ void PathRecording::EnsurePath() const {
 
 already_AddRefed<PathBuilder> PathRecording::CopyToBuilder(
     FillRule aFillRule) const {
-  RefPtr<PathBuilderRecording> recording =
-      new PathBuilderRecording(mBackendType, PathOps(mPathOps), aFillRule);
+  RefPtr recording = MakeRefPtr<PathBuilderRecording>(
+      mBackendType, PathOps(mPathOps), aFillRule);
   recording->SetCurrentPoint(mCurrentPoint);
   recording->SetBeginPoint(mBeginPoint);
   return recording.forget();
@@ -457,7 +457,7 @@ already_AddRefed<PathBuilder> PathRecording::CopyToBuilder(
 
 already_AddRefed<PathBuilder> PathRecording::TransformedCopyToBuilder(
     const Matrix& aTransform, FillRule aFillRule) const {
-  RefPtr<PathBuilderRecording> recording = new PathBuilderRecording(
+  RefPtr recording = MakeRefPtr<PathBuilderRecording>(
       mBackendType, mPathOps.TransformedCopy(aTransform), aFillRule);
   recording->SetCurrentPoint(aTransform.TransformPoint(mCurrentPoint));
   recording->SetBeginPoint(aTransform.TransformPoint(mBeginPoint));
@@ -465,8 +465,8 @@ already_AddRefed<PathBuilder> PathRecording::TransformedCopyToBuilder(
 }
 
 already_AddRefed<PathBuilder> PathRecording::MoveToBuilder(FillRule aFillRule) {
-  RefPtr<PathBuilderRecording> recording =
-      new PathBuilderRecording(mBackendType, std::move(mPathOps), aFillRule);
+  RefPtr recording = MakeRefPtr<PathBuilderRecording>(
+      mBackendType, std::move(mPathOps), aFillRule);
   recording->SetCurrentPoint(mCurrentPoint);
   recording->SetBeginPoint(mBeginPoint);
   return recording.forget();
@@ -475,8 +475,8 @@ already_AddRefed<PathBuilder> PathRecording::MoveToBuilder(FillRule aFillRule) {
 already_AddRefed<PathBuilder> PathRecording::TransformedMoveToBuilder(
     const Matrix& aTransform, FillRule aFillRule) {
   mPathOps.TransformInPlace(aTransform);
-  RefPtr<PathBuilderRecording> recording =
-      new PathBuilderRecording(mBackendType, std::move(mPathOps), aFillRule);
+  RefPtr recording = MakeRefPtr<PathBuilderRecording>(
+      mBackendType, std::move(mPathOps), aFillRule);
   recording->SetCurrentPoint(aTransform.TransformPoint(mCurrentPoint));
   recording->SetBeginPoint(aTransform.TransformPoint(mBeginPoint));
   return recording.forget();

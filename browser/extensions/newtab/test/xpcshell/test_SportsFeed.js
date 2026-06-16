@@ -429,17 +429,19 @@ add_task(async function test_fetchSportsData_dispatches_teams_and_matches() {
 });
 
 add_task(
-  async function test_fetchSportsData_filters_live_to_status_type_live() {
+  async function test_fetchSportsData_filters_live_to_in_progress_statuses() {
     // The /live endpoint is meant to be pre-filtered by the backend, but the
-    // feed re-filters on `status_type === "live"` as a defensive guard so the
-    // Now tab only ever surfaces actually-live matches.
+    // feed re-filters against the in-progress allowlist (live/halftime/extra
+    // time) as a defensive guard so the Now tab only ever surfaces actually-
+    // live matches.
     const feed = makeFeed();
     const mockLive = {
       matches: [
         { id: "live1", status_type: "live", query: "team1 vs team2" },
-        { id: "scheduled1", status_type: "scheduled", query: "team3 vs team4" },
-        { id: "ended1", status_type: "ended", query: "team5 vs team6" },
-        { id: "live2", status_type: "live", query: "team7 vs team8" },
+        { id: "halftime1", status_type: "Halftime", query: "team3 vs team4" },
+        { id: "extra1", status_type: "extra time", query: "team5 vs team6" },
+        { id: "scheduled1", status_type: "scheduled", query: "team7 vs team8" },
+        { id: "ended1", status_type: "ended", query: "team9 vs team10" },
       ],
     };
     sinon
@@ -464,8 +466,8 @@ add_task(
     const [dispatchedAction] = feed.store.dispatch.firstCall.args;
     Assert.deepEqual(
       dispatchedAction.data.live.map(m => m.id),
-      ["live1", "live2"],
-      "only matches with status_type === 'live' survive the filter"
+      ["live1", "halftime1", "extra1"],
+      "only in-progress matches (live/halftime/extra time, case-insensitive) survive the filter"
     );
   }
 );
@@ -2764,5 +2766,304 @@ add_task(async function test_fetchSportsData_dispatches_matches_invalid_url() {
     dispatchedAction.data.fetchError.error_type,
     "matches_invalid_url",
     "fetchError reports matches_invalid_url when the matches URL is unparseable"
+  );
+});
+
+// --- Celebration bookkeeping -------------------------------------------------
+
+// Returns the celebrations object the feed wrote via setCelebrations (the
+// second arg to cache.set("celebrations", ...)).
+function lastCelebrationsSet(setStub) {
+  const call = setStub.getCalls().findLast(c => c.args[0] === "celebrations");
+  return call?.args[1];
+}
+
+add_task(async function test_recordEndedMatches_stamps_new_ids() {
+  const feed = makeFeed();
+  sinon.stub(feed.cache, "get").resolves({});
+  const setStub = sinon.stub(feed.cache, "set").resolves();
+
+  info("recordEndedMatches stamps each new id with the current time");
+  const before = Date.now();
+  await feed.recordEndedMatches(["m1", "m2"]);
+  const after = Date.now();
+
+  const written = lastCelebrationsSet(setStub);
+  Assert.deepEqual(
+    Object.keys(written.endedAt).sort(),
+    ["m1", "m2"],
+    "both new ids stamped"
+  );
+  for (const id of ["m1", "m2"]) {
+    Assert.greaterOrEqual(
+      written.endedAt[id],
+      before,
+      `${id} stamped >= before`
+    );
+    Assert.lessOrEqual(written.endedAt[id], after, `${id} stamped <= after`);
+  }
+  Assert.deepEqual(written.celebrated, [], "celebrated untouched");
+
+  const broadcast = feed.store.dispatch
+    .getCalls()
+    .find(c => c.args[0].type === actionTypes.WIDGETS_SPORTS_SET_CELEBRATIONS);
+  Assert.ok(broadcast, "broadcasts SET_CELEBRATIONS to content");
+});
+
+add_task(async function test_recordEndedMatches_skips_celebrated_and_dupes() {
+  const feed = makeFeed();
+  // A recent stamp so it survives the retention prune.
+  const existingStamp = Date.now();
+  sinon.stub(feed.cache, "get").resolves({
+    celebrations: { endedAt: { m1: existingStamp }, celebrated: ["m2"] },
+  });
+  const setStub = sinon.stub(feed.cache, "set").resolves();
+
+  info(
+    "recordEndedMatches keeps existing stamps, skips already-celebrated ids, stamps the rest"
+  );
+  await feed.recordEndedMatches(["m1", "m2", "m3"]);
+
+  const written = lastCelebrationsSet(setStub);
+  Assert.equal(
+    written.endedAt.m1,
+    existingStamp,
+    "existing m1 stamp preserved"
+  );
+  Assert.ok(!("m2" in written.endedAt), "celebrated m2 not stamped");
+  Assert.equal(typeof written.endedAt.m3, "number", "new m3 stamped");
+});
+
+add_task(async function test_recordEndedMatches_prunes_stale_entries() {
+  const feed = makeFeed();
+  // An ancient stamp (ts = 1) is well past the retention window.
+  sinon.stub(feed.cache, "get").resolves({
+    celebrations: { endedAt: { ancient: 1 }, celebrated: [] },
+  });
+  const setStub = sinon.stub(feed.cache, "set").resolves();
+
+  info("recordEndedMatches prunes entries older than the retention window");
+  await feed.recordEndedMatches(["m1"]);
+
+  const written = lastCelebrationsSet(setStub);
+  Assert.ok(!("ancient" in written.endedAt), "stale entry pruned");
+  Assert.equal(typeof written.endedAt.m1, "number", "new id stamped");
+});
+
+add_task(async function test_recordEndedMatches_retention_respects_window() {
+  const feed = makeFeed();
+  // A configured window longer than the default retention floor must not have
+  // its stamps pruned before the window expires.
+  feed.store.state.Prefs.values["widgets.sportsWidget.celebrations.windowMs"] =
+    14 * 24 * 60 * 60 * 1000;
+  const eightDaysAgo = Date.now() - 8 * 24 * 60 * 60 * 1000;
+  sinon.stub(feed.cache, "get").resolves({
+    celebrations: { endedAt: { recentish: eightDaysAgo }, celebrated: [] },
+  });
+  const setStub = sinon.stub(feed.cache, "set").resolves();
+
+  info("recordEndedMatches keeps stamps within a configured window past 7d");
+  await feed.recordEndedMatches(["m1"]);
+
+  const written = lastCelebrationsSet(setStub);
+  Assert.equal(
+    written.endedAt.recentish,
+    eightDaysAgo,
+    "entry within the configured window is retained"
+  );
+});
+
+add_task(async function test_resolveCelebrationWindowMs_precedence() {
+  const feed = makeFeed();
+  const WINDOW_PREF = "widgets.sportsWidget.celebrations.windowMs";
+
+  info("Falls back to the raw pref when no trainhopConfig override is set");
+  feed.store.state.Prefs.values.trainhopConfig = {};
+  feed.store.state.Prefs.values[WINDOW_PREF] = 5000;
+  Assert.equal(feed.resolveCelebrationWindowMs(), 5000);
+
+  info("Legacy trainhopConfig.sports.celebrationsWindowMs overrides the pref");
+  feed.store.state.Prefs.values.trainhopConfig = {
+    sports: { celebrationsWindowMs: 4000 },
+  };
+  Assert.equal(feed.resolveCelebrationWindowMs(), 4000);
+
+  info(
+    "Canonical trainhopConfig.widgets window overrides the legacy sports key"
+  );
+  feed.store.state.Prefs.values.trainhopConfig = {
+    sports: { celebrationsWindowMs: 4000 },
+    widgets: { sportsWidgetCelebrationsWindowMs: 3000 },
+  };
+  Assert.equal(feed.resolveCelebrationWindowMs(), 3000);
+
+  info("Dedicated trainhopConfig.sportsCelebrations namespace wins over all");
+  feed.store.state.Prefs.values.trainhopConfig = {
+    sports: { celebrationsWindowMs: 4000 },
+    widgets: { sportsWidgetCelebrationsWindowMs: 3000 },
+    sportsCelebrations: { windowMs: 2000 },
+  };
+  Assert.equal(feed.resolveCelebrationWindowMs(), 2000);
+});
+
+add_task(async function test_recordEndedMatches_noop_on_empty() {
+  const feed = makeFeed();
+  const setStub = sinon.stub(feed.cache, "set").resolves();
+
+  info("recordEndedMatches does nothing when given no ids");
+  await feed.recordEndedMatches([]);
+
+  Assert.ok(setStub.notCalled, "cache.set not called for an empty batch");
+});
+
+add_task(async function test_MARK_CELEBRATED_records_and_drops_endedAt() {
+  const feed = makeFeed();
+  sinon.stub(feed.cache, "get").resolves({
+    celebrations: { endedAt: { m1: 5, m2: 6 }, celebrated: [] },
+  });
+  const setStub = sinon.stub(feed.cache, "set").resolves();
+
+  info("MARK_CELEBRATED records the id and drops its pending endedAt stamp");
+  await feed.onAction({
+    type: actionTypes.WIDGETS_SPORTS_MARK_CELEBRATED,
+    data: "m1",
+  });
+
+  const written = lastCelebrationsSet(setStub);
+  Assert.deepEqual(written.endedAt, { m2: 6 }, "m1's endedAt stamp dropped");
+  Assert.deepEqual(written.celebrated, ["m1"], "m1 added to celebrated");
+});
+
+add_task(async function test_MARK_CELEBRATED_ignores_duplicates() {
+  const feed = makeFeed();
+  sinon.stub(feed.cache, "get").resolves({
+    celebrations: { endedAt: {}, celebrated: ["m1"] },
+  });
+  const setStub = sinon.stub(feed.cache, "set").resolves();
+
+  info("MARK_CELEBRATED is a no-op for an already-celebrated id");
+  await feed.onAction({
+    type: actionTypes.WIDGETS_SPORTS_MARK_CELEBRATED,
+    data: "m1",
+  });
+
+  Assert.ok(setStub.notCalled, "cache.set not called for a duplicate");
+});
+
+// =============================================================================
+// Manual live refresh (refresh button on the Now tab)
+// =============================================================================
+
+add_task(async function test_LIVE_REFRESH_calls_fetchNow_when_due() {
+  const feed = makeLiveFeed();
+  feed.pollingState = "LIVE";
+  // lastLiveUpdated far enough in the past that the manual cap has elapsed.
+  feed.lastLiveUpdated = Date.now() - 60000;
+  const fetchNowStub = sinon.stub(feed, "fetchNow");
+
+  await feed.onAction({ type: actionTypes.WIDGETS_SPORTS_LIVE_REFRESH });
+
+  Assert.ok(
+    fetchNowStub.calledOnce,
+    "fetchNow called when the manual refresh cap has elapsed"
+  );
+});
+
+add_task(async function test_LIVE_REFRESH_calls_fetchNow_when_never_fetched() {
+  const feed = makeLiveFeed();
+  feed.pollingState = "LIVE";
+  // No live fetch has happened yet — the cap is keyed off lastLiveUpdated, so
+  // a null timestamp must NOT block the very first manual refresh.
+  feed.lastLiveUpdated = null;
+  const fetchNowStub = sinon.stub(feed, "fetchNow");
+
+  await feed.onAction({ type: actionTypes.WIDGETS_SPORTS_LIVE_REFRESH });
+
+  Assert.ok(
+    fetchNowStub.calledOnce,
+    "fetchNow called when no prior live fetch has happened"
+  );
+});
+
+add_task(async function test_LIVE_REFRESH_throttled_within_15s() {
+  const feed = makeLiveFeed();
+  feed.pollingState = "LIVE";
+  // A live fetch landed 5 seconds ago — well under the 15s hard floor.
+  feed.lastLiveUpdated = Date.now() - 5000;
+  const fetchNowStub = sinon.stub(feed, "fetchNow");
+
+  await feed.onAction({ type: actionTypes.WIDGETS_SPORTS_LIVE_REFRESH });
+
+  Assert.ok(
+    fetchNowStub.notCalled,
+    "fetchNow suppressed when last live fetch was inside the 15s cap"
+  );
+});
+
+add_task(async function test_LIVE_REFRESH_skipped_when_live_disabled() {
+  const feed = makeLiveFeed({ liveEnabled: false });
+  feed.pollingState = "LIVE";
+  feed.lastLiveUpdated = null;
+  const fetchNowStub = sinon.stub(feed, "fetchNow");
+
+  await feed.onAction({ type: actionTypes.WIDGETS_SPORTS_LIVE_REFRESH });
+
+  Assert.ok(
+    fetchNowStub.notCalled,
+    "fetchNow skipped when live polling is disabled"
+  );
+});
+
+add_task(async function test_LIVE_REFRESH_skipped_when_not_in_LIVE_state() {
+  const feed = makeLiveFeed();
+  feed.pollingState = "IDLE";
+  feed.lastLiveUpdated = null;
+  const fetchNowStub = sinon.stub(feed, "fetchNow");
+
+  await feed.onAction({ type: actionTypes.WIDGETS_SPORTS_LIVE_REFRESH });
+
+  Assert.ok(
+    fetchNowStub.notCalled,
+    "fetchNow skipped outside the LIVE polling state"
+  );
+});
+
+add_task(async function test_LIVE_REFRESH_skipped_when_tick_in_flight() {
+  const feed = makeLiveFeed();
+  feed.pollingState = "LIVE";
+  feed.lastLiveUpdated = null;
+  feed.ticking = true;
+  const fetchNowStub = sinon.stub(feed, "fetchNow");
+
+  await feed.onAction({ type: actionTypes.WIDGETS_SPORTS_LIVE_REFRESH });
+
+  Assert.ok(
+    fetchNowStub.notCalled,
+    "fetchNow skipped while a tick is already in flight"
+  );
+});
+
+add_task(async function test_MARK_CELEBRATED_caps_celebrated_list() {
+  const feed = makeFeed();
+  // 100 already-celebrated ids (the cap). Adding one more must drop the oldest.
+  const existing = Array.from({ length: 100 }, (_, i) => `c${i}`);
+  sinon.stub(feed.cache, "get").resolves({
+    celebrations: { endedAt: {}, celebrated: existing },
+  });
+  const setStub = sinon.stub(feed.cache, "set").resolves();
+
+  info("MARK_CELEBRATED FIFO-trims the celebrated list to the cap");
+  await feed.onAction({
+    type: actionTypes.WIDGETS_SPORTS_MARK_CELEBRATED,
+    data: "newest",
+  });
+
+  const written = lastCelebrationsSet(setStub);
+  Assert.equal(written.celebrated.length, 100, "list stays capped at 100");
+  Assert.equal(written.celebrated[0], "c1", "oldest id (c0) dropped");
+  Assert.equal(
+    written.celebrated[99],
+    "newest",
+    "newest id appended at the end"
   );
 });

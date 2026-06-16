@@ -23,6 +23,7 @@
 #include "mozilla/SyncRunnable.h"
 #include "mozilla/dom/HTMLMediaElement.h"
 #include "mozilla/glean/DomMediaHlsMetrics.h"
+#include "mozilla/java/GeckoAppShellWrappers.h"
 #include "mozilla/java/GeckoHLSResourceWrapperNatives.h"
 #include "mozilla/java/GeckoResultWrappers.h"
 #include "mozilla/java/WebMessageWrappers.h"
@@ -146,7 +147,7 @@ void HLSResourceCallbacksSupport::OnDataArrived() {
 }
 
 void HLSResourceCallbacksSupport::OnError(int aErrorCode) {
-  HLS_DEBUG("HLSResourceCallbacksSupport", "onError(%d)", aErrorCode);
+  HLS_DEBUG("HLSResourceCallbacksSupport", "onError({})", aErrorCode);
   MutexAutoLock lock(mMutex);
   if (!mDecoder) {
     return;
@@ -287,14 +288,14 @@ RefPtr<HLSDecoder> HLSDecoder::Create(MediaDecoderInit& aInit) {
 HLSDecoder::HLSDecoder(MediaDecoderInit& aInit) : MediaDecoder(aInit) {
   MOZ_ASSERT(NS_IsMainThread());
   sAllocatedInstances++;
-  HLS_DEBUG("HLSDecoder", "HLSDecoder(): allocated=%zu", sAllocatedInstances);
+  HLS_DEBUG("HLSDecoder", "HLSDecoder(): allocated={}", sAllocatedInstances);
 }
 
 HLSDecoder::~HLSDecoder() {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(sAllocatedInstances > 0);
   sAllocatedInstances--;
-  HLS_DEBUG("HLSDecoder", "~HLSDecoder(): allocated=%zu", sAllocatedInstances);
+  HLS_DEBUG("HLSDecoder", "~HLSDecoder(): allocated={}", sAllocatedInstances);
 }
 
 already_AddRefed<MediaDecoderStateMachineBase> HLSDecoder::CreateStateMachine(
@@ -317,7 +318,10 @@ already_AddRefed<MediaDecoderStateMachineBase> HLSDecoder::CreateStateMachine(
   return MakeAndAddRef<MediaDecoderStateMachine>(this, mReader);
 }
 
-bool HLSDecoder::IsEnabled() { return StaticPrefs::media_hls_enabled(); }
+bool HLSDecoder::IsEnabled() {
+  return StaticPrefs::media_hls_enabled() &&
+         !java::GeckoAppShell::IsIsolatedProcess();
+}
 
 bool HLSDecoder::IsSupportedType(const MediaContainerType& aContainerType) {
   return IsEnabled() && DecoderTraits::IsHttpLiveStreamingType(aContainerType);

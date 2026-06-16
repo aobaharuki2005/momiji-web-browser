@@ -99,6 +99,7 @@ import mozilla.components.ui.icons.R as iconsR
  * @param onCustomizeReaderViewMenuClick Invoked when the user clicks on the Customize Reader View button.
  * @param onMozillaAccountButtonClick Invoked when the user clicks on Mozilla account button.
  * @param onSettingsButtonClick Invoked when the user clicks on the settings button.
+ * @param onWallpaperButtonClick Invoked when the user clicks on the change wallpaper button.
  * @param onBookmarkPageMenuClick Invoked when the user clicks on the bookmark page menu item.
  * @param onEditBookmarkButtonClick Invoked when the user clicks on the edit bookmark button.
  * @param onSwitchToDesktopSiteMenuClick Invoked when the user clicks on the switch to desktop site
@@ -155,6 +156,7 @@ fun MainMenu(
     onCustomizeReaderViewMenuClick: () -> Unit,
     onMozillaAccountButtonClick: () -> Unit,
     onSettingsButtonClick: () -> Unit,
+    onWallpaperButtonClick: () -> Unit,
     onBookmarkPageMenuClick: () -> Unit,
     onEditBookmarkButtonClick: () -> Unit,
     onSwitchToDesktopSiteMenuClick: () -> Unit,
@@ -325,6 +327,12 @@ fun MainMenu(
                 accountState = accountState,
                 isPrivate = isPrivate,
                 onClick = onMozillaAccountButtonClick,
+            )
+
+            MenuItem(
+                label = stringResource(id = R.string.browser_menu_change_wallpaper),
+                beforeIconPainter = painterResource(id = iconsR.drawable.mozac_ic_wallpaper_24),
+                onClick = onWallpaperButtonClick,
             )
 
             MenuItem(
@@ -757,6 +765,7 @@ private fun MenuDialogPreview(
                 onCustomizeReaderViewMenuClick = {},
                 onMozillaAccountButtonClick = {},
                 onSettingsButtonClick = {},
+                onWallpaperButtonClick = {},
                 onBookmarkPageMenuClick = {},
                 onEditBookmarkButtonClick = {},
                 onSwitchToDesktopSiteMenuClick = {},
@@ -823,6 +832,7 @@ private fun MenuDialogPrivatePreview(
                 onCustomizeReaderViewMenuClick = {},
                 onMozillaAccountButtonClick = {},
                 onSettingsButtonClick = {},
+                onWallpaperButtonClick = {},
                 onBookmarkPageMenuClick = {},
                 onEditBookmarkButtonClick = {},
                 onSwitchToDesktopSiteMenuClick = {},

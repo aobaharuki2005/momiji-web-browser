@@ -2119,7 +2119,7 @@ void nsLineLayout::VerticalAlignFrames(PerSpanData* psd) {
       }
     }
 
-    const auto GetFontBaseline = [](RefPtr<nsFontMetrics> aFM,
+    const auto GetFontBaseline = [](nsFontMetrics* aFM,
                                     StyleAlignmentBaseline aAlignmentBaseline) {
       switch (aAlignmentBaseline) {
         case StyleAlignmentBaseline::Alphabetic:

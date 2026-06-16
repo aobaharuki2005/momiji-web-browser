@@ -87,7 +87,6 @@
     /* compiler predicate */ AnyCompilerAvailable(cx),                  \
     /* flag predicate     */ js::jit::JitSupportsWasmSimd(),            \
     /* flag force enable  */ false,                                     \
-    /* flag fuzz enable   */ true,                                      \
     /* preference name    */ relaxed_simd)                              \
   FEATURE(                                                              \
     /* capitalized name   */ MemoryControl,                             \
@@ -96,7 +95,6 @@
     /* compiler predicate */ AnyCompilerAvailable(cx),                  \
     /* flag predicate     */ true,                                      \
     /* flag force enable  */ false,                                     \
-    /* flag fuzz enable   */ false,                                     \
     /* preference name    */ memory_control)                            \
   FEATURE(                                                              \
     /* capitalized name   */ JSPromiseIntegration,                      \
@@ -105,7 +103,6 @@
     /* compiler predicate */ IonPlatformSupport(),                      \
     /* flag predicate     */ true,                                      \
     /* flag force enable  */ false,                                     \
-    /* flag fuzz enable   */ true,                                      \
     /* preference name    */ js_promise_integration)                    \
   FEATURE(                                                              \
     /* capitalized name   */ StackSwitching,                            \
@@ -114,7 +111,6 @@
     /* compiler predicate */ IonPlatformSupport(),                      \
     /* flag predicate     */ true,                                      \
     /* flag force enable  */ false,                                     \
-    /* flag fuzz enable   */ true,                                      \
     /* preference name    */ stack_switching)                           \
   FEATURE(                                                              \
     /* capitalized name   */ MozIntGemm,                                \
@@ -123,7 +119,6 @@
     /* compiler predicate */ AnyCompilerAvailable(cx),                  \
     /* flag predicate     */ IsPrivilegedContext(cx),                   \
     /* flag force enable  */ false,                                     \
-    /* flag fuzz enable   */ false,                                     \
     /* preference name    */ moz_intgemm)                               \
   FEATURE(                                                              \
     /* capitalized name   */ TestSerialization,                         \
@@ -132,7 +127,6 @@
     /* compiler predicate */ IonAvailable(cx),                          \
     /* flag predicate     */ true,                                      \
     /* flag force enable  */ false,                                     \
-    /* flag fuzz enable   */ false,                                     \
     /* preference name    */ test_serialization)                        \
   FEATURE(                                                              \
     /* capitalized name   */ BranchHinting,                             \
@@ -141,7 +135,6 @@
     /* compiler predicate */ true,                                      \
     /* flag predicate     */ true,                                      \
     /* flag force enable  */ false,                                     \
-    /* flag fuzz enable   */ true,                                      \
     /* preference name    */ branch_hinting)                            \
   FEATURE(                                                              \
     /* capitalized name   */ CustomPageSizes,                           \
@@ -150,7 +143,6 @@
     /* compiler predicate */ BaselineAvailable(cx),                     \
     /* flag predicate     */ !IsFuzzingIon(cx),                         \
     /* flag force enable  */ false,                                     \
-    /* flag fuzz enable   */ true,                                      \
     /* preference name    */ custom_page_sizes)                         \
   FEATURE(                                                              \
     /* capitalized name   */ CompactImports,                            \
@@ -159,7 +151,6 @@
     /* compiler predicate */ AnyCompilerAvailable(cx),                  \
     /* flag predicate     */ true,                                      \
     /* flag force enable  */ false,                                     \
-    /* flag fuzz enable   */ true,                                      \
     /* preference name    */ compact_imports)                           \
   FEATURE(                                                              \
     /* capitalized name   */ WideArithmetic,                            \
@@ -168,7 +159,6 @@
     /* compiler predicate */ AnyCompilerAvailable(cx),                  \
     /* flag predicate     */ true,                                      \
     /* flag force enable  */ false,                                     \
-    /* flag fuzz enable   */ true,                                      \
     /* preference name    */ wide_arithmetic)                           \
   FEATURE(                                                              \
     /* capitalized name   */ Components,                                \
@@ -177,7 +167,6 @@
     /* compiler predicate */ AnyCompilerAvailable(cx),                  \
     /* flag predicate     */ true,                                      \
     /* flag force enable  */ false,                                     \
-    /* flag fuzz enable   */ false,                                     \
     /* preference name    */ components)
 
 // clang-format on

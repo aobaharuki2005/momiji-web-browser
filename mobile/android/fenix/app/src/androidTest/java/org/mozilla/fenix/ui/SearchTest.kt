@@ -18,7 +18,7 @@ import org.junit.Test
 import org.mozilla.fenix.R
 import org.mozilla.fenix.customannotations.SkipLeaks
 import org.mozilla.fenix.customannotations.SmokeTest
-import org.mozilla.fenix.ext.settings
+import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.helpers.AppAndSystemHelper
 import org.mozilla.fenix.helpers.AppAndSystemHelper.denyPermission
 import org.mozilla.fenix.helpers.AppAndSystemHelper.denyPermissionAndDontAskAgainButton
@@ -777,7 +777,7 @@ class SearchTest {
     @SmokeTest
     @Test
     fun verifyTabsSearchWithOpenTabsTest() {
-        TestHelper.appContext.settings().tabGroupsOnboardingEnabled = false
+        TestHelper.appContext.components.settings.tabGroupsOnboardingEnabled = false
 
         val firstPageUrl = searchMockServerRule.server.getGenericAsset(1)
         val secondPageUrl = searchMockServerRule.server.getGenericAsset(2)
@@ -892,7 +892,7 @@ class SearchTest {
     @SmokeTest
     @Test
     fun searchHistoryNotRememberedInPrivateBrowsingTest() {
-        TestHelper.appContext.settings().shouldShowSearchSuggestionsInPrivate = true
+        TestHelper.appContext.components.settings.shouldShowSearchSuggestionsInPrivate = true
 
         val firstPageUrl = searchMockServerRule.server.getGenericAsset(1)
         val searchEngineName = "TestSearchEngine"

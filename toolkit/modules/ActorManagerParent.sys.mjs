@@ -777,6 +777,20 @@ if (AppConstants.platform != "android") {
     allFrames: true,
   };
 
+  JSWINDOWACTORS.AboutPDF = {
+    parent: {
+      esModuleURI: "resource://gre/actors/AboutPDFParent.sys.mjs",
+    },
+    child: {
+      esModuleURI: "resource://gre/actors/AboutPDFChild.sys.mjs",
+      events: {
+        DOMDocElementInserted: {},
+      },
+    },
+    matches: ["about:pdf", "about:pdf?*", "about:pdf#*"],
+    remoteTypes: ["privilegedabout"],
+  };
+
   JSWINDOWACTORS.AboutTranslations = {
     parent: {
       esModuleURI: "resource://gre/actors/AboutTranslationsParent.sys.mjs",

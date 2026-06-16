@@ -11,6 +11,8 @@ const PAGE_WITH_IFRAMES_URL = `https://example.org/document-builder.sjs?html=
   <iframe id=crossOrigin  src="${encodeURIComponent(
     'https://example.net/document-builder.sjs?html=CrossOrigin"'
   )}"></iframe>`;
+const USE_COUNTER_URL =
+  "https://example.net/document-builder.sjs?html=<h1>Test midi use counter</h1>";
 
 const l10n = new Localization(
   [
@@ -65,6 +67,15 @@ add_setup(async function () {
     });
     await SpecialPowers.removePermission("install", {
       url: EXAMPLE_COM_URL,
+    });
+    await SpecialPowers.removePermission("midi-sysex", {
+      url: USE_COUNTER_URL,
+    });
+    await SpecialPowers.removePermission("midi", {
+      url: USE_COUNTER_URL,
+    });
+    await SpecialPowers.removePermission("install", {
+      url: USE_COUNTER_URL,
     });
 
     while (gBrowser.tabs.length > 1) {
@@ -435,6 +446,18 @@ add_task(async function testRequestMIDIAccess() {
     ["site_warning", "cancelled"],
     "sitepermission"
   );
+
+  Assert.deepEqual(
+    Array.from(
+      new Set(
+        AddonTestUtils.getAMGleanEvents("install").map(
+          evt => evt.site_permission
+        )
+      )
+    ).sort(),
+    ["midi", "midi-sysex"],
+    "Install telemetry events distinguish the midi and midi-sysex site permissions"
+  );
 });
 
 add_task(async function testIframeRequestMIDIAccess() {
@@ -698,6 +721,142 @@ add_task(async function testDisabledRequestMIDIAccessFile() {
     isRequestMIDIAccessDefined,
     false,
     "navigator.requestMIDIAccess is not defined on file scheme"
+  );
+});
+
+add_task(async function testMIDIAccessGrantedUseCounter() {
+  // Verify the MIDIAccessGranted use counter is set on the document when
+  // requestMIDIAccess succeeds, and not set when permission is denied.
+  // Use counters are reported when the document is destroyed (tab close),
+  // so we open/close tabs and snapshot counters before and after.
+  //
+  // navigator_requestmidiaccess is a [UseCounter] on the method itself
+  // (fires whether or not the call resolves), so we use it as a sentinel to
+  // know the destroyed document's counters have been flushed before reading
+  // midiaccess_granted.
+
+  async function snapshotCounters() {
+    await Services.fog.testFlushAllChildren();
+    return {
+      grantedPage: Glean.useCounterPage.midiaccessGranted.testGetValue() ?? 0,
+      grantedDoc: Glean.useCounterDoc.midiaccessGranted.testGetValue() ?? 0,
+      requestPage:
+        Glean.useCounterPage.navigatorRequestmidiaccess.testGetValue() ?? 0,
+    };
+  }
+
+  async function waitForFlush(prevRequestPage) {
+    await BrowserTestUtils.waitForCondition(async () => {
+      await Services.fog.testFlushAllChildren();
+      return (
+        (Glean.useCounterPage.navigatorRequestmidiaccess.testGetValue() ?? 0) >
+        prevRequestPage
+      );
+    }, "Wait for use counter ping from destroyed document");
+  }
+
+  // ===== Deny phase =====
+  info("Deny phase: open tab on a fresh origin and reject addon install");
+  let before = await snapshotCounters();
+
+  let denyTab = BrowserTestUtils.addTab(gBrowser, USE_COUNTER_URL);
+  gBrowser.selectedTab = denyTab;
+  await BrowserTestUtils.browserLoaded(denyTab.linkedBrowser);
+
+  let onAddonInstallBlockedNotification = waitForNotification(
+    "addon-install-blocked"
+  );
+  await SpecialPowers.spawn(denyTab.linkedBrowser, [], () => {
+    content.midiAccessRequestPromise = content.navigator.requestMIDIAccess({
+      sysex: true,
+    });
+  });
+
+  let addonInstallPanel = await onAddonInstallBlockedNotification;
+  // secondaryButton is the "Don't allow" button
+  addonInstallPanel.childNodes[0].secondaryButton.click();
+
+  let denyRejected = await SpecialPowers.spawn(
+    denyTab.linkedBrowser,
+    [],
+    async () => {
+      try {
+        await content.midiAccessRequestPromise;
+      } catch (e) {
+        return true;
+      } finally {
+        delete content.midiAccessRequestPromise;
+      }
+      return false;
+    }
+  );
+  ok(denyRejected, "requestMIDIAccess was rejected in deny phase");
+
+  await BrowserTestUtils.removeTab(denyTab);
+  await waitForFlush(before.requestPage);
+
+  let afterDeny = await snapshotCounters();
+  is(
+    afterDeny.grantedPage,
+    before.grantedPage,
+    "midiaccess_granted page counter unchanged when permission denied"
+  );
+  is(
+    afterDeny.grantedDoc,
+    before.grantedDoc,
+    "midiaccess_granted document counter unchanged when permission denied"
+  );
+
+  // ===== Allow phase =====
+  info("Allow phase: open tab on same origin and accept addon install");
+  let allowTab = BrowserTestUtils.addTab(gBrowser, USE_COUNTER_URL);
+  gBrowser.selectedTab = allowTab;
+  await BrowserTestUtils.browserLoaded(allowTab.linkedBrowser);
+
+  onAddonInstallBlockedNotification = waitForNotification(
+    "addon-install-blocked"
+  );
+  await SpecialPowers.spawn(allowTab.linkedBrowser, [], () => {
+    content.midiAccessRequestPromise = content.navigator.requestMIDIAccess({
+      sysex: true,
+    });
+  });
+
+  addonInstallPanel = await onAddonInstallBlockedNotification;
+  let dialogPromise = waitForInstallDialog();
+  addonInstallPanel.childNodes[0].button.click();
+  let installDialog = await dialogPromise;
+  installDialog.button.click();
+
+  let allowResolved = await SpecialPowers.spawn(
+    allowTab.linkedBrowser,
+    [],
+    async () => {
+      try {
+        await content.midiAccessRequestPromise;
+        return true;
+      } catch (e) {
+      } finally {
+        delete content.midiAccessRequestPromise;
+      }
+      return false;
+    }
+  );
+  ok(allowResolved, "requestMIDIAccess resolved in allow phase");
+
+  await BrowserTestUtils.removeTab(allowTab);
+  await waitForFlush(afterDeny.requestPage);
+
+  let afterAllow = await snapshotCounters();
+  is(
+    afterAllow.grantedPage,
+    afterDeny.grantedPage + 1,
+    "midiaccess_granted page counter incremented when permission granted"
+  );
+  is(
+    afterAllow.grantedDoc,
+    afterDeny.grantedDoc + 1,
+    "midiaccess_granted document counter incremented when permission granted"
   );
 });
 

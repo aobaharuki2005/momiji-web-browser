@@ -33,6 +33,10 @@ private fun reducer(state: ShortcutsState, action: ShortcutsAction): ShortcutsSt
             topSites = action.topSites,
         )
 
+        is ShortcutsAction.UpdatePopularSites -> state.copy(
+            popularSites = action.popularSites,
+        )
+
         is ShortcutsAction.UpdateShowAddShortcut -> state.copy(
             showAddShortcut = action.showAddShortcut,
         )

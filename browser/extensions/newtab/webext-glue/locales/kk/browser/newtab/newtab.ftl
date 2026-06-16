@@ -31,6 +31,127 @@ newtab-card-dismiss-button =
     .title = Елемеу
     .aria-label = Елемеу
 
+## Strings for "Homepage" and "Firefox Home" sections of about:settings#home.
+## Homepage panel
+
+home-homepage-title =
+    .label = Үй парағы
+home-homepage-new-windows =
+    .label = Жаңа терезелер
+home-homepage-new-tabs =
+    .label = Жаңа беттер
+# This option leads to the "Custom Homepage" subpage
+home-homepage-custom-homepage-button =
+    .label = Белгілі бір сайтты таңдау
+
+## Custom URLs subpage
+
+# Subheader on the Custom Homepage subpage. Followed by a form to enter URLs and a list of URLs already saved, if any.
+home-custom-homepage-card-header =
+    .label = Веб-сайт адрес(тер)і
+home-custom-homepage-address =
+    .placeholder = Адресті енгізу
+home-custom-homepage-address-button =
+    .label = Адресті қосу
+# Shown when no custom websites/URLs to use as a homepage have been added yet
+home-custom-homepage-no-results =
+    .label = Әлі ешқандай веб-сайт қосылмаған.
+home-custom-homepage-delete-address-button =
+    .aria-label = Адресті өшіру
+    .title = Адресті өшіру
+# Further options to use when setting the home page. Two action buttons are placed in line with this prompt
+# to replace the current home page with a currently open page or bookmark.
+home-custom-homepage-replace-with-prompt =
+    .label = Немен алмастыру
+# Button that appears in-line after text "Replace with" (home-custom-homepage-replace-with-prompt)
+home-custom-homepage-current-pages-button =
+    .label = Ағымдағы ашық беттер
+# Button that appears in-line after text "Replace with" (home-custom-homepage-replace-with-prompt)
+home-custom-homepage-bookmarks-button =
+    .label = Бетбелгілер…
+
+## Firefox Home content
+
+home-prefs-content-header =
+    .label = { -firefox-home-brand-name }
+home-prefs-search-header2 =
+    .label = Іздеу
+home-prefs-stories-header2 =
+    .label = Хикаялар
+    .description = { -brand-product-name } отбасының таңдауы бойынша ұсынылған ерекше мазмұн
+home-prefs-widgets-header =
+    .label = Виджеттер
+# Lists is a widget on New Tab, similar to a to-do widget
+home-prefs-lists-header =
+    .label = Тізімдер
+# Timer is a widget on New Tab, similar to the Pomodoro timer.
+home-prefs-timer-header =
+    .label = Таймер
+# Sports is a widget on New Tab showing sports scores and schedules.
+home-prefs-sports-widget-header =
+    .label = Спорт
+# Clock is a widget on New Tab that displays time zones around the world.
+home-prefs-clocks-header =
+    .label = Сағат
+home-prefs-mission-message2 =
+    .message = Біздің демеушілеріміз жақсырақ интернет құру миссиямызға қолдау көрсетеді.
+home-prefs-manage-topics-link2 =
+    .label = Темаларды басқару
+home-prefs-choose-wallpaper-link2 =
+    .label = Тұсқағазды таңдау
+home-prefs-firefox-logo-header =
+    .label = { -brand-short-name } логотипі
+# Informational message bar that appears in the Firefox Home section when the options are disabled.
+# The user must select Firefox Home as their homepage for either new tabs or new windows to enable
+# the features in settings.
+home-prefs-firefox-home-disabled-notice =
+    .message = Бұл мүмкіндіктерді пайдалану үшін жаңа беттерді немесе жаңа терезелерді { -firefox-home-brand-name } күйіне орнатыңыз.
+# Variables:
+#   $num (number) - Number of rows displayed
+home-prefs-sections-rows-option-srd =
+    .label =
+        { $num ->
+            [one] { $num } жол
+           *[other] { $num } жол
+        }
+# Dropdown option shown when an extension replaces the contents of new windows or tabs.
+# Variables:
+#   $extension (string) - Name of the extension
+home-prefs-homepage-extension-option =
+    .label = Кеңейту ({ $extension })
+home-restore-defaults-srd =
+    .label = Бастапқы мәндерін қайтару
+    .accesskey = ы
+home-mode-choice-default-fx-srd =
+    .label = { -firefox-home-brand-name } (Үнсіз келісім бойынша)
+home-mode-choice-custom-srd =
+    .label = Таңдауыңызша URL адрестері…
+home-mode-choice-blank-srd =
+    .label = Бос бет
+home-prefs-shortcuts-header-srd =
+    .label = Жарлықтар
+home-prefs-shortcuts-select =
+    .aria-label = Жарлықтар
+home-prefs-shortcuts-by-option-sponsored-srd =
+    .label = Демеушілік жарлықтары
+home-prefs-recommended-by-option-sponsored-stories-srd =
+    .label = Демеушілер мақалалары
+home-prefs-highlights-option-visited-pages-srd =
+    .label = Қаралған беттер
+home-prefs-highlights-options-bookmarks-srd =
+    .label = Бетбелгілер
+home-prefs-highlights-option-most-recent-download-srd =
+    .label = Ең соңғы жүктеме
+home-prefs-recent-activity-header-srd =
+    .label = Соңғы белсенділігі
+home-prefs-recent-activity-select =
+    .aria-label = Соңғы белсенділігі
+home-prefs-weather-header-srd =
+    .label = Ауа райы
+home-prefs-support-firefox-header-srd =
+    .label = { -brand-product-name } қолдау
+home-prefs-mission-message-learn-more-link-srd = Қалай екенін білу
+
 ## Search box component.
 
 # "Search" is a verb/action
@@ -151,6 +272,8 @@ newtab-menu-section-block = Блоктау
 # "Follow", "unfollow", and "following" are social media terms that refer to subscribing to or unsubscribing from a section of stories.
 # e.g. Following the travel section of stories.
 newtab-menu-section-unfollow-topic = Жазылудан бас тарту
+# Context menu option to open a support page explaining the New Tab personalization features and privacy controls.
+newtab-menu-section-learn-more = Көбірек білу
 # "Follow", "unfollow", and "following" are social media terms that refer to subscribing to or unsubscribing from a section of stories.
 # e.g. Following the travel section of stories.
 newtab-menu-section-unfollow = Тақырыпқа жазылудан бас тарту
@@ -756,8 +879,6 @@ newtab-widget-lists-button-add-item = Элементті қосу
 newtab-widget-lists-input-add-an-item2 =
     .placeholder = Элементті қосу
     .aria-label = Элементті қосу
-newtab-widget-lists-input-add-an-item =
-    .placeholder = Элементті қосу
 newtab-widget-lists-input-error = Элемент қосу үшін мәтінді қосыңыз.
 newtab-widget-lists-input-menu-open-link = Сілтемені ашу
 newtab-widget-lists-input-menu-move-up = Жоғары жылжыту
@@ -785,11 +906,6 @@ newtab-widget-lists-name-placeholder-checklist2 =
 newtab-widget-lists-name-placeholder-new2 =
     .placeholder = Жаңа тізім
     .aria-label = Тізім атауын түзету
-newtab-widget-lists-name-placeholder-checklist =
-    .placeholder = Тексеру тізімі
-# The placeholder value of the name field for a newly created list
-newtab-widget-lists-name-placeholder-new =
-    .placeholder = Жаңа тізім
 newtab-widget-section-title = Виджеттер
 newtab-widget-menu-hide = Виджетті жасыру
 newtab-widget-menu-change-size = Өлшемін өзгерту
@@ -1052,6 +1168,20 @@ newtab-sports-widget-match-full-time = Толық уақыт
 newtab-sports-widget-match-halftime = Үзіліс
 newtab-sports-widget-match-extra-time = Қосымша уақыт
 newtab-sports-widget-match-penalties = Пенальти
+# Separator shown between two teams in a placeholder match row when no upcoming
+# match details are available yet.
+newtab-sports-widget-match-vs = -
+
+## Sports widget live-games pagination. Shown when 2+ matches are live at the same time
+
+# arrow button that goes to the previous page of live matches.
+newtab-sports-widget-pagination-previous =
+    .aria-label = Алдыңғы
+    .title = Алдыңғы
+# arrow button that goes to the next page of live matches.
+newtab-sports-widget-pagination-next =
+    .aria-label = Келесі
+    .title = Келесі
 
 ## Accessible labels for match rows in the sports widget. These are read by
 ## screen readers to announce the match details and status.
@@ -1112,6 +1242,8 @@ newtab-sports-widget-team-name-label-eng =
     .label = Англия
 newtab-sports-widget-team-name-label-sco =
     .label = Шотландия
+# Placeholder used in a match row's aria-label for an undecided team (shown visually as "--").
+newtab-sports-widget-team-tbd = Анықталуы керек
 
 ## Sports widget OMC messages
 ## Shown as on-screen messages promoting the Sports widget and World Cup wallpapers.

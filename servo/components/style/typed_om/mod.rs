@@ -17,8 +17,9 @@ use servo_arc::Arc;
 use style_traits::CssString;
 use thin_vec::ThinVec;
 
+pub mod numeric;
 pub mod numeric_declaration;
-pub mod numeric_values;
+pub mod numeric_type;
 pub mod sum_value;
 
 /// A single segment of an unparsed Typed OM value.
@@ -112,16 +113,113 @@ pub struct UnitValue {
     pub unit: CssString,
 }
 
+impl UnitValue {
+    /// Returns the unit as a string slice.
+    #[inline]
+    pub fn unit_str(&self) -> &str {
+        #[cfg(feature = "gecko")]
+        unsafe {
+            self.unit.as_str_unchecked()
+        }
+
+        #[cfg(feature = "servo")]
+        {
+            &self.unit
+        }
+    }
+}
+
 /// A sum of numeric values.
 ///
 /// This corresponds to `CSSMathSum` in the Typed OM specification. A sum
 /// value represents an expression such as `10px + 2em`. Each entry is itself
 /// a `NumericValue`, allowing nested sums if needed.
+pub type MathSum = ThinVec<NumericValue>;
+
+/// A product of numeric values.
+///
+/// This corresponds to `CSSMathProduct` in the Typed OM specification. A
+/// product value represents an expression such as `10px * 2`. Each entry is
+/// itself a `NumericValue`, allowing nested math expressions if needed.
+pub type MathProduct = ThinVec<NumericValue>;
+
+/// A negated numeric value.
+///
+/// This corresponds to `CSSMathNegate` in the Typed OM specification. A negate
+/// expression represents constructs such as `-10px` or `-(10px + 2em)`.
+pub type MathNegate = Box<NumericValue>;
+
+/// An inverted numeric value.
+///
+/// This corresponds to `CSSMathInvert` in the Typed OM specification. An
+/// invert expression represents constructs such as `1 / 2`, `1 / 10px`, or
+/// more generally the reciprocal of another numeric value.
+pub type MathInvert = Box<NumericValue>;
+
+/// A minimum expression over numeric values.
+///
+/// This corresponds to `CSSMathMin` in the Typed OM specification. A minimum
+/// expression represents constructs such as `min(10px, 20%)`. Each entry is
+/// itself a `NumericValue`, allowing nested math expressions if needed.
+pub type MathMin = ThinVec<NumericValue>;
+
+/// A maximum expression over numeric values.
+///
+/// This corresponds to `CSSMathMax` in the Typed OM specification. A maximum
+/// expression represents constructs such as `max(10px, 20%)`. Each entry is
+/// itself a `NumericValue`, allowing nested math expressions if needed.
+pub type MathMax = ThinVec<NumericValue>;
+
+/// A clamp expression over numeric values.
+///
+/// This corresponds to `CSSMathClamp` in the Typed OM specification. A clamp
+/// expression represents constructs such as `clamp(10px, 20%, 30px)`.
+///
+/// The array entries correspond to the lower bound, value, and upper bound,
+/// respectively.
+pub type MathClamp = crate::OwnedArray<NumericValue, 3>;
+
+/// A math expression used by the Typed OM.
+///
+/// This corresponds to `CSSMathValue` and its subclasses in the Typed OM
+/// specification.
 #[derive(Clone, Debug)]
 #[repr(C)]
-pub struct MathSum {
-    /// The list of numeric terms that make up the sum.
-    pub values: ThinVec<NumericValue>,
+pub enum MathValue {
+    /// A sum of numeric values.
+    ///
+    /// This corresponds to `CSSMathSum`.
+    Sum(MathSum),
+
+    /// A product of numeric values.
+    ///
+    /// This corresponds to `CSSMathProduct`.
+    Product(MathProduct),
+
+    /// A negated numeric value.
+    ///
+    /// This corresponds to `CSSMathNegate`.
+    Negate(MathNegate),
+
+    /// An inverted numeric value.
+    ///
+    /// This corresponds to `CSSMathInvert`.
+    Invert(MathInvert),
+
+    /// A minimum expression over numeric values.
+    ///
+    /// This corresponds to `CSSMathMin`.
+    Min(MathMin),
+
+    /// A maximum expression over numeric values.
+    ///
+    /// This corresponds to `CSSMathMax`.
+    Max(MathMax),
+
+    /// A clamp expression over numeric values.
+    ///
+    /// This corresponds to `CSSMathClamp`.
+    Clamp(MathClamp),
 }
 
 /// A numeric value used by the Typed OM.
@@ -141,10 +239,10 @@ pub enum NumericValue {
     /// This corresponds to `CSSUnitValue`.
     Unit(UnitValue),
 
-    /// A sum of numeric values.
+    /// A math expression.
     ///
-    /// This corresponds to `CSSMathSum`.
-    Sum(MathSum),
+    /// This corresponds to `CSSMathValue` and its subclasses.
+    Math(MathValue),
 }
 
 impl NumericValue {

@@ -9,7 +9,7 @@
 
 const { _clearModelsDataCacheForTesting, FALLBACK_MODELS } =
   ChromeUtils.importESModule(
-    "moz-src:///browser/components/aiwindow/ui/modules/AIWindowConstants.sys.mjs"
+    "moz-src:///browser/components/aiwindow/models/Utils.sys.mjs"
   );
 
 const DEFAULT_MODEL_CHOICE_ID = "2";

@@ -4564,57 +4564,6 @@
     "n_buckets": 15,
     "description": "BACKGROUND THUMBNAILS: Time it took to draw the capture's window to canvas (ms)"
   },
-  "WEBCRYPTO_EXTRACTABLE_IMPORT": {
-    "record_in_processes": ["main", "content"],
-    "products": ["firefox", "fennec"],
-    "expires_in_version": "never",
-    "kind": "boolean",
-    "description": "Whether an imported key was marked as extractable"
-  },
-  "WEBCRYPTO_EXTRACTABLE_GENERATE": {
-    "record_in_processes": ["main", "content"],
-    "products": ["firefox", "fennec"],
-    "expires_in_version": "never",
-    "kind": "boolean",
-    "description": "Whether a generated key was marked as extractable"
-  },
-  "WEBCRYPTO_EXTRACTABLE_ENC": {
-    "record_in_processes": ["main", "content"],
-    "products": ["firefox", "fennec"],
-    "expires_in_version": "never",
-    "kind": "boolean",
-    "description": "Whether a key used in an encrypt/decrypt operation was marked as extractable"
-  },
-  "WEBCRYPTO_EXTRACTABLE_SIG": {
-    "record_in_processes": ["main", "content"],
-    "products": ["firefox", "fennec"],
-    "expires_in_version": "never",
-    "kind": "boolean",
-    "description": "Whether a key used in a sign/verify operation was marked as extractable"
-  },
-  "WEBCRYPTO_RESOLVED": {
-    "record_in_processes": ["main", "content"],
-    "products": ["firefox", "fennec"],
-    "expires_in_version": "never",
-    "kind": "boolean",
-    "description": "Whether a promise created by WebCrypto was resolved (vs rejected)"
-  },
-  "WEBCRYPTO_METHOD": {
-    "record_in_processes": ["main", "content"],
-    "products": ["firefox", "fennec"],
-    "expires_in_version": "never",
-    "kind": "enumerated",
-    "n_values": 20,
-    "description": "Methods invoked under window.crypto.subtle (0=encrypt, 1=decrypt, 2=sign, 3=verify, 4=digest, 5=generateKey, 6=deriveKey, 7=deriveBits, 8=importKey, 9=exportKey, 10=wrapKey, 11=unwrapKey)"
-  },
-  "WEBCRYPTO_ALG": {
-    "record_in_processes": ["main", "content"],
-    "products": ["firefox", "fennec"],
-    "expires_in_version": "never",
-    "kind": "enumerated",
-    "n_values": 30,
-    "description": "Algorithms used with WebCrypto (see table in WebCryptoTask.cpp)"
-  },
   "PAGE_LOAD_ERROR": {
     "record_in_processes": ["main", "content"],
     "products": ["firefox", "fennec"],
@@ -5867,16 +5816,6 @@
     ],
     "description": "The common combinations of BFCacheStatus when we determine whether the page can be BFCached or not; If it's BFCached, we record BFCache_Success; Success_Not_Toplevel represents the number of not the only top level document in BrowsingContextGroup's documents that are BFCached, and BFCache_Success includes Success_Not_Toplevel; If it's not and it falls under common failure reasons combinations, we record the corresponding combination; Otherwise, we record Other to indicate this is not a common failure"
   },
-  "BFCACHE_PAGE_RESTORED": {
-    "record_in_processes": ["main", "content"],
-    "products": ["firefox", "fennec"],
-    "alert_emails": ["sefeng@mozilla.com"],
-    "bug_numbers": [1531917, 1551935],
-    "expires_in_version": "never",
-    "kind": "boolean",
-    "releaseChannelCollection": "opt-out",
-    "description": "Whether bfcache is used when loading a page from session history"
-  },
   "QM_QUOTA_INFO_LOAD_TIME_V0": {
     "record_in_processes": ["main"],
     "products": ["firefox", "fennec"],
@@ -6103,46 +6042,6 @@
     "bug_numbers": [1627708, 1672576],
     "description": "Input device that triggered the zoom gesture (InputData::PinchGestureSource)",
     "releaseChannelCollection": "opt-out"
-  },
-  "SQLITE_STORE_OPEN": {
-    "record_in_processes": ["main"],
-    "products": ["firefox"],
-    "alert_emails": ["dtownsend@mozilla.com", "mbonardo@mozilla.com"],
-    "expires_in_version": "never",
-    "kind": "categorical",
-    "keyed": true,
-    "releaseChannelCollection": "opt-out",
-    "bug_numbers": [1635489, 1977614],
-    "description": "The result of attempting to open a sqlite file.",
-    "labels": [
-      "failure",
-      "access",
-      "diskio",
-      "corrupt",
-      "busy",
-      "misuse",
-      "diskspace"
-    ]
-  },
-  "SQLITE_STORE_QUERY": {
-    "record_in_processes": ["main"],
-    "products": ["firefox"],
-    "alert_emails": ["dtownsend@mozilla.com", "mbonardo@mozilla.com"],
-    "expires_in_version": "never",
-    "kind": "categorical",
-    "keyed": true,
-    "releaseChannelCollection": "opt-out",
-    "bug_numbers": [1635489, 1977614],
-    "description": "The result of attempting to query a sqlite file.",
-    "labels": [
-      "failure",
-      "access",
-      "diskio",
-      "corrupt",
-      "busy",
-      "misuse",
-      "diskspace"
-    ]
   },
   "REL_PRELOAD_MISS_RATIO": {
     "record_in_processes": ["content"],

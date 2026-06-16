@@ -3246,7 +3246,7 @@ MOZ_ALWAYS_INLINE bool CallerSubsumes(JS::Handle<JS::Value> aValue) {
 }
 
 template <class T, class S>
-inline RefPtr<T> StrongOrRawPtr(already_AddRefed<S>&& aPtr) {
+inline RefPtr<T> StrongOrRawPtr(already_AddRefed<S> aPtr) {
   return std::move(aPtr);
 }
 

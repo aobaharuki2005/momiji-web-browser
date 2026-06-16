@@ -456,10 +456,8 @@ class Assembler : public vixl::Assembler {
   void executableCopy(uint8_t* buffer);
 
   BufferOffset immPool(ARMRegister dest, uint8_t* value, vixl::LoadLiteralOp op,
-                       const LiteralDoc& doc,
-                       ARMBuffer::PoolEntry* pe = nullptr);
-  BufferOffset immPool64(ARMRegister dest, uint64_t value,
-                         ARMBuffer::PoolEntry* pe = nullptr);
+                       const LiteralDoc& doc);
+  BufferOffset immPool64(ARMRegister dest, uint64_t value);
   BufferOffset fImmPool(ARMFPRegister dest, uint8_t* value,
                         vixl::LoadLiteralOp op, const LiteralDoc& doc);
   BufferOffset fImmPool64(ARMFPRegister dest, double value);

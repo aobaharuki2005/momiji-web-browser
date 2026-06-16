@@ -3343,17 +3343,6 @@ bool RegisterChildIPCChannel(mozilla::geckoargs::ChildProcessArgs& aArgs,
                              GeckoChildID aID) {
   StaticMutexAutoLock lock(gCrashHelperClientMutex);
   if (gCrashHelperClient) {
-    auto childNotificationPipe = CrashReporter::GetChildNotificationPipe();
-#if defined(XP_WIN) || defined(XP_MACOSX) || defined(XP_IOS)
-    geckoargs::sCrashReporter.Put(childNotificationPipe, aArgs);
-#else
-    if (!childNotificationPipe) {
-      NS_WARNING("Could not create the child crash notification pipe");
-      return false;
-    }
-    geckoargs::sCrashReporter.Put(std::move(childNotificationPipe), aArgs);
-#endif  // defined(XP_MACOSX) || defined(XP_IOS) || defined(XP_WIN)
-
     RawIPCConnector connector = {};
     if (!register_child_ipc_channel(gCrashHelperClient, aID, &connector)) {
       return false;
@@ -3384,6 +3373,18 @@ bool RegisterChildIPCChannel(mozilla::geckoargs::ChildProcessArgs& aArgs,
 
     geckoargs::sCrashHelper.Put(std::move(endpoint), aArgs);
 #endif
+
+    auto childNotificationPipe = CrashReporter::GetChildNotificationPipe();
+#if defined(XP_WIN) || defined(XP_MACOSX) || defined(XP_IOS)
+    geckoargs::sCrashReporter.Put(childNotificationPipe, aArgs);
+#else
+    if (!childNotificationPipe) {
+      NS_WARNING("Could not create the child crash notification pipe");
+      return false;
+    }
+    geckoargs::sCrashReporter.Put(std::move(childNotificationPipe), aArgs);
+#endif  // defined(XP_MACOSX) || defined(XP_IOS) || defined(XP_WIN)
+
     return true;
   }
 
@@ -3404,35 +3405,23 @@ bool ChildProcessProxyRendezvous(GeckoChildID aID, DWORD aPid, HANDLE aHandle) {
 
 bool SetRemoteExceptionHandler(int& aArgc, char** aArgv) {
   MOZ_ASSERT(!gExceptionHandler, "crash client already init'd");
-  auto crash_pipe = geckoargs::sCrashReporter.Get(aArgc, aArgv);
-
-  if (crash_pipe.isNothing()) {
-    return false;
-  }
+  auto crash_pipe = geckoargs::sCrashReporter.Get(aArgc, aArgv).extract();
 
 #if defined(XP_DARWIN)
-  auto send_right = geckoargs::sCrashHelperSend.Get(aArgc, aArgv);
-  auto recv_right = geckoargs::sCrashHelperRecv.Get(aArgc, aArgv);
-
-  if (send_right.isNothing() || recv_right.isNothing()) {
-    return false;
-  }
+  auto send_right = geckoargs::sCrashHelperSend.Get(aArgc, aArgv).extract();
+  auto recv_right = geckoargs::sCrashHelperRecv.Get(aArgc, aArgv).extract();
 
   RawIPCConnector raw_connector = {
-      .send = send_right->release(),
-      .recv = recv_right->release(),
+      .send = send_right.release(),
+      .recv = recv_right.release(),
   };
 #else
-  auto endpoint = geckoargs::sCrashHelper.Get(aArgc, aArgv);
-
-  if (endpoint.isNothing()) {
-    return false;
-  }
+  auto endpoint = geckoargs::sCrashHelper.Get(aArgc, aArgv).extract();
 
 #  if defined(XP_WIN)
-  RawIPCConnector raw_connector = {.handle = endpoint->release()};
+  RawIPCConnector raw_connector = {.handle = endpoint.release()};
 #  else
-  RawIPCConnector raw_connector = {.socket = endpoint->release()};
+  RawIPCConnector raw_connector = {.socket = endpoint.release()};
 #  endif  // defined(XP_WIN)
 #endif    // defined(XP_DARWIN)
 
@@ -3461,7 +3450,7 @@ bool SetRemoteExceptionHandler(int& aArgc, char** aArgv) {
       nullptr,  // no callback
       nullptr,  // no callback context
       google_breakpad::ExceptionHandler::HANDLER_ALL, GetMinidumpType(),
-      (const wchar_t*)NS_ConvertUTF8toUTF16(*crash_pipe).get(),
+      (const wchar_t*)NS_ConvertUTF8toUTF16(crash_pipe).get(),
       nullptr  // no custom info
   );
   gExceptionHandler->set_handle_debug_exceptions(true);
@@ -3478,14 +3467,14 @@ bool SetRemoteExceptionHandler(int& aArgc, char** aArgv) {
                                             nullptr,  // no callback
                                             nullptr,  // no callback context
                                             true,     // install signal handlers
-                                            crash_pipe->release());
+                                            crash_pipe.release());
 #elif defined(XP_MACOSX)
   gExceptionHandler =
       new google_breakpad::ExceptionHandler("", ChildFilter,
                                             nullptr,  // no callback
                                             nullptr,  // no callback context
                                             true,     // install signal handlers
-                                            *crash_pipe);
+                                            crash_pipe);
 #endif
 
   RecordMainThreadId();

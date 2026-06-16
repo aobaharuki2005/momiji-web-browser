@@ -565,8 +565,7 @@ function add_tls_server_setup(serverBinName, certsPath, addDefaultRoot = true) {
  *   output stream is ready.
  * @param {OriginAttributes} aOriginAttributes (optional)
  *   The origin attributes that the socket transport will have. This parameter
- *   affects OCSP because OCSP cache is double-keyed by origin attributes' first
- *   party domain.
+ *   affects OCSP because the OCSP cache partitioned by origin attributes.
  *
  * @param {OriginAttributes} aEchConfig (optional)
  *   A Base64-encoded ECHConfig. If non-empty, it will be configured to the client

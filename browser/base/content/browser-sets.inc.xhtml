@@ -86,6 +86,8 @@
     <command id="Browser:NextTab" />
     <command id="Browser:PrevTab" />
     <command id="Browser:ShowAllTabs" />
+    <command id="Browser:AddTabSplitView" />
+    <command id="Browser:SeparateTabSplitView" />
     <command id="cmd_fullZoomReduce" />
     <command id="cmd_fullZoomEnlarge" />
     <command id="cmd_fullZoomReset" />
@@ -302,6 +304,9 @@
          modifiers="accel,alt"
 #endif
          />
+    <key id="viewOpenTabsSidebarKb"
+         data-l10n-id="open-tabs-sidebar-shortcut"
+         modifiers="accel,shift"/>
     <key id="toggleSidebarKb"
          data-l10n-id="toggle-sidebar-shortcut"
 #ifdef XP_MACOSX
@@ -358,6 +363,8 @@
     <key id="key_restoreLastClosedTabOrWindowOrSession" command="History:RestoreLastClosedTabOrWindowOrSession" data-l10n-id="tab-new-shortcut" modifiers="accel,shift"/>
     <key id="key_undoCloseWindow" command="History:UndoCloseWindow" data-l10n-id="window-new-shortcut" modifiers="accel,shift"/>
 
+    <key id="key_addTabSplitView" command="Browser:AddTabSplitView"/>
+    <key id="key_separateTabSplitView" command="Browser:SeparateTabSplitView"/>
     <key id="key_duplicateTab" command="Browser:DuplicateTab"/>
 
 #ifdef XP_GNOME

@@ -44,6 +44,7 @@
 #include "mozilla/dom/Navigation.h"
 #include "mozilla/dom/NavigatorLogin.h"
 #include "mozilla/dom/PBackgroundSessionStorageCache.h"
+#include "mozilla/dom/ParentProcessChannelHandle.h"
 #include "mozilla/dom/SerialManagerParent.h"
 #include "mozilla/dom/UseCounterMetrics.h"
 #include "mozilla/dom/WebAuthnTransactionParent.h"
@@ -78,7 +79,6 @@
 #include "nsISharePicker.h"
 #include "nsISiteIntegrityService.h"
 #include "nsITimer.h"
-#include "nsITransportSecurityInfo.h"
 #include "nsIURIMutator.h"
 #include "nsIWebProgressListener.h"
 #include "nsIXPConnect.h"
@@ -127,12 +127,14 @@ WindowGlobalParent::WindowGlobalParent(
 }
 
 already_AddRefed<WindowGlobalParent> WindowGlobalParent::CreateDisconnected(
-    const WindowGlobalInit& aInit) {
+    const WindowGlobalInit& aInit, ContentParent* aForProcess) {
   RefPtr<CanonicalBrowsingContext> browsingContext =
       CanonicalBrowsingContext::Get(aInit.context().mBrowsingContextId);
   if (NS_WARN_IF(!browsingContext)) {
     return nullptr;
   }
+
+  MOZ_RELEASE_ASSERT(!aInit.staticCloneOf().IsDiscarded());
 
   RefPtr<WindowGlobalParent> wgp =
       GetByInnerWindowId(aInit.context().mInnerWindowId);
@@ -144,20 +146,46 @@ already_AddRefed<WindowGlobalParent> WindowGlobalParent::CreateDisconnected(
                              aInit.context().mOuterWindowId, std::move(fields));
   wgp->mDocumentPrincipal = aInit.principal();
   wgp->mDocumentURI = aInit.documentURI();
+  wgp->mStaticCloneOf = aInit.staticCloneOf().get_canonical();
   wgp->mIsInitialDocument = Some(aInit.isInitialDocument());
   wgp->mIsUncommittedInitialDocument = aInit.isUncommittedInitialDocument();
   wgp->mBlockAllMixedContent = aInit.blockAllMixedContent();
   wgp->mUpgradeInsecureRequests = aInit.upgradeInsecureRequests();
   wgp->mSandboxFlags = aInit.sandboxFlags();
   wgp->mHttpsOnlyStatus = aInit.httpsOnlyStatus();
-  wgp->mSecurityInfo = aInit.securityInfo();
   net::CookieJarSettings::Deserialize(aInit.cookieJarSettings(),
                                       getter_AddRefs(wgp->mCookieJarSettings));
   MOZ_RELEASE_ASSERT(wgp->mDocumentPrincipal, "Must have a valid principal");
+  MOZ_RELEASE_ASSERT(
+      !aForProcess || !wgp->mStaticCloneOf ||
+          wgp->mStaticCloneOf->GetContentParent() == aForProcess,
+      "Cannot static clone from a document in a different process!");
 
   nsresult rv = wgp->SetDocumentStoragePrincipal(aInit.storagePrincipal());
   MOZ_RELEASE_ASSERT(NS_SUCCEEDED(rv),
                      "Must succeed in setting storage principal");
+
+  if (aInit.documentChannelHandle()) {
+    auto result = aInit.documentChannelHandle()->GetChannel(
+        browsingContext, wgp->mStaticCloneOf);
+    if (result.isOk()) {
+      wgp->mDocumentChannel = result.unwrap();
+    } else {
+      MOZ_CRASH_UNSAFE_PRINTF("Invalid documentChannelHandle: %s",
+                              result.unwrapErr().get());
+    }
+  }
+
+  if (aInit.failedChannelHandle()) {
+    auto result = aInit.failedChannelHandle()->GetChannel(browsingContext,
+                                                          wgp->mStaticCloneOf);
+    if (result.isOk()) {
+      wgp->mFailedChannel = result.unwrap();
+    } else {
+      MOZ_CRASH_UNSAFE_PRINTF("Invalid failedChannelHandle: %s",
+                              result.unwrapErr().get());
+    }
+  }
 
   return wgp.forget();
 }
@@ -755,10 +783,68 @@ mozilla::ipc::IPCResult WindowGlobalParent::RecvUpdateCookieJarSettings(
   return IPC_OK();
 }
 
-mozilla::ipc::IPCResult WindowGlobalParent::RecvUpdateDocumentSecurityInfo(
-    nsITransportSecurityInfo* aSecurityInfo) {
-  mSecurityInfo = aSecurityInfo;
+mozilla::ipc::IPCResult WindowGlobalParent::RecvUpdateChannels(
+    ParentProcessChannelHandle* aDocumentHandle,
+    ParentProcessChannelHandle* aFailedHandle) {
+  nsCOMPtr<nsIChannel> documentChannel;
+  if (aDocumentHandle) {
+    auto result = aDocumentHandle->GetChannel(BrowsingContext());
+    if (result.isOk()) {
+      documentChannel = result.unwrap();
+    } else {
+      MOZ_CRASH_UNSAFE_PRINTF("Invalid aDocumentHandle: %s",
+                              result.unwrapErr().get());
+    }
+  }
+
+  nsCOMPtr<nsIChannel> failedChannel;
+  if (aFailedHandle) {
+    auto result = aFailedHandle->GetChannel(BrowsingContext());
+    if (result.isOk()) {
+      failedChannel = result.unwrap();
+    } else {
+      MOZ_CRASH_UNSAFE_PRINTF("Invalid aFailedHandle: %s",
+                              result.unwrapErr().get());
+    }
+  }
+
+  // NOTE: In the case where XSLT has performed a transformation on our
+  // document, it is possible for this method to be called multiple times. In
+  // that case, the channel should be identical to the channel which was
+  // previously loaded. Once XSLT is removed, we should be able to remove that
+  // part of this check.
+  if ((mDocumentChannel || mFailedChannel) &&
+      (mDocumentChannel != documentChannel ||
+       mFailedChannel != failedChannel)) {
+    return IPC_FAIL(this,
+                    "Conflicting attempts to set ParentProcessChannelHandle on "
+                    "WindowGlobalParent");
+  }
+
+  mDocumentChannel = documentChannel;
+  mFailedChannel = failedChannel;
+
   return IPC_OK();
+}
+
+already_AddRefed<nsIChannel> WindowGlobalParent::GetDocumentChannel() {
+  if (mDocumentChannel) {
+    return do_AddRef(mDocumentChannel);
+  }
+  if (Document* doc = GetExtantDoc()) {
+    return do_AddRef(doc->GetChannel());
+  }
+  return nullptr;
+}
+
+already_AddRefed<nsIChannel> WindowGlobalParent::GetFailedChannel() {
+  if (mFailedChannel) {
+    return do_AddRef(mFailedChannel);
+  }
+  if (Document* doc = GetExtantDoc()) {
+    return do_AddRef(doc->GetFailedChannel());
+  }
+  return nullptr;
 }
 
 mozilla::ipc::IPCResult WindowGlobalParent::RecvShare(
@@ -1991,12 +2077,14 @@ NS_IMPL_CYCLE_COLLECTION_CLASS(WindowGlobalParent)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(WindowGlobalParent,
                                                 WindowContext)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mPageUseCountersWindow)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mStaticCloneOf)
   tmp->UnlinkManager();
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(WindowGlobalParent,
                                                   WindowContext)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mPageUseCountersWindow)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mStaticCloneOf)
   if (!tmp->IsInProcess()) {
     CycleCollectionNoteChild(cb, static_cast<BrowserParent*>(tmp->Manager()),
                              "Manager()");

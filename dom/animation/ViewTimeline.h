@@ -13,6 +13,7 @@ struct TimelineRangeOffset;
 }  // namespace mozilla
 
 namespace mozilla::dom {
+class CSSNumericValue;
 struct ViewTimelineOptions;
 
 /*
@@ -51,8 +52,8 @@ class ViewTimeline final : public ScrollTimeline {
       const GlobalObject& aGlobal, const ViewTimelineOptions& aOptions,
       ErrorResult& aRv);
   Element* GetSubject() const { return mSubject; }
-  Nullable<double> GetStartOffset() const;
-  Nullable<double> GetEndOffset() const;
+  already_AddRefed<CSSNumericValue> GetStartOffset(ErrorResult& aRv) const;
+  already_AddRefed<CSSNumericValue> GetEndOffset(ErrorResult& aRv) const;
 
   bool IsViewTimeline() const override { return true; }
   const ViewTimeline* AsViewTimeline() const override { return this; }

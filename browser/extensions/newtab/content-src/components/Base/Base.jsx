@@ -33,6 +33,8 @@ import {
 import {
   WIDGET_REGISTRY,
   isWidgetEnabled,
+  isWidgetToggleVisible,
+  isWidgetsContainerVisible,
   resolveWidgetHasSidebar,
   resolveWidgetSize,
 } from "common/WidgetsRegistry.mjs";
@@ -858,47 +860,28 @@ export class BaseContent extends React.PureComponent {
     const pocketRegion = prefs["feeds.system.topstories"];
     const mayHaveInferredPersonalization =
       prefs[PREF_INFERRED_PERSONALIZATION_SYSTEM];
+    // Weather's visibility gate differs from the other widgets (it keys off
+    // system.showWeather / trainhopConfig.weather), so it keeps its own check
+    // plus the additive widgetsSettings.weatherVisible override.
     const mayHaveWeather =
-      prefs["system.showWeather"] || prefs.trainhopConfig?.weather?.enabled;
+      prefs["system.showWeather"] ||
+      prefs.trainhopConfig?.weather?.enabled ||
+      prefs.trainhopConfig?.widgetsSettings?.weatherVisible;
     const supportUrl = prefs["support.url"];
 
-    // Widgets experiment pref check
-    const nimbusWidgetsEnabled = prefs.widgetsConfig?.enabled;
-    const nimbusListsEnabled = prefs.widgetsConfig?.listsEnabled;
-    const nimbusTimerEnabled = prefs.widgetsConfig?.timerEnabled;
-    const nimbusClocksEnabled = prefs.widgetsConfig?.clocksEnabled;
-    const nimbusWidgetsTrainhopEnabled = prefs.trainhopConfig?.widgets?.enabled;
-    const nimbusListsTrainhopEnabled =
-      prefs.trainhopConfig?.widgets?.listsEnabled;
-    const nimbusTimerTrainhopEnabled =
-      prefs.trainhopConfig?.widgets?.timerEnabled;
-    const nimbusClocksTrainhopEnabled =
-      prefs.trainhopConfig?.widgets?.clocksEnabled;
-
-    const mayHaveWidgets =
-      prefs["widgets.system.enabled"] ||
-      nimbusWidgetsEnabled ||
-      nimbusWidgetsTrainhopEnabled;
-    const mayHaveListsWidget =
-      prefs["widgets.system.lists.enabled"] ||
-      nimbusListsEnabled ||
-      nimbusListsTrainhopEnabled;
-    const mayHaveTimerWidget =
-      prefs["widgets.system.focusTimer.enabled"] ||
-      nimbusTimerEnabled ||
-      nimbusTimerTrainhopEnabled;
-    const mayHaveClocksWidget =
-      prefs["widgets.system.clocks.enabled"] ||
-      nimbusClocksEnabled ||
-      nimbusClocksTrainhopEnabled;
-
-    const nimbusSportsWidgetEnabled = prefs.widgetsConfig?.sportsWidgetEnabled;
-    const nimbusSportsWidgetTrainhopEnabled =
-      prefs.trainhopConfig?.widgets?.sportsWidgetEnabled;
-    const mayHaveSportsWidget =
-      prefs["widgets.system.sportsWidget.enabled"] ||
-      nimbusSportsWidgetEnabled ||
-      nimbusSportsWidgetTrainhopEnabled;
+    // Widget toggle visibility is resolved by the shared registry helpers, which
+    // are additive across the system pref, the legacy widgetsConfig variable,
+    // trainhopConfig.widgets (addable), and trainhopConfig.widgetsSettings.
+    const widgetVisibleById = id =>
+      isWidgetToggleVisible(
+        WIDGET_REGISTRY.find(w => w.id === id),
+        prefs
+      );
+    const mayHaveWidgets = isWidgetsContainerVisible(prefs);
+    const mayHaveListsWidget = widgetVisibleById("lists");
+    const mayHaveTimerWidget = widgetVisibleById("focusTimer");
+    const mayHaveClocksWidget = widgetVisibleById("clocks");
+    const mayHaveSportsWidget = widgetVisibleById("sportsWidget");
 
     // These prefs set the initial values on the Customize panel toggle switches
     const enabledWidgets = {

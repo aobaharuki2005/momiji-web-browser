@@ -30,6 +30,7 @@
 #include "nsNetUtil.h"
 #include "nsMixedContentBlocker.h"
 #include "nsPIDOMWindow.h"
+#include "nsPIDOMWindowInlines.h"
 #include "nsQueryObject.h"
 #include "nsRFPService.h"
 #include "nsSandboxFlags.h"

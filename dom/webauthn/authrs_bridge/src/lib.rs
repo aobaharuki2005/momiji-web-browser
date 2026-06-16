@@ -167,6 +167,30 @@ fn cancel_prompts(tid: u64) -> Result<(), nsresult> {
     Ok(())
 }
 
+// Returns true if the attestation object contains information that could
+// identify the user's authenticator and should not be exposed to the relying
+// party without consent. This mirrors the AttestationConveyancePreference
+// "none" transform in AttestationObject::anonymize: an object is identifying
+// if and only if anonymize would alter its attestation statement. The AAGUID
+// identifies the make/model of the authenticator but no individual
+// user/device, so it is not on its own considered identifying.
+fn attestation_is_identifying(att_obj: &AttestationObject) -> bool {
+    if let AttestationStatement::Packed(ref packed) = att_obj.att_stmt {
+        // Self attestation ("packed" format, no x5c, zero AAGUID) is not
+        // identifying.
+        if packed.attestation_cert.is_empty()
+            && att_obj
+                .auth_data
+                .credential_data
+                .as_ref()
+                .is_some_and(|d| d.aaguid == AAGuid::default())
+        {
+            return false;
+        }
+    }
+    att_obj.att_stmt != AttestationStatement::None
+}
+
 #[xpcom(implement(nsIWebAuthnRegisterResult), atomic)]
 pub struct WebAuthnRegisterResult {
     // result is only borrowed mutably in `Anonymize`.
@@ -182,7 +206,8 @@ impl WebAuthnRegisterResult {
     xpcom_method!(get_attestation_object => GetAttestationObject() -> ThinVec<u8>);
     fn get_attestation_object(&self) -> Result<ThinVec<u8>, nsresult> {
         let mut out = ThinVec::new();
-        serde_cbor::to_writer(&mut out, &self.result.borrow().att_obj).or(Err(NS_ERROR_FAILURE))?;
+        serde_cbor_2::to_writer(&mut out, &self.result.borrow().att_obj)
+            .or(Err(NS_ERROR_FAILURE))?;
         Ok(out)
     }
 
@@ -288,13 +313,7 @@ impl WebAuthnRegisterResult {
 
     xpcom_method!(has_identifying_attestation => HasIdentifyingAttestation() -> bool);
     fn has_identifying_attestation(&self) -> Result<bool, nsresult> {
-        if self.result.borrow().att_obj.att_stmt != AttestationStatement::None {
-            return Ok(true);
-        }
-        if let Some(data) = &self.result.borrow().att_obj.auth_data.credential_data {
-            return Ok(data.aaguid != AAGuid::default());
-        }
-        Ok(false)
+        Ok(attestation_is_identifying(&self.result.borrow().att_obj))
     }
 
     xpcom_method!(anonymize => Anonymize());
@@ -313,7 +332,7 @@ impl WebAuthnAttObj {
     xpcom_method!(get_attestation_object => GetAttestationObject() -> ThinVec<u8>);
     fn get_attestation_object(&self) -> Result<ThinVec<u8>, nsresult> {
         let mut out = ThinVec::new();
-        serde_cbor::to_writer(&mut out, &self.att_obj).or(Err(NS_ERROR_FAILURE))?;
+        serde_cbor_2::to_writer(&mut out, &self.att_obj).or(Err(NS_ERROR_FAILURE))?;
         Ok(out)
     }
 
@@ -346,13 +365,7 @@ impl WebAuthnAttObj {
 
     xpcom_method!(is_identifying => IsIdentifying() -> bool);
     fn is_identifying(&self) -> Result<bool, nsresult> {
-        if self.att_obj.att_stmt != AttestationStatement::None {
-            return Ok(true);
-        }
-        if let Some(data) = &self.att_obj.auth_data.credential_data {
-            return Ok(data.aaguid != AAGuid::default());
-        }
-        Ok(false)
+        Ok(attestation_is_identifying(&self.att_obj))
     }
 }
 
@@ -577,6 +590,9 @@ fn status_callback(
             }
             Ok(StatusUpdate::InteractiveManagement(_)) => {
                 debug!("STATUS: interactive management");
+            }
+            Ok(StatusUpdate::LargeBlobData(_, _)) => {
+                debug!("STATUS: large blob data");
             }
             Ok(StatusUpdate::SelectResultNotice(sender, entities)) => {
                 debug!("STATUS: select result notice");
@@ -1597,7 +1613,7 @@ impl AuthrsService {
         .inspect_err(|_| self.discard_transaction())?;
         if static_prefs::pref!("security.webauth.webauthn_enable_usbtoken") {
             self.usb_token_manager.lock().unwrap().manage(
-                60 * 1000 * 1000,
+                60 * 1000,
                 status_tx,
                 state_callback,
             );
@@ -1707,7 +1723,7 @@ pub unsafe extern "C" fn authrs_webauthn_att_obj_constructor(
         return NS_ERROR_NULL_POINTER;
     }
 
-    let mut att_obj: AttestationObject = match serde_cbor::from_slice(att_obj_bytes) {
+    let mut att_obj: AttestationObject = match serde_cbor_2::from_slice(att_obj_bytes) {
         Ok(att_obj) => att_obj,
         Err(_) => return NS_ERROR_INVALID_ARG,
     };

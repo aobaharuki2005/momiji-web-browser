@@ -15,6 +15,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.yield
 import mozilla.components.support.test.robolectric.testContext
+import mozilla.telemetry.glean.Glean
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
@@ -112,7 +113,22 @@ class InstallReferrerWorkerTest {
         assertEquals("CONTENT", PlayStoreAttribution.content.testGetValue())
         assertEquals("TERM", PlayStoreAttribution.term.testGetValue())
 
+        assertEquals("SOURCE", Glean.testGetAttribution().source)
+        assertEquals("MEDIUM", Glean.testGetAttribution().medium)
+        assertEquals("CAMPAIGN", Glean.testGetAttribution().campaign)
+        assertEquals("CONTENT", Glean.testGetAttribution().content)
+        assertEquals("TERM", Glean.testGetAttribution().term)
+
         assertFalse(observed.isEmpty())
+    }
+
+    @Test
+    fun `WHEN recording install referrer with no UTM params THEN Glean attribution is not updated`() {
+        val settings = Settings(context)
+        val params = UTMParams.parseUTMParameters("")
+        params.recordInstallReferrer(settings)
+
+        assertNull(Glean.testGetAttribution().source)
     }
 
     @Test
@@ -447,6 +463,39 @@ class InstallReferrerWorkerTest {
         worker.handleSuccess(null, InstallReferrerClient.InstallReferrerResponse.OK, settings)
 
         assertTrue(settings.isUserRedditAttributed)
+    }
+
+    @Test
+    fun `WHEN handleSuccess receives an X-attributed referrer THEN isUserXTwitterAttributed is set to true`() {
+        val worker = TestListenableWorkerBuilder<InstallReferrerWorker>(context).build()
+        val settings = Settings(context)
+        val referrer = "utm_source=x&utm_medium=paid"
+
+        worker.handleSuccess(referrer, InstallReferrerClient.InstallReferrerResponse.OK, settings)
+
+        assertTrue(settings.isUserXTwitterAttributed)
+    }
+
+    @Test
+    fun `WHEN handleSuccess receives a non-X referrer THEN isUserXTwitterAttributed is set to false`() {
+        val worker = TestListenableWorkerBuilder<InstallReferrerWorker>(context).build()
+        val settings = Settings(context)
+        settings.isUserXTwitterAttributed = true
+
+        worker.handleSuccess("utm_source=google&utm_medium=cpc", InstallReferrerClient.InstallReferrerResponse.OK, settings)
+
+        assertFalse(settings.isUserXTwitterAttributed)
+    }
+
+    @Test
+    fun `WHEN handleSuccess receives a null referrer THEN isUserXTwitterAttributed is not changed`() {
+        val worker = TestListenableWorkerBuilder<InstallReferrerWorker>(context).build()
+        val settings = Settings(context)
+        settings.isUserXTwitterAttributed = true
+
+        worker.handleSuccess(null, InstallReferrerClient.InstallReferrerResponse.OK, settings)
+
+        assertTrue(settings.isUserXTwitterAttributed)
     }
 }
 

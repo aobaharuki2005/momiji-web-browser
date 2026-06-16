@@ -300,10 +300,11 @@ function normalizeMemoryList(parsed) {
  * }>>>}                            Promise resolving the list of generated memories
  */
 export async function generateInitialMemoriesList(engine, sources) {
-  const [systemPrompt, userPromptTemplate] = await Promise.all([
-    lazy.loadPrompt(MODEL_FEATURES.MEMORIES_INITIAL_GENERATION_SYSTEM),
-    lazy.loadPrompt(MODEL_FEATURES.MEMORIES_INITIAL_GENERATION_USER),
-  ]);
+  const [{ prompt: systemPrompt }, { prompt: userPromptTemplate }] =
+    await Promise.all([
+      lazy.loadPrompt(MODEL_FEATURES.MEMORIES_INITIAL_GENERATION_SYSTEM),
+      lazy.loadPrompt(MODEL_FEATURES.MEMORIES_INITIAL_GENERATION_USER),
+    ]);
 
   // Build sources string
   let profileRecordsRenderedStr = "";
@@ -354,10 +355,11 @@ export async function deduplicateMemories(
   existingMemoriesList,
   newMemoriesList
 ) {
-  const [systemPrompt, userPromptTemplate] = await Promise.all([
-    lazy.loadPrompt(MODEL_FEATURES.MEMORIES_DEDUPLICATION_SYSTEM),
-    lazy.loadPrompt(MODEL_FEATURES.MEMORIES_DEDUPLICATION_USER),
-  ]);
+  const [{ prompt: systemPrompt }, { prompt: userPromptTemplate }] =
+    await Promise.all([
+      lazy.loadPrompt(MODEL_FEATURES.MEMORIES_DEDUPLICATION_SYSTEM),
+      lazy.loadPrompt(MODEL_FEATURES.MEMORIES_DEDUPLICATION_USER),
+    ]);
 
   const userPrompt = renderPrompt(userPromptTemplate, {
     existingMemoriesList: formatListForPrompt(existingMemoriesList),
@@ -403,11 +405,11 @@ export async function deduplicateMemories(
  * @returns {Promise<Array<string>>}    Promise resolving the list of memory summary strings that are both high quality and non-sensitive
  */
 export async function applyQualityAndSensitivityFilter(engine, memoriesList) {
-  const systemPrompt = await lazy.loadPrompt(
+  const { prompt: systemPrompt } = await lazy.loadPrompt(
     MODEL_FEATURES.MEMORIES_QUALITY_AND_SENSITIVITY_FILTER_SYSTEM
   );
 
-  const userPromptTemplate = await lazy.loadPrompt(
+  const { prompt: userPromptTemplate } = await lazy.loadPrompt(
     MODEL_FEATURES.MEMORIES_QUALITY_AND_SENSITIVITY_FILTER_USER
   );
 

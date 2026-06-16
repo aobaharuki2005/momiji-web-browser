@@ -61,6 +61,8 @@ https_first_disabled = true
 ["browser_policy_disable_password_reveal.js"]
 
 ["browser_policy_disable_popup_blocker.js"]
+
+["browser_policy_disable_popup_blocker_locked.js"]
 support-files = [
   "!/browser/base/content/test/popups/popup_blocker2.html",
   "!/browser/base/content/test/popups/popup_blocker_a.html",

@@ -663,6 +663,9 @@
     <!-- Marketing onboarding primary button text. 'Firefox' is intentionally hardcoded.  -->
     <string name="nova_onboarding_marketing_primary_button_text" tools:ignore="BrandUsage">Help Firefox</string>
 
+    <!-- Marketing onboarding primary button text. -->
+    <string name="nova_onboarding_marketing_primary_button_text_2">Allow and Continue</string>
+
     <!-- Marketing onboarding secondary button text. -->
     <string name="nova_onboarding_marketing_secondary_button_text">No Thanks</string>
 
@@ -1059,10 +1062,12 @@
     <string name="customize_toggle_pocket_sponsored">Sponsored stories</string>
     <!-- Title for the opening wallpaper settings screen -->
     <string name="customize_wallpapers">Wallpapers</string>
+    <!-- Label for the menu item that opens the wallpaper settings screen. -->
+    <string name="browser_menu_change_wallpaper">Change wallpaper</string>
     <!-- Title for the customize home screen section with sponsored shortcuts. -->
     <string name="customize_toggle_contile">Sponsored shortcuts</string>
     <!-- Title for the customize home screen section that toggles the Homepage sports widget. -->
-    <string name="customize_toggle_world_cup" tools:ignore="UnusedResources">World Cup</string>
+    <string name="customize_toggle_world_cup">World Cup</string>
 
     <!-- Wallpapers -->
     <!-- Content description for various wallpapers. %1$s is the name of the wallpaper. -->
@@ -1880,8 +1885,8 @@
     <string name="webcompat_reporter_choose_reason_2">Choose a reason</string>
     <!-- The error message of the dropdown, prompting the user to select a high-level reason why the site is broken. -->
     <string name="webcompat_reporter_choose_reason_error">Please choose a reason</string>
-    <!-- The label/title of an optional field in the Web Compat Reporter feature for adding additional information. -->
-    <string name="webcompat_reporter_label_description">Describe the problem (optional)</string>
+  <!-- The label/title of an optional field in the Web Compat Reporter feature for adding additional information. -->
+    <string name="webcompat_reporter_label_description_2">Describe the problem in detail to help us investigate the issue (optional)</string>
     <!-- The button text for navigating away from the feature to provide more information on the broken site's bug report. -->
     <string name="webcompat_reporter_add_more_info">Add more info</string>
     <!-- The button text for the cancel button to leave the Web Compat Reporter feature. -->
@@ -1890,8 +1895,8 @@
     <string name="webcompat_reporter_send">Send</string>
     <!-- Text for a snackbar to confirm the successful submission of a WebCompat report. -->
     <string name="webcompat_reporter_success_snackbar_text_2">Report sent</string>
-    <!-- Placeholder text for the description field to prompt the user on what they should type. -->
-    <string name="webcompat_reporter_problem_description_placeholder_text">What happened? What should have happened?</string>
+  <!-- Placeholder text for the description field to prompt the user on what they should type. -->
+    <string name="webcompat_reporter_problem_description_placeholder_text_2">What happened? What did you expect to happen? Please provide steps to reproduce the issue.</string>
     <!-- Label of the checkbox on the “Report broken site” screen for sending URLS blocked by Enhanced Tracking Protection. -->
     <string name="webcompat_reporter_etp_checkbox_text_2">Send list of items blocked by tracking protection</string>
     <!-- The button text for the preview report button to view a preview of the report. -->
@@ -1900,6 +1905,12 @@
     <string name="webcompat_reporter_preview_bottom_sheet_header">Report Preview</string>
     <!-- Label for the “Send” button shown in the WebCompat Report preview panel, which the user taps to submit the report. -->
     <string name="webcompat_reporter_preview_bottom_sheet_send">Send</string>
+    <!-- Title for the Edit URL confirmation dialog in the WebCompatReporter-->
+    <string name="webcompat_reporter_edit_url_dialog_title">Edit website URL</string>
+    <!-- Text shown on the save button for the Edit URL confirmation dialog in the WebCompatReporter. -->
+    <string name="webcompat_reporter_edit_url_dialog_save">Save</string>
+    <!-- Text shown on the dismiss button for the Edit URL confirmation dialog in the WebCompatReporter.-->
+    <string name="webcompat_reporter_edit_url_dialog_dismiss">Dismiss</string>
 
     <!-- These reason strings are dropdown options on a WebCompat reporter form, indicating what is broken on the site. -->
     <!-- Broken site reason text for site doesn’t load -->
@@ -1921,7 +1932,7 @@
     <!-- Broken site reason text for something else -->
     <string name="webcompat_reporter_reason_other">Something else</string>
 
-    <!-- Crashes -->
+  <!-- Crashes -->
     <!-- Title text displayed on the tab crash page. %1$s is the name of the app (for example "Firefox"). -->
     <string name="tab_crash_title_2">Sorry. %1$s can’t load that page.</string>
     <!-- Send crash report checkbox text on the tab crash page -->
@@ -2583,8 +2594,6 @@
     <string name="etp_suspected_fingerprinters_description">Enables fingerprinting protection to stop suspected fingerprinters.</string>
     <!-- Category of trackers (fingerprinters) that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_known_fingerprinters_title">Known Fingerprinters</string>
-    <!-- Label for the fingerprinters category shown in the tracking protections dashboard breakdown -->
-    <string name="tracking_dashboard_fingerprinters_category_name">Fingerprinters</string>
     <!-- Description of the SmartBlock Enhanced Tracking Protection feature. The * symbol is intentionally hardcoded here,
          as we use it on the UI to indicate which trackers have been partially unblocked.  -->
     <string name="preference_etp_smartblock_description">Some trackers marked below have been partially unblocked on this page because you interacted with them *.</string>
@@ -2927,6 +2936,12 @@
     <string name="ip_protection_onboarding_body">%1$s by hiding your location, even on public Wi-Fi. Get %2$d GB free every month.</string>
     <!-- Used as text for a link in ip_protection_onboarding_body. Make sure to adapt capitalization if the link is in the middle of the sentence. -->
     <string name="ip_protection_onboarding_body_link">Browse with extra protection</string>
+    <!-- The body of the VPN onboarding card for a promotion that provides unlimited data bandwidth for a certain time.
+      %1$s is a localized date (for example "Jun 9") indicating the end of the promotional period.
+      %2$s is a link using ip_protection_onboarding_body_link_promo (“Learn more”) as text. It links to a support article about VPN on Firefox. -->
+    <string name="ip_protection_onboarding_body_promo">Turn it on to make your browsing more private and harder to trace. Try it now to get unlimited bandwidth through %1$s. %2$s</string>
+    <!-- Used as text for a link in ip_protection_onboarding_body. Make sure to adapt capitalization if the link is in the middle of the sentence. -->
+    <string name="ip_protection_onboarding_body_link_promo">Learn more</string>
     <!-- Label for the dismiss button on the onboarding bottom sheet. -->
     <string name="ip_protection_onboarding_not_now_button">Not now</string>
     <!-- Snackbar (in-app pop-up notification) text to signal the browser VPN connection error -->
@@ -2934,6 +2949,8 @@
     <!-- Snackbar (in-app pop-up notification) text to signal the browser VPN has reached the monthly data limit.
         %1$d is the total monthly allowance in GB (for example "50"). -->
     <string name="ip_protection_data_limit_reached_snackbar">%1$d GB of VPN data used. Access will reset next month.</string>
+    <!-- Snackbar (in-app pop-up notification) action button text that takes the user to the VPN settings screen. -->
+    <string name="ip_protection_data_limit_reached_snackbar_action">Settings</string>
 
     <!-- Autofill -->
     <!-- Preference and title for managing the autofill settings -->
@@ -3234,6 +3251,8 @@
     <string name="homepage_shortcuts_add_website">Add website</string>
     <!-- Title text for the "Enter a Website URL" dialog for adding a shortcut. -->
     <string name="homepage_shortcuts_add_website_title">Enter a Website URL</string>
+    <!-- Title for the "Popular sites" section in the "Add to homepage" bottom sheet. -->
+    <string name="homepage_shortcuts_popular_sites">Popular sites</string>
     <!-- Title text displayed in the dialog when shortcuts limit is reached. -->
     <string name="shortcut_max_limit_title">Shortcut limit reached</string>
     <!-- Content description text displayed in the dialog when shortcut limit is reached. -->
@@ -3597,12 +3616,47 @@
     <!-- Title text for the protection panel permissions section. -->
     <string name="protection_panel_permissions_title">Permissions</string>
     <!-- Text for displaying the total number of trackers blocked in the trackers blocked panel.
-        %d is a placeholder for the number of trackers blocked. -->
-    <string name="trackers_blocked_panel_total_num_trackers_blocked">Trackers blocked: %d</string>
-    <!-- Text for displaying the number of trackers blocked for a specific tracker category in the trackers blocked panel.
-        %s is a placeholder for the name of the tracker category.
-        %d is a placeholder for the number of trackers blocked. -->
-    <string name="trackers_blocked_panel_categorical_num_trackers_blocked">%s: %d</string>
+        %1$d is a placeholder for the number of trackers blocked. -->
+    <plurals name="trackers_blocked_panel_total_num_trackers_blocked_2">
+        <item quantity="one">%1$d tracker blocked on this site</item>
+        <item quantity="other">%1$d trackers blocked on this site</item>
+    </plurals>
+    <!-- Text for displaying in the trackers blocked panel the total number of blocked social media trackers.
+        %1$d is a placeholder for the number of social media trackers blocked. -->
+    <plurals name="trackers_blocked_panel_num_social_media_trackers">
+        <item quantity="one">%1$d social media tracker</item>
+        <item quantity="other">%1$d social media trackers</item>
+    </plurals>
+    <!-- Text for displaying in the trackers blocked panel the total number of blocked cross-site tracking cookies.
+        %1$d is a placeholder for the number of cross-site tracking cookies blocked. -->
+    <plurals name="trackers_blocked_panel_num_cross_site_cookies">
+        <item quantity="one">%1$d cross-site tracking cookie</item>
+        <item quantity="other">%1$d cross-site tracking cookies</item>
+    </plurals>
+    <!-- Text for displaying in the trackers blocked panel the total number of blocked cryptomining scripts.
+        %1$d is a placeholder for the number of cryptominers blocked. -->
+    <plurals name="trackers_blocked_panel_num_cryptominers">
+        <item quantity="one">%1$d cryptominer</item>
+        <item quantity="other">%1$d cryptominers</item>
+    </plurals>
+    <!-- Text for displaying in the trackers blocked panel the total number of blocked fingerprinter scripts.
+        %1$d is a placeholder for the number of fingerprinters blocked. -->
+    <plurals name="trackers_blocked_panel_num_fingerprinters">
+        <item quantity="one">%1$d fingerprinter</item>
+        <item quantity="other">%1$d fingerprinters</item>
+    </plurals>
+    <!-- Text for displaying in the trackers blocked panel the total number of blocked generic tracking scripts.
+        %1$d is a placeholder for the number of trackers blocked. -->
+    <plurals name="trackers_blocked_panel_num_trackers_2">
+        <item quantity="one">%1$d tracking content</item>
+        <item quantity="other">%1$d tracking content</item>
+    </plurals>
+    <!-- Text for displaying the number of trackers blocked this week in the trackers blocked panel.
+        %1$d is a placeholder for the number of trackers blocked this week. -->
+    <plurals name="trackers_blocked_panel_num_trackers_blocked_this_week_2">
+        <item quantity="one">%1$d tracker blocked this week</item>
+        <item quantity="other">%1$d trackers blocked this week</item>
+    </plurals>
     <!-- Description text for a dialog confirming whether the user wants to delete all data for current site.
         %s is a placeholder for the base domain of website. -->
     <string name="clear_site_data_dialog_description"><![CDATA[Removing cookies and site data for <b>%s</b> might log you out of websites and clear shopping carts.]]></string>
@@ -4147,7 +4201,7 @@
     <!-- Sports widget match status label shown during halftime of a match. -->
     <string name="sports_widget_halftime" tools:ignore="UnusedResources">Halftime</string>
     <!-- Sports widget match status label shown during extra time of a match. -->
-    <string name="sports_widget_extra_time" tools:ignore="UnusedResources">Extra time</string>
+    <string name="sports_widget_extra_time">Extra time</string>
     <!-- Sports widget match status label shown during penalties of a match. -->
     <string name="sports_widget_penalties">Penalties</string>
     <!-- Sports widget countdown label for days. D is short for Day. The layout only allows for 1–2 characters:

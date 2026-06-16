@@ -1653,7 +1653,7 @@ bool DrawTargetSkia::Draw3DTransformedSurface(SourceSurface* aSurface,
 already_AddRefed<SourceSurface> DrawTargetSkia::CreateSourceSurfaceFromData(
     unsigned char* aData, const IntSize& aSize, int32_t aStride,
     SurfaceFormat aFormat) const {
-  RefPtr<SourceSurfaceSkia> newSurf = new SourceSurfaceSkia();
+  RefPtr newSurf = MakeRefPtr<SourceSurfaceSkia>();
 
   if (!newSurf->InitFromData(aData, aSize, aStride, aFormat)) {
     gfxDebug() << *this
@@ -1667,7 +1667,7 @@ already_AddRefed<SourceSurface> DrawTargetSkia::CreateSourceSurfaceFromData(
 
 already_AddRefed<DrawTarget> DrawTargetSkia::CreateSimilarDrawTarget(
     const IntSize& aSize, SurfaceFormat aFormat) const {
-  RefPtr<DrawTargetSkia> target = new DrawTargetSkia();
+  RefPtr target = MakeRefPtr<DrawTargetSkia>();
 #ifdef DEBUG
   if (!IsBackedByPixels(mCanvas)) {
     // If our canvas is backed by vector storage such as PDF then we want to

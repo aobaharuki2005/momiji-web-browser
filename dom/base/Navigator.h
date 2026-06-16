@@ -14,6 +14,7 @@
 #include "mozilla/dom/Nullable.h"
 #include "nsHashKeys.h"
 #include "nsInterfaceHashtable.h"
+#include "nsPIDOMWindowInlines.h"  // FIXME: Stop including inline definitions!
 #include "nsString.h"
 #include "nsTArray.h"
 #include "nsWrapperCache.h"

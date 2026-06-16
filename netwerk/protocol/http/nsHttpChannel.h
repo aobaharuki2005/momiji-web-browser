@@ -834,7 +834,7 @@ class nsHttpChannel final : public HttpBaseChannel,
 
   nsresult LogConsoleError(const char* aTag);
 
-  void SetHTTPSSVCRecord(already_AddRefed<nsIDNSHTTPSSVCRecord>&& aRecord);
+  void SetHTTPSSVCRecord(already_AddRefed<nsIDNSHTTPSSVCRecord> aRecord);
 
   void RecordOnStartTelemetry(nsresult aStatus, bool aIsNavigation);
 
@@ -875,8 +875,10 @@ class nsHttpChannel final : public HttpBaseChannel,
   RefPtr<DNSPromise> mDNSBlockingThenable;
 
   // We update the value of mProxyConnectResponseHead when OnStartRequest is
-  // called and reset the value when we switch to another failover proxy.
-  Maybe<nsHttpResponseHead> mProxyConnectResponseHead;
+  // called and reset the value when we switch to another failover proxy. It is
+  // a shared pointer to the head owned by the connection/transaction, so this
+  // is an addref rather than a deep copy. See bug 2045419.
+  RefPtr<ProxyConnectResponseHead> mProxyConnectResponseHead;
 
   // If mHTTPSSVCRecord has value, it means OnHTTPSRRAvailable() is called and
   // we got the result of HTTPS RR query. Otherwise, it means we are still

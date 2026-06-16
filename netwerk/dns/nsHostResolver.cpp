@@ -1804,6 +1804,10 @@ void nsHostResolver::ResolveHostTask() {
                        ? glean::networking::DnsNativeCountLabel::eHttpsPrivate
                        : glean::networking::DnsNativeCountLabel::eHttpsRegular)
           .Add(1);
+      // Capture native success/duration; ResolveComplete records it as the
+      // HTTPS RR lookup time (keyed "native").
+      rec->mNativeSuccess = NS_SUCCEEDED(status);
+      rec->mNativeDuration = TimeStamp::Now() - startTime;
       CompleteLookupByType(rec, status, result, rec->mTRRSkippedReason, ttl,
                            rec->pb);
       return;

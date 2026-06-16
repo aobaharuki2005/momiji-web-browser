@@ -310,9 +310,13 @@ export class SidebarBookmarks extends SidebarPage {
             folderEl.textContent?.trim() ??
             "";
           const folderKind = folderEl.dataset.folderKind;
+          const children = folderEl.querySelector(
+            "sidebar-bookmark-list"
+          )?.tabItems;
           this.triggerNode = {
             guid: folderEl.guid,
             title,
+            children,
             isFolder: true,
             isEmpty,
             isRootFolder: lazy.PlacesUtils.isRootItem(folderEl.guid),
@@ -413,7 +417,14 @@ export class SidebarBookmarks extends SidebarPage {
       addSeparator.hidden = false;
     }
 
-    openAllBookmarks.disabled = isEmpty;
+    if (isFolder) {
+      const hasBookmarkItems = !!this.triggerNode.children?.some(
+        child => child.url && !child.isPlaceContainer
+      );
+      openAllBookmarks.disabled = isEmpty || !hasBookmarkItems;
+    } else {
+      openAllBookmarks.disabled = isEmpty;
+    }
     openAllBookmarks.setAttribute("data-l10n-id", "places-open-all-bookmarks");
     sortByName.disabled = isEmpty;
 
@@ -657,7 +668,7 @@ export class SidebarBookmarks extends SidebarPage {
         this.#deleteBookmarks(this.selectedItems ?? [this.triggerNode]);
         break;
       case "sidebar-bookmarks-context-show-in-folder":
-        this.#showInFolder(this.triggerNode);
+        this.showInFolder(this.triggerNode.guid).catch(console.error);
         break;
       case "sidebar-bookmarks-context-copy-link":
         lazy.BrowserUtils.copyLink(
@@ -725,12 +736,16 @@ export class SidebarBookmarks extends SidebarPage {
     }).transact();
   }
 
-  async #showInFolder(bookmark) {
-    const fetchInfo = await lazy.PlacesUtils.bookmarks.fetch(
-      { guid: bookmark.guid },
-      null,
-      { includePath: true }
-    );
+  async showInFolder(guid) {
+    this.searchQuery = "";
+    this.searchResults = [];
+    if (this.searchInput) {
+      this.searchInput.value = "";
+    }
+
+    const fetchInfo = await lazy.PlacesUtils.bookmarks.fetch({ guid }, null, {
+      includePath: true,
+    });
     if (!fetchInfo) {
       return;
     }
@@ -742,14 +757,12 @@ export class SidebarBookmarks extends SidebarPage {
       ...this.#expandedFolderGuids,
     ];
 
-    this.searchQuery = "";
-    this.searchResults = [];
-    if (this.searchInput) {
-      this.searchInput.value = "";
-    }
-
+    // #expandedFolderGuids is mutated in place, so Lit can't detect the
+    // change; request an update explicitly so the tree re-renders with the
+    // ancestor folders expanded before we scroll to the row.
+    this.requestUpdate();
     await this.updateComplete;
-    await this.#scrollAndFocusBookmarkRow(bookmark.guid);
+    await this.#scrollAndFocusBookmarkRow(guid);
   }
 
   async #scrollAndFocusBookmarkRow(guid) {
@@ -887,8 +900,6 @@ export class SidebarBookmarks extends SidebarPage {
     for (const child of node.children ?? []) {
       if (child.uri) {
         urls.push(child.uri);
-      } else if (child.children) {
-        urls.push(...this.#collectBookmarkUrls(child));
       }
     }
     return urls;

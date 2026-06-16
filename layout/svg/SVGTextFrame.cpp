@@ -9,6 +9,7 @@
 #include <algorithm>
 #include <cmath>
 #include <limits>
+#include <numeric>
 
 #include "DOMSVGPoint.h"
 #include "SVGAnimatedNumberList.h"
@@ -4503,7 +4504,7 @@ static void ShiftAnchoredChunk(nsTArray<CharPosition>& aCharPositions,
       shift -= aVisIStartEdge;
       break;
     case TextAnchorSide::Middle:
-      shift -= (aVisIStartEdge + aVisIEndEdge) / 2;
+      shift -= std::midpoint(aVisIStartEdge, aVisIEndEdge);
       break;
     case TextAnchorSide::Right:
       shift -= aVisIEndEdge;

@@ -63,7 +63,7 @@ class nsIContent : public nsINode {
   // If you're using the external API, the only thing you can know about
   // nsIContent is that it exists with an IID
 
-  explicit nsIContent(already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo)
+  explicit nsIContent(already_AddRefed<mozilla::dom::NodeInfo> aNodeInfo)
       : nsINode(std::move(aNodeInfo)) {
     MOZ_ASSERT(mNodeInfo);
     MOZ_ASSERT(static_cast<nsINode*>(this) == reinterpret_cast<nsINode*>(this));

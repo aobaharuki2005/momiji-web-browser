@@ -451,7 +451,6 @@ class nsIWidget : public nsSupportsWeakReference {
   using PopupLevel = mozilla::widget::PopupLevel;
   using BorderStyle = mozilla::widget::BorderStyle;
   using TransparencyMode = mozilla::widget::TransparencyMode;
-  using Screen = mozilla::widget::Screen;
 
   // Used in UpdateThemeGeometries.
   struct ThemeGeometry {
@@ -1173,7 +1172,7 @@ class nsIWidget : public nsSupportsWeakReference {
   /**
    * Return the screen the widget is in, or null if we don't know.
    */
-  virtual already_AddRefed<Screen> GetWidgetScreen();
+  virtual already_AddRefed<mozilla::widget::Screen> GetWidgetScreen();
 
   /**
    * Put the toplevel window into or out of fullscreen mode.

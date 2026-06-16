@@ -1616,7 +1616,10 @@ class XPCShellTests:
             if self.mozInfo["buildapp"] == "mobile/android":
                 # For android, use binary from host utilities.
                 http3ServerPath = os.path.join(self.xrePath, "http3server" + binSuffix)
-                serverEnv["LD_LIBRARY_PATH"] = self.xrePath
+                if sys.platform == "darwin":
+                    serverEnv["DYLD_LIBRARY_PATH"] = self.xrePath
+                else:
+                    serverEnv["LD_LIBRARY_PATH"] = self.xrePath
             elif build:
                 http3ServerPath = os.path.join(
                     build.topobjdir, "dist", "bin", "http3server" + binSuffix

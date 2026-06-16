@@ -2865,6 +2865,13 @@ bool wasm::GenerateContBaseFrameStub(jit::MacroAssembler& masm,
 
   int32_t offsetFromFPToStack = -ContStack::offsetOfBaseFrameFP();
 
+  // Store initial callee's InstanceReg into calleeInstance_ before clearing
+  // initialResumeTarget_.
+  masm.storePtr(InstanceReg,
+                Address(FramePointer,
+                        static_cast<int32_t>(
+                            wasm::FrameWithInstances::calleeInstanceOffset())));
+
   // Clear the 'resumeTarget' in our frame.
   masm.computeEffectiveAddress(
       Address(FramePointer,

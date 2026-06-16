@@ -231,8 +231,9 @@ static void UpdateOldAnimationPropertiesWithNew(
   // the scroll-timeline object if their scrollers and axes are the same.
   if (aOld.GetTimeline() != aTimeline) {
     // See `UpdateNamedTimelineAnimation` as to why `SetTimeline` isn't used.
-    aOld.SetTimelineNoUpdate(aTimeline, aTimelineName);
-    animationChanged = true;
+    animationChanged =
+        animationChanged || aOld.SetTimelineNoUpdate(aTimeline, aTimelineName,
+                                                     Animation::FromJS::No);
   }
 
   if (aOld.GetTimelineRange() != aTimelineRange) {
@@ -442,7 +443,7 @@ static already_AddRefed<CSSAnimation> BuildAnimation(
   animation->SetOwningElement(
       OwningElementRef(*aTarget.mElement, aTarget.mPseudoRequest));
 
-  animation->SetTimelineNoUpdate(timeline, timelineName);
+  animation->SetTimelineNoUpdate(timeline, timelineName, Animation::FromJS::No);
   animation->SetEffectNoUpdate(effect);
   animation->SetTimelineRangeNoUpdate(std::move(range));
 
@@ -548,7 +549,8 @@ static void UpdateNamedTimelineAnimation(dom::Document* aDocument,
   // No need to call `SetTimeline` and force compositor animation update -
   // timeline changing shouldn't cause change in animation state or playback
   // rate.
-  aAnimation->SetTimelineNoUpdate(newTimeline, aTimelineName);
+  aAnimation->SetTimelineNoUpdate(newTimeline, aTimelineName,
+                                  Animation::FromJS::No);
 }
 
 #ifdef DEBUG

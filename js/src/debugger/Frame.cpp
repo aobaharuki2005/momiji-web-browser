@@ -429,7 +429,13 @@ void DebuggerFrame::terminate(JS::GCContext* gcx, AbstractFramePtr frame) {
     if (onStepHandler()) {
       AbstractFramePtr referent = AbstractFramePtr::fromRaw(
           getReservedSlot(WASM_CONT_FRAME_PTR_SLOT).toPrivate());
-      decrementStepperCounter(gcx, referent);
+      // The WasmInstance may be in the same GC as the ContObject being freed.
+      // Skip the stepper-count decrement if its WasmInstanceObject is already
+      // scheduled for finalization.
+      wasm::Instance* inst = referent.asWasmDebugFrame()->instance();
+      if (!gc::IsAboutToBeFinalizedUnbarriered(inst->objectUnbarriered())) {
+        decrementStepperCounter(gcx, referent);
+      }
     }
     setReservedSlot(WASM_CONT_FRAME_PTR_SLOT, JS::UndefinedValue());
   }

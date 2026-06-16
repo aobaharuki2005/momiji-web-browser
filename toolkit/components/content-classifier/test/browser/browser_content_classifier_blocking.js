@@ -300,3 +300,58 @@ add_task(async function test_annotation() {
 
   BrowserTestUtils.removeTab(tab);
 });
+
+// Clearing test_list_urls after a non-empty value must drop the
+// installed engine, so previously-blocked third parties load again.
+// Exercises the empty-rules path through InstallEngineFromRules
+// (mEngines.Remove for the test_block feature).
+add_task(async function test_clearing_test_list_urls_drops_engine() {
+  let listsLoaded = TestUtils.topicObserved(LISTS_LOADED_TOPIC);
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      ["privacy.trackingprotection.content.testing", true],
+      ["privacy.trackingprotection.content.protection.enabled", true],
+      [
+        "privacy.trackingprotection.content.protection.test_list_urls",
+        BLOCK_LIST_URL,
+      ],
+      ["privacy.trackingprotection.content.protection.engines", "test_block"],
+      ["privacy.trackingprotection.content.annotation.enabled", false],
+      ["privacy.trackingprotection.content.annotation.test_list_urls", ""],
+    ],
+  });
+
+  let tab = await BrowserTestUtils.openNewForegroundTab(
+    gBrowser,
+    TEST_TOP_PAGE
+  );
+  let browser = tab.linkedBrowser;
+  await listsLoaded;
+
+  await assertImageBlocked(
+    browser,
+    TEST_BLOCKED_3RD_PARTY_DOMAIN,
+    "example.org blocked with non-empty test_list_urls"
+  );
+
+  // Clear the test_list_urls pref. OnPrefChange calls LoadFilterLists,
+  // which fetches nothing, installs empty rules, and drops the engine
+  // for "test_block" from mEngines. The lists-loaded notification must
+  // still fire so this wait doesn't hang.
+  let listsCleared = TestUtils.topicObserved(LISTS_LOADED_TOPIC);
+  await SpecialPowers.pushPrefEnv({
+    set: [["privacy.trackingprotection.content.protection.test_list_urls", ""]],
+  });
+  await listsCleared;
+
+  BrowserTestUtils.startLoadingURIString(browser, TEST_TOP_PAGE);
+  await BrowserTestUtils.browserLoaded(browser);
+
+  await assertImageLoaded(
+    browser,
+    TEST_BLOCKED_3RD_PARTY_DOMAIN,
+    "example.org no longer blocked after clearing test_list_urls"
+  );
+
+  BrowserTestUtils.removeTab(tab);
+});

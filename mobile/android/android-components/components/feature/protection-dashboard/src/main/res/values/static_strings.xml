@@ -16,8 +16,20 @@
         <item quantity="other">%1$d MB saved</item>
     </plurals>
 
-    <string name="protections_dashboard_category_cookies" translatable="false" tools:ignore="UnusedResources">Cross-site tracking cookies</string>
-    <string name="protections_dashboard_category_social" translatable="false" tools:ignore="UnusedResources">Social media trackers</string>
-    <string name="protections_dashboard_category_fingerprinters" translatable="false" tools:ignore="UnusedResources">Fingerprinters</string>
-    <string name="protections_dashboard_category_tracking_content" translatable="false" tools:ignore="UnusedResources">Tracking content</string>
+    <plurals name="protections_dashboard_category_cookies" translatable="false" tools:ignore="UnusedResources">
+        <item quantity="one">%1$d cross-site cookie</item>
+        <item quantity="other">%1$d cross-site cookies</item>
+    </plurals>
+    <plurals name="protections_dashboard_category_social" translatable="false" tools:ignore="UnusedResources">
+        <item quantity="one">%1$d social media tracker</item>
+        <item quantity="other">%1$d social media trackers</item>
+    </plurals>
+    <plurals name="protections_dashboard_category_fingerprinters" translatable="false" tools:ignore="UnusedResources">
+        <item quantity="one">%1$d fingerprinter</item>
+        <item quantity="other">%1$d fingerprinters</item>
+    </plurals>
+    <plurals name="protections_dashboard_category_tracking_content" translatable="false" tools:ignore="UnusedResources">
+        <item quantity="one">%1$d tracking content</item>
+        <item quantity="other">%1$d tracking content</item>
+    </plurals>
 </resources>

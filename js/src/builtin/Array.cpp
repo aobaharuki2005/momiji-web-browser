@@ -931,7 +931,7 @@ bool js::ArraySetLength(JSContext* cx, Handle<ArrayObject*> arr, HandleId id,
   // invariant.  (Capacity was already reduced during element deletion, if
   // necessary.)
   ObjectElements* header = arr->getElementsHeader();
-  header->initializedLength = std::min(header->initializedLength, newLen);
+  header->initializedLength = std::min(header->initializedLength.get(), newLen);
 
   if (!arr->isExtensible()) {
     arr->shrinkCapacityToInitializedLength(cx);

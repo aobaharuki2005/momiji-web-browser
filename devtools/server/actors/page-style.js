@@ -957,9 +957,13 @@ class PageStyleActor extends Actor {
         // FIXME: Bug 1909173. Need to handle view transitions peudo-elements
         // for DevTools. For now we skip them.
         return false;
-      case "::-webkit-scrollbar":
-      case "::checkmark":
+      case "::picker-icon":
+      case "::picker":
         // FIXME: Bug 2042839. Need to handle in DevTools.
+        return !isInherited && node.nodeName == "SELECT";
+      case "::checkmark":
+        return !isInherited && node.nodeName == "OPTION";
+      case "::-webkit-scrollbar":
         return false;
       default:
         console.error("Unhandled pseudo-element " + pseudo);

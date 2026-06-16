@@ -178,7 +178,7 @@ already_AddRefed<Animation> Animation::Constructor(
 
   RefPtr<Animation> animation = new Animation(global);
   // JS side can't refer to timeline by name.
-  animation->SetTimelineNoUpdate(timeline, nullptr);
+  animation->SetTimelineNoUpdate(timeline, nullptr, FromJS::Yes);
   animation->SetEffectNoUpdate(aEffect);
 
   return animation.forget();
@@ -296,15 +296,30 @@ void Animation::RemovedNamedTimelineReferenceFromJS(const nsAtom* aName) {
   animationManager->RemoveNamedTimelineAnimation(aName, AsCSSAnimation());
 }
 
-void Animation::SetTimeline(AnimationTimeline* aTimeline,
-                            const nsAtom* aTimelineName) {
-  SetTimelineNoUpdate(aTimeline, aTimelineName);
+void Animation::SetTimelineFromJS(AnimationTimeline* aTimeline) {
+  TimelineWillSetFromJS();
+  // Can't refer to timeline by name from JS side.
+  const auto prevTimelineName = GetTimelineName();
+  SetTimeline(aTimeline, nullptr, FromJS::Yes);
+  if (prevTimelineName) {
+    RemovedNamedTimelineReferenceFromJS(prevTimelineName);
+  }
+}
+
+bool Animation::SetTimeline(AnimationTimeline* aTimeline,
+                            const nsAtom* aTimelineName, FromJS aFromJS) {
+  const auto updated = SetTimelineNoUpdate(aTimeline, aTimelineName, aFromJS);
   PostUpdate();
+  return updated;
 }
 
 // https://drafts.csswg.org/web-animations-2/#setting-the-timeline
-void Animation::SetTimelineNoUpdate(AnimationTimeline* aTimeline,
-                                    const nsAtom* aTimelineName) {
+bool Animation::SetTimelineNoUpdate(AnimationTimeline* aTimeline,
+                                    const nsAtom* aTimelineName,
+                                    FromJS aFromJS) {
+  if (aFromJS == FromJS::No && TimelineOverridenByJS()) {
+    return false;
+  }
   // 1. Let old timeline be the current timeline of animation, if any.
   // 2. If new timeline is the same object as old timeline, abort this
   // procedure.
@@ -313,7 +328,8 @@ void Animation::SetTimelineNoUpdate(AnimationTimeline* aTimeline,
     if (mTimelineName != aTimelineName) {
       mTimelineName = aTimelineName;
     }
-    return;
+    // Timeline still didn't update, so...
+    return false;
   }
 
   // 3. Let previous play state be animation’s play state.
@@ -437,6 +453,7 @@ void Animation::SetTimelineNoUpdate(AnimationTimeline* aTimeline,
 
   // FIXME: Bug 1799071: Check if we need to add
   // MutationObservers::NotifyAnimationChanged(this) here.
+  return true;
 }
 
 void Animation::SetTimelineRange(AnimationRange&& aRange) {
@@ -1123,23 +1140,7 @@ void Animation::SetCurrentTime(const Nullable<CSSNumberish>& aCurrentTime,
 // ---------------------------------------------------------------------------
 
 void Animation::Tick(AnimationTimeline::TickState& aTickState) {
-  // FIXME: We probably need to do this only if the timeline data or range is
-  // changed. For now we always call the procedure per spec.
-  AutoAlignStartTime();
-
-  if (Pending()) {
-    if (!mPendingReadyTime.IsNull() || HasFiniteTimeline()) {
-      // mPendingReadyTime is only meaningful for monotonic timelines (see its
-      // declaration comment). For finite timelines, trigger directly using the
-      // timeline's current time.
-      TryTriggerNow();
-    } else if (MOZ_LIKELY(mTimeline)) {
-      // Monotonic timeline with no ready time yet — schedule the trigger for
-      // the next tick, but with this tick's timestamp.
-      mPendingReadyTime = mTimeline->GetCurrentTimeAsTimeStamp();
-    }
-  }
-
+  MakeReadyAndMaybeTrigger();
   UpdateTiming(SeekFlag::NoSeek, SyncNotifyFlag::Sync);
 
   // Check for changes to whether or not this animation is replaceable.
@@ -1160,6 +1161,27 @@ void Animation::Tick(AnimationTimeline::TickState& aTickState) {
       PlayState() == AnimationPlayState::Finished) {
     PostUpdate();
   }
+}
+
+bool Animation::MakeReadyAndMaybeTrigger() {
+  // FIXME: We probably need to do this only if the timeline data or range is
+  // changed. For now we always call the procedure per spec.
+  AutoAlignStartTime();
+  if (!Pending()) {
+    return false;
+  }
+  // mPendingReadyTime is only meaningful for monotonic timelines (see its
+  // declaration comment). For finite timelines, trigger directly using the
+  // timeline's current time.
+  if (mPendingReadyTime.IsNull() && !HasFiniteTimeline()) {
+    if (MOZ_LIKELY(mTimeline)) {
+      // Monotonic timeline with no ready time yet — schedule the trigger for
+      // the next tick, but with this tick's timestamp.
+      mPendingReadyTime = mTimeline->GetCurrentTimeAsTimeStamp();
+    }
+    return false;
+  }
+  return TryTriggerNow();
 }
 
 bool Animation::TryTriggerNow() {
@@ -1184,7 +1206,8 @@ bool Animation::TryTriggerNow() {
                          ? mTimeline->GetCurrentTimeAsDuration()
                          : mTimeline->ToTimelineTime(mPendingReadyTime);
   mPendingReadyTime = {};
-  if (NS_WARN_IF(currentTime.IsNull())) {
+  if (currentTime.IsNull()) {
+    (void)NS_WARN_IF(!HasFiniteTimeline());
     return false;
   }
   FinishPendingAt(currentTime.Value());

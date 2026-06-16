@@ -14,8 +14,12 @@ CANCEL_CSS = "button.cancel-button"
 async def check_paste_works(client):
     client.set_clipboard("")
     await client.navigate(URL)
-    client.await_css(ADD_PROMPT_CSS, is_displayed=True).send_keys("hello")
-    client.await_css(SEND_CSS, is_displayed=True).click()
+    prompt = client.await_css(ADD_PROMPT_CSS, is_displayed=True)
+    await client.stall(1)
+    prompt.send_keys("hello")
+    send = client.await_css(SEND_CSS, is_displayed=True)
+    await client.stall(1)
+    send.click()
     signed_out, _ = client.await_first_element_of(
         [client.text(SIGNED_OUT_TEXT), client.css(RESPONSE_CSS)], is_displayed=True
     )
@@ -31,6 +35,7 @@ async def check_paste_works(client):
     prompt = client.await_css(ADD_PROMPT_CSS, is_displayed=True)
     await client.apz_click(element=prompt, offset=[40, 20])
     client.do_paste()
+    await client.stall(1)
     return client.execute_script(
         """
         return arguments[0].innerText.trim() === "hello"

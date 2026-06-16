@@ -460,6 +460,9 @@ class WorkerPrivate final
   void UpdateContextOptionsInternal(JSContext* aCx,
                                     const JS::ContextOptions& aContextOptions);
 
+  void UpdateTimezoneOverrideInternal(JSContext* aCx,
+                                      const nsAString& aTimezone);
+
   void UpdateLanguagesInternal(const nsTArray<nsString>& aLanguages);
 
   void UpdateLanguageOverrideInternal(
@@ -1051,6 +1054,10 @@ class WorkerPrivate final
     return mLoadInfo.mIsOn3PCBExceptionList;
   }
 
+  const nsString& TimezoneOverride() const {
+    return mLoadInfo.mTimezoneOverride;
+  }
+
   RemoteWorkerChild* GetRemoteWorkerController();
 
   void SetRemoteWorkerController(RemoteWorkerChild* aController);
@@ -1122,6 +1129,8 @@ class WorkerPrivate final
   void MemoryPressure();
 
   void UpdateContextOptions(const JS::ContextOptions& aContextOptions);
+
+  void UpdateTimezoneOverride(const nsAString& aTimezone);
 
   void UpdateLanguages(const nsTArray<nsString>& aLanguages);
 

@@ -38,7 +38,7 @@
 
 mozilla::LazyLogModule gH264("H264");
 
-#define LOG(msg, ...) MOZ_LOG(gH264, LogLevel::Debug, (msg, ##__VA_ARGS__))
+#define LOG(msg, ...) MOZ_LOG_FMT(gH264, LogLevel::Debug, msg, ##__VA_ARGS__)
 
 namespace mozilla {
 
@@ -1344,7 +1344,7 @@ void H264::WriteExtraData(MediaByteBuffer* aDestExtraData,
   }
   if (aSample->mTrackInfo &&
       !aSample->mTrackInfo->mMimeType.EqualsLiteral("video/avc")) {
-    LOG("Only allow 'video/avc' (mimeType=%s)",
+    LOG("Only allow 'video/avc' (mimeType={})",
         aSample->mTrackInfo->mMimeType.get());
     return mozilla::Err(NS_ERROR_FAILURE);
   }
@@ -1361,7 +1361,7 @@ void H264::WriteExtraData(MediaByteBuffer* aDestExtraData,
 
   avcc.mConfigurationVersion = reader.ReadBits(8);
   if (avcc.mConfigurationVersion != 1) {
-    LOG("Invalid configuration version %u", avcc.mConfigurationVersion);
+    LOG("Invalid configuration version {}", avcc.mConfigurationVersion);
     return mozilla::Err(NS_ERROR_FAILURE);
   }
   avcc.mAVCProfileIndication = reader.ReadBits(8);
@@ -1380,13 +1380,13 @@ void H264::WriteExtraData(MediaByteBuffer* aDestExtraData,
     uint32_t spsBitsLength = sequenceParameterSetLength * 8;
     const uint8_t* spsPtr = aExtraData->Elements() + reader.BitCount() / 8;
     if (reader.AdvanceBits(spsBitsLength) < spsBitsLength) {
-      LOG("Aborting parsing, SPS NALU size (%u bits) is larger than remaining!",
+      LOG("Aborting parsing, SPS NALU size ({} bits) is larger than remaining!",
           spsBitsLength);
       return mozilla::Err(NS_ERROR_FAILURE);
     }
     H264NALU nalu(spsPtr, sequenceParameterSetLength);
     if (nalu.mNalUnitType != H264_NAL_SPS) {
-      LOG("Aborting parsing, expect SPS but got incorrect NALU type (%d)!",
+      LOG("Aborting parsing, expect SPS but got incorrect NALU type ({})!",
           nalu.mNalUnitType);
       return mozilla::Err(NS_ERROR_FAILURE);
     }
@@ -1406,13 +1406,13 @@ void H264::WriteExtraData(MediaByteBuffer* aDestExtraData,
     uint32_t ppsBitsLength = pictureParameterSetLength * 8;
     const uint8_t* ppsPtr = aExtraData->Elements() + reader.BitCount() / 8;
     if (reader.AdvanceBits(ppsBitsLength) < ppsBitsLength) {
-      LOG("Aborting parsing, PPS NALU size (%u bits) is larger than remaining!",
+      LOG("Aborting parsing, PPS NALU size ({} bits) is larger than remaining!",
           ppsBitsLength);
       return mozilla::Err(NS_ERROR_FAILURE);
     }
     H264NALU nalu(ppsPtr, pictureParameterSetLength);
     if (nalu.mNalUnitType != H264_NAL_PPS) {
-      LOG("Aborting parsing, expect PPS but got incorrect NALU type (%d)!",
+      LOG("Aborting parsing, expect PPS but got incorrect NALU type ({})!",
           nalu.mNalUnitType);
       return mozilla::Err(NS_ERROR_FAILURE);
     }
@@ -1445,7 +1445,7 @@ void H264::WriteExtraData(MediaByteBuffer* aDestExtraData,
       uint32_t spsExtBitsLength = sequenceParameterSetExtLength * 8;
       const uint8_t* spsExtPtr = aExtraData->Elements() + reader.BitCount() / 8;
       if (reader.AdvanceBits(spsExtBitsLength) < spsExtBitsLength) {
-        LOG("Aborting parsing, SPS Ext NALU size (%u bits) is larger than "
+        LOG("Aborting parsing, SPS Ext NALU size ({} bits) is larger than "
             "remaining!",
             spsExtBitsLength);
         break;
@@ -1453,7 +1453,7 @@ void H264::WriteExtraData(MediaByteBuffer* aDestExtraData,
       H264NALU nalu(spsExtPtr, sequenceParameterSetExtLength);
       if (nalu.mNalUnitType != H264_NAL_SPS_EXT) {
         LOG("Aborting parsing, expect SPSExt but got incorrect NALU type "
-            "(%d)!",
+            "({})!",
             nalu.mNalUnitType);
         break;
       }

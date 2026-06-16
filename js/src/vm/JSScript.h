@@ -1282,7 +1282,7 @@ class ScriptSourceObject : public NativeObject {
 //   Interpreter.
 //
 class ScriptWarmUpData {
-  uintptr_t data_ = ResetState();
+  GCData<uintptr_t> data_{ResetState()};
 
  private:
   static constexpr uintptr_t NumTagBits = 2;
@@ -1297,6 +1297,8 @@ class ScriptWarmUpData {
   static constexpr uintptr_t WarmUpCountTag = 3;
 
  private:
+  explicit ScriptWarmUpData(uintptr_t data) : data_(data) {}
+
   // A gc-safe value to clear to.
   constexpr uintptr_t ResetState() { return 0 | WarmUpCountTag; }
 
@@ -1322,6 +1324,8 @@ class ScriptWarmUpData {
   }
 
  public:
+  ScriptWarmUpData() = default;
+
   void trace(JSTracer* trc);
 
   bool isEnclosingScript() const {

@@ -14,6 +14,7 @@
 
 #include "nsWindow.h"
 #include "nsAppShell.h"
+#include "nsComponentManagerUtils.h"
 #include "TaskbarPreviewButton.h"
 #include "WinUtils.h"
 

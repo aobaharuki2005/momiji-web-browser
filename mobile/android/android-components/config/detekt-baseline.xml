@@ -62,7 +62,9 @@
     <ID>ForbiddenSuppress:ImageDecoder.kt$ImageDecoder.Companion.ImageMagicNumbers$@Suppress("MagicNumber")</ID>
     <ID>ForbiddenSuppress:InlineAutocompleteEditText.kt$InlineAutocompleteEditText$@Suppress("CognitiveComplexMethod")</ID>
     <ID>ForbiddenSuppress:InlineAutocompleteEditText.kt$InlineAutocompleteEditText$@Suppress("NestedBlockDepth", "CognitiveComplexMethod")</ID>
+    <ID>ForbiddenSuppress:InlineAutocompleteTextField.kt$@Suppress("CognitiveComplexMethod", "ReturnCount")</ID>
     <ID>ForbiddenSuppress:InlineAutocompleteTextField.kt$@Suppress("LongMethod", "CyclomaticComplexMethod", "CognitiveComplexMethod")</ID>
+    <ID>ForbiddenSuppress:InlineAutocompleteTextField.kt$@Suppress("LongParameterList", "CognitiveComplexMethod")</ID>
     <ID>ForbiddenSuppress:InputResultDetail.kt$InputResultDetail$@Suppress("MagicNumber")</ID>
     <ID>ForbiddenSuppress:LanguageModel.kt$LanguageModel.Companion$@Suppress("CognitiveComplexMethod")</ID>
     <ID>ForbiddenSuppress:Lexer.kt$Lexer$@Suppress("CyclomaticComplexMethod")</ID>
@@ -224,6 +226,7 @@
     <ID>MaterialTypographyUsage:TrackerProtectionDashboard.kt$MaterialTheme.typography</ID>
     <ID>MaxLineLength:ContextCompatDetector.kt$ContextCompatDetector.Companion$explanation = "Using this method can lead to crashes in older Android versions as newer features might not be available"</ID>
     <ID>MaxLineLength:IconDirectoryEntry.kt$@Suppress("MagicNumber", "ReturnCount", "CognitiveComplexMethod", "NestedBlockDepth", "ComplexCondition", "CyclomaticComplexMethod")</ID>
+    <ID>MaxLineLength:StringLintXmlDetectorTest.kt$StringLintXmlDetectorTest$fun</ID>
     <ID>MayBeConst:ConstraintLayoutPerfDetector.kt$private val CUSTOM_VIEW_ISSUE_DESCRIPTION = "Caution regarding custom views extending `ConstraintLayout`"</ID>
     <ID>MayBeConst:ConstraintLayoutPerfDetector.kt$private val CUSTOM_VIEW_ISSUE_MESSAGE = "Custom views extending `ConstraintLayout` are less " + "efficient because they cannot share other `ConstraintLayout` defined in file."</ID>
     <ID>TooManyFunctions:Engine.kt$Engine : WebExtensionRuntimeTranslationsRuntimeBrowserPreferencesRuntimeAddressStructureRuntimeDataCleanable</ID>

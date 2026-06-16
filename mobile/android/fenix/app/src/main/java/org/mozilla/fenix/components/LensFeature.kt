@@ -31,7 +31,6 @@ import org.mozilla.fenix.R
 import org.mozilla.fenix.components.appstate.AppAction.LensAction
 import org.mozilla.fenix.components.lens.LensCameraActivity
 import org.mozilla.fenix.ext.components
-import org.mozilla.fenix.ext.settings
 import java.io.IOException
 
 /**
@@ -203,7 +202,7 @@ class LensFeature(
             activityResultLauncher: ActivityResultLauncher<Intent>,
             cameraPermissionLauncher: ActivityResultLauncher<String>,
         ): ViewBoundFeatureWrapper<LensFeature>? {
-            val settings = fragment.requireContext().settings()
+            val settings = fragment.requireContext().components.settings
             if (!settings.googleLensIntegrationEnabled || !settings.googleLensIntegrationUserEnabled) {
                 return null
             }

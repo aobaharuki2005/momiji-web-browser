@@ -51,6 +51,20 @@ class ShortcutsStoreTest {
     }
 
     @Test
+    fun `WHEN UpdatePopularSites action is dispatched THEN popularSites are updated`() = runTest {
+        val store = ShortcutsStore(initialState = ShortcutsState.INITIAL)
+
+        assertTrue(store.state.popularSites.isEmpty())
+
+        val popularSites = listOf(
+            PopularSite(title = "Mozilla", url = "https://mozilla.org", iconUrl = null),
+        )
+        store.dispatch(ShortcutsAction.UpdatePopularSites(popularSites))
+
+        assertEquals(popularSites, store.state.popularSites)
+    }
+
+    @Test
     fun `WHEN UpdateShowAddShortcut action is dispatched THEN showAddShortcut is updated`() = runTest {
         val store = ShortcutsStore(initialState = ShortcutsState.INITIAL)
 

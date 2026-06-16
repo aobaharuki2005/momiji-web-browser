@@ -180,6 +180,39 @@ describe("<WatchLiveModal>", () => {
     });
   });
 
+  it("opens stream links in a new tab with a safe rel", () => {
+    const { container } = renderModal({
+      state: makeState({ loaded: true, data: watchLiveData }),
+    });
+    const links = container.querySelectorAll(".watch-live-modal-row-link");
+    expect(links.length).toBeGreaterThan(0);
+    links.forEach(link => {
+      expect(link).toHaveAttribute("target", "_blank");
+      expect(link).toHaveAttribute("rel", "noopener noreferrer");
+    });
+  });
+
+  it("does not render a navigable href for a non-http(s) stream url", () => {
+    const { container } = renderModal({
+      state: makeState({
+        loaded: true,
+        data: {
+          your_region: [
+            {
+              product_name: "Sketchy",
+              entitlement: "Free",
+              // eslint-disable-next-line no-script-url
+              url: "javascript:alert(1)",
+            },
+          ],
+        },
+      }),
+    });
+    const link = container.querySelector(".watch-live-modal-row-link");
+    expect(link).toBeInTheDocument();
+    expect(link.getAttribute("href")).toBe("");
+  });
+
   describe("entitlement label mapping", () => {
     it("maps a known entitlement string (case-insensitive) to a Fluent id", () => {
       const { container } = renderModal({

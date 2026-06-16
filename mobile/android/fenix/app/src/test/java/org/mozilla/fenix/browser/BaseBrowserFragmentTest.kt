@@ -37,7 +37,6 @@ import org.mozilla.fenix.components.toolbar.BrowserToolbarComposable
 import org.mozilla.fenix.components.toolbar.ToolbarContainerView
 import org.mozilla.fenix.components.toolbar.ToolbarPosition
 import org.mozilla.fenix.ext.components
-import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.utils.Settings
 import kotlin.test.assertNotNull
 
@@ -62,7 +61,7 @@ class BaseBrowserFragmentTest {
             testContext.components.core.geckoRuntime.isInteractiveWidgetDefaultResizesVisual
         } returns false
         every { testContext.components.settings } returns settings
-        every { testContext.settings() } returns settings
+        every { testContext.components.settings } returns settings
         every { fragment.isAdded } returns true
         every { fragment.activity } returns mockk()
         every { fragment.context } returns testContext
@@ -293,8 +292,8 @@ class BaseBrowserFragmentTest {
 
     @Test
     fun `WHEN isMicrosurveyEnabled and isExperimentationEnabled are true GIVEN a call to setupMicrosurvey THEN messagingFeature is initialized`() {
-        every { testContext.settings().isExperimentationEnabled } returns true
-        every { testContext.settings().microsurveyFeatureEnabled } returns true
+        every { testContext.components.settings.isExperimentationEnabled } returns true
+        every { testContext.components.settings.microsurveyFeatureEnabled } returns true
 
         assertNull(fragment.messagingFeatureMicrosurvey.get())
 
@@ -305,8 +304,8 @@ class BaseBrowserFragmentTest {
 
     @Test
     fun `WHEN isMicrosurveyEnabled and isExperimentationEnabled are false GIVEN a call to setupMicrosurvey THEN messagingFeature is not initialized`() {
-        every { testContext.settings().isExperimentationEnabled } returns false
-        every { testContext.settings().microsurveyFeatureEnabled } returns false
+        every { testContext.components.settings.isExperimentationEnabled } returns false
+        every { testContext.components.settings.microsurveyFeatureEnabled } returns false
 
         assertNull(fragment.messagingFeatureMicrosurvey.get())
 
@@ -317,8 +316,8 @@ class BaseBrowserFragmentTest {
 
     @Test
     fun `WHEN isMicrosurveyEnabled is true and isExperimentationEnabled false GIVEN a call to setupMicrosurvey THEN messagingFeature is not initialized`() {
-        every { testContext.settings().isExperimentationEnabled } returns false
-        every { testContext.settings().microsurveyFeatureEnabled } returns true
+        every { testContext.components.settings.isExperimentationEnabled } returns false
+        every { testContext.components.settings.microsurveyFeatureEnabled } returns true
 
         assertNull(fragment.messagingFeatureMicrosurvey.get())
 
@@ -329,8 +328,8 @@ class BaseBrowserFragmentTest {
 
     @Test
     fun `WHEN isMicrosurveyEnabled is false and isExperimentationEnabled true GIVEN a call to setupMicrosurvey THEN messagingFeature is not initialized`() {
-        every { testContext.settings().isExperimentationEnabled } returns true
-        every { testContext.settings().microsurveyFeatureEnabled } returns false
+        every { testContext.components.settings.isExperimentationEnabled } returns true
+        every { testContext.components.settings.microsurveyFeatureEnabled } returns false
 
         assertNull(fragment.messagingFeatureMicrosurvey.get())
 

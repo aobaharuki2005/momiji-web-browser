@@ -118,7 +118,6 @@ import org.mozilla.fenix.ext.pixelSizeFor
 import org.mozilla.fenix.ext.requireComponents
 import org.mozilla.fenix.ext.runIfFragmentIsAttached
 import org.mozilla.fenix.ext.setTextColor
-import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.library.LibraryPageFragment
 import org.mozilla.fenix.library.history.HistoryFragmentAction.SearchClicked
 import org.mozilla.fenix.library.history.HistoryFragmentAction.SearchDismissed
@@ -289,6 +288,7 @@ class HistoryFragment :
 
         CoroutineScope(Dispatchers.Main).allowUndo(
             view = requireActivity().getRootView()!!,
+            settings = requireComponents.settings,
             message = getMultiSelectSnackBarMessage(items),
             undoActionTitle = getString(R.string.snackbar_deleted_undo),
             onCancel = {

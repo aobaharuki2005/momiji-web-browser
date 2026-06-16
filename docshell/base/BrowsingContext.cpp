@@ -76,6 +76,7 @@
 #include "nsIURIFixup.h"
 #include "nsIXULRuntime.h"
 
+#include "mozilla/dom/WorkerCommon.h"
 #include "nsDocShell.h"
 #include "nsDocShellLoadState.h"
 #include "nsFocusManager.h"
@@ -86,6 +87,7 @@
 #include "nsISHistory.h"
 #include "nsJSUtils.h"
 #include "nsContentUtils.h"
+#include "nsPIDOMWindowInlines.h"
 #include "nsQueryObject.h"
 #include "nsSandboxFlags.h"
 #include "nsScreen.h"
@@ -3838,6 +3840,8 @@ void BrowsingContext::DidSet(FieldIndex<IDX_TimezoneOverride>,
                              nsString&& aOldValue) {
   MOZ_ASSERT(IsTop());
 
+  const nsString& timezoneOverride = GetTimezoneOverride();
+
   PreOrderWalk([&](BrowsingContext* aBrowsingContext) {
     if (RefPtr<WindowContext> windowContext =
             aBrowsingContext->GetCurrentWindowContext()) {
@@ -3847,12 +3851,16 @@ void BrowsingContext::DidSet(FieldIndex<IDX_TimezoneOverride>,
             nsGlobalWindowInner::Cast(window)->GetGlobalJSObject();
         JS::Realm* realm = JS::GetObjectRealmOrNull(global);
 
-        if (GetTimezoneOverride().IsEmpty()) {
+        if (timezoneOverride.IsEmpty()) {
           JS::SetRealmTimezoneOverride(realm, nullptr);
         } else {
           JS::SetRealmTimezoneOverride(
-              realm, NS_ConvertUTF16toUTF8(GetTimezoneOverride()).get());
+              realm, NS_ConvertUTF16toUTF8(timezoneOverride).get());
         }
+
+        UpdateTimezoneOverrideForWorkers(*window, timezoneOverride);
+        nsGlobalWindowInner::Cast(window)->UpdateSharedWorkerTimezoneOverride(
+            timezoneOverride);
       }
     }
   });

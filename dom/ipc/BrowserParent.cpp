@@ -1398,7 +1398,7 @@ IPCResult BrowserParent::RecvNewWindowGlobal(
 
   // Construct our new WindowGlobalParent, bind, and initialize it.
   RefPtr<WindowGlobalParent> wgp =
-      WindowGlobalParent::CreateDisconnected(aInit);
+      WindowGlobalParent::CreateDisconnected(aInit, Manager());
   BindPWindowGlobalEndpoint(std::move(aEndpoint), wgp);
   wgp->Init();
   return IPC_OK();

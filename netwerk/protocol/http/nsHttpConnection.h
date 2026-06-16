@@ -125,6 +125,11 @@ class nsHttpConnection final : public HttpConnectionBase,
 
   nsresult HandshakeError() const { return mHandshakeError; }
 
+  // Forwarded from TlsHandshaker on CertificateRequest / its resolution;
+  // HappyEyeballsTransaction uses these to pause around the cert dialog.
+  void OnClientAuthCertificateRequested();
+  void OnClientAuthCertificateSelected();
+
   // Retry ECH config captured at TLS handshake error time. Cached because the
   // NSS SSL state is no longer queryable by HE's failed-connection callback.
   const nsACString& CachedRetryEchConfig() const { return mRetryEchConfig; }

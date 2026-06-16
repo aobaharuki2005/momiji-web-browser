@@ -13,7 +13,7 @@ import androidx.sqlite.db.SupportSQLiteDatabase
  * Internal database for storing data for the Tab Group feature.
  **/
 @Database(
-    entities = [StoredTabGroup::class, TapGroupAssignment::class],
+    entities = [StoredTabGroup::class, TabGroupAssignment::class],
     version = 2,
 )
 internal abstract class TabGroupDatabase : RoomDatabase() {

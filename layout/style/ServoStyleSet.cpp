@@ -789,7 +789,8 @@ bool ServoStyleSet::GeneratedContentPseudoExists(
   }
   if (type == PseudoStyleType::Before || type == PseudoStyleType::After ||
       type == PseudoStyleType::Marker || type == PseudoStyleType::Backdrop ||
-      type == PseudoStyleType::Checkmark) {
+      type == PseudoStyleType::Checkmark ||
+      type == PseudoStyleType::PickerIcon) {
     // display:none is equivalent to not having a pseudo at all.
     if (aPseudoStyle.StyleDisplay()->mDisplay == StyleDisplay::None) {
       return false;

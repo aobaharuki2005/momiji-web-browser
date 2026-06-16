@@ -70,7 +70,9 @@ import { scrollList } from "../../utils/result-list";
 import { updateEditorSizeCssVariables } from "../../utils/ui";
 
 const { debounce } = require("resource://devtools/shared/debounce.js");
+const { throttle } = require("resource://devtools/shared/throttle.js");
 const classnames = require("resource://devtools/client/shared/classnames.js");
+const SourceEditor = require("resource://devtools/client/shared/sourceeditor/editor.js");
 
 const { appinfo } = Services;
 const isMacOS = appinfo.OS === "Darwin";
@@ -123,6 +125,7 @@ class Editor extends PureComponent {
       selectLocation: PropTypes.func.isRequired,
       showEditorContextMenu: PropTypes.func.isRequired,
       showEditorGutterContextMenu: PropTypes.func.isRequired,
+      updateStyleSheetContent: PropTypes.func.isRequired,
     };
   }
 
@@ -186,6 +189,20 @@ class Editor extends PureComponent {
   onEditorUpdated = viewUpdate => {
     if (viewUpdate.docChanged || viewUpdate.geometryChanged) {
       updateEditorSizeCssVariables(viewUpdate.view.dom);
+      const { selectedLocation } = this.props;
+      // To make sure we only update when we actually interact with the content in the stylesheet,
+      // we also check that the view has focus and the content changes.
+      if (
+        selectedLocation &&
+        selectedLocation.source.isStyleSheet &&
+        viewUpdate.view.hasFocus &&
+        viewUpdate.docChanged
+      ) {
+        this.updateStyleSheetText(
+          selectedLocation.sourceActor,
+          viewUpdate.state.doc.toString()
+        );
+      }
       this.props.updateViewport();
     } else if (viewUpdate.selectionSet) {
       this.onCursorChange();
@@ -432,6 +449,8 @@ class Editor extends PureComponent {
   }
 
   onEditorScroll = debounce(this.props.updateViewport, 75);
+
+  updateStyleSheetText = throttle(this.props.updateStyleSheetContent, 500);
 
   /*
    * The default Esc command is overridden in the CodeMirror keymap to allow
@@ -693,9 +712,14 @@ class Editor extends PureComponent {
       this.showErrorMessage(value);
       return;
     }
+
+    if (selectedSource.isStyleSheet) {
+      await editor.setMode(SourceEditor.modes.css);
+    }
     await editor.setText(selectedSourceTextContent.value.value, {
       documentId: selectedSource.id,
     });
+    await editor.setReadOnly(!selectedSource.isStyleSheet);
   }
 
   showErrorMessage(msg) {
@@ -929,6 +953,7 @@ const mapDispatchToProps = dispatch => ({
       closeFileSearch: actions.closeFileSearch,
       querySearchWorker: actions.querySearchWorker,
       setSearchOptions: actions.setSearchOptions,
+      updateStyleSheetContent: actions.updateStyleSheetContent,
     },
     dispatch
   ),

@@ -1382,8 +1382,14 @@ void CodeGenerator::visitMathF(LMathF* ins) {
 }
 
 void CodeGenerator::visitTruncateDToInt32(LTruncateDToInt32* ins) {
-  emitTruncateDouble(ToFloatRegister(ins->input()), ToRegister(ins->output()),
-                     ins->mir());
+  // Directly call fcvtmod.w.d if available to avoid generating unused OOL code
+  // in emitTruncateDouble.
+  if (MacroAssembler::HasZfaExtension()) {
+    masm.fcvtmod_w_d(ToRegister(ins->output()), ToFloatRegister(ins->input()));
+  } else {
+    emitTruncateDouble(ToFloatRegister(ins->input()), ToRegister(ins->output()),
+                       ins->mir());
+  }
 }
 
 void CodeGenerator::visitTruncateFToInt32(LTruncateFToInt32* ins) {
@@ -1393,8 +1399,14 @@ void CodeGenerator::visitTruncateFToInt32(LTruncateFToInt32* ins) {
 
 void CodeGenerator::visitWasmBuiltinTruncateDToInt32(
     LWasmBuiltinTruncateDToInt32* ins) {
-  emitTruncateDouble(ToFloatRegister(ins->input()), ToRegister(ins->output()),
-                     ins->mir());
+  // Directly call fcvtmod.w.d if available to avoid generating unused OOL code
+  // in emitTruncateDouble.
+  if (MacroAssembler::HasZfaExtension()) {
+    masm.fcvtmod_w_d(ToRegister(ins->output()), ToFloatRegister(ins->input()));
+  } else {
+    emitTruncateDouble(ToFloatRegister(ins->input()), ToRegister(ins->output()),
+                       ins->mir());
+  }
 }
 
 void CodeGenerator::visitWasmBuiltinTruncateFToInt32(

@@ -23,6 +23,7 @@
 #include "nsISubstitutingProtocolHandler.h"
 #include "nsLiteralString.h"
 #include "nsNetUtil.h"
+#include "nsPIDOMWindowInlines.h"
 #include "nsPrintfCString.h"
 
 namespace mozilla {

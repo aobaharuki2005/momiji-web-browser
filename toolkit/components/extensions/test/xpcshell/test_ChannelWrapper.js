@@ -52,6 +52,8 @@ const EXPECTATION_BASIC_FETCH = {
   canModify: true,
   frameId: 0, // Top-level frame.
   parentFrameId: -1,
+  documentInnerWindowId: EXPECT_TRUTHY,
+  parentDocumentInnerWindowId: 0, // Top-level frame has no parent document.
   browserElement: EXPECT_TRUTHY,
   frameAncestors: [], // Top-level frame does not have ancestors.
   urlClassification: {
@@ -109,6 +111,8 @@ const EXPECTATION_INVALID_CHANNEL = {
   canModify: false,
   frameId: 0,
   parentFrameId: -1,
+  documentInnerWindowId: 0,
+  parentDocumentInnerWindowId: 0,
   browserElement: EXPECT_FALSEY,
   frameAncestors: null,
   urlClassification: {
@@ -403,6 +407,8 @@ add_task(async function ChannelWrapper_https_url() {
     documentURL: "", // triggeringPrincipal is null principal in createChannel.
     originURI: null,
     documentURI: null,
+    documentInnerWindowId: 0, // simulated load not associated with a document.
+    parentDocumentInnerWindowId: 0,
     browserElement: null, // simulated load not associated with any <browser>.
     frameAncestors: null, // simulated load not associated with BrowsingContext.
   });

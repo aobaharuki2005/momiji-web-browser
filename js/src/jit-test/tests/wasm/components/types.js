@@ -317,22 +317,29 @@ wasmValidateText(`
 `);
 
 // ----------------------------------------------------------------------------
-// Own and borrow types (resources not supported per plan)
-// TODO(wasm-cm): Resource type parsing (0x3f) not yet implemented
+// Own and borrow types
 
-wasmFailValidateText(`
+wasmValidateText(`
 (component
   (type (resource (rep i32)))
   (type (own 0))
+  (type (borrow 0))
 )
-`, /unexpected type/);
+`);
 
 wasmFailValidateText(`
 (component
-  (type (resource (rep i32)))
+  (type s32)
+  (type (own 0))
+)
+`, /not a resource type/);
+
+wasmFailValidateText(`
+(component
+  (type s32)
   (type (borrow 0))
 )
-`, /unexpected type/);
+`, /not a resource type/);
 
 // ----------------------------------------------------------------------------
 // Func types
@@ -597,3 +604,344 @@ wasmValidateText(`
   (type (func (param "x" 1) (param "y" 2) (result 0)))
 )
 `);
+
+// ----------------------------------------------------------------------------
+// Value type equality (using the ascribed externdesc on exports to trigger a
+// structural equality check)
+
+function assertValTypesEqual(preamble, valTypes) {
+  let body = "";
+  for (let i = 0; i < valTypes.length; i++) {
+    body += `(type $__t${i} (func (param "x" ${valTypes[i]})))\n`;
+  }
+  for (let i = 0; i < valTypes.length; i++) {
+    body += `(import "import-f${i}" (func $__f${i} (type $__t${i})))\n`;
+  }
+  for (let i = 0; i < valTypes.length; i++) {
+    for (let j = 0; j < valTypes.length; j++) {
+      body += `(export "export-f${i}-t${j}" (func $__f${i}) (func (type $__t${j})))\n`;
+    }
+  }
+
+  wasmValidateText(`(component
+    ${preamble}
+    ${body}
+  )`);
+}
+
+function assertValTypesUnequal(preamble, valTypes) {
+  for (let i = 0; i < valTypes.length; i++) {
+    for (let j = 0; j < valTypes.length; j++) {
+      if (i == j) {
+        continue;
+      }
+
+      function test(a, b) {
+        wasmFailValidateText(`(component
+          ${preamble}
+          (type $__t${a} (func (param "x" ${valTypes[a]})))
+          (type $__t${b} (func (param "x" ${valTypes[b]})))
+          (import "import-f${a}" (func $__f${a} (type $__t${a})))
+          (import "import-f${b}" (func $__f${b} (type $__t${b})))
+          (export "export-f${a}-t${b}" (func $__f${a}) (func (type $__t${b})))
+        )`, /did not match explicitly-provided type/);
+      }
+      test(i, j);
+      test(j, i);
+    }
+  }
+}
+
+// Primitives
+const PRIMITIVES = [
+  "bool", "s8", "u8", "s16", "u16", "s32", "u32",
+  "s64", "u64", "f32", "f64", "char", "string",
+];
+for (const p of PRIMITIVES) {
+  assertValTypesEqual(`(type ${p})`, [p, "0"]);
+}
+assertValTypesUnequal(``, PRIMITIVES);
+assertValTypesUnequal(
+  PRIMITIVES.map(p => `(type ${p})`).join("\n"),
+  PRIMITIVES.map((_, i) => `${i}`),
+);
+
+// Records
+assertValTypesEqual(`
+  (type s32)
+  (type string)
+  (type $a (record (field "a" s32) (field "b" string)))
+  (type $b (record (field "a" s32) (field "b" string)))
+  (type $c (record (field "a" 0) (field "b" string)))
+  (type $d (record (field "a" s32) (field "b" 1)))
+  (type $e (record (field "a" 0) (field "b" 1)))
+`, ["$a", "$b", "$c", "$d", "$e"]);
+assertValTypesUnequal(`
+  (type $a (record (field "a" s32) (field "b" string)))
+  (type $b (record (field "a" s32) (field "c" string)))
+  (type $c (record (field "c" s32) (field "b" string)))
+  (type $d (record (field "a" s64) (field "b" string)))
+  (type $e (record (field "a" s32) (field "b" char)))
+  (type $f (record (field "a" s32)))
+  (type $g (variant (case "a" s32)))
+  (type $h s32)
+`, ["$a", "$b", "$c", "$d", "$e", "$f", "$g", "$h"]);
+
+// Variants
+assertValTypesEqual(`
+  (type s32)
+  (type string)
+  (type $a (variant (case "ok" s32) (case "err" string)))
+  (type $b (variant (case "ok" s32) (case "err" string)))
+  (type $c (variant (case "ok" 0) (case "err" string)))
+  (type $d (variant (case "ok" s32) (case "err" 1)))
+  (type $e (variant (case "ok" 0) (case "err" 1)))
+`, ["$a", "$b", "$c", "$d", "$e"]);
+assertValTypesEqual(`
+  (type $a (variant (case "none") (case "some" s32)))
+  (type $b (variant (case "none") (case "some" s32)))
+`, ["$a", "$b"]);
+assertValTypesUnequal(`
+  (type $a (variant (case "ok" s32) (case "err" string)))
+  (type $b (variant (case "ok" s32) (case "fail" string)))
+  (type $c (variant (case "err" s32) (case "ok" string)))
+  (type $d (variant (case "ok" s64) (case "err" string)))
+  (type $e (variant (case "ok" s32) (case "err" char)))
+  (type $f (variant (case "ok" s32)))
+  (type $g (variant (case "ok" s32) (case "err" string) (case "extra" u32)))
+  (type $h (variant (case "ok") (case "err" string)))
+  (type $i (variant (case "ok" s32) (case "err")))
+  (type $j (record (field "ok" s32) (field "err" string)))
+  (type $k s32)
+`, ["$a", "$b", "$c", "$d", "$e", "$f", "$g", "$h", "$i", "$j", "$k"]);
+
+// Lists
+assertValTypesEqual(`
+  (type s32)
+  (type $a (list s32))
+  (type $b (list s32))
+  (type $c (list 0))
+`, ["$a", "$b", "$c"]);
+assertValTypesUnequal(`
+  (type $a (list s32))
+  (type $b (list u32))
+  (type $c (list string))
+  (type $d (list (list s32)))
+  (type $e (tuple s32))
+  (type $f s32)
+`, ["$a", "$b", "$c", "$d", "$e", "$f"]);
+
+// Tuples
+assertValTypesEqual(`
+  (type s32)
+  (type string)
+  (type $a (tuple s32 string))
+  (type $b (tuple s32 string))
+  (type $c (tuple 0 string))
+  (type $d (tuple s32 1))
+  (type $e (tuple 0 1))
+`, ["$a", "$b", "$c", "$d", "$e"]);
+assertValTypesUnequal(`
+  (type $a (tuple s32 string))
+  (type $b (tuple string s32))
+  (type $c (tuple s32))
+  (type $d (tuple s32 string s32))
+  (type $e (tuple s32 char))
+  (type $f (tuple s64 string))
+  (type $g (record (field "a" s32) (field "b" string)))
+  (type $h (list s32))
+`, ["$a", "$b", "$c", "$d", "$e", "$f", "$g", "$h"]);
+
+// Flags
+assertValTypesEqual(`
+  (type $a (flags "read" "write" "execute"))
+  (type $b (flags "read" "write" "execute"))
+`, ["$a", "$b"]);
+assertValTypesUnequal(`
+  (type $a (flags "read" "write" "execute"))
+  (type $b (flags "write" "read" "execute"))
+  (type $c (flags "read" "write"))
+  (type $d (flags "read" "write" "execute" "delete"))
+  (type $e (flags "read" "write" "exec"))
+  (type $f (enum "read" "write" "execute"))
+`, ["$a", "$b", "$c", "$d", "$e", "$f"]);
+
+// Enums
+assertValTypesEqual(`
+  (type $a (enum "red" "green" "blue"))
+  (type $b (enum "red" "green" "blue"))
+`, ["$a", "$b"]);
+assertValTypesUnequal(`
+  (type $a (enum "red" "green" "blue"))
+  (type $b (enum "green" "red" "blue"))
+  (type $c (enum "red" "green"))
+  (type $d (enum "red" "green" "blue" "yellow"))
+  (type $e (enum "red" "green" "violet"))
+  (type $f (flags "red" "green" "blue"))
+`, ["$a", "$b", "$c", "$d", "$e", "$f"]);
+
+// Options
+assertValTypesEqual(`
+  (type s32)
+  (type $a (option s32))
+  (type $b (option s32))
+  (type $c (option 0))
+`, ["$a", "$b", "$c"]);
+assertValTypesUnequal(`
+  (type $a (option s32))
+  (type $b (option u32))
+  (type $c (option string))
+  (type $d (option (option s32)))
+  (type $e (list s32))
+  (type $f s32)
+`, ["$a", "$b", "$c", "$d", "$e", "$f"]);
+
+// Results
+assertValTypesEqual(`
+  (type s32)
+  (type string)
+  (type $a (result s32 (error string)))
+  (type $b (result s32 (error string)))
+  (type $c (result 0 (error string)))
+  (type $d (result s32 (error 1)))
+  (type $e (result 0 (error 1)))
+`, ["$a", "$b", "$c", "$d", "$e"]);
+assertValTypesEqual(`
+  (type $a (result s32))
+  (type $b (result s32))
+`, ["$a", "$b"]);
+assertValTypesEqual(`
+  (type $a (result (error string)))
+  (type $b (result (error string)))
+`, ["$a", "$b"]);
+assertValTypesEqual(`
+  (type $a (result))
+  (type $b (result))
+`, ["$a", "$b"]);
+assertValTypesUnequal(`
+  (type $a (result s32 (error string)))
+  (type $b (result u32 (error string)))
+  (type $c (result s32 (error char)))
+  (type $d (result s32))
+  (type $e (result (error string)))
+  (type $f (result))
+  (type $g (variant (case "ok" s32) (case "error" string)))
+`, ["$a", "$b", "$c", "$d", "$e", "$f", "$g"]);
+
+// Own / borrow
+//
+// Resource types are generative: each (resource ...) introduces a fresh
+// type, so two distinct resource definitions yield distinct (own/borrow)
+// types even when their representations are identical.
+assertValTypesEqual(`
+  (type $R (resource (rep i32)))
+  (type $a (own $R))
+  (type $b (own $R))
+`, ["$a", "$b"]);
+assertValTypesEqual(`
+  (type $R (resource (rep i32)))
+  (type $a (borrow $R))
+  (type $b (borrow $R))
+`, ["$a", "$b"]);
+assertValTypesUnequal(`
+  (type $R1 (resource (rep i32)))
+  (type $R2 (resource (rep i32)))
+  (type $a (own $R1))
+  (type $b (own $R2))
+  (type $c (borrow $R1))
+  (type $d (borrow $R2))
+`, ["$a", "$b", "$c", "$d"]);
+
+// ----------------------------------------------------------------------------
+// Recursive (nested) type equality
+
+// Record nested in record.
+assertValTypesEqual(`
+  (type s32)
+  (type $inner (record (field "x" s32) (field "y" s32)))
+  (type $a (record (field "p" $inner) (field "q" s32)))
+  (type $b (record (field "p" (record (field "x" s32) (field "y" s32))) (field "q" s32)))
+  (type $c (record (field "p" (record (field "x" 0) (field "y" 0))) (field "q" 0)))
+`, ["$a", "$b", "$c"]);
+assertValTypesUnequal(`
+  (type $a (record (field "p" (record (field "x" s32) (field "y" s32)))))
+  (type $b (record (field "p" (record (field "x" s32) (field "y" u32)))))
+  (type $c (record (field "p" (record (field "x" s32) (field "z" s32)))))
+  (type $d (record (field "p" (record (field "x" s32)))))
+  (type $e (record (field "q" (record (field "x" s32) (field "y" s32)))))
+`, ["$a", "$b", "$c", "$d", "$e"]);
+
+// Variant nested in variant.
+assertValTypesEqual(`
+  (type $inner (variant (case "yes" s32) (case "no")))
+  (type $a (variant (case "got" $inner) (case "lost")))
+  (type $b (variant (case "got" (variant (case "yes" s32) (case "no"))) (case "lost")))
+`, ["$a", "$b"]);
+assertValTypesUnequal(`
+  (type $a (variant (case "got" (variant (case "yes" s32) (case "no")))))
+  (type $b (variant (case "got" (variant (case "yes" u32) (case "no")))))
+  (type $c (variant (case "got" (variant (case "yes" s32) (case "nope")))))
+  (type $d (variant (case "got" (variant (case "yes" s32)))))
+  (type $e (variant (case "got" (variant (case "yes") (case "no")))))
+`, ["$a", "$b", "$c", "$d", "$e"]);
+
+// Cross-kind: variant inside record, result inside variant inside record.
+assertValTypesEqual(`
+  (type string)
+  (type $r (result s32 (error string)))
+  (type $v (variant (case "value" $r) (case "none")))
+  (type $a (record (field "outcome" $v) (field "label" string)))
+  (type $b (record (field "outcome" (variant (case "value" (result s32 (error string))) (case "none"))) (field "label" string)))
+`, ["$a", "$b"]);
+assertValTypesUnequal(`
+  (type $a (record (field "outcome" (variant (case "value" (result s32 (error string))) (case "none")))))
+  (type $b (record (field "outcome" (variant (case "value" (result u32 (error string))) (case "none")))))
+  (type $c (record (field "outcome" (variant (case "value" (result s32 (error char))) (case "none")))))
+  (type $d (record (field "outcome" (variant (case "value" (result s32)) (case "none")))))
+  (type $e (record (field "outcome" (variant (case "VALUE" (result s32 (error string))) (case "none")))))
+`, ["$a", "$b", "$c", "$d", "$e"]);
+
+// List of records, tuple of variants, option of result.
+assertValTypesEqual(`
+  (type $point (record (field "x" f64) (field "y" f64)))
+  (type $a (list $point))
+  (type $b (list (record (field "x" f64) (field "y" f64))))
+`, ["$a", "$b"]);
+assertValTypesUnequal(`
+  (type $a (list (record (field "x" f64) (field "y" f64))))
+  (type $b (list (record (field "x" f64) (field "y" f32))))
+  (type $c (list (record (field "x" f64))))
+  (type $d (list (record (field "a" f64) (field "b" f64))))
+`, ["$a", "$b", "$c", "$d"]);
+
+assertValTypesEqual(`
+  (type $v (variant (case "a" s32) (case "b")))
+  (type $a (tuple $v $v))
+  (type $b (tuple (variant (case "a" s32) (case "b")) (variant (case "a" s32) (case "b"))))
+`, ["$a", "$b"]);
+
+assertValTypesEqual(`
+  (type $r (result s32 (error string)))
+  (type $a (option $r))
+  (type $b (option (result s32 (error string))))
+`, ["$a", "$b"]);
+assertValTypesUnequal(`
+  (type $a (option (result s32 (error string))))
+  (type $b (option (result u32 (error string))))
+  (type $c (option (result s32 (error char))))
+  (type $d (option (result s32)))
+`, ["$a", "$b", "$c", "$d"]);
+
+// Deeply nested: record { data: tuple( list(variant), option(record) ) }.
+assertValTypesEqual(`
+  (type $v (variant (case "a" s32) (case "b")))
+  (type $inner (record (field "n" u32)))
+  (type $a (record (field "data" (tuple (list $v) (option $inner)))))
+  (type $b (record (field "data" (tuple (list (variant (case "a" s32) (case "b"))) (option (record (field "n" u32)))))))
+`, ["$a", "$b"]);
+assertValTypesUnequal(`
+  (type $a (record (field "data" (tuple (list (variant (case "a" s32) (case "b"))) (option (record (field "n" u32)))))))
+  (type $b (record (field "data" (tuple (list (variant (case "a" s32) (case "b"))) (option (record (field "n" u64)))))))
+  (type $c (record (field "data" (tuple (list (variant (case "a" u32) (case "b"))) (option (record (field "n" u32)))))))
+  (type $d (record (field "data" (tuple (list (variant (case "a" s32))) (option (record (field "n" u32)))))))
+`, ["$a", "$b", "$c", "$d"]);

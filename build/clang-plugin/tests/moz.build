@@ -13,6 +13,7 @@ SOURCES += [
     "TestDanglingOnTemporary.cpp",
     "TestEnumSerializer.cpp",
     "TestExplicitOperatorBool.cpp",
+    "TestFinalCycleCollectingIsupports.cpp",
     "TestGlobalClass.cpp",
     "TestGlobalVariableInitialization.cpp",
     "TestHeapClass.cpp",

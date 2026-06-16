@@ -31,6 +31,127 @@ newtab-card-dismiss-button =
     .title = Ignorar
     .aria-label = Ignorar
 
+## Strings for "Homepage" and "Firefox Home" sections of about:settings#home.
+## Homepage panel
+
+home-homepage-title =
+    .label = Pagina initial
+home-homepage-new-windows =
+    .label = Nove fenestras
+home-homepage-new-tabs =
+    .label = Nove schedas
+# This option leads to the "Custom Homepage" subpage
+home-homepage-custom-homepage-button =
+    .label = Eliger un sito specific
+
+## Custom URLs subpage
+
+# Subheader on the Custom Homepage subpage. Followed by a form to enter URLs and a list of URLs already saved, if any.
+home-custom-homepage-card-header =
+    .label = Adresse(s) de sito web
+home-custom-homepage-address =
+    .placeholder = Insere adresse
+home-custom-homepage-address-button =
+    .label = Adder adresse
+# Shown when no custom websites/URLs to use as a homepage have been added yet
+home-custom-homepage-no-results =
+    .label = Necun sito web ancora addite
+home-custom-homepage-delete-address-button =
+    .aria-label = Deler adresse
+    .title = Deler adresse
+# Further options to use when setting the home page. Two action buttons are placed in line with this prompt
+# to replace the current home page with a currently open page or bookmark.
+home-custom-homepage-replace-with-prompt =
+    .label = Substituer con
+# Button that appears in-line after text "Replace with" (home-custom-homepage-replace-with-prompt)
+home-custom-homepage-current-pages-button =
+    .label = Paginas actualmente aperte
+# Button that appears in-line after text "Replace with" (home-custom-homepage-replace-with-prompt)
+home-custom-homepage-bookmarks-button =
+    .label = Marcapaginas…
+
+## Firefox Home content
+
+home-prefs-content-header =
+    .label = { -firefox-home-brand-name }
+home-prefs-search-header2 =
+    .label = Cercar
+home-prefs-stories-header2 =
+    .label = Historias
+    .description = Contento exceptional curate per le familia de { -brand-product-name }
+home-prefs-widgets-header =
+    .label = Widgets
+# Lists is a widget on New Tab, similar to a to-do widget
+home-prefs-lists-header =
+    .label = Listas
+# Timer is a widget on New Tab, similar to the Pomodoro timer.
+home-prefs-timer-header =
+    .label = Temporisator
+# Sports is a widget on New Tab showing sports scores and schedules.
+home-prefs-sports-widget-header =
+    .label = Sports
+# Clock is a widget on New Tab that displays time zones around the world.
+home-prefs-clocks-header =
+    .label = Horologio
+home-prefs-mission-message2 =
+    .message = Nostre patrocinatores supporta nostre mission pro construer un web melior.
+home-prefs-manage-topics-link2 =
+    .label = Gerer topicos
+home-prefs-choose-wallpaper-link2 =
+    .label = Eliger un fundo de schermo
+home-prefs-firefox-logo-header =
+    .label = Logo de { -brand-short-name }
+# Informational message bar that appears in the Firefox Home section when the options are disabled.
+# The user must select Firefox Home as their homepage for either new tabs or new windows to enable
+# the features in settings.
+home-prefs-firefox-home-disabled-notice =
+    .message = Pro usar iste functionalitates, predefini nove schedas o nove fenestras pro { -firefox-home-brand-name }.
+# Variables:
+#   $num (number) - Number of rows displayed
+home-prefs-sections-rows-option-srd =
+    .label =
+        { $num ->
+            [one] { $num } linea
+           *[other] { $num } lineas
+        }
+# Dropdown option shown when an extension replaces the contents of new windows or tabs.
+# Variables:
+#   $extension (string) - Name of the extension
+home-prefs-homepage-extension-option =
+    .label = Extension ({ $extension })
+home-restore-defaults-srd =
+    .label = Restaurar le predefinitiones
+    .accesskey = R
+home-mode-choice-default-fx-srd =
+    .label = { -firefox-home-brand-name } (predefinite)
+home-mode-choice-custom-srd =
+    .label = URLs personalisate...
+home-mode-choice-blank-srd =
+    .label = Pagina vacue
+home-prefs-shortcuts-header-srd =
+    .label = Accessos directe
+home-prefs-shortcuts-select =
+    .aria-label = Accessos directe
+home-prefs-shortcuts-by-option-sponsored-srd =
+    .label = Accessos directe sponsorisate
+home-prefs-recommended-by-option-sponsored-stories-srd =
+    .label = Articulos sponsorisate
+home-prefs-highlights-option-visited-pages-srd =
+    .label = Paginas visitate
+home-prefs-highlights-options-bookmarks-srd =
+    .label = Marcapaginas
+home-prefs-highlights-option-most-recent-download-srd =
+    .label = Ultime discargamento
+home-prefs-recent-activity-header-srd =
+    .label = Recente activitate
+home-prefs-recent-activity-select =
+    .aria-label = Recente activitate
+home-prefs-weather-header-srd =
+    .label = Meteo
+home-prefs-support-firefox-header-srd =
+    .label = Supporta { -brand-product-name }
+home-prefs-mission-message-learn-more-link-srd = Discoperi como
+
 ## Search box component.
 
 # "Search" is a verb/action
@@ -151,6 +272,8 @@ newtab-menu-section-block = Blocar
 # "Follow", "unfollow", and "following" are social media terms that refer to subscribing to or unsubscribing from a section of stories.
 # e.g. Following the travel section of stories.
 newtab-menu-section-unfollow-topic = Non plus sequer
+# Context menu option to open a support page explaining the New Tab personalization features and privacy controls.
+newtab-menu-section-learn-more = Pro saper plus
 # "Follow", "unfollow", and "following" are social media terms that refer to subscribing to or unsubscribing from a section of stories.
 # e.g. Following the travel section of stories.
 newtab-menu-section-unfollow = Non plus sequer le argumento
@@ -754,8 +877,6 @@ newtab-widget-lists-button-add-item = Adder un elemento
 newtab-widget-lists-input-add-an-item2 =
     .placeholder = Adder un elemento
     .aria-label = Adder un elemento
-newtab-widget-lists-input-add-an-item =
-    .placeholder = Adder un elemento
 newtab-widget-lists-input-error = Include texto pro adder un elemento.
 newtab-widget-lists-input-menu-open-link = Aperir ligamine
 newtab-widget-lists-input-menu-move-up = Mover in alto
@@ -783,11 +904,6 @@ newtab-widget-lists-name-placeholder-checklist2 =
 newtab-widget-lists-name-placeholder-new2 =
     .placeholder = Nove lista
     .aria-label = Modificar le nomine del lista
-newtab-widget-lists-name-placeholder-checklist =
-    .placeholder = Lista de verification
-# The placeholder value of the name field for a newly created list
-newtab-widget-lists-name-placeholder-new =
-    .placeholder = Nove lista
 newtab-widget-section-title = Widgets
 newtab-widget-menu-hide = Celar widget
 newtab-widget-menu-change-size = Cambiar dimension
@@ -823,6 +939,14 @@ newtab-widget-section-menu-manage = Gerer widgets
 newtab-widget-section-menu-hide-all = Celar widgets
 newtab-widget-section-menu-learn-more = Pro saper plus
 newtab-widget-section-feedback = Conta nos lo que que tu pensa
+# Button shown when additional widgets are hidden beyond the
+# first row, allowing users to show them.
+newtab-widget-section-show-more =
+    .label = Monstrar altere widgets
+# Button shown when the widgets row is expanded to multiple rows,
+# allowing users to collapse it back to one row.
+newtab-widget-section-show-less =
+    .label = Monstrar minus widgets
 newtab-widget-lists-name-default = Lista de verification
 
 ## Strings introduced by the Nova redesign of the Timer widget
@@ -1041,7 +1165,31 @@ newtab-sports-widget-world-cup-champions = Campiones de Cuppa del mundo 2026
 #   $date (Date) - The match start time
 newtab-sports-widget-match-time = { DATETIME($date, hour: "2-digit", minute: "2-digit") }
 newtab-sports-widget-match-full-time = Incontro terminate
+newtab-sports-widget-match-halftime = Intervallo
+newtab-sports-widget-match-extra-time = Prorogation
 newtab-sports-widget-match-penalties = Penalties
+# Separator shown between two teams in a placeholder match row when no upcoming
+# match details are available yet.
+newtab-sports-widget-match-vs = contra
+# Note shown in the Upcoming tab when no match details are available yet.
+newtab-sports-widget-no-upcoming-matches = Resta syntonisate pro le detalios del matches imminente
+
+## Sports widget live-games pagination. Shown when 2+ matches are live at the same time
+
+# arrow button that goes to the previous page of live matches.
+newtab-sports-widget-pagination-previous =
+    .aria-label = Previe
+    .title = Previe
+# arrow button that goes to the next page of live matches.
+newtab-sports-widget-pagination-next =
+    .aria-label = Sequente
+    .title = Sequente
+# Dot indicator that jumps directly to a given live match.
+# $index (number) - 1-based position of this dot in the list.
+# $total (number) - Total number of live matches.
+newtab-sports-widget-pagination-dot =
+    .aria-label = Match in vivo { $index } sur { $total }
+    .title = Match in vivo { $index } sur { $total }
 
 ## Accessible labels for match rows in the sports widget. These are read by
 ## screen readers to announce the match details and status.
@@ -1102,6 +1250,8 @@ newtab-sports-widget-team-name-label-eng =
     .label = Anglaterra
 newtab-sports-widget-team-name-label-sco =
     .label = Scotia
+# Placeholder used in a match row's aria-label for an undecided team (shown visually as "--").
+newtab-sports-widget-team-tbd = A definir
 
 ## Sports widget OMC messages
 ## Shown as on-screen messages promoting the Sports widget and World Cup wallpapers.
