@@ -51,11 +51,7 @@
 #pragma mark - Private
 
 + (BOOL)isMetalAvailable {
-    if(@available(macOS 10.11, *)) {
-        return [MTLCopyAllDevices() count] > 0;
-    } else {
-        return 0;
-    }
+  return [MTLCopyAllDevices() count] > 0;
 }
 
 - (void)configure {

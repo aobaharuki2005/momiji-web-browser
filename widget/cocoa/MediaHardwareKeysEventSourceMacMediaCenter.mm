@@ -235,9 +235,7 @@ void MediaHardwareKeysEventSourceMacMediaCenter::SetMediaMetadata(
             requestHandler:^NSImage* _Nonnull(CGSize aSize) {
               return image;
             }];
-    if(@available(macos 10.13.2, *)) {
-      [nowPlayingInfo setObject:artwork forKey:MPMediaItemPropertyArtwork];
-    }
+    [nowPlayingInfo setObject:artwork forKey:MPMediaItemPropertyArtwork];
     [artwork release];
     [image release];
 
@@ -247,9 +245,7 @@ void MediaHardwareKeysEventSourceMacMediaCenter::SetMediaMetadata(
   }
 
   if (remove) {
-    if(@available(macos 10.13.2, *)) {
-      [nowPlayingInfo removeObjectForKey:MPMediaItemPropertyArtwork];
-    }
+    [nowPlayingInfo removeObjectForKey:MPMediaItemPropertyArtwork];
   }
 
   // The procedure of updating `nowPlayingInfo` is actually an async operation

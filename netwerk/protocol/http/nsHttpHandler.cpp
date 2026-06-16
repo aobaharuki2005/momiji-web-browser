@@ -111,7 +111,6 @@
 
 #if defined(XP_MACOSX)
 #  include <CoreServices/CoreServices.h>
-#  include "nsCocoaFeatures.h"
 #endif
 
 //-----------------------------------------------------------------------------
@@ -1210,8 +1209,7 @@ void nsHttpHandler::InitUserAgentComponents() {
 #  endif
 
 #elif defined(XP_MACOSX)
-   // Always return an "Intel" UA string, even on ARM64 macOS like Safari does.
-   mOscpu = nsPrintfCString("Intel Mac OS X 10.15");
+  mOscpu.AssignLiteral("Intel Mac OS X 10.15");
 #elif defined(ANDROID)
   mOscpu.AssignLiteral("Linux armv81");
 #elif defined(XP_IOS)

@@ -252,7 +252,7 @@ void NativeKeyBindings::GetEditCommands(const WidgetKeyboardEvent& aEvent,
                              modifierFlags:[originalEvent modifierFlags]
                                  timestamp:[originalEvent timestamp]
                               windowNumber:[originalEvent windowNumber]
-                                   context:[originalEvent context]
+                                   context:nil
                                 characters:chars
                charactersIgnoringModifiers:chars
                                  isARepeat:[originalEvent isARepeat]

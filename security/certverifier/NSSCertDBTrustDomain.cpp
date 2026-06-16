@@ -47,10 +47,6 @@
 #include "secder.h"
 #include "secerr.h"
 
-#ifdef MOZ_WIDGET_COCOA
-#  include "nsCocoaFeatures.h"
-#endif
-
 using namespace mozilla;
 using namespace mozilla::ct;
 using namespace mozilla::pkix;

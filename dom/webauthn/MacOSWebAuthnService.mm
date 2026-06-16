@@ -1376,7 +1376,7 @@ MacOSWebAuthnService::GetAutoFillEntriesForRpId(
             credentials) {
         nsTArray<RefPtr<nsIWebAuthnAutoFillEntry>> entries;
         for (NSUInteger i = 0; i < credentials.count; i++) {
-          const auto& credential = [credentials objectAtIndex:i];
+          const auto& credential = credentials[i];
           nsAutoString userName;
           nsCocoaUtils::GetStringForNSString(credential.name, userName);
           nsAutoString credRpId;

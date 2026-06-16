@@ -21,7 +21,7 @@
 // mozjemalloc for its own structures.
 class BaseAlloc {
  public:
-  BaseAlloc() = default;
+  constexpr BaseAlloc() = default;
 
   void Init() MOZ_REQUIRES(gInitLock);
 
@@ -70,10 +70,7 @@ class BaseAlloc {
   // The maximum object size handled by the regular free lists (before
   // deferring to the oversize rbtree).  This should fit arena_t.
   constexpr static base_alloc_size_t kMaxSizeForLists = 4096;
-  /* Momiji notes: Replace std::has_single_bit with a bitwise power-of-2 check */
-  // References: https://claude.ai/share/33de02a1-4894-45a9-96d5-8bbfa75230eb
-  static_assert((kMaxSizeForLists & (kMaxSizeForLists - 1)) == 0);
-  /* EOMN */
+  static_assert(std::has_single_bit(kMaxSizeForLists));
 
   // There are no more than 3 size classes ber cache line. See
   // get_list_index_for_size().

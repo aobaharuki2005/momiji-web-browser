@@ -5,13 +5,16 @@
 #include "chrome/common/mach_ipc_mac.h"
 
 #include "base/logging.h"
+#include "base/message_loop.h"
 #include "base/string_util.h"
 #include "mozilla/GeckoArgs.h"
+#include "mozilla/ipc/IOThread.h"
 #include "mozilla/Result.h"
 #include "mozilla/ResultVariant.h"
 #include "mozilla/ScopeExit.h"
 #include "mozilla/UniquePtrExtensions.h"
 #include "nsDebug.h"
+#include "nsXULAppAPI.h"
 
 #ifdef XP_MACOSX
 #  include <bsm/libbsm.h>
@@ -186,8 +189,10 @@ bool MachChildProcessCheckIn(
 }
 
 //==============================================================================
+namespace {
+
 mozilla::Result<mozilla::Ok, mozilla::ipc::LaunchError>
-MachHandleProcessCheckIn(
+MachHandleProcessCheckInSync(
     mach_port_t endpoint, pid_t child_pid, mach_msg_timeout_t timeout,
     const std::vector<mozilla::UniqueMachSendRight>& send_rights,
     std::vector<mozilla::UniqueMachReceiveRight>& receive_rights,
@@ -237,15 +242,12 @@ MachHandleProcessCheckIn(
     return Err(LaunchError("invalid child process check-in message format"));
   }
 
-  //instead of calling audit_token_to_pid, we simply compare the sixth member
-  //as shown by the openBSM group's patch:
-  //https://github.com/NixOS/nixpkgs/blob/master/pkgs/development/libraries/openbsm/bsm-add-audit_token_to_pid.patch
   // Ensure the message was sent by the newly spawned child process.
-  if (((pid_t) request.trailer.msgh_audit.val[5]) != child_pid) {
+  if (audit_token_to_pid(request.trailer.msgh_audit) != child_pid) {
     CHROMIUM_LOG(ERROR) << "task_t was not sent by child process";
     return Err(LaunchError("audit_token_to_pid"));
-  } 
-  
+  }
+
   // Ensure the task_t corresponds to the newly spawned child process.
   pid_t task_pid = -1;
   kr = pid_for_task(request.data.name, &task_pid);
@@ -290,8 +292,9 @@ MachHandleProcessCheckIn(
   }
 
   // Send the reply.
-  kr = mach_msg(&reply->header, MACH_SEND_MSG, reply->header.msgh_size, 0,
-                MACH_PORT_NULL, MACH_MSG_TIMEOUT_NONE, MACH_PORT_NULL);
+  kr = mach_msg(&reply->header, MACH_SEND_MSG | MACH_SEND_TIMEOUT,
+                reply->header.msgh_size, 0, MACH_PORT_NULL, /* timeout */ 0,
+                MACH_PORT_NULL);
   if (kr != KERN_SUCCESS) {
     // NOTE: The only port which `mach_msg_destroy` would destroy is
     // `header.msgh_remote_port`, which is actually owned by `request`, so we
@@ -313,8 +316,6 @@ MachHandleProcessCheckIn(
   return Ok();
 }
 
-/* sorry nika, it's not working */
-/*
 class MachCheckInListener : public MessageLoopForIO::MachPortWatcher {
  public:
   MachCheckInListener(
@@ -380,7 +381,7 @@ void MachCheckInListener::OnMachMessageReceived(mach_port_t port) {
 
   task_t task = MACH_PORT_NULL;
   auto result = MachHandleProcessCheckInSync(endpoint_.get(), child_pid_,
-                                             0, send_rights_,
+                                             /* timeout */ 0, send_rights_,
                                              receive_rights_, &task);
   CompleteAndDelete(result.map([&](const mozilla::Ok&) { return task; }));
 }
@@ -422,5 +423,5 @@ RefPtr<MachHandleProcessCheckInPromise> MachHandleProcessCheckIn(
       ->Start(timeout);
   return promise;
 }
-*/
+
 #endif

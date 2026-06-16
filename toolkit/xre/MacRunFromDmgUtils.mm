@@ -11,8 +11,8 @@
 #include <sys/mount.h>
 #include <sys/param.h>
 
-#include "MacRunFromDmgUtils.h"
 #include "MacLaunchHelper.h"
+#include "MacRunFromDmgUtils.h"
 
 #include "mozilla/ErrorResult.h"
 #include "mozilla/intl/Localization.h"
@@ -33,6 +33,8 @@
 // For IOKit docs, see:
 // https://developer.apple.com/documentation/iokit
 // https://developer.apple.com/library/archive/documentation/DeviceDrivers/Conceptual/IOKitFundamentals/
+
+using namespace mozilla::MacLaunchHelper;
 
 namespace mozilla::MacRunFromDmgUtils {
 
@@ -259,22 +261,19 @@ static void ShowInstallFailedDialog() {
 #ifdef MOZ_UPDATER
 bool LaunchElevatedDmgInstall(NSString* aBundlePath, NSArray* aArguments) {
   NSTask* task = [[NSTask alloc] init];
+  [task setExecutableURL:[NSURL fileURLWithPath:aBundlePath]];
   if (aArguments) {
     [task setArguments:aArguments];
   }
-  if (@available(macOS 10.13, *)) {
-    [task setExecutableURL:[NSURL fileURLWithPath:aBundlePath]];
-    [task launchAndReturnError:nil];
-  } else {
-    [task setLaunchPath:aBundlePath];
-    [task launch];
-  }
+  [task launchAndReturnError:nil];
+
   bool didSucceed = InstallPrivilegedHelper();
   [task waitUntilExit];
   [task release];
   if (!didSucceed) {
-      AbortElevatedUpdate();
+    AbortElevatedUpdate();
   }
+
   return didSucceed;
 }
 #endif

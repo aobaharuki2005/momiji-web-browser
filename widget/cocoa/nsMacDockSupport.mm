@@ -60,7 +60,7 @@ NS_IMPL_ISUPPORTS(nsMacDockSupport, nsIMacDockSupport, nsITaskbarProgress)
   progressFillRect.size.width *= mFractionValue;
   [NSGraphicsContext saveGraphicsState];
   [NSBezierPath clipRect:progressFillRect];
-  [ControlAccentColor() setFill];
+  [[NSColor controlAccentColor] setFill];
   [path fill];
   [NSGraphicsContext restoreGraphicsState];
 
@@ -324,11 +324,11 @@ NSString* GetPathForApp(NSDictionary* aPersistantApp) {
   if (![aPersistantApp isKindOfClass:[NSDictionary class]]) {
     return nil;
   }
-  NSDictionary* tileData = [aPersistantApp objectForKey:kDockTileDataKey];
+  NSDictionary* tileData = aPersistantApp[kDockTileDataKey];
   if (![tileData isKindOfClass:[NSDictionary class]]) {
     return nil;
   }
-  NSDictionary* fileData = [tileData objectForKey:kDockFileDataKey];
+  NSDictionary* fileData = tileData[kDockFileDataKey];
   if (![fileData isKindOfClass:[NSDictionary class]]) {
     // Some special tiles may not have DockFileData but we can ignore those.
     return nil;
@@ -527,42 +527,25 @@ nsresult nsMacDockSupport::LaunchAppBundle(
     [arguments addObject:mozilla::XPCOMStringToNSString(arg)];
   }
 
-  if (@available(macOS 10.15, *)) {
-    NSWorkspaceOpenConfiguration* config =
-        [NSWorkspaceOpenConfiguration configuration];
-    [config setArguments:arguments];
-    [config setCreatesNewApplicationInstance:YES];
-    [config setEnvironment:[[NSProcessInfo processInfo] environment]];
-    if (aLaunchOptions) {
-      bool val = false;
-      if (NS_SUCCEEDED(aLaunchOptions->GetAddsToRecentItems(&val))) {
-        [config setAddsToRecentItems:val];
-      }
-    }
+  NSWorkspaceOpenConfiguration* config =
+      [NSWorkspaceOpenConfiguration configuration];
+  [config setArguments:arguments];
+  [config setCreatesNewApplicationInstance:YES];
+  [config setEnvironment:[[NSProcessInfo processInfo] environment]];
 
-    [[NSWorkspace sharedWorkspace]
-        openApplicationAtURL:[NSURL fileURLWithPath:launchPath]
-               configuration:config
-           completionHandler:^(NSRunningApplication* aChild, NSError* aError){
-           }];
-  } else {
-    NSError *error=nil;
-    unsigned options = NSWorkspaceLaunchAsync | NSWorkspaceLaunchNewInstance;
-    if (aLaunchOptions) {
-      bool val = false;
-      if (NS_SUCCEEDED(aLaunchOptions->GetAddsToRecentItems(&val))) {
-         if (!val) { //only add to the options line if we DON'T WANT IT TO SHOW in recent items 
-           options |= NSWorkspaceLaunchWithoutAddingToRecents;
-          }
-      }
+  if (aLaunchOptions) {
+    bool val = false;
+    if (NS_SUCCEEDED(aLaunchOptions->GetAddsToRecentItems(&val))) {
+      [config setAddsToRecentItems:val];
     }
-    [[NSWorkspace sharedWorkspace] 
-        launchApplicationAtURL:[NSBundle mainBundle].bundleURL
-        options:options
-        configuration:@{NSWorkspaceLaunchConfigurationArguments:arguments, 
-                        NSWorkspaceLaunchConfigurationEnvironment:[[NSProcessInfo processInfo] environment]}
-        error:&error];
   }
+
+  [[NSWorkspace sharedWorkspace]
+      openApplicationAtURL:[NSURL fileURLWithPath:launchPath]
+             configuration:config
+         completionHandler:^(NSRunningApplication* aChild, NSError* aError){
+         }];
+
   return NS_OK;
 
   NS_OBJC_END_TRY_BLOCK_RETURN(NS_ERROR_FAILURE);

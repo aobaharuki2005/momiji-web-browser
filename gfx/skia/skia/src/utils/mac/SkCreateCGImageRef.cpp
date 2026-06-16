@@ -292,7 +292,7 @@ sk_sp<SkColorSpace> SkMakeColorSpaceFromCGColorSpace(CGColorSpaceRef cgColorSpac
     }
 
     // Attempt to convert by parsing the ICC profile.
-    SkUniqueCFRef<CFDataRef> iccData(CGColorSpaceCopyICCProfile(cgColorSpace));
+    SkUniqueCFRef<CFDataRef> iccData(CGColorSpaceCopyICCData(cgColorSpace));
     if (!iccData) {
         return nullptr;
     }

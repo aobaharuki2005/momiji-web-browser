@@ -1232,7 +1232,7 @@ static bool ProvidesTitle(const Accessible* aAccessible, nsString& aName) {
           static_cast<MOXTextMarkerDelegate*>([self moxTextMarkerDelegate]);
       NSMutableDictionary* userInfo =
           [[[delegate selectionChangeInfo] mutableCopy] autorelease];
-      [userInfo setObject:self forKey:@"AXTextChangeElement"];
+      userInfo[@"AXTextChangeElement"] = self;
 
       mozAccessible* webArea = [self topWebArea];
       [webArea

@@ -168,6 +168,7 @@ RESOURCE_FILES.__setattr__(
 )
 
 OS_LIBS += [
+    "-framework Accessibility",
     "-framework IOSurface",
     "-framework Vision",
 ]

@@ -103,6 +103,13 @@ xpcAccessibleMacInterface::GetParameterizedAttributeNames(
   NS_OBJC_END_TRY_BLOCK_RETURN(NS_ERROR_FAILURE)
 }
 
+// Return a string that uniquely identifies a custom action.
+static NSString* GetCustomActionName(NSAccessibilityCustomAction* action) {
+  return [NSString stringWithFormat:@"Name:%@ Target:%@ Selector:%@",
+                                    [action name], [action target],
+                                    NSStringFromSelector([action selector])];
+}
+
 NS_IMETHODIMP
 xpcAccessibleMacInterface::GetActionNames(nsTArray<nsString>& aActionNames) {
   NS_OBJC_BEGIN_TRY_BLOCK_RETURN
@@ -117,19 +124,15 @@ xpcAccessibleMacInterface::GetActionNames(nsTArray<nsString>& aActionNames) {
     aActionNames.AppendElement(actionName);
   }
 
-  // custom actions are only available on 10.13 and up
-  if (@available(macOS 10.13, *)) {
-    if (NSArray* customActions = [mNativeObject accessibilityCustomActions]) {
-      for (id action in customActions) {
-        nsAutoString actionName;
-        NSString* actionNameStr = [NSString stringWithFormat:@"Name:%@ Target:%@ Selector:%@",
-                           [action name], [action target],
-                           NSStringFromSelector([action selector])];
-        nsCocoaUtils::GetStringForNSString(actionNameStr, actionName);
-        aActionNames.AppendElement(actionName);
-      }
+  if (NSArray* customActions = [mNativeObject accessibilityCustomActions]) {
+    for (id action in customActions) {
+      nsAutoString actionName;
+      NSString* actionNameStr = GetCustomActionName(action);
+      nsCocoaUtils::GetStringForNSString(actionNameStr, actionName);
+      aActionNames.AppendElement(actionName);
     }
   }
+
   return NS_OK;
 
   NS_OBJC_END_TRY_BLOCK_RETURN(NS_ERROR_FAILURE)
@@ -148,17 +151,12 @@ xpcAccessibleMacInterface::GetActionDescription(const nsAString& aActionName,
 
   // First search custom actions, since `accessibilityActionDescription` will
   // just return the provided name if no description is found.
-  //custom actions are only available on 10.13 and up.
-  if (@available(macos 10.13, *)) {
-    if (NSArray* customActions = [mNativeObject accessibilityCustomActions]) {
-      for (id action in customActions) {
-        NSString* actionNameStr = [NSString stringWithFormat:@"Name:%@ Target:%@ Selector:%@",
-                           [action name], [action target],
-                           NSStringFromSelector([action selector])];
-        if ([actionNameStr isEqualToString:actionName]) {
-          nsCocoaUtils::GetStringForNSString([action name], aDescription);
-          return NS_OK;
-        }
+  if (NSArray* customActions = [mNativeObject accessibilityCustomActions]) {
+    for (id action in customActions) {
+      NSString* actionNameStr = GetCustomActionName(action);
+      if ([actionNameStr isEqualToString:actionName]) {
+        nsCocoaUtils::GetStringForNSString([action name], aDescription);
+        return NS_OK;
       }
     }
   }
@@ -182,17 +180,12 @@ xpcAccessibleMacInterface::PerformAction(const nsAString& aActionName) {
 
   // First search custom actions, since `accessibilityPerformAction` will
   // silently fail on unknown action names.
-  // custom actions are only available on 10.13 and up
-  if (@available(macOS 10.13, *)) {
-    if (NSArray* customActions = [mNativeObject accessibilityCustomActions]) {
-      for (id action in customActions) {
-        NSString* actionNameStr = [NSString stringWithFormat:@"Name:%@ Target:%@ Selector:%@",
-                           [action name], [action target],
-                           NSStringFromSelector([action selector])];
-        if ([actionNameStr isEqualToString:actionName]) {
-          [[action target] performSelector:[action selector]];
-          return NS_OK;
-        }
+  if (NSArray* customActions = [mNativeObject accessibilityCustomActions]) {
+    for (id action in customActions) {
+      NSString* actionNameStr = GetCustomActionName(action);
+      if ([actionNameStr isEqualToString:actionName]) {
+        [[action target] performSelector:[action selector]];
+        return NS_OK;
       }
     }
   }
@@ -340,7 +333,7 @@ nsresult xpcAccessibleMacInterface::NSObjectToJsValue(
       return NS_ERROR_FAILURE;
     }
     for (size_t i = 0; i < [objArr count]; ++i) {
-      nsresult rv = NSObjectToJsValue([objArr objectAtIndex:i], aCx, v[i]);
+      nsresult rv = NSObjectToJsValue(objArr[i], aCx, v[i]);
       NS_ENSURE_SUCCESS(rv, rv);
     }
 
@@ -378,7 +371,7 @@ nsresult xpcAccessibleMacInterface::NSObjectToJsValue(
 
                           NSMutableDictionary* attrRun =
                               [attributes mutableCopy];
-                          [attrRun setObject:str forKey:@"string"];
+                          attrRun[@"string"] = str;
 
                           [attrRunArray addObject:attrRun];
                         }];
@@ -610,7 +603,7 @@ id xpcAccessibleMacInterface::JsValueToSpecifiedNSObject(
       JS_GetPropertyById(aCx, object, ids[i], &currentValue);
       id unwrappedValue = JsValueToNSObject(currentValue, aCx, &rv);
       NS_ENSURE_SUCCESS(rv, nil);
-      [dict setObject:unwrappedValue forKey:unwrappedKey];
+      dict[unwrappedKey] = unwrappedValue;
     }
 
     *aResult = NS_OK;

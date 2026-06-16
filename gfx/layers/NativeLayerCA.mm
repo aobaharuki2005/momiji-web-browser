@@ -158,7 +158,6 @@ NativeLayerRootCA::~NativeLayerRootCA() {
       mSublayers.IsEmpty(),
       "Please clear all layers before destroying the layer root.");
 
-
   {
     // Clear the root layer's sublayers. At this point the window is usually
     // closed, so this transaction does not cause any screen updates.
@@ -276,52 +275,49 @@ bool NativeLayerRootCA::AreOffMainThreadCommitsSuspended() {
 }
 
 bool NativeLayerRootCA::CommitToScreen() {
-  {
-    MutexAutoLock lock(mMutex);
+  MutexAutoLock lock(mMutex);
 
-    if (!NS_IsMainThread() && mOffMainThreadCommitsSuspended) {
-      mCommitPending = true;
-      return false;
+  if (!NS_IsMainThread() && mOffMainThreadCommitsSuspended) {
+    mCommitPending = true;
+    return false;
+  }
+
+  CommitRepresentation(WhichRepresentation::ONSCREEN, mOnscreenRootCALayer,
+                       mSublayers, mMutatedOnscreenLayerStructure,
+                       mWindowIsFullscreen);
+  mMutatedOnscreenLayerStructure = false;
+
+  mCommitPending = false;
+
+  if (StaticPrefs::gfx_webrender_debug_dump_native_layer_tree_to_file()) {
+    static uint32_t sFrameID = 0;
+    uint32_t frameID = sFrameID++;
+
+    NSString* dirPath =
+        [NSString stringWithFormat:@"%@/Desktop/nativelayerdumps-%d",
+                                   NSHomeDirectory(), getpid()];
+    if ([NSFileManager.defaultManager createDirectoryAtPath:dirPath
+                                withIntermediateDirectories:YES
+                                                 attributes:nil
+                                                      error:nullptr]) {
+      NSString* filename =
+          [NSString stringWithFormat:@"frame-%d.html", frameID];
+      NSString* filePath = [dirPath stringByAppendingPathComponent:filename];
+      DumpLayerTreeToFile([filePath UTF8String], lock);
+    } else {
+      NSLog(@"Failed to create directory %@", dirPath);
     }
+  }
 
-    CommitRepresentation(WhichRepresentation::ONSCREEN, mOnscreenRootCALayer,
-                         mSublayers, mMutatedOnscreenLayerStructure,
-                         mWindowIsFullscreen);
-    mMutatedOnscreenLayerStructure = false;
-
-    mCommitPending = false;
-
-    if (StaticPrefs::gfx_webrender_debug_dump_native_layer_tree_to_file()) {
-      static uint32_t sFrameID = 0;
-      uint32_t frameID = sFrameID++;
-
-      NSString* dirPath =
-          [NSString stringWithFormat:@"%@/Desktop/nativelayerdumps-%d",
-                                     NSHomeDirectory(), getpid()];
-      if ([NSFileManager.defaultManager createDirectoryAtPath:dirPath
-                                  withIntermediateDirectories:YES
-                                                   attributes:nil
-                                                        error:nullptr]) {
-        NSString* filename =
-            [NSString stringWithFormat:@"frame-%d.html", frameID];
-        NSString* filePath = [dirPath stringByAppendingPathComponent:filename];
-        DumpLayerTreeToFile([filePath UTF8String], lock);
-      } else {
-        NSLog(@"Failed to create directory %@", dirPath);
-      }
-    }
-
-    // Decide if we are going to emit telemetry about video low power on this
-    // commit.
-    static const int32_t TELEMETRY_COMMIT_PERIOD =
-        StaticPrefs::gfx_core_animation_low_power_telemetry_frames_AtStartup();
-    mTelemetryCommitCount =
-        (mTelemetryCommitCount + 1) % TELEMETRY_COMMIT_PERIOD;
-    if (mTelemetryCommitCount == 0) {
-      // Figure out if we are hitting video low power mode.
-      VideoLowPowerType videoLowPower = CheckVideoLowPower(lock);
-      EmitTelemetryForVideoLowPower(videoLowPower);
-    }
+  // Decide if we are going to emit telemetry about video low power on this
+  // commit.
+  static const int32_t TELEMETRY_COMMIT_PERIOD =
+      StaticPrefs::gfx_core_animation_low_power_telemetry_frames_AtStartup();
+  mTelemetryCommitCount = (mTelemetryCommitCount + 1) % TELEMETRY_COMMIT_PERIOD;
+  if (mTelemetryCommitCount == 0) {
+    // Figure out if we are hitting video low power mode.
+    VideoLowPowerType videoLowPower = CheckVideoLowPower(lock);
+    EmitTelemetryForVideoLowPower(videoLowPower);
   }
 
   return true;
@@ -345,14 +341,12 @@ UniquePtr<NativeLayerRootSnapshotter> NativeLayerRootCA::CreateSnapshotter() {
 #endif
 }
 
-#ifdef XP_MACOSX
 void NativeLayerRootCA::OnNativeLayerRootSnapshotterDestroyed(
     NativeLayerRootSnapshotterCA* aNativeLayerRootSnapshotter) {
   MutexAutoLock lock(mMutex);
   MOZ_RELEASE_ASSERT(mWeakSnapshotter == aNativeLayerRootSnapshotter);
   mWeakSnapshotter = nullptr;
 }
-#endif
 
 void NativeLayerRootCA::CommitOffscreen(CALayer* aRootCALayer) {
   MutexAutoLock lock(mMutex);
@@ -553,6 +547,7 @@ VideoLowPowerType NativeLayerRootCA::CheckVideoLowPower(
       if (isVideo) {
         ++videoLayerCount;
       }
+
       secondCALayer = topCALayer;
 
       topLayer = layer;
@@ -586,14 +581,11 @@ VideoLowPowerType NativeLayerRootCA::CheckVideoLowPower(
     return VideoLowPowerType::FailBacking;
   }
 
-  CALayer* topContentCALayer = [topCALayer.sublayers objectAtIndex:0];
+  CALayer* topContentCALayer = topCALayer.sublayers[0];
   if (![topContentCALayer isKindOfClass:[AVSampleBufferDisplayLayer class]]) {
     // We didn't create a AVSampleBufferDisplayLayer for the top video layer.
     // Try to figure out why by following some of the logic in
     // NativeLayerCA::ShouldSpecializeVideo.
-    if (!nsCocoaFeatures::OnHighSierraOrLater()) {
-      return VideoLowPowerType::FailMacOSVersion;
-    }
 
     if (!StaticPrefs::gfx_core_animation_specialize_video()) {
       return VideoLowPowerType::FailPref;
@@ -816,29 +808,12 @@ NativeLayerCA::NativeLayerCA(bool aIsOpaque)
 #endif
 }
 
-CGColorRef CGColorCreateForDeviceColor(gfx::DeviceColor aColor) {
+CGColorRef CGColorCreateForDeviceColor(const gfx::DeviceColor& aColor) {
   if (StaticPrefs::gfx_color_management_native_srgb()) {
-    // Use CGColorCreateSRGB if it's available, otherwise use older macOS API methods,
-    // which unfortunately allocate additional memory for the colorSpace object.
-    if (@available(macOS 10.15, iOS 13.0, *)) {
-      // Even if it is available, we have to address the function dynamically, to keep
-      // compiler happy when building with earlier versions of the SDK.
-      static auto CGColorCreateSRGBPtr = (CGColorRef(*)(CGFloat, CGFloat, CGFloat, CGFloat))dlsym(
-          RTLD_DEFAULT, "CGColorCreateSRGB");
-      if (CGColorCreateSRGBPtr) {
-        return CGColorCreateSRGBPtr(aColor.r, aColor.g, aColor.b, aColor.a);
-      }
-    }
-
-    CGColorSpaceRef colorSpace = CGColorSpaceCreateWithName(kCGColorSpaceSRGB);
-    CGFloat components[] = {aColor.r, aColor.g, aColor.b, aColor.a};
-    CGColorRef color = CGColorCreate(colorSpace, components);
-    CFRelease(colorSpace);
-    return color;
+    return CGColorCreateSRGB(aColor.r, aColor.g, aColor.b, aColor.a);
   }
 
   return CGColorCreateGenericRGB(aColor.r, aColor.g, aColor.b, aColor.a);
-   //return CGColorCreateSRGB(aColor.r, aColor.g, aColor.b, aColor.a);
 }
 
 NativeLayerCA::NativeLayerCA(gfx::DeviceColor aColor)
@@ -896,6 +871,9 @@ void NativeLayerCA::AttachExternalImage(wr::RenderTextureHost* aExternalImage) {
 
   mDisplayRect = IntRect(IntPoint{}, mSize);
 
+  bool isDRM = aExternalImage->IsFromDRMSource();
+  bool changedIsDRM = (mIsDRM != isDRM);
+  mIsDRM = isDRM;
 
   MacIOSurface* macIOSurface = texture->GetSurface();
   mIsHDR = macIOSurface->IsHDRSurface() && gfxPlatform::UseHDR();
@@ -913,25 +891,13 @@ void NativeLayerCA::AttachExternalImage(wr::RenderTextureHost* aExternalImage) {
   }
 #endif
 
-  if(@available(macOS 10.15, *)) {
-    bool isDRM = aExternalImage->IsFromDRMSource();
-    bool changedIsDRM = (mIsDRM != isDRM);
-    mIsDRM = isDRM;
-    ForAllRepresentations([&](Representation& r) {
-      r.mMutatedFrontSurface = true;
-      r.mMutatedDisplayRect |= changedSizeAndDisplayRect;
-      r.mMutatedSize |= changedSizeAndDisplayRect;
-      r.mMutatedSpecializeVideo |= changedSpecializeVideo;
-      r.mMutatedIsDRM |= changedIsDRM;
-    });
-  } else {
-    ForAllRepresentations([&](Representation& r) {
-      r.mMutatedFrontSurface = true;
-      r.mMutatedDisplayRect |= changedSizeAndDisplayRect;
-      r.mMutatedSize |= changedSizeAndDisplayRect;
-      r.mMutatedSpecializeVideo |= changedSpecializeVideo;
-    });
-  }
+  ForAllRepresentations([&](Representation& r) {
+    r.mMutatedFrontSurface = true;
+    r.mMutatedDisplayRect |= changedSizeAndDisplayRect;
+    r.mMutatedSize |= changedSizeAndDisplayRect;
+    r.mMutatedSpecializeVideo |= changedSpecializeVideo;
+    r.mMutatedIsDRM |= changedIsDRM;
+  });
 }
 
 GpuFence* NativeLayerCA::GetGpuFence() {
@@ -957,11 +923,6 @@ bool NativeLayerCA::IsVideo(const MutexAutoLock& aProofOfLock) {
 bool NativeLayerCA::ShouldSpecializeVideo(const MutexAutoLock& aProofOfLock) {
   if (!IsVideo(aProofOfLock)) {
     // Only videos are eligible.
-    return false;
-  }
-
-  if (!nsCocoaFeatures::OnHighSierraOrLater()) {
-    // We must be on a modern-enough macOS.
     return false;
   }
 
@@ -1155,7 +1116,7 @@ void NativeLayerCA::DumpLayer(std::ostream& aOutputStream) {
   }
 
   Maybe<CGRect> scaledClipRect =
-      NativeLayerCA::CalculateClipGeometry(surfaceSize, mPosition, mTransform, displayRect,
+      CalculateClipGeometry(surfaceSize, mPosition, mTransform, displayRect,
                             mClipRect, mBackingScale);
 
   CGRect useClipRect;
@@ -1328,6 +1289,9 @@ void NativeLayerCA::SetSurfaceToPresent(CFTypeRefPtr<IOSurfaceRef> aSurfaceRef,
     mTextureHostIsVideo = false;
   }
 
+  bool changedIsDRM = (mIsDRM != aIsDRM);
+  mIsDRM = aIsDRM;
+
   mIsHDR = aIsHDR;
 
   bool specializeVideo = ShouldSpecializeVideo(lock);
@@ -1342,22 +1306,13 @@ void NativeLayerCA::SetSurfaceToPresent(CFTypeRefPtr<IOSurfaceRef> aSurfaceRef,
         this);
   }
 #endif
-  if(@available(macOS 10.15, *)) {
-    bool changedIsDRM = (mIsDRM != aIsDRM);
-    mIsDRM = aIsDRM;
-    ForAllRepresentations([&](Representation& r) {
-      r.mMutatedFrontSurface |= changedSurface;
-      r.mMutatedSize |= changedSize;
-      r.mMutatedSpecializeVideo |= changedSpecializeVideo;
-      r.mMutatedIsDRM |= changedIsDRM;
-    });
-  } else {
-    ForAllRepresentations([&](Representation& r) {
-      r.mMutatedFrontSurface |= changedSurface;
-      r.mMutatedSize |= changedSize;
-      r.mMutatedSpecializeVideo |= changedSpecializeVideo;
-    });
-  }
+
+  ForAllRepresentations([&](Representation& r) {
+    r.mMutatedFrontSurface |= changedSurface;
+    r.mMutatedSize |= changedSize;
+    r.mMutatedSpecializeVideo |= changedSpecializeVideo;
+    r.mMutatedIsDRM |= changedIsDRM;
+  });
 }
 
 NativeLayerCARepresentation::NativeLayerCARepresentation()
@@ -1374,7 +1329,6 @@ NativeLayerCARepresentation::NativeLayerCARepresentation()
       mMutatedSamplingFilter(true),
       mMutatedSpecializeVideo(true),
       mMutatedIsDRM(true) {}
-
 
 NativeLayerCARepresentation::~NativeLayerCARepresentation() {
   [mContentCALayer release];
@@ -1616,7 +1570,7 @@ bool NativeLayerCARepresentation::EnqueueSurface(IOSurfaceRef aSurfaceRef) {
       colorSpace = CFTypeRefPtr<CGColorSpaceRef>::WrapUnderCreateRule(
           CGDisplayCopyColorSpace(CGMainDisplayID()));
       auto colorData = CFTypeRefPtr<CFDataRef>::WrapUnderCreateRule(
-          CGColorSpaceCopyICCProfile(colorSpace.get()));
+          CGColorSpaceCopyICCData(colorSpace.get()));
       IOSurfaceSetValue(aSurfaceRef, CFSTR("IOSurfaceColorSpace"),
                         colorData.get());
 
@@ -1856,11 +1810,10 @@ bool NativeLayerCARepresentation::ApplyChanges(
     }
   }
 
-  if (@available(macOS 10.15, iOS 13.0, *)) {
-      if (aSpecializeVideo && mMutatedIsDRM) {
-          ((AVSampleBufferDisplayLayer*)mContentCALayer).preventsCapture = aIsDRM;
-      }
+  if (aSpecializeVideo && mMutatedIsDRM) {
+    ((AVSampleBufferDisplayLayer*)mContentCALayer).preventsCapture = aIsDRM;
   }
+
   bool shouldTintOpaqueness = StaticPrefs::gfx_core_animation_tint_opaque();
   if (shouldTintOpaqueness && !mOpaquenessTintLayer) {
     mOpaquenessTintLayer = [[CALayer layer] retain];
@@ -1942,53 +1895,52 @@ bool NativeLayerCARepresentation::ApplyChanges(
     // mutated and don't get selected below.
     mRoundedClipCALayer.cornerRadius = 0.0f;
     mRoundedClipCALayer.masksToBounds = NO;
+    mRoundedClipCALayer.maskedCorners = 0;
 
     if (aRoundedClip.isSome()) {
       // Select which corner(s) the rounded clip should be applied to
       // Select from the corners which is the maximum radius (since we know
       // they are either uniform or zero).
-      if(@available(macOS 10.13, *)) {
-        mRoundedClipCALayer.maskedCorners = 0;
-        CACornerMask maskedCorners = 0;
-        auto effectiveRadius = 0.0f;
-        if (aRoundedClip->corners.radii[0].width > 0.0) {
-          maskedCorners |= kCALayerMinXMinYCorner;
-          effectiveRadius =
-              std::max(effectiveRadius, aRoundedClip->corners.radii[0].width);
-        }
-        if (aRoundedClip->corners.radii[1].width > 0.0) {
-          maskedCorners |= kCALayerMaxXMinYCorner;
-          effectiveRadius =
-              std::max(effectiveRadius, aRoundedClip->corners.radii[1].width);
-        }
-        if (aRoundedClip->corners.radii[2].width > 0.0) {
-          maskedCorners |= kCALayerMaxXMaxYCorner;
-          effectiveRadius =
-              std::max(effectiveRadius, aRoundedClip->corners.radii[2].width);
-        }
-        if (aRoundedClip->corners.radii[3].width > 0.0) {
-          maskedCorners |= kCALayerMinXMaxYCorner;
-          effectiveRadius =
-              std::max(effectiveRadius, aRoundedClip->corners.radii[3].width);
-        }
+      CACornerMask maskedCorners = 0;
+      auto effectiveRadius = 0.0f;
+      if (aRoundedClip->corners.radii[0].width > 0.0) {
+        maskedCorners |= kCALayerMinXMinYCorner;
+        effectiveRadius =
+            std::max(effectiveRadius, aRoundedClip->corners.radii[0].width);
+      }
+      if (aRoundedClip->corners.radii[1].width > 0.0) {
+        maskedCorners |= kCALayerMaxXMinYCorner;
+        effectiveRadius =
+            std::max(effectiveRadius, aRoundedClip->corners.radii[1].width);
+      }
+      if (aRoundedClip->corners.radii[2].width > 0.0) {
+        maskedCorners |= kCALayerMaxXMaxYCorner;
+        effectiveRadius =
+            std::max(effectiveRadius, aRoundedClip->corners.radii[2].width);
+      }
+      if (aRoundedClip->corners.radii[3].width > 0.0) {
+        maskedCorners |= kCALayerMinXMaxYCorner;
+        effectiveRadius =
+            std::max(effectiveRadius, aRoundedClip->corners.radii[3].width);
+      }
 
-        // Only create a rounded clip mask if we had 1+ non-zero corner radius
-        if (maskedCorners != 0) {
-          rrClipRect.origin.x = aRoundedClip->rect.x / aBackingScale;
-          rrClipRect.origin.y = aRoundedClip->rect.y / aBackingScale;
-          rrClipRect.size.width = aRoundedClip->rect.width / aBackingScale;
-          rrClipRect.size.height = aRoundedClip->rect.height / aBackingScale;
+      // Only create a rounded clip mask if we had 1+ non-zero corner radius
+      if (maskedCorners != 0) {
+        rrClipRect.origin.x = aRoundedClip->rect.x / aBackingScale;
+        rrClipRect.origin.y = aRoundedClip->rect.y / aBackingScale;
+        rrClipRect.size.width = aRoundedClip->rect.width / aBackingScale;
+        rrClipRect.size.height = aRoundedClip->rect.height / aBackingScale;
 
-          // Move in to local space relative to the parent wrapping layer
-          rrClipRect.origin.x -= useClipRect.origin.x;
-          rrClipRect.origin.y -= useClipRect.origin.y;
+        // Move in to local space relative to the parent wrapping layer
+        rrClipRect.origin.x -= useClipRect.origin.x;
+        rrClipRect.origin.y -= useClipRect.origin.y;
 
-          mRoundedClipCALayer.cornerRadius = effectiveRadius / aBackingScale;
-          mRoundedClipCALayer.masksToBounds = YES;
-          mRoundedClipCALayer.maskedCorners = maskedCorners;
-        }
+        mRoundedClipCALayer.cornerRadius = effectiveRadius / aBackingScale;
+        mRoundedClipCALayer.masksToBounds = YES;
+        mRoundedClipCALayer.maskedCorners = maskedCorners;
       }
     }
+
     // Position the rounded clip layer in the right space
     mRoundedClipCALayer.position = rrClipRect.origin;
     mRoundedClipCALayer.bounds =
@@ -2090,6 +2042,7 @@ bool NativeLayerCARepresentation::ApplyChanges(
   mMutatedFrontSurface = false;
   mMutatedSamplingFilter = false;
   mMutatedSpecializeVideo = false;
+  mMutatedIsDRM = false;
 
   return true;
 }

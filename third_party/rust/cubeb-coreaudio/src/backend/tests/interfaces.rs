@@ -1314,8 +1314,7 @@ fn test_ops_input_voice_stream_init_and_destroy() {
         let stm = unsafe { &mut *(stream as *mut AudioUnitStream) };
         assert_eq!(
             stm.core_stream_data.using_voice_processing_unit(),
-            (macos_kernel_major_version().unwrap() != MACOS_KERNEL_MAJOR_VERSION_MONTEREY) &&
-		(macos_kernel_major_version().unwrap() >= MACOS_KERNEL_MAJOR_VERSION_SIERRA)
+            macos_kernel_major_version().unwrap() != MACOS_KERNEL_MAJOR_VERSION_MONTEREY
         );
     });
 }
@@ -1327,8 +1326,7 @@ fn test_ops_input_voice_stream_start() {
         let stm = unsafe { &mut *(stream as *mut AudioUnitStream) };
         assert_eq!(
             stm.core_stream_data.using_voice_processing_unit(),
-            (macos_kernel_major_version().unwrap() != MACOS_KERNEL_MAJOR_VERSION_MONTEREY) &&
-		(macos_kernel_major_version().unwrap() >= MACOS_KERNEL_MAJOR_VERSION_SIERRA)
+            macos_kernel_major_version().unwrap() != MACOS_KERNEL_MAJOR_VERSION_MONTEREY
         );
     });
 }
@@ -1340,8 +1338,7 @@ fn test_ops_input_voice_stream_stop() {
         let stm = unsafe { &mut *(stream as *mut AudioUnitStream) };
         assert_eq!(
             stm.core_stream_data.using_voice_processing_unit(),
-            (macos_kernel_major_version().unwrap() != MACOS_KERNEL_MAJOR_VERSION_MONTEREY) &&
-		(macos_kernel_major_version().unwrap() >= MACOS_KERNEL_MAJOR_VERSION_SIERRA)
+            macos_kernel_major_version().unwrap() != MACOS_KERNEL_MAJOR_VERSION_MONTEREY
         );
     });
 }
@@ -1352,8 +1349,7 @@ fn test_ops_duplex_voice_stream_init_and_destroy() {
         let stm = unsafe { &mut *(stream as *mut AudioUnitStream) };
         assert_eq!(
             stm.core_stream_data.using_voice_processing_unit(),
-            (macos_kernel_major_version().unwrap() != MACOS_KERNEL_MAJOR_VERSION_MONTEREY) &&
-		(macos_kernel_major_version().unwrap() >= MACOS_KERNEL_MAJOR_VERSION_SIERRA)
+            macos_kernel_major_version().unwrap() != MACOS_KERNEL_MAJOR_VERSION_MONTEREY
         );
     });
 }
@@ -1365,8 +1361,7 @@ fn test_ops_duplex_voice_stream_start() {
         let stm = unsafe { &mut *(stream as *mut AudioUnitStream) };
         assert_eq!(
             stm.core_stream_data.using_voice_processing_unit(),
-            (macos_kernel_major_version().unwrap() != MACOS_KERNEL_MAJOR_VERSION_MONTEREY) &&
-		(macos_kernel_major_version().unwrap() >= MACOS_KERNEL_MAJOR_VERSION_SIERRA)
+            macos_kernel_major_version().unwrap() != MACOS_KERNEL_MAJOR_VERSION_MONTEREY
         );
     });
 }
@@ -1378,8 +1373,7 @@ fn test_ops_duplex_voice_stream_stop() {
         let stm = unsafe { &mut *(stream as *mut AudioUnitStream) };
         assert_eq!(
             stm.core_stream_data.using_voice_processing_unit(),
-            (macos_kernel_major_version().unwrap() != MACOS_KERNEL_MAJOR_VERSION_MONTEREY) &&
-		(macos_kernel_major_version().unwrap() >= MACOS_KERNEL_MAJOR_VERSION_SIERRA)
+            macos_kernel_major_version().unwrap() != MACOS_KERNEL_MAJOR_VERSION_MONTEREY
         );
     });
 }
@@ -1394,8 +1388,7 @@ fn test_ops_duplex_voice_stream_drain() {
             let stm = unsafe { &mut *(stream as *mut AudioUnitStream) };
             assert_eq!(
                 stm.core_stream_data.using_voice_processing_unit(),
-                (macos_kernel_major_version().unwrap() != MACOS_KERNEL_MAJOR_VERSION_MONTEREY) &&
-		(macos_kernel_major_version().unwrap() >= MACOS_KERNEL_MAJOR_VERSION_SIERRA)
+                macos_kernel_major_version().unwrap() != MACOS_KERNEL_MAJOR_VERSION_MONTEREY
             );
             thread::sleep(Duration::from_millis(10));
         },
@@ -1405,8 +1398,7 @@ fn test_ops_duplex_voice_stream_drain() {
 #[test]
 #[ignore]
 fn test_ops_timing_sensitive_multiple_voice_stream_init_and_destroy() {
-    if (macos_kernel_major_version().unwrap() == MACOS_KERNEL_MAJOR_VERSION_MONTEREY) &&
-		(macos_kernel_major_version().unwrap() >= MACOS_KERNEL_MAJOR_VERSION_SIERRA) {
+    if macos_kernel_major_version().unwrap() == MACOS_KERNEL_MAJOR_VERSION_MONTEREY {
         // We disable VPIO on Monterey.
         return;
     }
@@ -1559,8 +1551,7 @@ fn test_ops_timing_sensitive_multiple_voice_stream_init_and_destroy() {
 #[test]
 #[ignore]
 fn test_ops_timing_sensitive_multiple_duplex_voice_stream_start() {
-    if (macos_kernel_major_version().unwrap() == MACOS_KERNEL_MAJOR_VERSION_MONTEREY) &&
-		(macos_kernel_major_version().unwrap() >= MACOS_KERNEL_MAJOR_VERSION_SIERRA) {
+    if macos_kernel_major_version().unwrap() == MACOS_KERNEL_MAJOR_VERSION_MONTEREY {
         // We disable VPIO on Monterey.
         return;
     }
@@ -1601,8 +1592,7 @@ fn test_ops_timing_sensitive_multiple_duplex_voice_stream_start() {
 #[test]
 #[ignore]
 fn test_ops_timing_sensitive_multiple_duplex_voice_stream_params() {
-    if (macos_kernel_major_version().unwrap() == MACOS_KERNEL_MAJOR_VERSION_MONTEREY) &&
-		(macos_kernel_major_version().unwrap() >= MACOS_KERNEL_MAJOR_VERSION_SIERRA) {
+    if macos_kernel_major_version().unwrap() == MACOS_KERNEL_MAJOR_VERSION_MONTEREY {
         // We disable VPIO on Monterey.
         return;
     }
@@ -1689,8 +1679,7 @@ fn test_ops_timing_sensitive_multiple_duplex_voice_stream_params() {
 
 #[test]
 fn test_ops_duplex_voice_stream_set_input_mute() {
-    if (macos_kernel_major_version().unwrap() == MACOS_KERNEL_MAJOR_VERSION_MONTEREY) &&
-		(macos_kernel_major_version().unwrap() >= MACOS_KERNEL_MAJOR_VERSION_SIERRA) {
+    if macos_kernel_major_version().unwrap() == MACOS_KERNEL_MAJOR_VERSION_MONTEREY {
         // We disable VPIO on Monterey.
         return;
     }
@@ -1706,8 +1695,7 @@ fn test_ops_duplex_voice_stream_set_input_mute() {
 
 #[test]
 fn test_ops_duplex_voice_stream_set_input_mute_before_start() {
-    if (macos_kernel_major_version().unwrap() == MACOS_KERNEL_MAJOR_VERSION_MONTEREY) &&
-		(macos_kernel_major_version().unwrap() >= MACOS_KERNEL_MAJOR_VERSION_SIERRA) {
+    if macos_kernel_major_version().unwrap() == MACOS_KERNEL_MAJOR_VERSION_MONTEREY {
         // We disable VPIO on Monterey.
         return;
     }
@@ -1727,8 +1715,7 @@ fn test_ops_duplex_voice_stream_set_input_mute_before_start() {
 
 #[test]
 fn test_ops_duplex_voice_stream_set_input_mute_before_start_with_reinit() {
-    if (macos_kernel_major_version().unwrap() == MACOS_KERNEL_MAJOR_VERSION_MONTEREY) &&
-		(macos_kernel_major_version().unwrap() >= MACOS_KERNEL_MAJOR_VERSION_SIERRA) {
+    if macos_kernel_major_version().unwrap() == MACOS_KERNEL_MAJOR_VERSION_MONTEREY {
         // We disable VPIO on Monterey.
         return;
     }
@@ -1767,8 +1754,7 @@ fn test_ops_duplex_voice_stream_set_input_mute_before_start_with_reinit() {
 
 #[test]
 fn test_ops_duplex_voice_stream_set_input_mute_after_start() {
-    if (macos_kernel_major_version().unwrap() == MACOS_KERNEL_MAJOR_VERSION_MONTEREY) &&
-		(macos_kernel_major_version().unwrap() >= MACOS_KERNEL_MAJOR_VERSION_SIERRA) {
+    if macos_kernel_major_version().unwrap() == MACOS_KERNEL_MAJOR_VERSION_MONTEREY {
         // We disable VPIO on Monterey.
         return;
     }
@@ -1785,8 +1771,7 @@ fn test_ops_duplex_voice_stream_set_input_mute_after_start() {
 
 #[test]
 fn test_ops_duplex_voice_stream_set_input_processing_params() {
-    if (macos_kernel_major_version().unwrap() == MACOS_KERNEL_MAJOR_VERSION_MONTEREY) &&
-		(macos_kernel_major_version().unwrap() >= MACOS_KERNEL_MAJOR_VERSION_SIERRA) {
+    if macos_kernel_major_version().unwrap() == MACOS_KERNEL_MAJOR_VERSION_MONTEREY {
         // We disable VPIO on Monterey.
         return;
     }
@@ -1806,8 +1791,7 @@ fn test_ops_duplex_voice_stream_set_input_processing_params() {
 
 #[test]
 fn test_ops_duplex_voice_stream_set_input_processing_params_before_start() {
-    if (macos_kernel_major_version().unwrap() == MACOS_KERNEL_MAJOR_VERSION_MONTEREY) &&
-		(macos_kernel_major_version().unwrap() >= MACOS_KERNEL_MAJOR_VERSION_SIERRA) {
+    if macos_kernel_major_version().unwrap() == MACOS_KERNEL_MAJOR_VERSION_MONTEREY {
         // We disable VPIO on Monterey.
         return;
     }
@@ -1831,8 +1815,7 @@ fn test_ops_duplex_voice_stream_set_input_processing_params_before_start() {
 
 #[test]
 fn test_ops_duplex_voice_stream_set_input_processing_params_before_start_with_reinit() {
-    if (macos_kernel_major_version().unwrap() == MACOS_KERNEL_MAJOR_VERSION_MONTEREY) &&
-		(macos_kernel_major_version().unwrap() >= MACOS_KERNEL_MAJOR_VERSION_SIERRA) {
+    if macos_kernel_major_version().unwrap() == MACOS_KERNEL_MAJOR_VERSION_MONTEREY {
         // We disable VPIO on Monterey.
         return;
     }
@@ -1896,8 +1879,7 @@ fn test_ops_duplex_voice_stream_set_input_processing_params_before_start_with_re
 
 #[test]
 fn test_ops_duplex_voice_stream_set_input_processing_params_after_start() {
-    if (macos_kernel_major_version().unwrap() == MACOS_KERNEL_MAJOR_VERSION_MONTEREY) &&
-		(macos_kernel_major_version().unwrap() >= MACOS_KERNEL_MAJOR_VERSION_SIERRA) {
+    if macos_kernel_major_version().unwrap() == MACOS_KERNEL_MAJOR_VERSION_MONTEREY {
         // We disable VPIO on Monterey.
         return;
     }
@@ -1927,8 +1909,7 @@ fn test_ops_stereo_input_duplex_voice_stream_init_and_destroy() {
             let stm = unsafe { &mut *(stream as *mut AudioUnitStream) };
             assert_eq!(
                 stm.core_stream_data.using_voice_processing_unit(),
-                (macos_kernel_major_version().unwrap() != MACOS_KERNEL_MAJOR_VERSION_MONTEREY) &&
-		(macos_kernel_major_version().unwrap() >= MACOS_KERNEL_MAJOR_VERSION_SIERRA)
+                macos_kernel_major_version().unwrap() != MACOS_KERNEL_MAJOR_VERSION_MONTEREY
             );
         },
     );
@@ -1942,8 +1923,7 @@ fn test_ops_stereo_input_duplex_voice_stream_start() {
             let stm = unsafe { &mut *(stream as *mut AudioUnitStream) };
             assert_eq!(
                 stm.core_stream_data.using_voice_processing_unit(),
-                (macos_kernel_major_version().unwrap() != MACOS_KERNEL_MAJOR_VERSION_MONTEREY) &&
-		(macos_kernel_major_version().unwrap() >= MACOS_KERNEL_MAJOR_VERSION_SIERRA)
+                macos_kernel_major_version().unwrap() != MACOS_KERNEL_MAJOR_VERSION_MONTEREY
             );
             assert_eq!(unsafe { OPS.stream_start.unwrap()(stream) }, ffi::CUBEB_OK);
         },
@@ -1958,8 +1938,7 @@ fn test_ops_stereo_input_duplex_voice_stream_stop() {
             let stm = unsafe { &mut *(stream as *mut AudioUnitStream) };
             assert_eq!(
                 stm.core_stream_data.using_voice_processing_unit(),
-                (macos_kernel_major_version().unwrap() != MACOS_KERNEL_MAJOR_VERSION_MONTEREY) &&
-		(macos_kernel_major_version().unwrap() >= MACOS_KERNEL_MAJOR_VERSION_SIERRA)
+                macos_kernel_major_version().unwrap() != MACOS_KERNEL_MAJOR_VERSION_MONTEREY
             );
             assert_eq!(unsafe { OPS.stream_stop.unwrap()(stream) }, ffi::CUBEB_OK);
         },

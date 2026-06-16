@@ -346,12 +346,11 @@ nsresult nsIconChannel::MakeInputStream(nsIInputStream** _retval,
 
   NSGraphicsContext* oldContext = [NSGraphicsContext currentContext];
   [NSGraphicsContext
-      setCurrentContext:[NSGraphicsContext graphicsContextWithGraphicsPort:ctx
+      setCurrentContext:[NSGraphicsContext graphicsContextWithCGContext:ctx
                                                                 flipped:NO]];
 
-  if(@available(macOS 10.9, *)) {
-     [iconImage drawInRect:NSMakeRect(0, 0, width, height)];
-  }
+  [iconImage drawInRect:NSMakeRect(0, 0, width, height)];
+
   [NSGraphicsContext setCurrentContext:oldContext];
 
   CGContextRelease(ctx);

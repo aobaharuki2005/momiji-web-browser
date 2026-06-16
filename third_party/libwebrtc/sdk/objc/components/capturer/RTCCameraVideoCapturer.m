@@ -26,12 +26,13 @@
 const int64_t kNanosecondsPerSecond = 1000000000;
 
 @interface RTC_OBJC_TYPE (RTCCameraVideoCapturer)
-()<AVCaptureVideoDataOutputSampleBufferDelegate> @property(nonatomic,
-                                                           readonly) dispatch_queue_t frameQueue;
+()<AVCaptureVideoDataOutputSampleBufferDelegate> @property(nonatomic, readonly)
+    dispatch_queue_t frameQueue;
 @property(nonatomic, strong) AVCaptureDevice *currentDevice;
 @property(nonatomic, assign) BOOL hasRetriedOnFatalError;
 @property(nonatomic, assign) BOOL isRunning;
-// Will the session be running once all asynchronous operations have been completed?
+// Will the session be running once all asynchronous operations have been
+// completed?
 @property(nonatomic, assign) BOOL willBeRunning;
 @end
 
@@ -55,28 +56,22 @@ const int64_t kNanosecondsPerSecond = 1000000000;
 @synthesize willBeRunning = _willBeRunning;
 
 - (instancetype)init {
-  return [self initWithDelegate:nil captureSession:[[AVCaptureSession alloc] init]];
+  return [self initWithDelegate:nil
+                 captureSession:[[AVCaptureSession alloc] init]];
 }
 
-#  if !defined(MAC_OS_X_VERSION_10_7) || \
-         MAC_OS_X_VERSION_MIN_REQUIRED < MAC_OS_X_VERSION_10_7
-- (instancetype)initWithDelegate:(__strong id<RTC_OBJC_TYPE(RTCVideoCapturerDelegate)>)delegate {
-  return [self initWithDelegate:delegate captureSession:[[AVCaptureSession alloc] init]];
+- (instancetype)initWithDelegate:
+    (__weak id<RTC_OBJC_TYPE(RTCVideoCapturerDelegate)>)delegate {
+  return [self initWithDelegate:delegate
+                 captureSession:[[AVCaptureSession alloc] init]];
 }
-// This initializer is used for testing.
-- (instancetype)initWithDelegate:(__strong id<RTC_OBJC_TYPE(RTCVideoCapturerDelegate)>)delegate
-                  captureSession:(AVCaptureSession *)captureSession {
-#else
-- (instancetype)initWithDelegate:(__weak id<RTC_OBJC_TYPE(RTCVideoCapturerDelegate)>)delegate {
-  return [self initWithDelegate:delegate captureSession:[[AVCaptureSession alloc] init]];
-}
-// This initializer is used for testing.
-- (instancetype)initWithDelegate:(__weak id<RTC_OBJC_TYPE(RTCVideoCapturerDelegate)>)delegate
-                  captureSession:(AVCaptureSession *)captureSession {
-#endif
 
-    self = [super initWithDelegate:delegate];
-    if (self) {
+// This initializer is used for testing.
+- (instancetype)initWithDelegate:
+                    (__weak id<RTC_OBJC_TYPE(RTCVideoCapturerDelegate)>)delegate
+                  captureSession:(AVCaptureSession *)captureSession {
+  self = [super initWithDelegate:delegate];
+  if (self) {
     // Create the capture session and all relevant inputs and outputs. We need
     // to do this in init because the application may want the capture session
     // before we start the capturer for e.g. AVCapturePreviewLayer. All objects
@@ -123,28 +118,37 @@ const int64_t kNanosecondsPerSecond = 1000000000;
 
 - (void)dealloc {
   NSAssert(!_willBeRunning,
-           @"Session was still running in RTC_OBJC_TYPE(RTCCameraVideoCapturer) dealloc. Forgot to "
+           @"Session was still running in "
+           @"RTC_OBJC_TYPE(RTCCameraVideoCapturer) dealloc. Forgot to "
            @"call stopCapture?");
   [[NSNotificationCenter defaultCenter] removeObserver:self];
 }
 
-+ (NSArray<AVCaptureDevice *> *)captureDevices {
-#if defined(WEBRTC_IOS) && defined(__IPHONE_10_0) && \
-    __IPHONE_OS_VERSION_MIN_REQUIRED >= __IPHONE_10_0
++ (NSArray<AVCaptureDevice *> *)captureDevicesWithDeviceTypes:
+    (NSArray<AVCaptureDeviceType> *)deviceTypes {
   AVCaptureDeviceDiscoverySession *session = [AVCaptureDeviceDiscoverySession
-      discoverySessionWithDeviceTypes:@[ AVCaptureDeviceTypeBuiltInWideAngleCamera ]
+      discoverySessionWithDeviceTypes:deviceTypes
                             mediaType:AVMediaTypeVideo
                              position:AVCaptureDevicePositionUnspecified];
   return session.devices;
-#else
-  return [AVCaptureDevice devicesWithMediaType:AVMediaTypeVideo];
-#endif
-
 }
 
-+ (NSArray<AVCaptureDeviceFormat *> *)supportedFormatsForDevice:(AVCaptureDevice *)device {
-  // Support opening the device in any format. We make sure it's converted to a format we
-  // can handle, if needed, in the method `-setupVideoDataOutput`.
++ (NSArray<AVCaptureDeviceType> *)defaultCaptureDeviceTypes {
+  NSArray *types = @[ AVCaptureDeviceTypeBuiltInWideAngleCamera ];
+#if !defined(WEBRTC_IOS)
+  if (@available(macOS 14.0, *)) {
+    types = [types arrayByAddingObject:AVCaptureDeviceTypeExternal];
+  } else {
+    types = [types arrayByAddingObject:AVCaptureDeviceTypeExternalUnknown];
+  }
+#endif
+  return types;
+}
+
++ (NSArray<AVCaptureDeviceFormat *> *)supportedFormatsForDevice:
+    (AVCaptureDevice *)device {
+  // Support opening the device in any format. We make sure it's converted to a
+  // format we can handle, if needed, in the method `-setupVideoDataOutput`.
   return device.formats;
 }
 
@@ -155,7 +159,10 @@ const int64_t kNanosecondsPerSecond = 1000000000;
 - (void)startCaptureWithDevice:(AVCaptureDevice *)device
                         format:(AVCaptureDeviceFormat *)format
                            fps:(NSInteger)fps {
-  [self startCaptureWithDevice:device format:format fps:fps completionHandler:nil];
+  [self startCaptureWithDevice:device
+                        format:format
+                           fps:fps
+             completionHandler:nil];
 }
 
 - (void)stopCapture {
@@ -165,17 +172,21 @@ const int64_t kNanosecondsPerSecond = 1000000000;
 - (void)startCaptureWithDevice:(AVCaptureDevice *)device
                         format:(AVCaptureDeviceFormat *)format
                            fps:(NSInteger)fps
-             completionHandler:(nullable void (^)(NSError *_Nullable error))completionHandler {
+             completionHandler:(nullable void (^)(NSError *_Nullable error))
+                                   completionHandler {
   _willBeRunning = YES;
   [RTC_OBJC_TYPE(RTCDispatcher)
       dispatchAsyncOnType:RTCDispatcherTypeCaptureSession
                     block:^{
-                      RTCLogInfo("startCaptureWithDevice %@ @ %ld fps", format, (long)fps);
+                      RTCLogInfo("startCaptureWithDevice %@ @ %ld fps",
+                                 format,
+                                 (long)fps);
 
 #if TARGET_OS_IPHONE
                       dispatch_async(dispatch_get_main_queue(), ^{
                         if (!self->_generatingOrientationNotifications) {
-                          [[UIDevice currentDevice] beginGeneratingDeviceOrientationNotifications];
+                          [[UIDevice currentDevice]
+                              beginGeneratingDeviceOrientationNotifications];
                           self->_generatingOrientationNotifications = YES;
                         }
                       });
@@ -207,14 +218,16 @@ const int64_t kNanosecondsPerSecond = 1000000000;
                     }];
 }
 
-- (void)stopCaptureWithCompletionHandler:(nullable void (^)(void))completionHandler {
+- (void)stopCaptureWithCompletionHandler:
+    (nullable void (^)(void))completionHandler {
   _willBeRunning = NO;
   [RTC_OBJC_TYPE(RTCDispatcher)
       dispatchAsyncOnType:RTCDispatcherTypeCaptureSession
                     block:^{
                       RTCLogInfo("Stop");
                       self.currentDevice = nil;
-                      for (AVCaptureDeviceInput *oldInput in [self.captureSession.inputs copy]) {
+                      for (AVCaptureDeviceInput *oldInput in
+                           [self.captureSession.inputs copy]) {
                         [self.captureSession removeInput:oldInput];
                       }
                       [self.captureSession stopRunning];
@@ -222,7 +235,8 @@ const int64_t kNanosecondsPerSecond = 1000000000;
 #if TARGET_OS_IPHONE
                       dispatch_async(dispatch_get_main_queue(), ^{
                         if (self->_generatingOrientationNotifications) {
-                          [[UIDevice currentDevice] endGeneratingDeviceOrientationNotifications];
+                          [[UIDevice currentDevice]
+                              endGeneratingDeviceOrientationNotifications];
                           self->_generatingOrientationNotifications = NO;
                         }
                       });
@@ -238,10 +252,11 @@ const int64_t kNanosecondsPerSecond = 1000000000;
 
 #if TARGET_OS_IPHONE
 - (void)deviceOrientationDidChange:(NSNotification *)notification {
-  [RTC_OBJC_TYPE(RTCDispatcher) dispatchAsyncOnType:RTCDispatcherTypeCaptureSession
-                                              block:^{
-                                                [self updateOrientation];
-                                              }];
+  [RTC_OBJC_TYPE(RTCDispatcher)
+      dispatchAsyncOnType:RTCDispatcherTypeCaptureSession
+                    block:^{
+                      [self updateOrientation];
+                    }];
 }
 #endif
 
@@ -252,7 +267,8 @@ const int64_t kNanosecondsPerSecond = 1000000000;
            fromConnection:(AVCaptureConnection *)connection {
   NSParameterAssert(captureOutput == _videoDataOutput);
 
-  if (CMSampleBufferGetNumSamples(sampleBuffer) != 1 || !CMSampleBufferIsValid(sampleBuffer) ||
+  if (CMSampleBufferGetNumSamples(sampleBuffer) != 1 ||
+      !CMSampleBufferIsValid(sampleBuffer) ||
       !CMSampleBufferDataIsReady(sampleBuffer)) {
     return;
   }
@@ -265,16 +281,19 @@ const int64_t kNanosecondsPerSecond = 1000000000;
 #if TARGET_OS_IPHONE
   // Default to portrait orientation on iPhone.
   BOOL usingFrontCamera = NO;
-  // Check the image's EXIF for the camera the image came from as the image could have been
-  // delayed as we set alwaysDiscardsLateVideoFrames to NO.
+  // Check the image's EXIF for the camera the image came from as the image
+  // could have been delayed as we set alwaysDiscardsLateVideoFrames to NO.
   AVCaptureDevicePosition cameraPosition =
       [AVCaptureSession devicePositionForSampleBuffer:sampleBuffer];
   if (cameraPosition != AVCaptureDevicePositionUnspecified) {
     usingFrontCamera = AVCaptureDevicePositionFront == cameraPosition;
   } else {
     AVCaptureDeviceInput *deviceInput =
-        (AVCaptureDeviceInput *)((AVCaptureInputPort *)connection.inputPorts.firstObject).input;
-    usingFrontCamera = AVCaptureDevicePositionFront == deviceInput.device.position;
+        (AVCaptureDeviceInput *)((AVCaptureInputPort *)
+                                     connection.inputPorts.firstObject)
+            .input;
+    usingFrontCamera =
+        AVCaptureDevicePositionFront == deviceInput.device.position;
   }
   switch (_orientation) {
     case UIDeviceOrientationPortrait:
@@ -302,7 +321,8 @@ const int64_t kNanosecondsPerSecond = 1000000000;
 
   RTC_OBJC_TYPE(RTCCVPixelBuffer) *rtcPixelBuffer =
       [[RTC_OBJC_TYPE(RTCCVPixelBuffer) alloc] initWithPixelBuffer:pixelBuffer];
-  int64_t timeStampNs = CMTimeGetSeconds(CMSampleBufferGetPresentationTimeStamp(sampleBuffer)) *
+  int64_t timeStampNs =
+      CMTimeGetSeconds(CMSampleBufferGetPresentationTimeStamp(sampleBuffer)) *
       kNanosecondsPerSecond;
   RTC_OBJC_TYPE(RTCVideoFrame) *videoFrame =
       [[RTC_OBJC_TYPE(RTCVideoFrame) alloc] initWithBuffer:rtcPixelBuffer
@@ -315,13 +335,14 @@ const int64_t kNanosecondsPerSecond = 1000000000;
     didDropSampleBuffer:(CMSampleBufferRef)sampleBuffer
          fromConnection:(AVCaptureConnection *)connection {
 #if TARGET_OS_IPHONE
-  CFStringRef droppedReason =
-      CMGetAttachment(sampleBuffer, kCMSampleBufferAttachmentKey_DroppedFrameReason, nil);
+  CFStringRef droppedReason = CMGetAttachment(
+      sampleBuffer, kCMSampleBufferAttachmentKey_DroppedFrameReason, nil);
 #else
   // DroppedFrameReason unavailable on macOS.
   CFStringRef droppedReason = nil;
 #endif
-  RTCLogError(@"Dropped sample buffer. Reason: %@", (__bridge NSString *)droppedReason);
+  RTCLogError(@"Dropped sample buffer. Reason: %@",
+              (__bridge NSString *)droppedReason);
 }
 
 #pragma mark - AVCaptureSession notifications
@@ -329,7 +350,8 @@ const int64_t kNanosecondsPerSecond = 1000000000;
 - (void)handleCaptureSessionInterruption:(NSNotification *)notification {
   NSString *reasonString = nil;
 #if TARGET_OS_IPHONE
-  NSNumber *reason = notification.userInfo[AVCaptureSessionInterruptionReasonKey];
+  NSNumber *reason =
+      notification.userInfo[AVCaptureSessionInterruptionReasonKey];
   if (reason) {
     switch (reason.intValue) {
       case AVCaptureSessionInterruptionReasonVideoDeviceNotAvailableInBackground:
@@ -355,32 +377,35 @@ const int64_t kNanosecondsPerSecond = 1000000000;
 }
 
 - (void)handleCaptureSessionRuntimeError:(NSNotification *)notification {
-  NSError *error = [notification.userInfo objectForKey:AVCaptureSessionErrorKey];
+  NSError *error =
+      [notification.userInfo objectForKey:AVCaptureSessionErrorKey];
   RTCLogError(@"Capture session runtime error: %@", error);
 
-  [RTC_OBJC_TYPE(RTCDispatcher) dispatchAsyncOnType:RTCDispatcherTypeCaptureSession
-                                              block:^{
+  [RTC_OBJC_TYPE(RTCDispatcher)
+      dispatchAsyncOnType:RTCDispatcherTypeCaptureSession
+                    block:^{
 #if TARGET_OS_IPHONE
-                                                if (error.code == AVErrorMediaServicesWereReset) {
-                                                  [self handleNonFatalError];
-                                                } else {
-                                                  [self handleFatalError];
-                                                }
+                      if (error.code == AVErrorMediaServicesWereReset) {
+                        [self handleNonFatalError];
+                      } else {
+                        [self handleFatalError];
+                      }
 #else
         [self handleFatalError];
 #endif
-                                              }];
+                    }];
 }
 
 - (void)handleCaptureSessionDidStartRunning:(NSNotification *)notification {
   RTCLog(@"Capture session started.");
 
-  [RTC_OBJC_TYPE(RTCDispatcher) dispatchAsyncOnType:RTCDispatcherTypeCaptureSession
-                                              block:^{
-                                                // If we successfully restarted after an unknown
-                                                // error, allow future retries on fatal errors.
-                                                self.hasRetriedOnFatalError = NO;
-                                              }];
+  [RTC_OBJC_TYPE(RTCDispatcher)
+      dispatchAsyncOnType:RTCDispatcherTypeCaptureSession
+                    block:^{
+                      // If we successfully restarted after an unknown
+                      // error, allow future retries on fatal errors.
+                      self.hasRetriedOnFatalError = NO;
+                    }];
 }
 
 - (void)handleCaptureSessionDidStopRunning:(NSNotification *)notification {
@@ -392,7 +417,8 @@ const int64_t kNanosecondsPerSecond = 1000000000;
       dispatchAsyncOnType:RTCDispatcherTypeCaptureSession
                     block:^{
                       if (!self.hasRetriedOnFatalError) {
-                        RTCLogWarning(@"Attempting to recover from fatal capture error.");
+                        RTCLogWarning(
+                            @"Attempting to recover from fatal capture error.");
                         [self handleNonFatalError];
                         self.hasRetriedOnFatalError = YES;
                       } else {
@@ -402,13 +428,14 @@ const int64_t kNanosecondsPerSecond = 1000000000;
 }
 
 - (void)handleNonFatalError {
-  [RTC_OBJC_TYPE(RTCDispatcher) dispatchAsyncOnType:RTCDispatcherTypeCaptureSession
-                                              block:^{
-                                                RTCLog(@"Restarting capture session after error.");
-                                                if (self.isRunning) {
-                                                  [self.captureSession startRunning];
-                                                }
-                                              }];
+  [RTC_OBJC_TYPE(RTCDispatcher)
+      dispatchAsyncOnType:RTCDispatcherTypeCaptureSession
+                    block:^{
+                      RTCLog(@"Restarting capture session after error.");
+                      if (self.isRunning) {
+                        [self.captureSession startRunning];
+                      }
+                    }];
 }
 
 #if TARGET_OS_IPHONE
@@ -460,29 +487,34 @@ const int64_t kNanosecondsPerSecond = 1000000000;
 
 - (void)setupVideoDataOutput {
   NSAssert(_videoDataOutput == nil, @"Setup video data output called twice.");
-  AVCaptureVideoDataOutput *videoDataOutput = [[AVCaptureVideoDataOutput alloc] init];
+  AVCaptureVideoDataOutput *videoDataOutput =
+      [[AVCaptureVideoDataOutput alloc] init];
 
-  // `videoDataOutput.availableVideoCVPixelFormatTypes` returns the pixel formats supported by the
-  // device with the most efficient output format first. Find the first format that we support.
+  // `videoDataOutput.availableVideoCVPixelFormatTypes` returns the pixel
+  // formats supported by the device with the most efficient output format
+  // first. Find the first format that we support.
   NSSet<NSNumber *> *supportedPixelFormats =
       [RTC_OBJC_TYPE(RTCCVPixelBuffer) supportedPixelFormats];
-  NSMutableOrderedSet *availablePixelFormats =
-      [NSMutableOrderedSet orderedSetWithArray:videoDataOutput.availableVideoCVPixelFormatTypes];
+  NSMutableOrderedSet *availablePixelFormats = [NSMutableOrderedSet
+      orderedSetWithArray:videoDataOutput.availableVideoCVPixelFormatTypes];
   [availablePixelFormats intersectSet:supportedPixelFormats];
   NSNumber *pixelFormat = availablePixelFormats.firstObject;
   NSAssert(pixelFormat, @"Output device has no supported formats.");
 
   _preferredOutputPixelFormat = [pixelFormat unsignedIntValue];
   _outputPixelFormat = _preferredOutputPixelFormat;
-  videoDataOutput.videoSettings = @{(NSString *)kCVPixelBufferPixelFormatTypeKey : pixelFormat};
+  videoDataOutput.videoSettings =
+      @{(NSString *)kCVPixelBufferPixelFormatTypeKey : pixelFormat};
   videoDataOutput.alwaysDiscardsLateVideoFrames = NO;
   [videoDataOutput setSampleBufferDelegate:self queue:self.frameQueue];
   _videoDataOutput = videoDataOutput;
 }
 
 - (void)updateVideoDataOutputPixelFormat:(AVCaptureDeviceFormat *)format {
-  FourCharCode mediaSubType = CMFormatDescriptionGetMediaSubType(format.formatDescription);
-  if (![[RTC_OBJC_TYPE(RTCCVPixelBuffer) supportedPixelFormats] containsObject:@(mediaSubType)]) {
+  FourCharCode mediaSubType =
+      CMFormatDescriptionGetMediaSubType(format.formatDescription);
+  if (![[RTC_OBJC_TYPE(RTCCVPixelBuffer) supportedPixelFormats]
+          containsObject:@(mediaSubType)]) {
     mediaSubType = _preferredOutputPixelFormat;
   }
 
@@ -490,9 +522,10 @@ const int64_t kNanosecondsPerSecond = 1000000000;
     _outputPixelFormat = mediaSubType;
   }
 
-  // Update videoSettings with dimensions, as some virtual cameras, e.g. Snap Camera, may not work
-  // otherwise.
-  CMVideoDimensions dimensions = CMVideoFormatDescriptionGetDimensions(format.formatDescription);
+  // Update videoSettings with dimensions, as some virtual cameras, e.g. Snap
+  // Camera, may not work otherwise.
+  CMVideoDimensions dimensions =
+      CMVideoFormatDescriptionGetDimensions(format.formatDescription);
   _videoDataOutput.videoSettings = @{
     (id)kCVPixelBufferWidthKey : @(dimensions.width),
     (id)kCVPixelBufferHeightKey : @(dimensions.height),
@@ -502,26 +535,32 @@ const int64_t kNanosecondsPerSecond = 1000000000;
 
 #pragma mark - Private, called inside capture queue
 
-- (void)updateDeviceCaptureFormat:(AVCaptureDeviceFormat *)format fps:(NSInteger)fps {
-  NSAssert([RTC_OBJC_TYPE(RTCDispatcher) isOnQueueForType:RTCDispatcherTypeCaptureSession],
+- (void)updateDeviceCaptureFormat:(AVCaptureDeviceFormat *)format
+                              fps:(NSInteger)fps {
+  NSAssert([RTC_OBJC_TYPE(RTCDispatcher)
+               isOnQueueForType:RTCDispatcherTypeCaptureSession],
            @"updateDeviceCaptureFormat must be called on the capture queue.");
   @try {
     _currentDevice.activeFormat = format;
     _currentDevice.activeVideoMinFrameDuration = CMTimeMake(1, fps);
   } @catch (NSException *exception) {
-    RTCLogError(@"Failed to set active format!\n User info:%@", exception.userInfo);
+    RTCLogError(@"Failed to set active format!\n User info:%@",
+                exception.userInfo);
     return;
   }
 }
 
 - (void)reconfigureCaptureSessionInput {
-  NSAssert([RTC_OBJC_TYPE(RTCDispatcher) isOnQueueForType:RTCDispatcherTypeCaptureSession],
-           @"reconfigureCaptureSessionInput must be called on the capture queue.");
+  NSAssert(
+      [RTC_OBJC_TYPE(RTCDispatcher)
+          isOnQueueForType:RTCDispatcherTypeCaptureSession],
+      @"reconfigureCaptureSessionInput must be called on the capture queue.");
   NSError *error = nil;
   AVCaptureDeviceInput *input =
       [AVCaptureDeviceInput deviceInputWithDevice:_currentDevice error:&error];
   if (!input) {
-    RTCLogError(@"Failed to create front camera input: %@", error.localizedDescription);
+    RTCLogError(@"Failed to create front camera input: %@",
+                error.localizedDescription);
     return;
   }
   [_captureSession beginConfiguration];
@@ -537,7 +576,8 @@ const int64_t kNanosecondsPerSecond = 1000000000;
 }
 
 - (void)updateOrientation {
-  NSAssert([RTC_OBJC_TYPE(RTCDispatcher) isOnQueueForType:RTCDispatcherTypeCaptureSession],
+  NSAssert([RTC_OBJC_TYPE(RTCDispatcher)
+               isOnQueueForType:RTCDispatcherTypeCaptureSession],
            @"updateOrientation must be called on the capture queue.");
 #if TARGET_OS_IPHONE
   _orientation = [UIDevice currentDevice].orientation;

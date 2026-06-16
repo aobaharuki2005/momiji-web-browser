@@ -141,7 +141,7 @@ mozAccessible* GetEditableNativeFromGeckoAccessible(Accessible* aAcc) {
   if (!caretEditable && stateChangeType == AXTextStateChangeTypeSelectionMove) {
     // If we are not in an editable, VO expects AXTextStateSync to be present
     // and true.
-    [info setObject:@YES forKey:@"AXTextStateSync"];
+    info[@"AXTextStateSync"] = @YES;
   }
 
   if (!prevCaretMarker.IsValid() || caretMarker == prevCaretMarker) {
@@ -155,12 +155,12 @@ mozAccessible* GetEditableNativeFromGeckoAccessible(Accessible* aAcc) {
   if (prevCaretEditable != caretEditable) {
     // If the caret goes in or out of an editable, consider the
     // move direction "discontiguous".
-    [info setObject:@(AXTextSelectionDirectionDiscontiguous) forKey:@"AXTextSelectionDirection"];
-
+    info[@"AXTextSelectionDirection"] =
+        @(AXTextSelectionDirectionDiscontiguous);
     if ([[caretEditable moxFocused] boolValue]) {
       // If the caret is in a new focused editable, VO expects this attribute to
       // be present and to be true.
-      [info setObject:@YES forKey:@"AXTextSelectionChangedFocus"];
+      info[@"AXTextSelectionChangedFocus"] = @YES;
     }
 
     return info;
@@ -270,9 +270,9 @@ mozAccessible* GetEditableNativeFromGeckoAccessible(Accessible* aAcc) {
   }
 
   GeckoTextMarker p1 = GeckoTextMarker::MarkerFromAXTextMarker(
-      mGeckoDocAccessible, (__bridge AXTextMarkerRef)[textMarkers objectAtIndex:0]);
+      mGeckoDocAccessible, (__bridge AXTextMarkerRef)textMarkers[0]);
   GeckoTextMarker p2 = GeckoTextMarker::MarkerFromAXTextMarker(
-      mGeckoDocAccessible, (__bridge AXTextMarkerRef)[textMarkers objectAtIndex:1]);
+      mGeckoDocAccessible, (__bridge AXTextMarkerRef)textMarkers[1]);
 
   if (!p1.IsValid() || !p2.IsValid()) {
     // If either marker is invalid, return nil.

@@ -11,11 +11,9 @@
 
 extern "C" namespace soundtouch
 {
-SOUNDTOUCH_API
 soundtouch::SoundTouch*
 createSoundTouchObj();
 
-SOUNDTOUCH_API
 void
 destroySoundTouchObj(soundtouch::SoundTouch* aObj);
 }

@@ -7,14 +7,12 @@
 extern "C" namespace soundtouch
 {
 
-SOUNDTOUCH_API
 soundtouch::SoundTouch*
 createSoundTouchObj()
 {
   return new soundtouch::SoundTouch();
 }
 
-SOUNDTOUCH_API
 void
 destroySoundTouchObj(soundtouch::SoundTouch* aObj)
 {

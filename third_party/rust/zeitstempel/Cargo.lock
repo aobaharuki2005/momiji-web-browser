@@ -49,6 +49,5 @@ dependencies = [
  "cfg-if",
  "libc",
  "once_cell",
- "whatsys",
  "winapi",
 ]

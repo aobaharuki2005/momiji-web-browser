@@ -336,8 +336,6 @@ class Message : public mojo::core::ports::UserMessage, public Pickle {
 
   uint32_t num_send_rights() const;
 
-  //it ain't workin sorry nika
-  /*
   bool WriteMachReceiveRight(mozilla::UniqueMachReceiveRight port);
 
   // WARNING: This method is marked as `const` so it can be called when
@@ -346,7 +344,6 @@ class Message : public mojo::core::ports::UserMessage, public Pickle {
                                mozilla::UniqueMachReceiveRight* port) const;
 
   uint32_t num_receive_rights() const;
-  */
 #endif
 
 #ifdef FUZZING_SNAPSHOT
@@ -416,8 +413,6 @@ class Message : public mojo::core::ports::UserMessage, public Pickle {
   // deserializing a message.
   mutable nsTArray<mozilla::UniqueMachSendRight> attached_send_rights_;
 
-  //it ain't workin sorry nika
-  /*
   // The set of mach receive rights which are attached to this message.
   //
   // Mutable, as this array can be mutated during `ConsumeMachReceiveRight` when
@@ -428,7 +423,6 @@ class Message : public mojo::core::ports::UserMessage, public Pickle {
   // being processed, which may be used by the system to temporarily boost the
   // QoS for this process.
   mozilla::UniqueMachSendRight mach_voucher_;
-  */
 #endif
 
   // Total size of buffers which should have been sent in shared memory, but had
