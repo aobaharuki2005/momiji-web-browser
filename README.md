@@ -1,5 +1,10 @@
 <span style="display:block;text-align:center">![Momiji](./docs/readme/banner.jpg)</span>
 
+<p align="center"> 
+  <a href="https://github.com/aobaharuki2005/firefox-dynasty-RELIFE/releases"><img src="https://img.shields.io/github/downloads/aobaharuki2005/momiji-web-browser/total"></a>
+  <a href="https://opensource.org/licenses/MPL-2.0"><img src="https://img.shields.io/badge/License-MPL_2.0-brightgreen.svg" alt="License: MPL 2.0"></a>
+</p>
+
 # Momiji Web Browser - macOS Legacy (10.7-10.14) support
 
 > [!IMPORTANT]
