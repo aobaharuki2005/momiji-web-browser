@@ -7,12 +7,19 @@
 
 # Momiji Web Browser - macOS Legacy (10.7-10.14) support
 
+---
 > [!IMPORTANT]
 > - Hardware graphics acceleration is available but maybe buggy on some platforms  (on my Ivy Bridge machine, fonts look partially broken in case of macOS 10.7 and 10.8). In case of buggy experience, follow [this guide](https://support.mozilla.org/en-US/kb/performance-settings) to turn off hardware acceleration for better Web rendering.
->     - Especially, in pre-2010 era machines, Momiji is reported with `SIGILL` crash in thread `Renderer`. In this case, you should try running Momiji in safe-mode first using Terminal: `/path/to/Momiji.app/Contents/MacOS/momiji --safe-mode` _(replace `/path/to/Momiji.app` with your actual Momiji path)_, then turn off hardware acceleration using the aforementioned guide, then perform a normal launch to see whether it works. If it still does not work, please file a bug in the Issue subpage. For more detail about this caveats, check out for this [issue #13 reference](https://github.com/aobaharuki2005/momiji-web-browser/issues/13#issuecomment-4412459833)
-> - Screen sharing (in Google Meet, Microsoft Teams, etc.) is unavailable on macOS 10.7 due to the absence of compatible `DesktopCapture` framework
+>     - Especially, in pre-2010 era machines, Momiji is reported with `SIGILL` crash in thread `Renderer`. If you encounter this, try running Momiji in safe-mode first using Terminal: `/path/to/Momiji.app/Contents/MacOS/momiji --safe-mode` (replace `/path/to/Momiji.app` with your actual Momiji path), then turn off hardware acceleration using the above guide). 
+>      - After that, perform a normal launch to see whether it works. If not, please file a bug in the Issue subpage. For more detail about this caveats, check out for this [issue #13 reference](https://github.com/aobaharuki2005/momiji-web-browser/issues/13#issuecomment-4412459833)
+> - Full screen sharing (in Google Meet, Microsoft Teams, etc.) and Translations is unavailable on macOS 10.7
 > - Discord voice, video calls and its Go Live streams are unsupported as they require at least Firefox 142 to work on since 2026-Mar-02, while Momiji is currently being based on Firefox 140 ESR baseline.
-> - DRM-encrypted content (e.g. Spotify, Netflix) is unable to play by default, due to unsupported WideVine plugin. To bring back this functionality, please install Momiji using Momiji Downloader created by @wowfunhappy in this [link](https://mavericksforever.com/).
+> - DRM-encrypted content (e.g. Spotify, Netflix) is unable to play by default, due to unsupported WideVine plugin. If you need this, bring it back by leveraging Momiji Downloader created by Wowfunhappy to install Momiji in this [link](https://mavericksforever.com/).
+
+> [!NOTE]
+> - According to [Firefox Release Calendar](https://whattrainisitnow.com/calendar/), the end-of-life date for Firefox 140 ESR **has been extended further 2 weeks till 2026-Sep-29,** marking the 17th release of the equivalent baseline.
+> - Another thing to notice is that Mozilla **have boosted their releasing schedule up to 2x faster than before**, reducing durations between two consecutive releases down to only 2 weeks. I think that Mozilla has been increasingly leveraging AI recently must be playing a huge role in this. However as I'm still undergoing my undergraduate program for the last year, together with the fact I am not financially eligible for such paid plans, it's not worth expecting me to follow such speedy release schedules.
+---
 
 ## About Momiji
 
