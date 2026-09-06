@@ -1,4 +1,4 @@
-<span style="display:block;text-align:center">![Momiji](./docs/readme/banner.jpg)</span>
+<span style="display:block;text-align:center">![Momiji](./img/banner.jpg)</span>
 
 <p align="center"> 
   <a href="https://github.com/aobaharuki2005/firefox-dynasty-RELIFE/releases"><img src="https://img.shields.io/github/downloads/aobaharuki2005/momiji-web-browser/total"></a>
@@ -6,6 +6,8 @@
 </p>
 
 # Momiji Web Browser - macOS Legacy (10.7-10.14) support
+
+<span style="display:block;text-align:center">![Screenshot](img/screenshot_new.png)</span>
 
 ---
 > [!IMPORTANT]
@@ -55,13 +57,6 @@ Modified files are documented in [CHANGES.md](CHANGES.md).
 ## Downloads
 Check out for my releases (binary distribution and source code archive) in this [Releases](https://github.com/aobaharuki2005/firefox-dynasty-RELIFE/releases) page.
 
-## Building
-For build guide, please checkout for [BUILDING.md](BUILDING.md)
-
-## Screenshot
-
-<span style="display:block;text-align:center">![Screenshot](docs/readme/screenshot_new.png)</span>
-
 ## Credits
 
 If I've forgotten to put your name here, please let me know and I'll add it.
@@ -82,7 +77,7 @@ In case of any questions, please contact me via email: tranbaohnth@outlook.com.v
 
 # Original repository readme
 
-![Firefox Browser](./docs/readme/readme-banner.svg)
+![Firefox Browser](./img/readme-banner.svg)
 
 [Firefox](https://firefox.com/) is a fast, reliable and private web browser from the non-profit [Mozilla organization](https://mozilla.org/).
 
