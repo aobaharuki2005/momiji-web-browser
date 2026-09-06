@@ -49,13 +49,8 @@ This project is NOT AFFILIATED WITH, ENDORSED BY, OR SPONSORED by Mozilla Founda
 ## Disclaimer
 This is an independent community open-source project. Use at your own risk. No warranty provided.
 
-## Source Code
-Full source code is available in this repository, as required by the Mozilla Public License 2.0.
-
-Modified files are documented in [CHANGES.md](CHANGES.md).
-
 ## Downloads
-Check out for my releases (binary distribution and source code archive) in this [Releases](https://github.com/aobaharuki2005/firefox-dynasty-RELIFE/releases) page.
+Check out for my releases (binary distribution and equivalent source code) in this [Releases](https://github.com/aobaharuki2005/firefox-dynasty-RELIFE/releases) page.
 
 ## Credits
 
