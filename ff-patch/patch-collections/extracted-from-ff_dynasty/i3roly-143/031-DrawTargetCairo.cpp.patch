@@ -1,0 +1,15 @@
+diff --git a/gfx/2d/DrawTargetCairo.cpp b/gfx/2d/DrawTargetCairo.cpp
+index ac3d6fba439b..1ad37d30992f 100644
+--- a/gfx/2d/DrawTargetCairo.cpp
++++ b/gfx/2d/DrawTargetCairo.cpp
+@@ -1689,9 +1689,7 @@ void DrawTargetCairo::PushClipRect(const Rect& aRect) {
+ }
+ 
+ void DrawTargetCairo::PopClip() {
+-  if (NS_WARN_IF(mClipDepth <= 0)) {
+-    return;
+-  }
++  MOZ_ASSERT(mClipDepth > 0);
+ 
+   if (!IsValid()) {
+     gfxCriticalNote << "PopClip with bad surface "

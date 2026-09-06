@@ -1,0 +1,13 @@
+diff --git a/media/libsoundtouch/moz.yaml b/media/libsoundtouch/moz.yaml
+index 4d41f7659f71a..e4edf60d31196 100644
+--- a/media/libsoundtouch/moz.yaml
++++ b/media/libsoundtouch/moz.yaml
+@@ -52,7 +52,7 @@ vendoring:
+   keep:
+     - AUTHORS
+     - clear-lf.sh
+-    - src/RLBoxSoundTouch*
++    - src/RLBoxSoundTouchFactory.*
+     - src/SoundTouchFactory.*
+     - src/soundtouch_config.h
+     - src/soundtouch_perms.h

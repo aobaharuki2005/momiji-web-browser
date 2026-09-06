@@ -1,0 +1,30 @@
+diff --git a/dom/media/moz.build b/dom/media/moz.build
+index 8df95fbade..4851c5f7bc 100644
+--- a/dom/media/moz.build
++++ b/dom/media/moz.build
+@@ -196,6 +196,8 @@ EXPORTS += [
+     "PrincipalHandle.h",
+     "QueueObject.h",
+     "ReaderProxy.h",
++    "RLBoxSoundTouch.h",
++    "RLBoxSoundTouchTypes.h",
+     "SeekJob.h",
+     "SeekTarget.h",
+     "SelfRef.h",
+@@ -310,6 +312,7 @@ UNIFIED_SOURCES += [
+     "MemoryBlockCache.cpp",
+     "QueueObject.cpp",
+     "ReaderProxy.cpp",
++    "RLBoxSoundTouch.cpp",
+     "SeekJob.cpp",
+     "TimeUnits.cpp",
+     "Tracing.cpp",
+@@ -357,7 +360,7 @@ EXTRA_JS_MODULES.media += [
+ ]
+ 
+ LOCAL_INCLUDES += [
+-    "!/media/libsoundtouch/src",
++    "!/security/rlbox",
+     "/caps",
+     "/docshell/base",
+     "/dom/base",

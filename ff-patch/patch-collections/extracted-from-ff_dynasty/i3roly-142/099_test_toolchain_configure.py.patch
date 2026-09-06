@@ -1,0 +1,13 @@
+diff --git a/python/mozbuild/mozbuild/test/configure/test_toolchain_configure.py b/python/mozbuild/mozbuild/test/configure/test_toolchain_configure.py
+index 5e75371e30..3a8999b82f 100644
+--- a/python/mozbuild/mozbuild/test/configure/test_toolchain_configure.py
++++ b/python/mozbuild/mozbuild/test/configure/test_toolchain_configure.py
+@@ -897,7 +897,7 @@ class OSXToolchainTest(BaseToolchainTest):
+             [
+                 "-isysroot",
+                 xcrun("", ("--show-sdk-path",))[1],
+-                "-mmacosx-version-min=10.15",
++                "-mmacosx-version-min=10.13",
+             ]
+         )
+     }

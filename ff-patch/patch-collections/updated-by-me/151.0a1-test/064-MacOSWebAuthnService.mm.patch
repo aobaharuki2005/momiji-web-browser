@@ -1,0 +1,13 @@
+diff --git a/dom/webauthn/MacOSWebAuthnService.mm b/dom/webauthn/MacOSWebAuthnService.mm
+index f5f58d2552815..3e4e98cfeb96f 100644
+--- a/dom/webauthn/MacOSWebAuthnService.mm
++++ b/dom/webauthn/MacOSWebAuthnService.mm
+@@ -1022,7 +1022,7 @@ nsresult BrowsingContextIdToNSWindow(uint64_t browsingContextId,
+                 credentials) {
+           nsTArray<RefPtr<nsIWebAuthnAutoFillEntry>> autoFillEntries;
+           for (NSUInteger i = 0; i < credentials.count; i++) {
+-            const auto& credential = credentials[i];
++            const auto& credential = [credentials objectAtIndex:i];
+             nsAutoString userName;
+             nsCocoaUtils::GetStringForNSString(credential.name, userName);
+             nsAutoString rpId;

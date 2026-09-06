@@ -1,0 +1,20 @@
+diff --git a/toolkit/xre/nsEmbedFunctions.cpp b/toolkit/xre/nsEmbedFunctions.cpp
+index eac36ad3e5392..af1b13ef21998 100644
+--- a/toolkit/xre/nsEmbedFunctions.cpp
++++ b/toolkit/xre/nsEmbedFunctions.cpp
+@@ -436,12 +436,15 @@ nsresult XRE_InitChildProcess(int aArgc, char* aArgv[],
+ 
+   Maybe<IPC::Channel::ChannelHandle> clientChannel =
+       geckoargs::sIPCHandle.Get(aArgc, aArgv);
++//it ain't workin sorry nika
++/*
+ #ifdef XP_DARWIN
+   MOZ_ASSERT_IF(clientChannel, !geckoargs::sIPCPort.IsPresent(aArgc, aArgv));
+   if (!clientChannel) {
+     clientChannel = geckoargs::sIPCPort.Get(aArgc, aArgv);
+   }
+ #endif
++*/
+   if (NS_WARN_IF(!clientChannel)) {
+     return NS_ERROR_FAILURE;
+   }

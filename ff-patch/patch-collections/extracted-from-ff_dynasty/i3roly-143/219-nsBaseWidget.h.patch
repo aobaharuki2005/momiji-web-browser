@@ -1,0 +1,17 @@
+diff --git a/widget/nsBaseWidget.h b/widget/nsBaseWidget.h
+index 9de4197bbc50..72c3ee2d3a4f 100644
+--- a/widget/nsBaseWidget.h
++++ b/widget/nsBaseWidget.h
+@@ -361,6 +361,12 @@ class nsBaseWidget : public nsIWidget, public nsSupportsWeakReference {
+   bool IsSmallPopup() const;
+ 
+   PopupLevel GetPopupLevel() { return mPopupLevel; }
++  
++  LayoutDeviceIntSize ClientToWindowSize(
++      const LayoutDeviceIntSize& aClientSize) override {
++    return aClientSize;
++  }
++
+ 
+   const SizeConstraints GetSizeConstraints() override;
+   void SetSizeConstraints(const SizeConstraints& aConstraints) override;

@@ -1,0 +1,13 @@
+diff --git a/dom/media/mediasink/moz.build b/dom/media/mediasink/moz.build
+index e04bf24a25c5..0dfa35357b90 100644
+--- a/dom/media/mediasink/moz.build
++++ b/dom/media/mediasink/moz.build
+@@ -17,7 +17,7 @@ EXPORTS += [
+ ]
+ 
+ LOCAL_INCLUDES += [
+-    "!/media/libsoundtouch/src",
++    "!/security/rlbox",
+     "/dom/media",
+ ]
+ 

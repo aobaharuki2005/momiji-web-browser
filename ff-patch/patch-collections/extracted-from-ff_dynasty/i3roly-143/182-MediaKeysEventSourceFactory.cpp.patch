@@ -1,0 +1,23 @@
+diff --git a/widget/cocoa/MediaKeysEventSourceFactory.cpp b/widget/cocoa/MediaKeysEventSourceFactory.cpp
+index 5751a716df34..1a5ad93b4c0b 100644
+--- a/widget/cocoa/MediaKeysEventSourceFactory.cpp
++++ b/widget/cocoa/MediaKeysEventSourceFactory.cpp
+@@ -6,12 +6,17 @@
+ 
+ #include "MediaHardwareKeysEventSourceMac.h"
+ #include "MediaHardwareKeysEventSourceMacMediaCenter.h"
++#include "nsCocoaFeatures.h"
+ 
+ namespace mozilla {
+ namespace widget {
+ 
+ mozilla::dom::MediaControlKeySource* CreateMediaControlKeySource() {
+-  return new MediaHardwareKeysEventSourceMacMediaCenter();
++  if (nsCocoaFeatures::IsAtLeastVersion(10, 12, 2)) {
++    return new MediaHardwareKeysEventSourceMacMediaCenter();
++  } else {
++    return new MediaHardwareKeysEventSourceMac();
++  }
+ }
+ 
+ }  // namespace widget

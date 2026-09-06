@@ -1,0 +1,20 @@
+diff --git a/image/decoders/icon/mac/nsIconChannelCocoa.mm b/image/decoders/icon/mac/nsIconChannelCocoa.mm
+index c1770f0c87871..8d2698e7a3359 100644
+--- a/image/decoders/icon/mac/nsIconChannelCocoa.mm
++++ b/image/decoders/icon/mac/nsIconChannelCocoa.mm
+@@ -346,11 +346,12 @@
+ 
+   NSGraphicsContext* oldContext = [NSGraphicsContext currentContext];
+   [NSGraphicsContext
+-      setCurrentContext:[NSGraphicsContext graphicsContextWithCGContext:ctx
++      setCurrentContext:[NSGraphicsContext graphicsContextWithGraphicsPort:ctx
+                                                                 flipped:NO]];
+ 
+-  [iconImage drawInRect:NSMakeRect(0, 0, width, height)];
+-
++  if(@available(macOS 10.9, *)) {
++     [iconImage drawInRect:NSMakeRect(0, 0, width, height)];
++  }
+   [NSGraphicsContext setCurrentContext:oldContext];
+ 
+   CGContextRelease(ctx);

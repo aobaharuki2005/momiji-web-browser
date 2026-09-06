@@ -1,0 +1,12 @@
+diff --git a/dom/media/platforms/apple/AppleVTDecoder.h b/dom/media/platforms/apple/AppleVTDecoder.h
+index 3345f9f0b700a..46fc1f9225413 100644
+--- a/dom/media/platforms/apple/AppleVTDecoder.h
++++ b/dom/media/platforms/apple/AppleVTDecoder.h
+@@ -11,6 +11,7 @@
+ #include <CoreMedia/CoreMedia.h>          // For CMVideoFormatDescriptionRef
+ #include <VideoToolbox/VideoToolbox.h>    // For VTDecompressionSessionRef
+ 
++#include "AppleVDADecoder.h"
+ #include "AppleDecoderModule.h"
+ #include "PerformanceRecorder.h"
+ #include "PlatformDecoderModule.h"

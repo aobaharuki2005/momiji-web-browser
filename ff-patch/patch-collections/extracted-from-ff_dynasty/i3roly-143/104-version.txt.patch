@@ -1,0 +1,7 @@
+diff --git a/mobile/android/version.txt b/mobile/android/version.txt
+index dbfb8800fbb8..9d3464189bcc 100644
+--- a/mobile/android/version.txt
++++ b/mobile/android/version.txt
+@@ -1 +1 @@
+-143.0b10
++143.0

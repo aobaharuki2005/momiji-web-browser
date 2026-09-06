@@ -1,0 +1,14 @@
+diff --git a/third_party/rust/objc2-metal/Cargo.toml b/third_party/rust/objc2-metal/Cargo.toml
+index dbbc75315111f..03bc88a9f6e7e 100644
+--- a/third_party/rust/objc2-metal/Cargo.toml
++++ b/third_party/rust/objc2-metal/Cargo.toml
+@@ -585,6 +585,9 @@ features = [
+ optional = true
+ default-features = false
+ 
++[dependencies.whatsys]
++version = "0.3"
++
+ [lints.clippy]
+ ptr_as_ptr = "warn"
+ redundant_feature_names = "allow"

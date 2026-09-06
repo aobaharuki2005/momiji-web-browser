@@ -1,0 +1,17 @@
+diff --git a/dom/media/systemservices/objc_video_capture/video_capture_avfoundation.mm b/dom/media/systemservices/objc_video_capture/video_capture_avfoundation.mm
+index ca7bf4db9b..186e3455ae 100644
+--- a/dom/media/systemservices/objc_video_capture/video_capture_avfoundation.mm
++++ b/dom/media/systemservices/objc_video_capture/video_capture_avfoundation.mm
+@@ -125,9 +125,9 @@ rtc::scoped_refptr<VideoCaptureModule> VideoCaptureAvFoundation::Create(
+     const char* _Nullable aDeviceUniqueIdUTF8) {
+   std::string uniqueId(aDeviceUniqueIdUTF8);
+ 
+-  for (AVCaptureDevice* device in [RTCCameraVideoCapturer
+-           captureDevicesWithDeviceTypes:[RTCCameraVideoCapturer
+-                                             defaultCaptureDeviceTypes]]) {
++  for (AVCaptureDevice* device in [RTCCameraVideoCapturer captureDevices]
++           /* //FUCK YOU captureDevicesWithDeviceTypes:[RTCCameraVideoCapturer
++                                             defaultCaptureDeviceTypes]]*/) {
+     if ([NSString stdStringForString:device.uniqueID] == uniqueId) {
+       rtc::scoped_refptr<VideoCaptureModule> module(
+           new rtc::RefCountedObject<VideoCaptureAvFoundation>(device));

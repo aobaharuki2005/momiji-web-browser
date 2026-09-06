@@ -1,0 +1,13 @@
+diff --git a/security/manager/ssl/osclientcerts/Cargo.toml b/security/manager/ssl/osclientcerts/Cargo.toml
+index d92225e7a6d40..1778c1332afd9 100644
+--- a/security/manager/ssl/osclientcerts/Cargo.toml
++++ b/security/manager/ssl/osclientcerts/Cargo.toml
+@@ -20,6 +20,8 @@ rsclientcerts = { path = "../rsclientcerts" }
+ rsclientcerts-util = { path = "../rsclientcerts-util" }
+ xpcom = { path = "../../../../xpcom/rust/xpcom" }
+ 
++whatsys = "0.3"
++
+ [target."cfg(any(target_os = \"macos\", target_os = \"ios\"))".dependencies.core-foundation]
+ version = "0.9"
+ 

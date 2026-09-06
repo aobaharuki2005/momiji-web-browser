@@ -1,0 +1,12 @@
+diff --git a/third_party/rust/cubeb-coreaudio/src/backend/device_property.rs b/third_party/rust/cubeb-coreaudio/src/backend/device_property.rs
+index d209f345c6..16358a4a28 100644
+--- a/third_party/rust/cubeb-coreaudio/src/backend/device_property.rs
++++ b/third_party/rust/cubeb-coreaudio/src/backend/device_property.rs
+@@ -4,7 +4,6 @@ pub fn get_device_uid(
+     id: AudioDeviceID,
+     devtype: DeviceType,
+ ) -> std::result::Result<StringRef, OSStatus> {
+-    assert_ne!(id, kAudioObjectUnknown);
+     debug_assert_running_serially();
+ 
+     let address = get_property_address(Property::DeviceUID, devtype);

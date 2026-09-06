@@ -1,0 +1,17 @@
+diff --git a/memory/build/RadixTree.h b/memory/build/RadixTree.h
+index c9260ea35e487..6605490d9cdf7 100644
+--- a/memory/build/RadixTree.h
++++ b/memory/build/RadixTree.h
+@@ -44,11 +44,9 @@ class AddressRadixTree {
+   Mutex mLock MOZ_UNANNOTATED;
+   // We guard only the single slot creations and assume read-only is safe
+   // at any time.
+-  void** mRoot = nullptr;
++  void** mRoot;
+ 
+  public:
+-  // Note that the constructor does not initialise the mutex.
+-  constexpr AddressRadixTree() {}
+ 
+   bool Init() MOZ_REQUIRES(gInitLock) MOZ_EXCLUDES(mLock);
+ 

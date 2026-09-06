@@ -1,0 +1,40 @@
+diff --git a/third_party/rust/metal/src/renderpass.rs b/third_party/rust/metal/src/renderpass.rs
+index f23d9342cb..de4b96a0b6 100644
+--- a/third_party/rust/metal/src/renderpass.rs
++++ b/third_party/rust/metal/src/renderpass.rs
+@@ -235,7 +235,7 @@ foreign_obj_type! {
+ 
+ impl RenderPassColorAttachmentDescriptorArrayRef {
+     pub fn object_at(&self, index: NSUInteger) -> Option<&RenderPassColorAttachmentDescriptorRef> {
+-        unsafe { msg_send![self, objectAtIndexedSubscript: index] }
++        unsafe { msg_send![self, objectAtIndex: index] }
+     }
+ 
+     pub fn set_object_at(
+@@ -245,7 +245,7 @@ impl RenderPassColorAttachmentDescriptorArrayRef {
+     ) {
+         unsafe {
+             msg_send![self, setObject:attachment
+-                     atIndexedSubscript:index]
++                     atIndex:index]
+         }
+     }
+ }
+@@ -335,7 +335,7 @@ impl RenderPassSampleBufferAttachmentDescriptorArrayRef {
+         &self,
+         index: NSUInteger,
+     ) -> Option<&RenderPassSampleBufferAttachmentDescriptorRef> {
+-        unsafe { msg_send![self, objectAtIndexedSubscript: index] }
++        unsafe { msg_send![self, objectAtIndex: index] }
+     }
+ 
+     pub fn set_object_at(
+@@ -345,7 +345,7 @@ impl RenderPassSampleBufferAttachmentDescriptorArrayRef {
+     ) {
+         unsafe {
+             msg_send![self, setObject:attachment
+-                     atIndexedSubscript:index]
++                     atIndex:index]
+         }
+     }
+ }

@@ -1,0 +1,36 @@
+diff --git a/third_party/rust/metal/src/pipeline/compute.rs b/third_party/rust/metal/src/pipeline/compute.rs
+index feee941696c54..4dce9dc820ef1 100644
+--- a/third_party/rust/metal/src/pipeline/compute.rs
++++ b/third_party/rust/metal/src/pipeline/compute.rs
+@@ -374,11 +374,11 @@ foreign_obj_type! {
+ 
+ impl AttributeDescriptorArrayRef {
+     pub fn object_at(&self, index: NSUInteger) -> Option<&AttributeDescriptorRef> {
+-        unsafe { msg_send![self, objectAtIndexedSubscript: index] }
++        unsafe { msg_send![self, objectAtIndex: index] }
+     }
+ 
+     pub fn set_object_at(&self, index: NSUInteger, buffer_desc: Option<&AttributeDescriptorRef>) {
+-        unsafe { msg_send![self, setObject:buffer_desc atIndexedSubscript:index] }
++        unsafe { msg_send![self, setObject:buffer_desc atIndex:index] }
+     }
+ }
+ 
+@@ -426,7 +426,7 @@ foreign_obj_type! {
+ 
+ impl BufferLayoutDescriptorArrayRef {
+     pub fn object_at(&self, index: NSUInteger) -> Option<&BufferLayoutDescriptorRef> {
+-        unsafe { msg_send![self, objectAtIndexedSubscript: index] }
++        unsafe { msg_send![self, objectAtIndex: index] }
+     }
+ 
+     pub fn set_object_at(
+@@ -434,7 +434,7 @@ impl BufferLayoutDescriptorArrayRef {
+         index: NSUInteger,
+         buffer_desc: Option<&BufferLayoutDescriptorRef>,
+     ) {
+-        unsafe { msg_send![self, setObject:buffer_desc atIndexedSubscript:index] }
++        unsafe { msg_send![self, setObject:buffer_desc atIndex:index] }
+     }
+ }
+ 

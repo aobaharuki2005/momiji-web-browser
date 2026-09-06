@@ -1,0 +1,13 @@
+diff --git a/widget/cocoa/nsTouchBarInput.mm b/widget/cocoa/nsTouchBarInput.mm
+index af638f52d3..0a5da5eca7 100644
+--- a/widget/cocoa/nsTouchBarInput.mm
++++ b/widget/cocoa/nsTouchBarInput.mm
+@@ -118,7 +118,7 @@ - (id)initWithKey:(NSString*)aKey
+         TouchBarInput* convertedChild =
+             [[TouchBarInput alloc] initWithXPCOM:child];
+         if (convertedChild) {
+-          orderedChildren[i] = convertedChild;
++          [orderedChildren insertObject:convertedChild atIndex:i];
+         }
+       }
+       [self setChildren:orderedChildren];

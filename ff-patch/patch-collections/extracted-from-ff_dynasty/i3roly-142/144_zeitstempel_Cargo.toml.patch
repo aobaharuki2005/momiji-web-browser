@@ -1,0 +1,16 @@
+diff --git a/third_party/rust/zeitstempel/Cargo.toml b/third_party/rust/zeitstempel/Cargo.toml
+index 73efa45ec0..061c6c0cab 100644
+--- a/third_party/rust/zeitstempel/Cargo.toml
++++ b/third_party/rust/zeitstempel/Cargo.toml
+@@ -24,7 +24,11 @@ version = "1.0.0"
+ [dependencies.once_cell]
+ version = "1.5.2"
+ 
++[dependencies]
++whatsys = "0.3"
++
+ [features]
+ win10plus = []
++
+ [target."cfg(any(target_os = \"linux\", target_os = \"android\", target_os = \"macos\", target_os = \"ios\"))".dependencies.libc]
+ version = "0.2"

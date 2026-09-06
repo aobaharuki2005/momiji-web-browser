@@ -1,0 +1,34 @@
+diff --git a/gfx/skia/skia/src/ports/SkTypeface_mac_ct.cpp b/gfx/skia/skia/src/ports/SkTypeface_mac_ct.cpp
+index 81e11e4f45..44b2623b9b 100644
+--- a/gfx/skia/skia/src/ports/SkTypeface_mac_ct.cpp
++++ b/gfx/skia/skia/src/ports/SkTypeface_mac_ct.cpp
+@@ -729,17 +729,19 @@ bool SkTypeface_Mac::onGlyphMaskNeedsCurrentColor() const {
+ 
+ CFArrayRef SkTypeface_Mac::getVariationAxes() const {
+     fInitVariationAxes([this]{
+-        // Prefer kCTFontVariationAxesAttribute, faster since it doesn't localize axis names.
+-        SkUniqueCFRef<CTFontDescriptorRef> desc(CTFontCopyFontDescriptor(fFontRef.get()));
+-        SkUniqueCFRef<CFTypeRef> cf(
+-                CTFontDescriptorCopyAttribute(desc.get(), kCTFontVariationAxesAttribute));
+-        CFArrayRef array;
+-        if (cf && SkCFDynamicCast(cf.get(), &array, "Axes")) {
+-            fVariationAxes.reset(array);
+-            cf.release();
+-            return;
++        if(__builtin_available(macOS 10.13, *)) {
++          // Prefer kCTFontVariationAxesAttribute, faster since it doesn't localize axis names.
++          SkUniqueCFRef<CTFontDescriptorRef> desc(CTFontCopyFontDescriptor(fFontRef.get()));
++          SkUniqueCFRef<CFTypeRef> cf(
++                  CTFontDescriptorCopyAttribute(desc.get(), kCTFontVariationAxesAttribute));
++          CFArrayRef array;
++          if (cf && SkCFDynamicCast(cf.get(), &array, "Axes")) {
++              fVariationAxes.reset(array);
++              cf.release();
++              return;
++          }
++          fVariationAxes.reset(CTFontCopyVariationAxes(fFontRef.get()));
+         }
+-        fVariationAxes.reset(CTFontCopyVariationAxes(fFontRef.get()));
+     });
+     return fVariationAxes.get();
+ }

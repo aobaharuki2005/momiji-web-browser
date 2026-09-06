@@ -1,0 +1,14 @@
+diff --git a/config/rules.mk b/config/rules.mk
+index 3150ade35501..e20f8d89e7bf 100644
+--- a/config/rules.mk
++++ b/config/rules.mk
+@@ -274,6 +274,9 @@ endif
+ # MacOS X specific stuff
+ #
+ 
++# see
++# https://hg.mozilla.org/mozilla-unified/rev/1bc4ee894015268a6be66950b80705e73f17147e
++# for why we are setting loader path back to executable path
+ ifeq ($(OS_ARCH),Darwin)
+ ifneq (,$(SHARED_LIBRARY))
+ _LOADER_PATH := @rpath

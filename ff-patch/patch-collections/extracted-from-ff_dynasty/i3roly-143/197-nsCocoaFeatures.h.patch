@@ -1,0 +1,32 @@
+diff --git a/widget/cocoa/nsCocoaFeatures.h b/widget/cocoa/nsCocoaFeatures.h
+index dfad59dfe676..17b00ce37204 100644
+--- a/widget/cocoa/nsCocoaFeatures.h
++++ b/widget/cocoa/nsCocoaFeatures.h
+@@ -18,6 +18,16 @@ class nsCocoaFeatures {
+   static int32_t macOSVersionMajor();
+   static int32_t macOSVersionMinor();
+   static int32_t macOSVersionBugFix();
++  static bool OnLionOrLater();
++  static bool OnMountainLionOrLater();
++  static bool OnMavericksOrLater();
++  static bool OnYosemiteOrLater();
++  static bool OnElCapitanOrLater();
++  static bool OnSierraExactly();
++  static bool OnSierraOrLater();
++  static bool OnHighSierraOrLater();
++  static bool OnMojaveOrLater();
++  static bool OnCatalinaOrLater();
+   static bool OnBigSurOrLater();
+   static bool OnMontereyOrLater();
+   static bool OnVenturaOrLater();
+@@ -46,4 +56,10 @@ class nsCocoaFeatures {
+   static int32_t mOSVersion;
+ };
+ 
++// C-callable helper for cairo-quartz-font.c and SkFontHost_mac.cpp
++extern "C" {
++    bool Gecko_OnSierraExactly();
++    bool Gecko_OnSierraOrLater();
++}
++
+ #endif  // nsCocoaFeatures_h_

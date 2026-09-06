@@ -1,0 +1,22 @@
+diff --git a/third_party/rust/metal/src/computepass.rs b/third_party/rust/metal/src/computepass.rs
+index d3173e3d6607..3c8d4b37faef 100644
+--- a/third_party/rust/metal/src/computepass.rs
++++ b/third_party/rust/metal/src/computepass.rs
+@@ -40,7 +40,7 @@ impl ComputePassSampleBufferAttachmentDescriptorArrayRef {
+         &self,
+         index: NSUInteger,
+     ) -> Option<&ComputePassSampleBufferAttachmentDescriptorRef> {
+-        unsafe { msg_send![self, objectAtIndexedSubscript: index] }
++        unsafe { msg_send![self, objectAtIndex: index] }
+     }
+ 
+     pub fn set_object_at(
+@@ -50,7 +50,7 @@ impl ComputePassSampleBufferAttachmentDescriptorArrayRef {
+     ) {
+         unsafe {
+             msg_send![self, setObject:attachment
+-                     atIndexedSubscript:index]
++                     atIndex:index]
+         }
+     }
+ }

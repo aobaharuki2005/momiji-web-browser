@@ -1,0 +1,14 @@
+diff --git a/widget/cocoa/GfxInfo.mm b/widget/cocoa/GfxInfo.mm
+index b64ebc0fa8..58c6b5c3b0 100644
+--- a/widget/cocoa/GfxInfo.mm
++++ b/widget/cocoa/GfxInfo.mm
+@@ -507,9 +507,6 @@ static uint32_t IntValueOfCFData(CFDataRef d) {
+         case OperatingSystem::OSX10_5:
+         case OperatingSystem::OSX10_6:
+         case OperatingSystem::OSX10_7:
+-          *aStatus = nsIGfxInfo::FEATURE_BLOCKED_OS_VERSION;
+-          aFailureId = "FEATURE_FAILURE_CANVAS_OSX_VERSION";
+-          break;
+         default:
+           *aStatus = nsIGfxInfo::FEATURE_STATUS_OK;
+           break;

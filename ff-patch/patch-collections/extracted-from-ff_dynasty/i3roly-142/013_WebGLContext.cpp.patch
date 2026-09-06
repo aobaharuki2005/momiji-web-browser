@@ -1,0 +1,47 @@
+diff --git a/dom/canvas/WebGLContext.cpp b/dom/canvas/WebGLContext.cpp
+index a1fd6e7639..3dde233f2f 100644
+--- a/dom/canvas/WebGLContext.cpp
++++ b/dom/canvas/WebGLContext.cpp
+@@ -87,6 +87,11 @@
+ #include "WebGLValidateStrings.h"
+ #include "WebGLVertexArray.h"
+ 
++#ifdef MOZ_WIDGET_COCOA
++#  include "nsCocoaFeatures.h"
++#endif
++
++
+ #ifdef XP_WIN
+ #  include "WGLLibrary.h"
+ #endif
+@@ -732,6 +737,14 @@ void WebGLContext::FinishInit() {
+     }
+   }
+ 
++    mNeedsFakeNoStencil_UserFBs = false;
++#ifdef MOZ_WIDGET_COCOA
++  if (!nsCocoaFeatures::IsAtLeastVersion(10, 12) &&
++      gl->Vendor() == gl::GLVendor::Intel) {
++    mNeedsFakeNoStencil_UserFBs = true;
++  }
++#endif
++
+   mResetLayer = true;
+   mOptionsFrozen = true;
+ 
+@@ -1974,8 +1987,13 @@ ScopedDrawCallWrapper::ScopedDrawCallWrapper(WebGLContext& webgl)
+     }
+     driverDepthTest &= !mWebGL.mNeedsFakeNoDepth;
+     driverStencilTest &= !mWebGL.mNeedsFakeNoStencil;
+-  }
+-
++    } else {
++      if (mWebGL.mNeedsFakeNoStencil_UserFBs &&
++          fb->DepthAttachment().HasAttachment() &&
++          !fb->StencilAttachment().HasAttachment()) {
++        driverStencilTest = false;
++      }
++    }
+   const auto& gl = mWebGL.gl;
+   mWebGL.DoColorMask(Some(0), driverColorMask0);
+   if (mWebGL.mDriverDepthTest != driverDepthTest) {

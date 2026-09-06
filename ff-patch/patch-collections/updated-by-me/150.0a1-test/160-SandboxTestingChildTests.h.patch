@@ -1,0 +1,28 @@
+diff --git a/security/sandbox/common/test/SandboxTestingChildTests.h b/security/sandbox/common/test/SandboxTestingChildTests.h
+index 128199de26402..2834f46e3db9a 100644
+--- a/security/sandbox/common/test/SandboxTestingChildTests.h
++++ b/security/sandbox/common/test/SandboxTestingChildTests.h
+@@ -10,6 +10,9 @@
+ #include "SandboxTestingChild.h"
+ 
+ #include "mozilla/ipc/UtilityProcessSandboxing.h"
++#ifdef XP_MACOSX
++#  include "nsCocoaFeatures.h"
++#endif
+ #include "nsXULAppAPI.h"
+ 
+ #ifdef XP_UNIX
+@@ -292,7 +295,12 @@ void RunMacTestLaunchProcess(SandboxTestingChild* child,
+   });
+ 
+   // Test that launching an application using LSOpenCFURLRef fails
+-  char* uri = const_cast<char*>("/System/Applications/Utilities/Console.app");
++  char* uri;
++  if (nsCocoaFeatures::OnCatalinaOrLater()) {
++    uri = const_cast<char*>("/System/Applications/Utilities/Console.app");
++  } else {
++    uri = const_cast<char*>("/Applications/Utilities/Console.app");
++  }
+   CFStringRef filePath = ::CFStringCreateWithCString(kCFAllocatorDefault, uri,
+                                                      kCFStringEncodingUTF8);
+   CFURLRef urlRef = ::CFURLCreateWithFileSystemPath(

@@ -1,0 +1,13 @@
+diff --git a/widget/InitData.h b/widget/InitData.h
+index 5b3480487c44a..b9de6f5dcfbc6 100644
+--- a/widget/InitData.h
++++ b/widget/InitData.h
+@@ -82,7 +82,7 @@ enum class PiPType : uint8_t {
+ // Basic struct for widget initialization data.
+ // @see Create member function of nsIWidget
+ struct InitData {
+-  WindowType mWindowType = WindowType::TopLevel;
++  WindowType mWindowType = WindowType::TopLevel; 
+   BorderStyle mBorderStyle = BorderStyle::Default;
+   PopupType mPopupHint = PopupType::Panel;
+   PopupLevel mPopupLevel = PopupLevel::Top;

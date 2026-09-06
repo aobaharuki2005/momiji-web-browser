@@ -1,0 +1,11 @@
+diff --git a/third_party/rust/zeitstempel/Cargo.lock b/third_party/rust/zeitstempel/Cargo.lock
+index 40ffe291157cf..66f2d5d464128 100644
+--- a/third_party/rust/zeitstempel/Cargo.lock
++++ b/third_party/rust/zeitstempel/Cargo.lock
+@@ -49,5 +49,6 @@ dependencies = [
+  "cfg-if",
+  "libc",
+  "once_cell",
++ "whatsys",
+  "winapi",
+ ]

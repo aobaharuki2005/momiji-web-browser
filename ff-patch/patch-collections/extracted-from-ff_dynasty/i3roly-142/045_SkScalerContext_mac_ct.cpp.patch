@@ -1,0 +1,89 @@
+diff --git a/gfx/skia/skia/src/ports/SkScalerContext_mac_ct.cpp b/gfx/skia/skia/src/ports/SkScalerContext_mac_ct.cpp
+index 99c9b4eae0..0af527fcf5 100644
+--- a/gfx/skia/skia/src/ports/SkScalerContext_mac_ct.cpp
++++ b/gfx/skia/skia/src/ports/SkScalerContext_mac_ct.cpp
+@@ -52,6 +52,45 @@
+ 
+ #include <algorithm>
+ 
++#include <sys/utsname.h>
++
++// i'm blue--da ba dee, da ba dai, daba dee daba dai--box (@blueboxd)
++// See Source/WebKit/chromium/base/mac/mac_util.mm DarwinMajorVersionInternal for original source.
++static int readVersion() {
++    struct utsname info;
++    if (uname(&info) != 0) {
++        SkDebugf("uname failed\n");
++        return 0;
++    }
++    if (strcmp(info.sysname, "Darwin") != 0) {
++        SkDebugf("unexpected uname sysname %s\n", info.sysname);
++        return 0;
++    }
++    char* dot = strchr(info.release, '.');
++    if (!dot) {
++        SkDebugf("expected dot in uname release %s\n", info.release);
++        return 0;
++    }
++    int version = atoi(info.release);
++    if (version == 0) {
++        SkDebugf("could not parse uname release %s\n", info.release);
++    }
++    return version;
++}
++static int darwinVersion() {
++    static int darwin_version = readVersion();
++    return darwin_version;
++}
++static bool isLion() {
++    return darwinVersion() == 11;
++}
++static bool isMountainLion() {
++    return darwinVersion() == 12;
++}
++static bool isMavericks() {
++    return darwinVersion() == 13;
++}
++
+ class SkDescriptor;
+ 
+ 
+@@ -241,6 +280,7 @@ CGRGBPixel* SkScalerContext_Mac::Offscreen::getCG(const SkScalerContext_Mac& con
+ 
+         if (SkMask::kARGB32_Format != glyph.maskFormat()) {
+             // Draw black on white to create mask. (Special path exists to speed this up in CG.)
++            // If light-on-dark is requested, draw white on black.
+             CGContextSetGrayFillColor(fCG.get(), 0.0f, 1.0f);
+         } else {
+             CGContextSetFillColorWithColor(fCG.get(), fCGForegroundColor.get());
+@@ -336,7 +376,7 @@ SkScalerContext::GlyphMetrics SkScalerContext_Mac::generateMetrics(const SkGlyph
+         // is rare, so we won't incur a big performance cost for this extra check.
+         // Avoid trying to create a path from a color font due to crashing on 10.9.
+         if (0 == cgAdvance.width && 0 == cgAdvance.height &&
+-            SkMask::kARGB32_Format != glyph.maskFormat()) {
++            SkMask::kARGB32_Format != glyph.maskFormat()  && !isMavericks()) {
+             SkUniqueCFRef<CGPathRef> path(CTFontCreatePathForGlyph(fCTFont.get(), cgGlyph,nullptr));
+             if (!path || CGPathIsEmpty(path.get())) {
+                 return mx;
+@@ -495,9 +535,9 @@ void SkScalerContext_Mac::generateImage(const SkGlyph& glyph, void* imageBuffer)
+         CGRGBPixel* addr = cgPixels;
+         for (int y = 0; y < glyph.height(); ++y) {
+             for (int x = 0; x < glyph.width(); ++x) {
+-                int r = (addr[x] >> 16) & 0xFF;
+-                int g = (addr[x] >>  8) & 0xFF;
+-                int b = (addr[x] >>  0) & 0xFF;
++                int r = linear[(addr[x] >> 16) & 0xFF];
++                int g = linear[(addr[x] >>  8) & 0xFF];
++                int b = linear[(addr[x] >>  0) & 0xFF];
+                 addr[x] = (linear[r] << 16) | (linear[g] << 8) | linear[b];
+             }
+             addr = SkTAddOffset<CGRGBPixel>(addr, cgRowBytes);
+@@ -632,6 +672,8 @@ public:
+ #define kScaleForSubPixelPositionHinting (4.0f)
+ 
+ bool SkScalerContext_Mac::generatePath(const SkGlyph& glyph, SkPath* path, bool* modified) {
++    if(isMavericks())
++        return false;
+     SkScalar scaleX = SK_Scalar1;
+     SkScalar scaleY = SK_Scalar1;
+ 

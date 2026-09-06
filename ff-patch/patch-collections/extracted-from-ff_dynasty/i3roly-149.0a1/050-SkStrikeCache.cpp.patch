@@ -1,0 +1,26 @@
+diff --git a/gfx/skia/skia/src/core/SkStrikeCache.cpp b/gfx/skia/skia/src/core/SkStrikeCache.cpp
+index 2e03b233863f0..ff16066a60fd4 100644
+--- a/gfx/skia/skia/src/core/SkStrikeCache.cpp
++++ b/gfx/skia/skia/src/core/SkStrikeCache.cpp
+@@ -17,6 +17,8 @@
+ #include "src/core/SkStrike.h"
+ #include "src/core/SkStrikeSpec.h"
+ 
++#include "src/sksl/SkSLDefines.h"
++
+ #include <algorithm>
+ #include <utility>
+ 
+@@ -28,10 +30,12 @@ using namespace sktext;
+ bool gSkUseThreadLocalStrikeCaches_IAcknowledgeThisIsIncrediblyExperimental = false;
+ 
+ SkStrikeCache* SkStrikeCache::GlobalStrikeCache() {
++#if !defined(SKSL_USE_THREAD_LOCAL) 
+     if (gSkUseThreadLocalStrikeCaches_IAcknowledgeThisIsIncrediblyExperimental) {
+         static thread_local auto* cache = new SkStrikeCache;
+         return cache;
+     }
++#endif
+     static auto* cache = new SkStrikeCache;
+     return cache;
+ }

@@ -1,0 +1,13 @@
+diff --git a/browser/app/macbuild/Contents/Info.plist.in b/browser/app/macbuild/Contents/Info.plist.in
+index 0c4fb837a2449..c9ba38b0621b8 100644
+--- a/browser/app/macbuild/Contents/Info.plist.in
++++ b/browser/app/macbuild/Contents/Info.plist.in
+@@ -255,7 +255,7 @@
+ 	<key>LSFileQuarantineEnabled</key>
+ 	<true/>
+ 	<key>LSMinimumSystemVersion</key>
+-	<string>10.15.0</string>
++	<string>10.6.0</string>
+   <key>NSSupportsAutomaticGraphicsSwitching</key>
+   <true/>
+   <key>NSRequiresAquaSystemAppearance</key>

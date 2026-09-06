@@ -1,0 +1,63 @@
+diff --git a/widget/cocoa/VibrancyManager.h b/widget/cocoa/VibrancyManager.h
+index 3791e5a251..0069697e4c 100644
+--- a/widget/cocoa/VibrancyManager.h
++++ b/widget/cocoa/VibrancyManager.h
+@@ -11,7 +11,7 @@
+ #include "Units.h"
+ 
+ @class NSView;
+-class nsCocoaWindow;
++class nsChildView;
+ 
+ namespace mozilla {
+ 
+@@ -45,13 +45,13 @@ class VibrancyManager {
+    * Create a new VibrancyManager instance and provide it with an NSView
+    * to attach NSVisualEffectViews to.
+    *
+-   * @param aCoordinateConverter  The nsCocoaWindow to use for converting
++   * @param aCoordinateConverter  The nsChildView to use for converting
+    *   nsIntRect device pixel coordinates into Cocoa NSRect coordinates. Must
+    *   outlive this VibrancyManager instance.
+    * @param aContainerView  The view that's going to be the superview of the
+    *   NSVisualEffectViews which will be created for vibrant regions.
+    */
+-  VibrancyManager(const nsCocoaWindow& aCoordinateConverter,
++  VibrancyManager(const nsChildView& aCoordinateConverter,
+                   NSView* aContainerView);
+ 
+   ~VibrancyManager();
+@@ -67,10 +67,30 @@ class VibrancyManager {
+   bool UpdateVibrantRegion(VibrancyType aType,
+                            const LayoutDeviceIntRegion& aRegion);
+ 
+-  void PrefChanged();
++ 
++  LayoutDeviceIntRegion GetUnionOfVibrantRegions() const;
+ 
+- protected:
+-  const nsCocoaWindow& mCoordinateConverter;
++  /**
++   * Check whether the operating system supports vibrancy at all.
++   * You may only create a VibrancyManager instance if this returns true.
++   * @return Whether VibrancyManager can be used on this OS.
++   */
++  static bool SystemSupportsVibrancy();
++
++  /**
++   * Create an NSVisualEffectView for the specified vibrancy type. The return
++   * value is not autoreleased. We return an object of type NSView* because we
++   * compile with an SDK that does not contain a definition for
++   * NSVisualEffectView.
++   * @param aIsContainer Whether this NSView will have child views. This value
++   *                     affects hit testing: Container views will pass through
++   *                     hit testing requests to their children, and leaf views
++   *                     will be transparent to hit testing.
++   */
++  static NSView* CreateEffectView(VibrancyType aType, BOOL aIsContainer = NO);
++
++protected:
++  const nsChildView& mCoordinateConverter;
+   NSView* mContainerView;
+   EnumeratedArray<VibrancyType, UniquePtr<ViewRegion>> mVibrantRegions;
+ };

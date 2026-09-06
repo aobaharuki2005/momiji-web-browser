@@ -1,0 +1,13 @@
+diff --git a/xpcom/threads/RWLock.h b/xpcom/threads/RWLock.h
+index 4a4a53b870a3b..d43a33ab5d4ad 100644
+--- a/xpcom/threads/RWLock.h
++++ b/xpcom/threads/RWLock.h
+@@ -180,7 +180,7 @@ typedef BaseAutoTryWriteLock<RWLock> AutoTryWriteLock;
+ // calls to WriteLock() and WriteUnlock().
+ typedef BaseAutoWriteLock<RWLock> AutoWriteLock;
+ 
+-class MOZ_ONLY_USED_TO_AVOID_STATIC_CONSTRUCTORS MOZ_CAPABILITY("rwlock")
++class  MOZ_CAPABILITY("rwlock")
+     StaticRWLock {
+  public:
+   // In debug builds, check that mLock is initialized for us as we expect by

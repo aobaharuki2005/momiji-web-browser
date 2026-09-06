@@ -1,0 +1,12 @@
+diff --git a/layout/base/nsLayoutUtils.cpp b/layout/base/nsLayoutUtils.cpp
+index 8f17cede6b45..a43746613e74 100644
+--- a/layout/base/nsLayoutUtils.cpp
++++ b/layout/base/nsLayoutUtils.cpp
+@@ -2402,6 +2402,7 @@ nsRect nsLayoutUtils::TransformFrameRectToAncestor(
+       NSFloatPixelsToAppUnits(float(result.height), destAppUnitsPerDevPixel));
+ }
+ 
++
+ LayoutDeviceIntPoint nsLayoutUtils::WidgetToWidgetOffset(nsIWidget* aFrom,
+                                                          nsIWidget* aTo) {
+   auto fromOffset = aFrom->WidgetToScreenOffset();

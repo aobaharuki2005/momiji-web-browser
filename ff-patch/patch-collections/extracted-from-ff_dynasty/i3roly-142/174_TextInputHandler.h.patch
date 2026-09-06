@@ -1,0 +1,94 @@
+diff --git a/widget/cocoa/TextInputHandler.h b/widget/cocoa/TextInputHandler.h
+index 4283103817..ae11a582e9 100644
+--- a/widget/cocoa/TextInputHandler.h
++++ b/widget/cocoa/TextInputHandler.h
+@@ -22,13 +22,17 @@
+ #include "mozilla/TextEventDispatcherListener.h"
+ #include "WritingModes.h"
+ 
+-class nsCocoaWindow;
++class nsChildView;
+ 
+ namespace mozilla {
+ namespace widget {
+ 
+ // Key code constants
+ enum {
++#if !defined(MAC_OS_X_VERSION_10_12) || MAC_OS_X_VERSION_MAX_ALLOWED < MAC_OS_X_VERSION_10_12
++  kVK_RightCommand = 0x36,  // right command key
++#endif
++
+   kVK_PC_PrintScreen = kVK_F13,
+   kVK_PC_ScrollLock = kVK_F14,
+   kVK_PC_Pause = kVK_F15,
+@@ -517,20 +521,20 @@ class TextInputHandlerBase : public TextEventDispatcherListener {
+    *                              sub classes should return from this method
+    *                              without cleaning up.
+    */
+-  virtual bool OnDestroyWidget(nsCocoaWindow* aDestroyingWidget);
++  virtual bool OnDestroyWidget(nsChildView* aDestroyingWidget);
+ 
+  protected:
+   // The creator of this instance, client and its text event dispatcher.
+   // These members must not be nullptr after initialized until
+   // OnDestroyWidget() is called.
+-  nsCocoaWindow* mWidget;  // [WEAK]
++  nsChildView* mWidget;  // [WEAK]
+   RefPtr<TextEventDispatcher> mDispatcher;
+ 
+   // The native view for mWidget.
+   // This view handles the actual text inputting.
+   NSView<mozView>* mView;  // [STRONG]
+ 
+-  TextInputHandlerBase(nsCocoaWindow* aWidget, NSView<mozView>* aNativeView);
++  TextInputHandlerBase(nsChildView* aWidget, NSView<mozView>* aNativeView);
+   virtual ~TextInputHandlerBase();
+ 
+   bool Destroyed() { return !mWidget; }
+@@ -899,13 +903,13 @@ class TextInputHandlerBase : public TextEventDispatcherListener {
+ 
+ /**
+  * IMEInputHandler manages:
+- *   1. The IME/keyboard layout statement of nsCocoaWindow.
+- *   2. The IME composition statement of nsCocoaWindow.
++ *   1. The IME/keyboard layout statement of nsChildView.
++ *   2. The IME composition statement of nsChildView.
+  * And also provides the methods which controls the current IME transaction of
+  * the instance.
+  *
+- * Note that an nsCocoaWindow handles one or more NSView's events.  E.g., even
+- * if a text editor on XUL panel element, the input events handled on the parent
++ * Note that an nsChildView handles one or more NSView's events.  E.g., even if
++ * a text editor on XUL panel element, the input events handled on the parent
+  * (or its ancestor) widget handles it (the native focus is set to it).  The
+  * actual focused view is notified by OnFocusChangeInGecko.
+  */
+@@ -924,7 +928,7 @@ class IMEInputHandler : public TextInputHandlerBase {
+                             uint32_t aIndexOfKeypress, void* aData) override;
+ 
+  public:
+-  virtual bool OnDestroyWidget(nsCocoaWindow* aDestroyingWidget) override;
++  virtual bool OnDestroyWidget(nsChildView* aDestroyingWidget) override;
+ 
+   virtual void OnFocusChangeInGecko(bool aFocus);
+ 
+@@ -1071,9 +1075,8 @@ class IMEInputHandler : public TextInputHandlerBase {
+   nsString mOriginalTextForTextSubstitution;
+   NSTextCheckingResult* mCandidatedTextSubstitutionResult;
+   bool mProcessTextSubstitution;
+-  bool mBlockDismissTextSubstitutionPanel = false;
+ 
+-  IMEInputHandler(nsCocoaWindow* aWidget, NSView<mozView>* aNativeView);
++  IMEInputHandler(nsChildView* aWidget, NSView<mozView>* aNativeView);
+   virtual ~IMEInputHandler();
+ 
+   void ResetTimer();
+@@ -1273,7 +1276,7 @@ class TextInputHandler : public IMEInputHandler {
+   static CFArrayRef CreateAllKeyboardLayoutList();
+   static void DebugPrintAllKeyboardLayouts();
+ 
+-  TextInputHandler(nsCocoaWindow* aWidget, NSView<mozView>* aNativeView);
++  TextInputHandler(nsChildView* aWidget, NSView<mozView>* aNativeView);
+   virtual ~TextInputHandler();
+ 
+   /**

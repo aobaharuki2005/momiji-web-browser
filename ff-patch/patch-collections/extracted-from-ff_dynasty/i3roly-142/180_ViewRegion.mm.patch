@@ -1,0 +1,22 @@
+diff --git a/widget/cocoa/ViewRegion.mm b/widget/cocoa/ViewRegion.mm
+index b4b38b58d0..5b275a18a3 100644
+--- a/widget/cocoa/ViewRegion.mm
++++ b/widget/cocoa/ViewRegion.mm
+@@ -7,7 +7,7 @@
+ #include "ViewRegion.h"
+ #import <Cocoa/Cocoa.h>
+ 
+-#include "nsCocoaWindow.h"
++#include "nsChildView.h"
+ 
+ using namespace mozilla;
+ 
+@@ -18,7 +18,7 @@
+ }
+ 
+ bool ViewRegion::UpdateRegion(const LayoutDeviceIntRegion& aRegion,
+-                              const nsCocoaWindow& aCoordinateConverter,
++                              const nsChildView& aCoordinateConverter,
+                               NSView* aContainerView,
+                               NSView* (^aViewCreationCallback)()) {
+   if (mRegion == aRegion) {

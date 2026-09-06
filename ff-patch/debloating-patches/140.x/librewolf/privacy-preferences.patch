@@ -1,0 +1,152 @@
+diff --git a/browser/components/preferences/privacy.inc.xhtml b/browser/components/preferences/privacy.inc.xhtml
+index 584dc6600b..abf38d971d 100644
+--- a/browser/components/preferences/privacy.inc.xhtml
++++ b/browser/components/preferences/privacy.inc.xhtml
+@@ -43,20 +43,6 @@
+                 permissions-exceptions-manage-etp-desc,
+               "/>
+     </hbox>
+-    <hbox id="rfpIncompatibilityWarning" class="info-box-container" hidden="true">
+-      <vbox class="info-icon-container">
+-        <html:img class="info-icon"></html:img>
+-      </vbox>
+-      <vbox flex="1">
+-        <description>
+-          <html:span data-l10n-id="content-blocking-rfp-incompatibility-warning"/>
+-          <html:a is="moz-support-link"
+-                  class="learnMore"
+-                  support-page="resist-fingerprinting"
+-          />
+-        </description>
+-      </vbox>
+-    </hbox>
+     <hbox id="fpiIncompatibilityWarning" class="info-box-container" hidden="true">
+       <vbox class="info-icon-container">
+         <html:img class="info-icon"></html:img>
+@@ -71,7 +57,7 @@
+       <radiogroup id="contentBlockingCategoryRadio"
+                   preference="browser.contentblocking.category"
+                   aria-labelledby="trackingProtectionMenuDesc">
+-        <vbox id="contentBlockingOptionStandard" class="privacy-detailedoption info-box-container">
++        <vbox id="contentBlockingOptionStandard" class="privacy-detailedoption info-box-container" hidden="true">
+           <hbox>
+             <radio id="standardRadio"
+                    value="standard"
+@@ -218,7 +204,7 @@
+                         is="highlightable-button"
+                         data-l10n-id="content-blocking-reload-tabs-button"/>
+               </html:div>
+-              <vbox class="content-blocking-warning info-box-container">
++              <vbox class="content-blocking-warning info-box-container" hidden="true">
+                 <hbox>
+                   <image class="content-blocking-warning-image"/>
+                   <label class="content-blocking-warning-title" data-l10n-id="content-blocking-warning-title"/>
+@@ -235,7 +221,7 @@
+             </vbox>
+           </vbox>
+         </vbox>
+-        <vbox id="contentBlockingOptionCustom" class="privacy-detailedoption info-box-container">
++        <vbox id="contentBlockingOptionCustom" class="privacy-detailedoption info-box-container" hidden="true">
+           <hbox>
+             <radio id="customRadio"
+                    value="custom"
+@@ -356,6 +342,20 @@
+         </vbox>
+       </radiogroup>
+     </vbox>
++    <hbox id="rfpIncompatibilityWarning" class="info-box-container" hidden="true">
++      <vbox class="info-icon-container">
++        <html:img class="info-icon"></html:img>
++      </vbox>
++      <vbox flex="1">
++        <description>
++          <html:span data-l10n-id="content-blocking-rfp-incompatibility-warning"/>
++          <html:a is="moz-support-link"
++                  class="learnMore"
++                  support-page="resist-fingerprinting"
++          />
++        </description>
++      </vbox>
++    </hbox>
+   </vbox>
+ </groupbox>
+ <groupbox id="nonTechnicalPrivacyGroup" data-category="panePrivacy" hidden="true">
+@@ -600,7 +600,7 @@
+ <!-- History -->
+ <groupbox id="historyGroup" data-category="panePrivacy" hidden="true">
+   <label><html:h2 data-l10n-id="history-header"/></label>
+-  <hbox align="center">
++  <hbox align="center" hidden="true">
+     <label id="historyModeLabel"
+            control="historyMode"
+            data-l10n-id="history-remember-label"/>
+@@ -647,8 +647,9 @@
+         <vbox>
+           <checkbox id="privateBrowsingAutoStart"
+                     data-l10n-id="history-private-browsing-permanent"
+-                    preference="browser.privatebrowsing.autostart"/>
+-          <vbox class="indent">
++                    preference="browser.privatebrowsing.autostart"
++                    hidden="true" />
++          <vbox>
+             <checkbox id="rememberHistory"
+                       data-l10n-id="history-remember-browser-option"
+                       preference="places.history.enabled"/>
+@@ -1055,8 +1056,8 @@
+ 
+ <!-- addons, forgery (phishing) UI Security -->
+ <groupbox id="browsingProtectionGroup" data-category="panePrivacy" hidden="true">
+-  <label><html:h2 data-l10n-id="security-browsing-protection"/></label>
+-  <hbox align = "center">
++  <label><html:h2 data-l10n-id="security-browsing-protection" hidden="true"/></label>
++  <hbox align = "center" hidden="true">
+     <checkbox id="enableSafeBrowsing"
+               data-l10n-id="security-enable-safe-browsing"
+               class="tail-with-learn-more"/>
+@@ -1067,7 +1068,7 @@
+             support-page="phishing-malware"
+     />
+   </hbox>
+-  <vbox class="indent">
++  <vbox class="indent" hidden="true">
+     <checkbox id="blockDownloads"
+               data-l10n-id="security-block-downloads"/>
+     <checkbox id="blockUncommonUnwanted"
+diff --git a/browser/locales/en-US/browser/preferences/preferences.ftl b/browser/locales/en-US/browser/preferences/preferences.ftl
+index 10c3552661..1ee7853e56 100644
+--- a/browser/locales/en-US/browser/preferences/preferences.ftl
++++ b/browser/locales/en-US/browser/preferences/preferences.ftl
+@@ -1252,8 +1252,6 @@
+ 
+ content-blocking-enhanced-tracking-protection = Enhanced Tracking Protection
+ 
+-content-blocking-section-top-level-description = Trackers follow you around online to collect information about your browsing habits and interests. { -brand-short-name } blocks many of these trackers and other malicious scripts.
+-
+ content-blocking-learn-more = Learn more
+ 
+ content-blocking-fpi-incompatibility-warning = You are using First Party Isolation (FPI), which overrides some of { -brand-short-name }’s cookie settings.
+diff --git a/browser/themes/shared/preferences/privacy.css b/browser/themes/shared/preferences/privacy.css
+index 48de5f4b3e..274bc0dc8e 100644
+--- a/browser/themes/shared/preferences/privacy.css
++++ b/browser/themes/shared/preferences/privacy.css
+@@ -213,7 +213,7 @@
+ }
+ 
+ .extra-information-label {
+-  margin-top: 18px;
++  margin-top: 5px;
+ }
+ 
+ /* Apply display: block to the containers of all the category information, as
+@@ -249,9 +249,8 @@
+ }
+ 
+ .content-blocking-extra-blocking-desc {
+-  margin-inline-start: 0.5em;
+-  position: relative;
+-  top: 0.65em;
++  margin-top: 1em;
++  margin-bottom: 0.5em;
+ }
+ 
+ .content-blocking-label,

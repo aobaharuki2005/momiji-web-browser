@@ -1,0 +1,12 @@
+diff --git a/third_party/rust/neqo-udp/Cargo.toml b/third_party/rust/neqo-udp/Cargo.toml
+index e1c9f8cceefbb..0a790e6aba0c3 100644
+--- a/third_party/rust/neqo-udp/Cargo.toml
++++ b/third_party/rust/neqo-udp/Cargo.toml
+@@ -64,7 +64,6 @@ path = "./../neqo-common"
+ version = "0.6"
+ features = [
+     "log",
+-    "fast-apple-datapath",
+ ]
+ default-features = false
+ 

@@ -1,0 +1,43 @@
+diff --git a/third_party/rust/neqo-udp/src/lib.rs b/third_party/rust/neqo-udp/src/lib.rs
+index 003d796faadf0..dd4ba31d94508 100644
+--- a/third_party/rust/neqo-udp/src/lib.rs
++++ b/third_party/rust/neqo-udp/src/lib.rs
+@@ -236,20 +236,6 @@ impl<S: SocketRef> Socket<S> {
+         })
+     }
+ 
+-    /// Enable the Apple fast UDP datapath (`sendmsg_x`/`recvmsg_x`) for this
+-    /// socket.
+-    ///
+-    /// # Safety
+-    ///
+-    /// `sendmsg_x` and `recvmsg_x` are private Apple APIs. Quinn-udp resolves
+-    /// them at runtime via `dlsym` and falls back to standard `sendmsg`/`recvmsg`
+-    /// if they are unavailable, so this will not crash on unsupported OS versions.
+-    /// The `unsafe` contract is inherited from [`quinn_udp::UdpSocketState::set_apple_fast_path`].
+-    #[cfg(apple)]
+-    pub unsafe fn enable_apple_fast_path(&self) {
+-        // SAFETY: Caller ensures the APIs are available on this OS version.
+-        unsafe { self.state.set_apple_fast_path() }
+-    }
+ 
+     /// Send a [`datagram::Batch`] on the given [`Socket`].
+     pub fn send(&self, d: &datagram::Batch) -> io::Result<()> {
+@@ -509,17 +495,6 @@ mod tests {
+         Ok(())
+     }
+ 
+-    #[test]
+-    #[cfg(apple)]
+-    fn apple_fast_path() -> Result<(), io::Error> {
+-        let socket = socket()?;
+-        // SAFETY: Tests run on Apple OS versions that support sendmsg_x/recvmsg_x.
+-        unsafe {
+-            socket.enable_apple_fast_path();
+-        }
+-        assert!(socket.max_gso_segments() > 1);
+-        Ok(())
+-    }
+ 
+     #[test]
+     fn may_fragment_returns_bool() -> Result<(), io::Error> {

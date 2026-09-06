@@ -1,0 +1,20 @@
+diff --git a/gfx/layers/wr/WebRenderLayerManager.h b/gfx/layers/wr/WebRenderLayerManager.h
+index 3cb9efe11a5bf..12c8beb41edca 100644
+--- a/gfx/layers/wr/WebRenderLayerManager.h
++++ b/gfx/layers/wr/WebRenderLayerManager.h
+@@ -160,6 +160,7 @@ class WebRenderLayerManager final : public WindowRenderer {
+   WebRenderScrollData& GetScrollData() { return mScrollData; }
+ 
+   void WrUpdated();
++  void WindowOverlayChanged() { mWindowOverlayChanged = true; }
+   nsIWidget* GetWidget() { return mWidget; }
+ 
+   uint32_t StartFrameTimeRecording(int32_t aBufferSize) override;
+@@ -237,6 +238,7 @@ class WebRenderLayerManager final : public WindowRenderer {
+   // APZ to do it's job
+   WebRenderScrollData mScrollData;
+ 
++  bool mWindowOverlayChanged;
+   bool mNeedsComposite;
+   bool mIsFirstPaint;
+   bool mDestroyed;

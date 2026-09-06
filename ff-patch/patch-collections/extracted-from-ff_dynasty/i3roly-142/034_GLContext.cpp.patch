@@ -1,0 +1,54 @@
+diff --git a/gfx/gl/GLContext.cpp b/gfx/gl/GLContext.cpp
+index 5f75c86163..dce0cee5dd 100644
+--- a/gfx/gl/GLContext.cpp
++++ b/gfx/gl/GLContext.cpp
+@@ -576,7 +576,11 @@ bool GLContext::InitImpl() {
+   MOZ_ASSERT(majorVer < 10);
+   MOZ_ASSERT(minorVer < 10);
+   mVersion = majorVer * 100 + minorVer * 10;
+-  if (mVersion < 200) return false;
++  if (mVersion < 200) {
++    // Mac OSX 10.6/10.7 machines with Intel GPUs claim only OpenGL 1.4 but
++    // have all the GL2+ extensions that we need.
++    mVersion = 200;
++  }
+ 
+   ////
+ 
+@@ -891,12 +895,30 @@ bool GLContext::InitImpl() {
+     int maxTexSize = INT32_MAX;
+     int maxCubeSize = INT32_MAX;
+ #ifdef XP_MACOSX
+-    // https://bugzilla.mozilla.org/show_bug.cgi?id=1544446
+-    // Mojave exposes 16k textures, but gives FRAMEBUFFER_UNSUPPORTED for any
+-    // 16k*16k FB except rgba8 without depth/stencil.
+-    // The max supported sizes changes based on involved formats.
+-    // (RGBA32F more restrictive than RGBA16F)
+-    maxTexSize = 8192;
++    if (!nsCocoaFeatures::IsAtLeastVersion(10, 12)) {
++      if (mVendor == GLVendor::Intel) {
++        // see bug 737182 for 2D textures, bug 684882 for cube map textures.
++        maxTexSize = 4096;
++        maxCubeSize = 512;
++      } else if (mVendor == GLVendor::NVIDIA) {
++        if (nsCocoaFeatures::OnMountainLionOrLater()) {
++          // See bug 879656.  8192 fails, 8191 works.
++          mMaxTextureSize = std::min(mMaxTextureSize, 8191);
++          mMaxRenderbufferSize = std::min(mMaxRenderbufferSize, 8191);
++        } else {
++          // See bug 877949.
++          mMaxTextureSize = std::min(mMaxTextureSize, 4096);
++          mMaxRenderbufferSize = std::min(mMaxRenderbufferSize, 4096);
++        }
++      }
++    } else {
++      // https://bugzilla.mozilla.org/show_bug.cgi?id=1544446
++      // Mojave exposes 16k textures, but gives FRAMEBUFFER_UNSUPPORTED for any
++      // 16k*16k FB except rgba8 without depth/stencil.
++      // The max supported sizes changes based on involved formats.
++      // (RGBA32F more restrictive than RGBA16F)
++      maxTexSize = 8192;
++    }
+ #endif
+ #ifdef MOZ_X11
+     if (mVendor == GLVendor::Nouveau) {

@@ -1,0 +1,15 @@
+diff --git a/browser/modules/SharingUtils.sys.mjs b/browser/modules/SharingUtils.sys.mjs
+index 915d25b3761b6..5fdf2f6d848b1 100644
+--- a/browser/modules/SharingUtils.sys.mjs
++++ b/browser/modules/SharingUtils.sys.mjs
+@@ -31,6 +31,10 @@ class SharingUtilsCls {
+   updateShareURLMenuItem(browser, insertAfterEl) {
+     if (!Services.prefs.getBoolPref("browser.menu.share_url.allow", true)) {
+       return;
++    } else if (AppConstants.platform == "macosx") {
++      if (!AppConstants.isPlatformAndVersionAtLeast("macosx", "12")) {
++        return;
++      }
+     }
+ 
+     let shareURL = insertAfterEl.nextElementSibling;

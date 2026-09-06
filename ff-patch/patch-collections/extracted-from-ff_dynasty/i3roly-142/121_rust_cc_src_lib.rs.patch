@@ -1,0 +1,13 @@
+diff --git a/third_party/rust/cc/src/lib.rs b/third_party/rust/cc/src/lib.rs
+index 0631584e95..55d4881f61 100644
+--- a/third_party/rust/cc/src/lib.rs
++++ b/third_party/rust/cc/src/lib.rs
+@@ -3840,7 +3840,7 @@ impl Build {
+                     let minor = deployment_target.next().unwrap_or(0);
+ 
+                     // If below 10.9, we ignore it and let the SDK's target definitions handle it.
+-                    if major == 10 && minor < 9 {
++                    if major == 10 && minor < 6 {
+                         self.cargo_output.print_warning(&format_args!(
+                             "macOS deployment target ({}) too low, it will be increased",
+                             deployment_target_ver

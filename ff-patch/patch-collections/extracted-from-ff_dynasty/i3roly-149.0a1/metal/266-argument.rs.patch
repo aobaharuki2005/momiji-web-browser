@@ -1,0 +1,13 @@
+diff --git a/third_party/rust/metal/src/argument.rs b/third_party/rust/metal/src/argument.rs
+index d50051dd8f8ab..76d7f349908f2 100644
+--- a/third_party/rust/metal/src/argument.rs
++++ b/third_party/rust/metal/src/argument.rs
+@@ -200,7 +200,7 @@ foreign_obj_type! {
+ 
+ impl StructMemberArrayRef {
+     pub fn object_at(&self, index: NSUInteger) -> Option<&StructMemberRef> {
+-        unsafe { msg_send![self, objectAtIndexedSubscript: index] }
++        unsafe { msg_send![self, objectAtIndex: index] }
+     }
+ 
+     pub fn count(&self) -> NSUInteger {

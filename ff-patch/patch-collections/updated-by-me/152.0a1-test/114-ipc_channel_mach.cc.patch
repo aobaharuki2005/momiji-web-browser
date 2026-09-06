@@ -1,0 +1,13 @@
+diff --git a/ipc/chromium/src/chrome/common/ipc_channel_mach.cc b/ipc/chromium/src/chrome/common/ipc_channel_mach.cc
+index 68d1b07ba51d8..e8a02d03edec0 100644
+--- a/ipc/chromium/src/chrome/common/ipc_channel_mach.cc
++++ b/ipc/chromium/src/chrome/common/ipc_channel_mach.cc
+@@ -422,7 +422,7 @@ bool ChannelMach::ProcessIncomingMessage() {
+     }
+ #ifdef XP_MACOSX
+     if (XRE_IsParentProcess() &&
+-        audit_token_to_pid(trailer->msgh_audit) != other_pid) {
++        ((pid_t) trailer->msgh_audit.val[5]) != other_pid) {
+       CHROMIUM_LOG(ERROR) << "audit token does not correspond to given pid";
+       return false;
+     }

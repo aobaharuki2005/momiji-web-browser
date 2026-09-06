@@ -1,0 +1,78 @@
+diff --git a/layout/generic/nsContainerFrame.cpp b/layout/generic/nsContainerFrame.cpp
+index 9f6a69e767..9c5a7e9e87 100644
+--- a/layout/generic/nsContainerFrame.cpp
++++ b/layout/generic/nsContainerFrame.cpp
+@@ -747,8 +747,9 @@ void nsContainerFrame::SetSizeConstraints(nsPresContext* aPresContext,
+     devMaxSize.height = devMinSize.height;
+   }
+ 
++  nsIWidget* rootWidget = aPresContext->GetNearestWidget();
+   DesktopToLayoutDeviceScale constraintsScale(MOZ_WIDGET_INVALID_SCALE);
+-  if (nsIWidget* rootWidget = aPresContext->GetNearestWidget()) {
++  if (rootWidget) {
+     constraintsScale = rootWidget->GetDesktopToDeviceScale();
+   }
+ 
+@@ -757,20 +758,16 @@ void nsContainerFrame::SetSizeConstraints(nsPresContext* aPresContext,
+   // The sizes are in inner window sizes, so convert them into outer window
+   // sizes. Use a size of (200, 200) as only the difference between the inner
+   // and outer size is needed.
+-  const LayoutDeviceIntSize sizeDiff =
+-      aWidget->NormalSizeModeClientToWindowSizeDifference();
+-  if (constraints.mMinSize.width) {
+-    constraints.mMinSize.width += sizeDiff.width;
+-  }
+-  if (constraints.mMinSize.height) {
+-    constraints.mMinSize.height += sizeDiff.height;
+-  }
+-  if (constraints.mMaxSize.width != NS_MAXSIZE) {
+-    constraints.mMaxSize.width += sizeDiff.width;
+-  }
+-  if (constraints.mMaxSize.height != NS_MAXSIZE) {
+-    constraints.mMaxSize.height += sizeDiff.height;
+-  }
++  LayoutDeviceIntSize windowSize =
++      aWidget->ClientToWindowSize(LayoutDeviceIntSize(200, 200));
++  if (constraints.mMinSize.width)
++    constraints.mMinSize.width += windowSize.width - 200;
++  if (constraints.mMinSize.height)
++    constraints.mMinSize.height += windowSize.height - 200;
++  if (constraints.mMaxSize.width != NS_MAXSIZE)
++    constraints.mMaxSize.width += windowSize.width - 200;
++  if (constraints.mMaxSize.height != NS_MAXSIZE)
++    constraints.mMaxSize.height += windowSize.height - 200;
+ 
+   aWidget->SetSizeConstraints(constraints);
+ }
+@@ -3072,8 +3069,7 @@ void nsContainerFrame::List(FILE* out, const char* aPrefix,
+                             ListFlags aFlags) const {
+   nsCString str;
+   ListGeneric(str, aPrefix, aFlags);
+-  ExtraContainerFrameInfo(str,
+-                          aFlags.contains(ListFlag::OnlyListDeterministicInfo));
++  ExtraContainerFrameInfo(str);
+ 
+   // Output the frame name and various fields.
+   fprintf_stderr(out, "%s <\n", str.get());
+@@ -3125,9 +3121,8 @@ void nsContainerFrame::ListChildLists(FILE* aOut, const char* aPrefix,
+ 
+     // Use nsPrintfCString so that %p don't output prefix "0x". This is
+     // consistent with nsIFrame::ListTag().
+-    nsCString str{nsPrintfCString("%s%s", aPrefix, ChildListName(listID))};
+-    ListPtr(str, aFlags, &GetChildList(listID), "@");
+-    str += " <\n";
++    const nsPrintfCString str("%s%s@%p <\n", aPrefix, ChildListName(listID),
++                              &GetChildList(listID));
+     fprintf_stderr(aOut, "%s", str.get());
+ 
+     for (nsIFrame* kid : list) {
+@@ -3139,6 +3134,8 @@ void nsContainerFrame::ListChildLists(FILE* aOut, const char* aPrefix,
+   }
+ }
+ 
+-void nsContainerFrame::ExtraContainerFrameInfo(nsACString&, bool) const {}
++void nsContainerFrame::ExtraContainerFrameInfo(nsACString& aTo) const {
++  (void)aTo;
++}
+ 
+ #endif

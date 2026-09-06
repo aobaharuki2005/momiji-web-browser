@@ -1,0 +1,18 @@
+diff --git a/ipc/chromium/src/chrome/common/ipc_channel.h b/ipc/chromium/src/chrome/common/ipc_channel.h
+index 49bfbc2c30d85..9650263d358a2 100644
+--- a/ipc/chromium/src/chrome/common/ipc_channel.h
++++ b/ipc/chromium/src/chrome/common/ipc_channel.h
+@@ -38,10 +38,12 @@ class Channel {
+   // endpoints may be passed around directly using IPC messages.
+   using ChannelHandle =
+       std::variant<std::monostate, mozilla::UniqueFileHandle
+-#if defined(XP_DARWIN)
++//it ain't workin. sorry nika
++/*#if defined(XP_DARWIN)
+                    ,
+                    mozilla::UniqueMachSendRight, mozilla::UniqueMachReceiveRight
+ #endif
++*/
+                    >;
+ 
+   // Implemented by consumers of a Channel to receive messages.

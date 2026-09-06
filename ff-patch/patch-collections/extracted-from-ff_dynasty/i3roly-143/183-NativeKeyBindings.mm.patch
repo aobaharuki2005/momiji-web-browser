@@ -1,0 +1,13 @@
+diff --git a/widget/cocoa/NativeKeyBindings.mm b/widget/cocoa/NativeKeyBindings.mm
+index 24b70173c2e8..1e90c65b32f4 100644
+--- a/widget/cocoa/NativeKeyBindings.mm
++++ b/widget/cocoa/NativeKeyBindings.mm
+@@ -255,7 +255,7 @@ void NativeKeyBindings::GetEditCommands(const WidgetKeyboardEvent& aEvent,
+                              modifierFlags:[originalEvent modifierFlags]
+                                  timestamp:[originalEvent timestamp]
+                               windowNumber:[originalEvent windowNumber]
+-                                   context:nil
++                                   context:[originalEvent context]
+                                 characters:chars
+                charactersIgnoringModifiers:chars
+                                  isARepeat:[originalEvent isARepeat]

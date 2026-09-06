@@ -1,0 +1,228 @@
+diff --git a/gfx/layers/NativeLayerCA.mm b/gfx/layers/NativeLayerCA.mm
+index 729d2ad4dc..b8369c3eab 100644
+--- a/gfx/layers/NativeLayerCA.mm
++++ b/gfx/layers/NativeLayerCA.mm
+@@ -663,11 +663,14 @@ VideoLowPowerType NativeLayerRootCA::CheckVideoLowPower(
+     return VideoLowPowerType::FailBacking;
+   }
+ 
+-  CALayer* topContentCALayer = topCALayer.sublayers[0];
++  CALayer* topContentCALayer = [topCALayer.sublayers objectAtIndex:0];
+   if (![topContentCALayer isKindOfClass:[AVSampleBufferDisplayLayer class]]) {
+     // We didn't create a AVSampleBufferDisplayLayer for the top video layer.
+     // Try to figure out why by following some of the logic in
+     // NativeLayerCA::ShouldSpecializeVideo.
++    if (!nsCocoaFeatures::OnHighSierraOrLater()) {
++      return VideoLowPowerType::FailMacOSVersion;
++    }
+ 
+     if (!StaticPrefs::gfx_core_animation_specialize_video()) {
+       return VideoLowPowerType::FailPref;
+@@ -715,6 +718,7 @@ NativeLayerRootSnapshotterCA::NativeLayerRootSnapshotterCA(
+ 
+ NativeLayerRootSnapshotterCA::~NativeLayerRootSnapshotterCA() {
+   mLayerRoot->OnNativeLayerRootSnapshotterDestroyed(this);
++  AutoCATransaction transaction;
+   [mRenderer release];
+ }
+ 
+@@ -862,10 +866,27 @@ NativeLayerCA::NativeLayerCA(bool aIsOpaque)
+ 
+ CGColorRef CGColorCreateForDeviceColor(gfx::DeviceColor aColor) {
+   if (StaticPrefs::gfx_color_management_native_srgb()) {
+-    return CGColorCreateSRGB(aColor.r, aColor.g, aColor.b, aColor.a);
++    // Use CGColorCreateSRGB if it's available, otherwise use older macOS API methods,
++    // which unfortunately allocate additional memory for the colorSpace object.
++    if (@available(macOS 10.15, iOS 13.0, *)) {
++      // Even if it is available, we have to address the function dynamically, to keep
++      // compiler happy when building with earlier versions of the SDK.
++      static auto CGColorCreateSRGBPtr = (CGColorRef(*)(CGFloat, CGFloat, CGFloat, CGFloat))dlsym(
++          RTLD_DEFAULT, "CGColorCreateSRGB");
++      if (CGColorCreateSRGBPtr) {
++        return CGColorCreateSRGBPtr(aColor.r, aColor.g, aColor.b, aColor.a);
++      }
++    }
++
++    CGColorSpaceRef colorSpace = CGColorSpaceCreateWithName(kCGColorSpaceSRGB);
++    CGFloat components[] = {aColor.r, aColor.g, aColor.b, aColor.a};
++    CGColorRef color = CGColorCreate(colorSpace, components);
++    CFRelease(colorSpace);
++    return color;
+   }
+ 
+   return CGColorCreateGenericRGB(aColor.r, aColor.g, aColor.b, aColor.a);
++   //return CGColorCreateSRGB(aColor.r, aColor.g, aColor.b, aColor.a);
+ }
+ 
+ NativeLayerCA::NativeLayerCA(gfx::DeviceColor aColor)
+@@ -926,11 +947,11 @@ void NativeLayerCA::AttachExternalImage(wr::RenderTextureHost* aExternalImage) {
+         this);
+   }
+ #endif
+-
+   bool oldIsDRM = mIsDRM;
+   mIsDRM = aExternalImage->IsFromDRMSource();
+   bool changedIsDRM = (mIsDRM != oldIsDRM);
+ 
++
+   ForAllRepresentations([&](Representation& r) {
+     r.mMutatedFrontSurface = true;
+     r.mMutatedDisplayRect |= changedSizeAndDisplayRect;
+@@ -966,14 +987,20 @@ bool NativeLayerCA::ShouldSpecializeVideo(const MutexAutoLock& aProofOfLock) {
+     return false;
+   }
+ 
++  if (!nsCocoaFeatures::OnHighSierraOrLater()) {
++    // We must be on a modern-enough macOS.
++    return false;
++  }
++
+   MOZ_ASSERT(mTextureHost);
+ 
+   // DRM video is supported in macOS 10.15 and beyond, and such video must use
+   // a specialized video layer.
+-  if (mTextureHost->IsFromDRMSource()) {
+-    return true;
++  if (@available(macOS 10.15, iOS 13.0, *)) {
++      if (mTextureHost->IsFromDRMSource()) {
++          return true;
++      }
+   }
+-
+   // Beyond this point, we need to know about the format of the video.
+   MacIOSurface* macIOSurface = mTextureHost->GetSurface();
+   if (macIOSurface->GetYUVColorSpace() == gfx::YUVColorSpace::BT2020) {
+@@ -1300,9 +1327,10 @@ NativeLayerCA::Representation::Representation()
+       mMutatedSurfaceIsFlipped(true),
+       mMutatedFrontSurface(true),
+       mMutatedSamplingFilter(true),
+-      mMutatedSpecializeVideo(true),
++      mMutatedSpecializeVideo(true), 
+       mMutatedIsDRM(true) {}
+ 
++
+ NativeLayerCA::Representation::~Representation() {
+   [mContentCALayer release];
+   [mOpaquenessTintLayer release];
+@@ -1537,7 +1565,7 @@ bool NativeLayerCA::Representation::EnqueueSurface(IOSurfaceRef aSurfaceRef) {
+       colorSpace = CFTypeRefPtr<CGColorSpaceRef>::WrapUnderCreateRule(
+           CGDisplayCopyColorSpace(CGMainDisplayID()));
+       auto colorData = CFTypeRefPtr<CFDataRef>::WrapUnderCreateRule(
+-          CGColorSpaceCopyICCData(colorSpace.get()));
++          CGColorSpaceCopyICCProfile(colorSpace.get()));
+       IOSurfaceSetValue(aSurfaceRef, CFSTR("IOSurfaceColorSpace"),
+                         colorData.get());
+ 
+@@ -1776,10 +1804,11 @@ bool NativeLayerCA::Representation::ApplyChanges(
+     }
+   }
+ 
+-  if (aSpecializeVideo && mMutatedIsDRM) {
+-    ((AVSampleBufferDisplayLayer*)mContentCALayer).preventsCapture = aIsDRM;
++  if (@available(macOS 10.15, iOS 13.0, *)) {
++      if (aSpecializeVideo && mMutatedIsDRM) {
++          ((AVSampleBufferDisplayLayer*)mContentCALayer).preventsCapture = aIsDRM;
++      }
+   }
+-
+   bool shouldTintOpaqueness = StaticPrefs::gfx_core_animation_tint_opaque();
+   if (shouldTintOpaqueness && !mOpaquenessTintLayer) {
+     mOpaquenessTintLayer = [[CALayer layer] retain];
+@@ -1859,52 +1888,53 @@ bool NativeLayerCA::Representation::ApplyChanges(
+     // mutated and don't get selected below.
+     mRoundedClipCALayer.cornerRadius = 0.0f;
+     mRoundedClipCALayer.masksToBounds = NO;
+-    mRoundedClipCALayer.maskedCorners = 0;
+ 
+     if (aRoundedClip.isSome()) {
+       // Select which corner(s) the rounded clip should be applied to
+       // Select from the corners which is the maximum radius (since we know
+       // they are either uniform or zero).
+-      CACornerMask maskedCorners = 0;
+-      auto effectiveRadius = 0.0f;
+-      if (aRoundedClip->corners.radii[0].width > 0.0) {
+-        maskedCorners |= kCALayerMinXMinYCorner;
+-        effectiveRadius =
+-            std::max(effectiveRadius, aRoundedClip->corners.radii[0].width);
+-      }
+-      if (aRoundedClip->corners.radii[1].width > 0.0) {
+-        maskedCorners |= kCALayerMaxXMinYCorner;
+-        effectiveRadius =
+-            std::max(effectiveRadius, aRoundedClip->corners.radii[1].width);
+-      }
+-      if (aRoundedClip->corners.radii[2].width > 0.0) {
+-        maskedCorners |= kCALayerMaxXMaxYCorner;
+-        effectiveRadius =
+-            std::max(effectiveRadius, aRoundedClip->corners.radii[2].width);
+-      }
+-      if (aRoundedClip->corners.radii[3].width > 0.0) {
+-        maskedCorners |= kCALayerMinXMaxYCorner;
+-        effectiveRadius =
+-            std::max(effectiveRadius, aRoundedClip->corners.radii[3].width);
+-      }
++      if(@available(macOS 10.13, *)) {
++        mRoundedClipCALayer.maskedCorners = 0;
++        CACornerMask maskedCorners = 0;
++        auto effectiveRadius = 0.0f;
++        if (aRoundedClip->corners.radii[0].width > 0.0) {
++          maskedCorners |= kCALayerMinXMinYCorner;
++          effectiveRadius =
++              std::max(effectiveRadius, aRoundedClip->corners.radii[0].width);
++        }
++        if (aRoundedClip->corners.radii[1].width > 0.0) {
++          maskedCorners |= kCALayerMaxXMinYCorner;
++          effectiveRadius =
++              std::max(effectiveRadius, aRoundedClip->corners.radii[1].width);
++        }
++        if (aRoundedClip->corners.radii[2].width > 0.0) {
++          maskedCorners |= kCALayerMaxXMaxYCorner;
++          effectiveRadius =
++              std::max(effectiveRadius, aRoundedClip->corners.radii[2].width);
++        }
++        if (aRoundedClip->corners.radii[3].width > 0.0) {
++          maskedCorners |= kCALayerMinXMaxYCorner;
++          effectiveRadius =
++              std::max(effectiveRadius, aRoundedClip->corners.radii[3].width);
++        }
+ 
+-      // Only create a rounded clip mask if we had 1+ non-zero corner radius
+-      if (maskedCorners != 0) {
+-        rrClipRect.origin.x = aRoundedClip->rect.x / aBackingScale;
+-        rrClipRect.origin.y = aRoundedClip->rect.y / aBackingScale;
+-        rrClipRect.size.width = aRoundedClip->rect.width / aBackingScale;
+-        rrClipRect.size.height = aRoundedClip->rect.height / aBackingScale;
++        // Only create a rounded clip mask if we had 1+ non-zero corner radius
++        if (maskedCorners != 0) {
++          rrClipRect.origin.x = aRoundedClip->rect.x / aBackingScale;
++          rrClipRect.origin.y = aRoundedClip->rect.y / aBackingScale;
++          rrClipRect.size.width = aRoundedClip->rect.width / aBackingScale;
++          rrClipRect.size.height = aRoundedClip->rect.height / aBackingScale;
+ 
+-        // Move in to local space relative to the parent wrapping layer
+-        rrClipRect.origin.x -= useClipRect.origin.x;
+-        rrClipRect.origin.y -= useClipRect.origin.y;
++          // Move in to local space relative to the parent wrapping layer
++          rrClipRect.origin.x -= useClipRect.origin.x;
++          rrClipRect.origin.y -= useClipRect.origin.y;
+ 
+-        mRoundedClipCALayer.cornerRadius = effectiveRadius / aBackingScale;
+-        mRoundedClipCALayer.masksToBounds = YES;
+-        mRoundedClipCALayer.maskedCorners = maskedCorners;
++          mRoundedClipCALayer.cornerRadius = effectiveRadius / aBackingScale;
++          mRoundedClipCALayer.masksToBounds = YES;
++          mRoundedClipCALayer.maskedCorners = maskedCorners;
++        }
+       }
+     }
+-
+     // Position the rounded clip layer in the right space
+     mRoundedClipCALayer.position = rrClipRect.origin;
+     mRoundedClipCALayer.bounds =
+@@ -2006,7 +2036,6 @@ bool NativeLayerCA::Representation::ApplyChanges(
+   mMutatedFrontSurface = false;
+   mMutatedSamplingFilter = false;
+   mMutatedSpecializeVideo = false;
+-  mMutatedIsDRM = false;
+ 
+   return true;
+ }

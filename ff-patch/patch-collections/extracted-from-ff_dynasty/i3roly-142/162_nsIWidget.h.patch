@@ -1,0 +1,73 @@
+diff --git a/widget/nsIWidget.h b/widget/nsIWidget.h
+index abeb9a15fd..0eb320077a 100644
+--- a/widget/nsIWidget.h
++++ b/widget/nsIWidget.h
+@@ -842,9 +842,6 @@ class nsIWidget : public nsISupports {
+    * Similar to GetScreenBounds except that this function will always
+    * get the size when the widget is in the nsSizeMode_Normal size mode
+    * even if the current size mode is not nsSizeMode_Normal.
+-   *
+-   * If PersistClientBounds() is true, then the returned size are client sizes.
+-   *
+    * This method will fail if the size mode is not nsSizeMode_Normal and
+    * the platform doesn't have the ability.
+    * This method will always succeed if the current size mode is
+@@ -856,13 +853,6 @@ class nsIWidget : public nsISupports {
+   [[nodiscard]] virtual nsresult GetRestoredBounds(
+       LayoutDeviceIntRect& aRect) = 0;
+ 
+-  /**
+-   * On some platforms (namely, GTK), we can't know the bounds of the client
+-   * decorations before actually showing the window. For that reason, we instead
+-   * persist client (inner) sizes.
+-   */
+-  virtual bool PersistClientBounds() const { return false; }
+-
+   /**
+    * Get this widget's client area bounds, if the window has a 3D border
+    * appearance this returns the area inside the border. The position is the
+@@ -1240,7 +1230,7 @@ class nsIWidget : public nsISupports {
+   virtual void SetIcon(const nsAString& aIconSpec) = 0;
+ 
+   /**
+-   * Return this widget's client origin in screen coordinates.
++   * Return this widget's origin in screen coordinates.
+    *
+    * @return screen coordinates stored in the x,y members
+    */
+@@ -1273,21 +1263,12 @@ class nsIWidget : public nsISupports {
+   }
+ 
+   /**
+-   * Returns the margins that are applied to go from client sizes to window
+-   * sizes on a normal sizemode window (which includes window borders and
+-   * titlebar).
+-   *
+-   * This method should work even when the window is not yet visible.
+-   */
+-  virtual LayoutDeviceIntMargin NormalSizeModeClientToWindowMargin() {
+-    return {};
+-  }
+-
+-  /**
+-   * Returns the size difference from client area to window area of a
+-   * normal-sizemode window.
++   * Given the specified client size, return the corresponding window size,
++   * which includes the area for the borders and titlebar. This method
++   * should work even when the window is not yet visible.
+    */
+-  LayoutDeviceIntSize NormalSizeModeClientToWindowSizeDifference();
++  virtual LayoutDeviceIntSize ClientToWindowSize(
++      const LayoutDeviceIntSize& aClientSize) = 0;
+ 
+   /**
+    * Dispatches an event to the widget
+@@ -2079,7 +2060,7 @@ class nsIWidget : public nsISupports {
+   nsIWidget* MOZ_NON_OWNING_REF mParent = nullptr;
+   // When Destroy() is called, the sub class should set this true.
+   bool mOnDestroyCalled = false;
+-  WindowType mWindowType = WindowType::TopLevel;
++  WindowType mWindowType = WindowType::Child; 
+   WidgetType mWidgetType = WidgetType::Native;
+ };
+ 

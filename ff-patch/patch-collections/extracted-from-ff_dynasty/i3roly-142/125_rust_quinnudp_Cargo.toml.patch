@@ -1,0 +1,12 @@
+diff --git a/third_party/rust/quinn-udp/Cargo.toml b/third_party/rust/quinn-udp/Cargo.toml
+index 5f750795cb..d182d9e852 100644
+--- a/third_party/rust/quinn-udp/Cargo.toml
++++ b/third_party/rust/quinn-udp/Cargo.toml
+@@ -39,7 +39,6 @@ default = [
+     "log",
+ ]
+ direct-log = ["dep:log"]
+-fast-apple-datapath = []
+ log = ["tracing/log"]
+ 
+ [lib]

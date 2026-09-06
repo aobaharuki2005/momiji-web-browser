@@ -1,0 +1,12 @@
+diff --git a/config/external/lgpllibs/moz.build b/config/external/lgpllibs/moz.build
+index c26817ac44e3..97cb7ce49df9 100644
+--- a/config/external/lgpllibs/moz.build
++++ b/config/external/lgpllibs/moz.build
+@@ -12,7 +12,3 @@
+ 
+ GeckoSharedLibrary("lgpllibs")
+ SHARED_LIBRARY_NAME = "lgpllibs"
+-
+-# For some reason, mingw builds export way too many symbols.
+-if CONFIG["TARGET_OS"] == "WINNT" and CONFIG["CC_TYPE"] != "clang-cl":
+-    SYMBOLS_FILE = "lgpllibs.symbols"

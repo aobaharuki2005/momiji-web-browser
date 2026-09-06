@@ -1,0 +1,14 @@
+diff --git a/third_party/rust/metal/Cargo.toml b/third_party/rust/metal/Cargo.toml
+index 77d328b147d0..d03b48bf9409 100644
+--- a/third_party/rust/metal/Cargo.toml
++++ b/third_party/rust/metal/Cargo.toml
+@@ -153,6 +153,9 @@ version = "0.2.4"
+ [dependencies.paste]
+ version = "1"
+ 
++[dependencies.whatsys]
++version = "0.3"
++
+ [dev-dependencies.cocoa]
+ version = "0.25.0"
+ 

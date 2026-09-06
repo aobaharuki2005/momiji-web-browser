@@ -1,0 +1,12 @@
+diff --git a/widget/cocoa/moz.build b/widget/cocoa/moz.build
+index 47c3a63460f6a..c299a6db960b4 100644
+--- a/widget/cocoa/moz.build
++++ b/widget/cocoa/moz.build
+@@ -170,7 +170,6 @@ RESOURCE_FILES.__setattr__(
+ )
+ 
+ OS_LIBS += [
+-    "-framework Accessibility",
+     "-framework IOSurface",
+     "-framework Vision",
+ ]

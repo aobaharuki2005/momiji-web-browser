@@ -1,0 +1,12 @@
+diff --git a/third_party/rust/neqo-udp/Cargo.toml b/third_party/rust/neqo-udp/Cargo.toml
+index 610483ae7b7fb..15369cd298e34 100644
+--- a/third_party/rust/neqo-udp/Cargo.toml
++++ b/third_party/rust/neqo-udp/Cargo.toml
+@@ -47,7 +47,6 @@ bench = [
+     "neqo-common/bench",
+     "log/release_max_level_info",
+ ]
+-fast-apple-datapath = ["quinn-udp/fast-apple-datapath"]
+ 
+ [lib]
+ name = "neqo_udp"

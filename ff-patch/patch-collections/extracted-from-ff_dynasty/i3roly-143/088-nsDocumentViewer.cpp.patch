@@ -1,0 +1,13 @@
+diff --git a/layout/base/nsDocumentViewer.cpp b/layout/base/nsDocumentViewer.cpp
+index ed8b288f558a..98ac5fc18ca6 100644
+--- a/layout/base/nsDocumentViewer.cpp
++++ b/layout/base/nsDocumentViewer.cpp
+@@ -3265,6 +3265,8 @@ bool nsDocumentViewer::ShouldAttachToTopLevel() {
+   if (nsIWidget::UsePuppetWidgets() || mParentWidget->IsPuppetWidget()) {
+     return true;
+   }
++
++  // TODO(emilio, bug 1919165): Unify this between macOS and other platforms?
+ #ifdef DEBUG
+   nsIWidgetListener* parentListener = mParentWidget->GetWidgetListener();
+   MOZ_ASSERT(!parentListener || !parentListener->GetView(),

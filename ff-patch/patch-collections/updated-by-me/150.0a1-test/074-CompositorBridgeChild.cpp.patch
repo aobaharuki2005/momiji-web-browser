@@ -1,0 +1,20 @@
+diff --git a/gfx/layers/ipc/CompositorBridgeChild.cpp b/gfx/layers/ipc/CompositorBridgeChild.cpp
+index 810391cb8db11..f1abf450dab36 100644
+--- a/gfx/layers/ipc/CompositorBridgeChild.cpp
++++ b/gfx/layers/ipc/CompositorBridgeChild.cpp
+@@ -73,6 +73,7 @@ CompositorBridgeChild::CompositorBridgeChild(CompositorManagerChild* aManager)
+       mIdNamespace(0),
+       mResourceId(0),
+       mCanSend(false),
++      mWindowOverlayChanged(false),
+       mActorDestroyed(false),
+       mPaused(false),
+       mForceSyncFlushRendering(false),
+@@ -527,6 +528,7 @@ already_AddRefed<CanvasChild> CompositorBridgeChild::GetCanvasChild() {
+ 
+ void CompositorBridgeChild::EndCanvasTransaction() {
+   if (auto* cm = gfx::CanvasManagerChild::Get()) {
++    mWindowOverlayChanged = false;
+     cm->EndCanvasTransaction();
+   }
+ }

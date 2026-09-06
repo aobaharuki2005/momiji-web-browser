@@ -1,0 +1,37 @@
+diff --git a/third_party/rust/neqo-udp/Cargo.toml b/third_party/rust/neqo-udp/Cargo.toml
+index 3aa4227aa92a..f38e9dbc4930 100644
+--- a/third_party/rust/neqo-udp/Cargo.toml
++++ b/third_party/rust/neqo-udp/Cargo.toml
+@@ -25,16 +25,16 @@ description = "Neqo, the Mozilla implementation of QUIC in Rust."
+ homepage = "https://github.com/mozilla/neqo/"
+ readme = "../README.md"
+ keywords = [
+-    "quic",
+-    "http3",
+-    "neqo",
+-    "mozilla",
+-    "ietf",
+-    "firefox",
++"quic",
++"http3",
++"neqo",
++"mozilla",
++"ietf",
++"firefox",
+ ]
+ categories = [
+-    "network-programming",
+-    "web-programming",
++"network-programming",
++"web-programming",
+ ]
+ license = "MIT OR Apache-2.0"
+ repository = "https://github.com/mozilla/neqo/"
+@@ -44,7 +44,6 @@ ignored = ["log"]
+ 
+ [features]
+ bench = ["neqo-common/bench"]
+-fast-apple-datapath = ["quinn-udp/fast-apple-datapath"]
+ 
+ [lib]
+ name = "neqo_udp"

@@ -1,0 +1,19 @@
+diff --git a/media/libsoundtouch/src/SoundTouchFactory.cpp b/media/libsoundtouch/src/SoundTouchFactory.cpp
+index 1d70d74a78982..e94c7c53365b6 100644
+--- a/media/libsoundtouch/src/SoundTouchFactory.cpp
++++ b/media/libsoundtouch/src/SoundTouchFactory.cpp
+@@ -7,12 +7,14 @@
+ extern "C" namespace soundtouch
+ {
+ 
++SOUNDTOUCH_API
+ soundtouch::SoundTouch*
+ createSoundTouchObj()
+ {
+   return new soundtouch::SoundTouch();
+ }
+ 
++SOUNDTOUCH_API
+ void
+ destroySoundTouchObj(soundtouch::SoundTouch* aObj)
+ {

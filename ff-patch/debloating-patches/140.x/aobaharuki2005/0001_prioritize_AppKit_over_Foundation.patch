@@ -1,0 +1,30 @@
+From 12a92c032aabaee84c5bf4b0a8b63ab221d2d79a Mon Sep 17 00:00:00 2001
+From: aobaharuki2005 <tranbaohnth@outlook.com>
+Date: Sat, 28 Mar 2026 18:44:35 +0700
+Subject: [PATCH] Fix: prioritize AppKit frameworks for  10.7 compatibility
+
+ In macOS 10.7, the _OBJC_CLASS_$_NSLayoutConstraint symbol is expected to be found in AppKit.framework. Howwever since macOS 10.9 Apple has moved it into Foundation.framework (so that this symbol can be sharingly used both for iOS and macOS). Without this patch, Momiji will still trying to find the symbol staticly in Foundation.framework in macOS 10.8 and earlier, and then crash with "Symbol not found" error
+---
+ toolkit/library/moz.build | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/toolkit/library/moz.build b/toolkit/library/moz.build
+index 1018d2323dff4..dbc5063bd1598 100644
+--- a/toolkit/library/moz.build
++++ b/toolkit/library/moz.build
+@@ -213,6 +213,7 @@ if CONFIG["MOZ_WEBRTC"]:
+ 
+ if CONFIG["MOZ_WIDGET_TOOLKIT"] == "cocoa":
+     OS_LIBS += [
++        "-framework AppKit",
+         "-framework Accessibility",
+         "-framework Foundation",
+         "-framework CoreFoundation",
+@@ -229,7 +230,6 @@ if CONFIG["MOZ_WIDGET_TOOLKIT"] == "cocoa":
+         "-framework ServiceManagement",
+         "-framework CoreServices",
+         "-framework ApplicationServices",
+-        "-framework AppKit",
+         "-framework CoreMIDI",
+         "-framework SystemConfiguration",
+         "-framework AVFoundation",

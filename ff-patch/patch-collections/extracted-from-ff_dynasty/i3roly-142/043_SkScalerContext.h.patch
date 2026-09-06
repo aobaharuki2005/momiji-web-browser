@@ -1,0 +1,12 @@
+diff --git a/gfx/skia/skia/src/core/SkScalerContext.h b/gfx/skia/skia/src/core/SkScalerContext.h
+index b73585d8dd..32328c4de4 100644
+--- a/gfx/skia/skia/src/core/SkScalerContext.h
++++ b/gfx/skia/skia/src/core/SkScalerContext.h
+@@ -280,6 +280,7 @@ public:
+         kBaselineSnap_Flag        = 0x2000,
+ 
+         kNeedsForegroundColor_Flag = 0x4000,
++        kLightOnDark_Flag          = 0x8000,
+     };
+ 
+     // computed values

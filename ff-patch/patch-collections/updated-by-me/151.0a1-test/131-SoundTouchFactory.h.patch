@@ -1,0 +1,16 @@
+diff --git a/media/libsoundtouch/src/SoundTouchFactory.h b/media/libsoundtouch/src/SoundTouchFactory.h
+index 42408c9777ed3..2bdd2e3fe6a09 100644
+--- a/media/libsoundtouch/src/SoundTouchFactory.h
++++ b/media/libsoundtouch/src/SoundTouchFactory.h
+@@ -11,9 +11,11 @@
+ 
+ extern "C" namespace soundtouch
+ {
++SOUNDTOUCH_API
+ soundtouch::SoundTouch*
+ createSoundTouchObj();
+ 
++SOUNDTOUCH_API
+ void
+ destroySoundTouchObj(soundtouch::SoundTouch* aObj);
+ }

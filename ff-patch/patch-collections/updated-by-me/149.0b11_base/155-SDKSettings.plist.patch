@@ -1,0 +1,12 @@
+diff --git a/python/mozbuild/mozbuild/test/configure/macos_fake_sdk/SDKSettings.plist b/python/mozbuild/mozbuild/test/configure/macos_fake_sdk/SDKSettings.plist
+index 085eea86baedc..032293fafd0f3 100644
+--- a/python/mozbuild/mozbuild/test/configure/macos_fake_sdk/SDKSettings.plist
++++ b/python/mozbuild/mozbuild/test/configure/macos_fake_sdk/SDKSettings.plist
+@@ -3,6 +3,6 @@
+ <plist version="1.0">
+ <dict>
+         <key>Version</key>
+-        <string>26.2</string>
++        <string>10.13</string>
+ </dict>
+ </plist>

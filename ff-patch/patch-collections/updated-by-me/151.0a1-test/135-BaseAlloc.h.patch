@@ -1,0 +1,27 @@
+diff --git a/memory/build/BaseAlloc.h b/memory/build/BaseAlloc.h
+index 64453ade4c1a1..063150ab5860f 100644
+--- a/memory/build/BaseAlloc.h
++++ b/memory/build/BaseAlloc.h
+@@ -11,7 +11,7 @@
+ // mozjemalloc for its own structures.
+ class BaseAlloc {
+  public:
+-  constexpr BaseAlloc() {};
++  BaseAlloc() {};
+ 
+   void Init() MOZ_REQUIRES(gInitLock);
+ 
+@@ -43,10 +43,10 @@ class BaseAlloc {
+   // required (from pages_alloc()).  Else-if an allocation would case
+   // mNextAddr > mNextDecommitted then some of the memory is decommitted and
+   // pages_committ() is needed before the memory can be used.
+-  uintptr_t mNextAddr MOZ_GUARDED_BY(mMutex) = 0;
+-  uintptr_t mNextDecommitted MOZ_GUARDED_BY(mMutex) = 0;
++  void* mNextAddr MOZ_GUARDED_BY(mMutex) = 0;
++  void* mNextDecommitted MOZ_GUARDED_BY(mMutex) = 0;
+   // Address immediately past the current chunk of pages.
+-  uintptr_t mPastAddr MOZ_GUARDED_BY(mMutex) = 0;
++  void* mPastAddr MOZ_GUARDED_BY(mMutex) = 0;
+ 
+   Stats mStats MOZ_GUARDED_BY(mMutex);
+ };

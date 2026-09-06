@@ -1,0 +1,38 @@
+diff --git a/gfx/layers/MacIOSurfaceImage.cpp b/gfx/layers/MacIOSurfaceImage.cpp
+index e735b85f89d6a..fee0e65d74370 100644
+--- a/gfx/layers/MacIOSurfaceImage.cpp
++++ b/gfx/layers/MacIOSurfaceImage.cpp
+@@ -14,6 +14,10 @@
+ #include "mozilla/StaticPrefs_layers.h"
+ #include "YCbCrUtils.h"
+ 
++#ifdef XP_MACOSX
++#  include "nsCocoaFeatures.h"
++#endif
++
+ using namespace mozilla::layers;
+ using namespace mozilla::gfx;
+ 
+@@ -305,7 +309,6 @@ already_AddRefed<MacIOSurface> MacIOSurfaceRecycleAllocator::Allocate(
+                  (size_t)aCbCrSize.height);
+     }
+ #endif
+-
+     return MakeAndAddRef<MacIOSurface>(surf, false, aYUVColorSpace);
+   }
+ 
+@@ -318,9 +321,12 @@ already_AddRefed<MacIOSurface> MacIOSurfaceRecycleAllocator::Allocate(
+   // planar format.
+   // 4:2:2 formats with 8 bit color are single planar, otherwise bi-planar.
+ 
++  //Lion doesn't do 10-bit colour, so we have to always create a single planar
++  //surface for 10.7 and lower lol.
+   RefPtr<MacIOSurface> result;
+-  if (aChromaSubsampling == gfx::ChromaSubsampling::HALF_WIDTH &&
+-      aColorDepth == gfx::ColorDepth::COLOR_8) {
++  if ((aChromaSubsampling == gfx::ChromaSubsampling::HALF_WIDTH &&
++      aColorDepth == gfx::ColorDepth::COLOR_8) || 
++      !nsCocoaFeatures::OnMountainLionOrLater()) {
+     result = MacIOSurface::CreateSinglePlanarSurface(
+         aYSize, aYUVColorSpace, aTransferFunction, aColorRange);
+   } else {

@@ -1,0 +1,23 @@
+diff --git a/toolkit/xre/MacUtils.mm b/toolkit/xre/MacUtils.mm
+index f0e42ab91a..27525706e4 100644
+--- a/toolkit/xre/MacUtils.mm
++++ b/toolkit/xre/MacUtils.mm
+@@ -17,11 +17,16 @@ void LaunchTask(NSString* aPath, NSArray* aArguments) {
+ 
+   @try {
+     NSTask* task = [[NSTask alloc] init];
+-    [task setExecutableURL:[NSURL fileURLWithPath:aPath]];
+     if (aArguments) {
+       [task setArguments:aArguments];
+     }
+-    [task launchAndReturnError:nil];
++    if(@available(macOS 10.13, *)) {
++      [task setExecutableURL:[NSURL fileURLWithPath:aPath]];
++      [task launchAndReturnError:nil];
++    } else {
++      [task setLaunchPath:aPath];
++      [task launch];
++    }
+     [task waitUntilExit];
+     [task release];
+   } @catch (NSException* e) {

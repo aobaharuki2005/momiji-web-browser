@@ -1,0 +1,41 @@
+diff --git a/memory/build/mozjemalloc.cpp b/memory/build/mozjemalloc.cpp
+index 465027ccdf411..558eecc4c93b2 100644
+--- a/memory/build/mozjemalloc.cpp
++++ b/memory/build/mozjemalloc.cpp
+@@ -203,7 +203,7 @@ static Atomic<bool, MemoryOrdering::Relaxed> malloc_initialized;
+ #endif
+ 
+ // This lock must be held while bootstrapping us.
+-constinit StaticMutex gInitLock MOZ_UNANNOTATED;
++StaticMutex gInitLock MOZ_UNANNOTATED = {STATIC_MUTEX_INIT};
+ 
+ // ***************************************************************************
+ // Statistics data structures.
+@@ -922,7 +922,6 @@ struct ArenaTreeTrait {
+ //   used by the standard API.
+ class ArenaCollection {
+  public:
+-  constexpr ArenaCollection() {}
+ 
+   bool Init() MOZ_REQUIRES(gInitLock) MOZ_EXCLUDES(mLock) {
+     arena_params_t params;
+@@ -1193,8 +1192,8 @@ class ArenaCollection {
+     return aArenaId & MAIN_THREAD_ARENA_BIT;
+   }
+ 
+-  arena_t* mDefaultArena = nullptr;
+-  arena_id_t mLastPublicArenaId MOZ_GUARDED_BY(mLock) = 0;
++  arena_t* mDefaultArena;
++  arena_id_t mLastPublicArenaId MOZ_GUARDED_BY(mLock);
+ 
+   // Accessing mArenas and mPrivateArenas can only be done while holding mLock.
+   Tree mArenas MOZ_GUARDED_BY(mLock);
+@@ -1234,7 +1233,7 @@ class ArenaCollection {
+   Atomic<bool> mIsDeferredPurgeEnabled;
+ };
+ 
+-constinit static ArenaCollection gArenas;
++ MOZ_RUNINIT static ArenaCollection gArenas;
+ 
+ // Protects huge allocation-related data structures.
+ static Mutex huge_mtx;

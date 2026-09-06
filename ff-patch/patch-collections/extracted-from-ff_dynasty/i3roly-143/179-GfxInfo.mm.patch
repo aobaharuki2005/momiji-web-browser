@@ -1,0 +1,14 @@
+diff --git a/widget/cocoa/GfxInfo.mm b/widget/cocoa/GfxInfo.mm
+index b64ebc0fa809..58c6b5c3b011 100644
+--- a/widget/cocoa/GfxInfo.mm
++++ b/widget/cocoa/GfxInfo.mm
+@@ -507,9 +507,6 @@ nsresult GfxInfo::GetFeatureStatusImpl(
+         case OperatingSystem::OSX10_5:
+         case OperatingSystem::OSX10_6:
+         case OperatingSystem::OSX10_7:
+-          *aStatus = nsIGfxInfo::FEATURE_BLOCKED_OS_VERSION;
+-          aFailureId = "FEATURE_FAILURE_CANVAS_OSX_VERSION";
+-          break;
+         default:
+           *aStatus = nsIGfxInfo::FEATURE_STATUS_OK;
+           break;

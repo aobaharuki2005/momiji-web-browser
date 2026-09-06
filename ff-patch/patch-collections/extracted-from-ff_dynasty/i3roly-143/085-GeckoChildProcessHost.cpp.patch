@@ -1,0 +1,32 @@
+diff --git a/ipc/glue/GeckoChildProcessHost.cpp b/ipc/glue/GeckoChildProcessHost.cpp
+index 83241df4d053..bf70b3b494c3 100644
+--- a/ipc/glue/GeckoChildProcessHost.cpp
++++ b/ipc/glue/GeckoChildProcessHost.cpp
+@@ -1232,9 +1232,9 @@ Result<Ok, LaunchError> PosixProcessLauncher::DoSetup() {
+     nsCString new_dyld_lib_path(path.get());
+     if (PR_GetEnv("MOZ_RUN_GTEST")) {
+       new_dyld_lib_path = path + "/gtest:"_ns + new_dyld_lib_path;
+-      mLaunchOptions->env_map["DYLD_LIBRARY_PATH"] = new_dyld_lib_path.get();
+     }
+ 
++    mLaunchOptions->env_map["DYLD_LIBRARY_PATH"] = new_dyld_lib_path.get();
+     // DYLD_INSERT_LIBRARIES is currently unused by default but we allow
+     // it to be set by the external environment.
+     const char* interpose = PR_GetEnv("DYLD_INSERT_LIBRARIES");
+@@ -1894,6 +1894,8 @@ RefPtr<ProcessLaunchPromise> BaseProcessLauncher::Launch(
+     if (auto* handle = std::get_if<UniqueFileHandle>(&clientHandle)) {
+       geckoargs::sIPCHandle.Put(std::move(*handle), mChildArgs);
+     }
++// it ain't workin sorry nika
++/**
+ #ifdef XP_DARWIN
+     // NOTE: We don't support passing UniqueMachReceiveRight instances on the
+     // command line, so clientHandle must be a send right.
+@@ -1901,6 +1903,7 @@ RefPtr<ProcessLaunchPromise> BaseProcessLauncher::Launch(
+       geckoargs::sIPCPort.Put(std::move(*port), mChildArgs);
+     }
+ #endif
++*/
+     else {
+       MOZ_ASSERT_UNREACHABLE();
+       return ProcessLaunchPromise::CreateAndReject(LaunchError("BadPipeType"),

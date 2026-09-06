@@ -1,0 +1,13 @@
+diff --git a/accessible/mac/mozAccessible.mm b/accessible/mac/mozAccessible.mm
+index fc7e8a536e0e8..20d2c6c161768 100644
+--- a/accessible/mac/mozAccessible.mm
++++ b/accessible/mac/mozAccessible.mm
+@@ -1147,7 +1147,7 @@ - (void)handleAccessibleEvent:(uint32_t)eventType {
+           static_cast<MOXTextMarkerDelegate*>([self moxTextMarkerDelegate]);
+       NSMutableDictionary* userInfo =
+           [[[delegate selectionChangeInfo] mutableCopy] autorelease];
+-      userInfo[@"AXTextChangeElement"] = self;
++      [userInfo setObject:self forKey:@"AXTextChangeElement"];
+ 
+       mozAccessible* webArea = [self topWebArea];
+       [webArea

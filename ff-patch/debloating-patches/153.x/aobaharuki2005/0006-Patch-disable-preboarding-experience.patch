@@ -1,0 +1,31 @@
+From bae4b431afec96fb0e5b28387f512d55e900272b Mon Sep 17 00:00:00 2001
+From: aobaharuki2005 <tranbaohnth@outlook.com>
+Date: Thu, 21 May 2026 17:49:10 +0700
+Subject: [PATCH] Patch: disable preboarding experience
+
+---
+ browser/app/profile/firefox.js | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
+
+diff --git a/browser/app/profile/firefox.js b/browser/app/profile/firefox.js
+index 412e0879bbb..68e84a307c0 100644
+--- a/browser/app/profile/firefox.js
++++ b/browser/app/profile/firefox.js
+@@ -1738,10 +1738,10 @@ pref("browser.partnerlink.campaign.topsites", "amzn_2020_a1");
+ // Activates preloading of the new tab url.
+ pref("browser.newtab.preload", true);
+ 
+-// Do not enable the preonboarding experience on Linux
+-#ifdef XP_LINUX
+-  pref("browser.preonboarding.enabled", false);
+-#endif
++// // Do not enable the preonboarding experience on Linux & legacy macOS (Momiji purpose)
++// #ifdef XP_LINUX
++pref("browser.preonboarding.enabled", false);
++// #endif
+ 
+ // Show "Download Firefox for mobile" QR code modal on newtab
+ pref("browser.newtabpage.activity-stream.mobileDownloadModal.enabled", false);
+-- 
+2.50.1 (Apple Git-155)
+

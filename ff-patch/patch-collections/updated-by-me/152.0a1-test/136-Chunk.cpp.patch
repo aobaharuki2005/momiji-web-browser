@@ -1,0 +1,13 @@
+diff --git a/memory/build/Chunk.cpp b/memory/build/Chunk.cpp
+index 8d38eaacc1f53..d4e6769712be2 100644
+--- a/memory/build/Chunk.cpp
++++ b/memory/build/Chunk.cpp
+@@ -493,7 +493,7 @@ void* pages_mmap_aligned(size_t size, size_t alignment,
+   return ret;
+ }
+ 
+-constinit AddressRadixTree<(sizeof(void*) << 3) - LOG2(kChunkSize)> gChunkRTree;
++AddressRadixTree<(sizeof(void*) << 3) - LOG2(kChunkSize)> gChunkRTree;
+ 
+ // Protects chunk-related data structures.
+ static Mutex chunks_mtx;

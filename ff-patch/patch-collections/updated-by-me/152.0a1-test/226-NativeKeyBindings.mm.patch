@@ -1,0 +1,13 @@
+diff --git a/widget/cocoa/NativeKeyBindings.mm b/widget/cocoa/NativeKeyBindings.mm
+index 9f0954b9d004a..61c6b13dde49d 100644
+--- a/widget/cocoa/NativeKeyBindings.mm
++++ b/widget/cocoa/NativeKeyBindings.mm
+@@ -254,7 +254,7 @@
+                              modifierFlags:[originalEvent modifierFlags]
+                                  timestamp:[originalEvent timestamp]
+                               windowNumber:[originalEvent windowNumber]
+-                                   context:nil
++                                   context:[originalEvent context]
+                                 characters:chars
+                charactersIgnoringModifiers:chars
+                                  isARepeat:[originalEvent isARepeat]

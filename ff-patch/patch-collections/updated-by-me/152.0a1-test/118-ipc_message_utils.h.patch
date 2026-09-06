@@ -1,0 +1,50 @@
+diff --git a/ipc/chromium/src/chrome/common/ipc_message_utils.h b/ipc/chromium/src/chrome/common/ipc_message_utils.h
+index 98b3d38f10767..869e5ebafa1a8 100644
+--- a/ipc/chromium/src/chrome/common/ipc_message_utils.h
++++ b/ipc/chromium/src/chrome/common/ipc_message_utils.h
+@@ -119,10 +119,12 @@ class MOZ_STACK_CLASS MessageWriter final {
+   bool WriteMachSendRight(mozilla::UniqueMachSendRight port) {
+     return message_.WriteMachSendRight(std::move(port));
+   }
+-
++  //it ain't workin sorry nika
++  /*
+   bool WriteMachReceiveRight(mozilla::UniqueMachReceiveRight port) {
+     return message_.WriteMachReceiveRight(std::move(port));
+   }
++  */
+ #endif
+ 
+   void FatalError(const char* aErrorMsg) const {
+@@ -218,10 +220,13 @@ class MOZ_STACK_CLASS MessageReader final {
+     return message_.ConsumeMachSendRight(&iter_, port);
+   }
+ 
++  //it ain't workin sorry nika
++  /*
+   [[nodiscard]] bool ConsumeMachReceiveRight(
+       mozilla::UniqueMachReceiveRight* port) {
+     return message_.ConsumeMachReceiveRight(&iter_, port);
+   }
++  */
+ #endif
+ 
+   void FatalError(const char* aErrorMsg) const {
+@@ -1090,6 +1095,8 @@ struct ParamTraitsIPC<mozilla::UniqueMachSendRight> {
+   }
+ };
+ 
++//it ain't workin sorry nbika
++/*
+ // `UniqueMachReceiveRight` may be serialized over IPC channels. On the
+ // receiving side, the UniqueMachReceiveRight is the local name of the right
+ // which was transmitted.
+@@ -1131,7 +1138,7 @@ struct ParamTraitsIPC<mozilla::UniqueMachReceiveRight> {
+     }
+     return true;
+   }
+-};
++};*/
+ #endif
+ 
+ // Mozilla-specific types.

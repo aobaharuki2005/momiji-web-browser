@@ -1,0 +1,15 @@
+diff --git a/security/certverifier/NSSCertDBTrustDomain.cpp b/security/certverifier/NSSCertDBTrustDomain.cpp
+index 1866c345f5ab9..f799490b60059 100644
+--- a/security/certverifier/NSSCertDBTrustDomain.cpp
++++ b/security/certverifier/NSSCertDBTrustDomain.cpp
+@@ -47,6 +47,10 @@
+ #include "secder.h"
+ #include "secerr.h"
+ 
++#ifdef MOZ_WIDGET_COCOA
++#  include "nsCocoaFeatures.h"
++#endif
++
+ using namespace mozilla;
+ using namespace mozilla::ct;
+ using namespace mozilla::pkix;

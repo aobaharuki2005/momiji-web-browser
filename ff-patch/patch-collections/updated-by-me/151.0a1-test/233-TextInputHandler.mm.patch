@@ -1,0 +1,43 @@
+diff --git a/widget/cocoa/TextInputHandler.mm b/widget/cocoa/TextInputHandler.mm
+index 515180d3e35e3..1e51d136fbd82 100644
+--- a/widget/cocoa/TextInputHandler.mm
++++ b/widget/cocoa/TextInputHandler.mm
+@@ -5196,11 +5196,17 @@ WidgetQueryContentEvent queryTextContentEvent(true, eQueryTextContent,
+   // NSTextCheckingResult.range is read only, so re-create this result object.
+   NSRange candidatedRange = NSMakeRange(candidate.range.location + startFetch,
+                                         candidate.range.length);
++  NSArray<NSString *> *anAlternativeString;
++  if(@available(macOS 10.8, *)) {
++    anAlternativeString = candidate.alternativeStrings;
++  } else {
++    anAlternativeString = @[];
++  }
+   [mCandidatedTextSubstitutionResult release];
+   mCandidatedTextSubstitutionResult = [[NSTextCheckingResult
+       correctionCheckingResultWithRange:candidatedRange
+                       replacementString:candidate.replacementString
+-                     alternativeStrings:candidate.alternativeStrings] retain];
++                     alternativeStrings:anAlternativeString] retain];
+   mOriginalTextForTextSubstitution =
+       Substring(queryTextContentEvent.mReply->DataRef(),
+                 candidatedRange.location - startFetch, candidatedRange.length);
+@@ -5250,12 +5256,17 @@ WidgetQueryContentEvent queryTextContentEvent(true, eQueryTextContent,
+   if (!spellchecker) {
+     return;
+   }
++  NSArray<NSString *> *anotherAlternativeString;
++  if(@available(macOS 10.8, *)) {
++    anotherAlternativeString = mCandidatedTextSubstitutionResult.alternativeStrings;
++  } else {
++    anotherAlternativeString = @[];
++  }
+   [spellchecker
+       showCorrectionIndicatorOfType:NSCorrectionIndicatorTypeDefault
+                       primaryString:mCandidatedTextSubstitutionResult
+                                         .replacementString
+-                 alternativeStrings:mCandidatedTextSubstitutionResult
+-                                        .alternativeStrings
++                 alternativeStrings:anotherAlternativeString
+                     forStringInRect:rect
+                                view:mView
+                   completionHandler:^(NSString* aAcceptedString) {

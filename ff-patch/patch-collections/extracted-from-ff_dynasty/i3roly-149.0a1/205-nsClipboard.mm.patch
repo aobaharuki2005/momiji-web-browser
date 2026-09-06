@@ -1,0 +1,16 @@
+diff --git a/widget/cocoa/nsClipboard.mm b/widget/cocoa/nsClipboard.mm
+index f444358c4c509..36831d32372a6 100644
+--- a/widget/cocoa/nsClipboard.mm
++++ b/widget/cocoa/nsClipboard.mm
+@@ -65,7 +65,10 @@
+     case nsIClipboard::kGlobalClipboard:
+       return [NSPasteboard generalPasteboard];
+     case nsIClipboard::kFindClipboard:
+-      return [NSPasteboard pasteboardWithName:NSPasteboardNameFind];
++      if (@available(macOS 10.13, *)) {
++          return [NSPasteboard pasteboardWithName:NSPasteboardNameFind];
++      }
++      return [NSPasteboard pasteboardWithName:NSFindPboard];
+     default:
+       return nil;
+   }

@@ -1,0 +1,18 @@
+diff --git a/browser/themes/shared/browser-shared.css b/browser/themes/shared/browser-shared.css
+index d1b11a65e527c..907515a35f100 100644
+--- a/browser/themes/shared/browser-shared.css
++++ b/browser/themes/shared/browser-shared.css
+@@ -341,6 +341,13 @@ body {
+   }
+ }
+ 
++@media (-moz-platform: macos) {
++  #titlebar-fullscreen-button {
++    appearance: auto;
++    -moz-default-appearance: -moz-mac-fullscreen-button;
++  }
++}
++
+ /* Menu bar */
+ 
+ #toolbar-menubar {

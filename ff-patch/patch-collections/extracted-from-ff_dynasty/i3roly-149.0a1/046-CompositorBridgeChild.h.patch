@@ -1,0 +1,20 @@
+diff --git a/gfx/layers/ipc/CompositorBridgeChild.h b/gfx/layers/ipc/CompositorBridgeChild.h
+index 2d07d9d739130..993426d69a91e 100644
+--- a/gfx/layers/ipc/CompositorBridgeChild.h
++++ b/gfx/layers/ipc/CompositorBridgeChild.h
+@@ -145,6 +145,7 @@ class CompositorBridgeChild final : public PCompositorBridgeChild,
+   static void ShutDown();
+ 
+   FwdTransactionCounter& GetFwdTransactionCounter();
++  void WindowOverlayChanged() { mWindowOverlayChanged = true; }
+ 
+   /**
+    * Hold TextureClient ref until end of usage on host side if
+@@ -224,6 +225,7 @@ class CompositorBridgeChild final : public PCompositorBridgeChild,
+   // True until the beginning of the two-step shutdown sequence of this actor.
+   bool mCanSend;
+ 
++  bool mWindowOverlayChanged;
+   // False until the actor is destroyed.
+   bool mActorDestroyed;
+ 

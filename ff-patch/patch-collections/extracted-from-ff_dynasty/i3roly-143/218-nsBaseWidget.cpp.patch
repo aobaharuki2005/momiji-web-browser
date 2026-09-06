@@ -1,0 +1,54 @@
+diff --git a/widget/nsBaseWidget.cpp b/widget/nsBaseWidget.cpp
+index 153b935bdb9f..8a97a9c55d65 100644
+--- a/widget/nsBaseWidget.cpp
++++ b/widget/nsBaseWidget.cpp
+@@ -524,9 +524,10 @@ already_AddRefed<nsIWidget> nsBaseWidget::CreateChild(
+ 
+ // Attach a view to our widget which we'll send events to.
+ void nsBaseWidget::AttachViewToTopLevel(bool aUseAttachedEvents) {
+-  NS_ASSERTION(mWindowType == WindowType::TopLevel ||
+-                   mWindowType == WindowType::Dialog ||
+-                   mWindowType == WindowType::Invisible,
++  NS_ASSERTION((mWindowType == WindowType::TopLevel ||
++                mWindowType == WindowType::Dialog ||
++                mWindowType == WindowType::Invisible,
++                mWindowType == WindowType::Child),
+                "Can't attach to window of that type");
+ 
+   mUseAttachedEvents = aUseAttachedEvents;
+@@ -611,15 +612,6 @@ nsIntSize nsIWidget::CustomCursorSize(const Cursor& aCursor) {
+   return {width, height};
+ }
+ 
+-LayoutDeviceIntSize nsIWidget::NormalSizeModeClientToWindowSizeDifference() {
+-  auto margin = NormalSizeModeClientToWindowMargin();
+-  MOZ_ASSERT(margin.top >= 0, "Window should be bigger than client area");
+-  MOZ_ASSERT(margin.left >= 0, "Window should be bigger than client area");
+-  MOZ_ASSERT(margin.right >= 0, "Window should be bigger than client area");
+-  MOZ_ASSERT(margin.bottom >= 0, "Window should be bigger than client area");
+-  return {margin.LeftRight(), margin.TopBottom()};
+-}
+-
+ RefPtr<mozilla::VsyncDispatcher> nsIWidget::GetVsyncDispatcher() {
+   return nullptr;
+ }
+@@ -948,8 +940,8 @@ nsBaseWidget::AutoLayerManagerSetup::AutoLayerManagerSetup(
+     nsBaseWidget* aWidget, gfxContext* aTarget)
+     : mWidget(aWidget) {
+   WindowRenderer* renderer = mWidget->GetWindowRenderer();
+-  if (auto* fallback = renderer->AsFallback()) {
+-    mRenderer = fallback;
++  if (renderer->AsFallback()) {
++    mRenderer = renderer->AsFallback();
+     mRenderer->SetTarget(aTarget);
+   }
+ }
+@@ -994,7 +986,7 @@ bool nsBaseWidget::UseAPZ() const {
+     return mWindowType == WindowType::Dialog ||
+            mWindowType == WindowType::Popup;
+   }
+-
++  
+   if (StaticPrefs::apz_popups_without_remote_enabled()) {
+     return mWindowType == WindowType::Popup;
+   }

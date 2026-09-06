@@ -1,0 +1,40 @@
+diff --git a/third_party/rust/metal/src/vertexdescriptor.rs b/third_party/rust/metal/src/vertexdescriptor.rs
+index 5e01be4359..7df15063ca 100644
+--- a/third_party/rust/metal/src/vertexdescriptor.rs
++++ b/third_party/rust/metal/src/vertexdescriptor.rs
+@@ -130,7 +130,7 @@ foreign_obj_type! {
+ 
+ impl VertexBufferLayoutDescriptorArrayRef {
+     pub fn object_at(&self, index: NSUInteger) -> Option<&VertexBufferLayoutDescriptorRef> {
+-        unsafe { msg_send![self, objectAtIndexedSubscript: index] }
++        unsafe { msg_send![self, objectAtIndex: index] }
+     }
+ 
+     pub fn set_object_at(
+@@ -140,7 +140,7 @@ impl VertexBufferLayoutDescriptorArrayRef {
+     ) {
+         unsafe {
+             msg_send![self, setObject:layout
+-                   atIndexedSubscript:index]
++                   atIndex:index]
+         }
+     }
+ }
+@@ -198,7 +198,7 @@ foreign_obj_type! {
+ 
+ impl VertexAttributeDescriptorArrayRef {
+     pub fn object_at(&self, index: NSUInteger) -> Option<&VertexAttributeDescriptorRef> {
+-        unsafe { msg_send![self, objectAtIndexedSubscript: index] }
++        unsafe { msg_send![self, objectAtIndex: index] }
+     }
+ 
+     pub fn set_object_at(
+@@ -208,7 +208,7 @@ impl VertexAttributeDescriptorArrayRef {
+     ) {
+         unsafe {
+             msg_send![self, setObject:attribute
+-                   atIndexedSubscript:index]
++                   atIndex:index]
+         }
+     }
+ }

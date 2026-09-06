@@ -1,0 +1,12 @@
+diff --git a/third_party/rust/neqo-bin/Cargo.toml b/third_party/rust/neqo-bin/Cargo.toml
+index a6b7980712019..a501d564417fc 100644
+--- a/third_party/rust/neqo-bin/Cargo.toml
++++ b/third_party/rust/neqo-bin/Cargo.toml
+@@ -147,7 +147,6 @@ default-features = false
+ version = "0.6"
+ features = [
+     "log",
+-    "fast-apple-datapath",
+ ]
+ default-features = false
+ 

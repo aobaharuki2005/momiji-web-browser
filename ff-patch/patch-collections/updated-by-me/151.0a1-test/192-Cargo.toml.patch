@@ -1,0 +1,19 @@
+diff --git a/third_party/rust/neqo-bin/Cargo.toml b/third_party/rust/neqo-bin/Cargo.toml
+index 47bed5ac303ae..bbc80757eaa47 100644
+--- a/third_party/rust/neqo-bin/Cargo.toml
++++ b/third_party/rust/neqo-bin/Cargo.toml
+@@ -60,7 +60,6 @@ draft-29 = [
+     "neqo-http3/draft-29",
+     "neqo-transport/draft-29",
+ ]
+-fast-apple-datapath = ["quinn-udp/fast-apple-datapath"]
+ 
+ [lib]
+ name = "neqo_bin"
+@@ -278,4 +277,4 @@ unused_qualifications = "warn"
+ [lints.rust.unexpected_cfgs]
+ level = "warn"
+ priority = 0
+-check-cfg = ["cfg(coverage,coverage_nightly,fuzzing)"]
++check-cfg = ["cfg(coverage,coverage_nightly,fuzzing)"]
+\ No newline at end of file

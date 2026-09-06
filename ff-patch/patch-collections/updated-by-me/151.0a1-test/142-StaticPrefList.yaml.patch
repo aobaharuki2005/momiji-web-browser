@@ -1,0 +1,13 @@
+diff --git a/modules/libpref/init/StaticPrefList.yaml b/modules/libpref/init/StaticPrefList.yaml
+index b46f7b8c66e97..3a704b984f258 100644
+--- a/modules/libpref/init/StaticPrefList.yaml
++++ b/modules/libpref/init/StaticPrefList.yaml
+@@ -14936,7 +14936,7 @@
+ #     PROXYCONFIG_SYSTEM   = 5
+ - name: network.proxy.type
+   type: RelaxedAtomicUint32
+-  value: 5
++  value: 0
+   mirror: always
+ 
+ # Whether to use WPAD while configuring proxy with system settings

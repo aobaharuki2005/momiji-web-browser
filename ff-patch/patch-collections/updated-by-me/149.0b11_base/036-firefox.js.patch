@@ -1,0 +1,30 @@
+diff --git a/browser/app/profile/firefox.js b/browser/app/profile/firefox.js
+index 141c9a0370168..6b7946aee3662 100644
+--- a/browser/app/profile/firefox.js
++++ b/browser/app/profile/firefox.js
+@@ -75,8 +75,8 @@ pref("extensions.webextensions.remote", true);
+ #endif
+ 
+ // Require signed add-ons by default
+-pref("extensions.langpacks.signatures.required", true);
+-pref("xpinstall.signatures.required", true);
++pref("extensions.langpacks.signatures.required", false);
++pref("xpinstall.signatures.required", false);
+ 
+ // Enable data collection permissions.
+ pref("extensions.dataCollectionPermissions.enabled", true);
+@@ -1853,10 +1853,10 @@ pref("browser.partnerlink.campaign.topsites", "amzn_2020_a1");
+ // Activates preloading of the new tab url.
+ pref("browser.newtab.preload", true);
+ 
+-// Do not enable the preonboarding experience on Linux
+-#ifdef XP_LINUX
+-  pref("browser.preonboarding.enabled", false);
+-#endif
++// // Do not enable the preonboarding experience on Linux & legacy macOS (Momiji purpose)
++// #ifdef XP_LINUX
++pref("browser.preonboarding.enabled", false);
++// #endif
+ 
+ // For further detail on the TOU prefs below, see the `preonboarding` feature in
+ // FeatureManifest.yaml

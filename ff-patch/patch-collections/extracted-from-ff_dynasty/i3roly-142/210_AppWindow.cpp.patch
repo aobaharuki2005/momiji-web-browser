@@ -1,0 +1,76 @@
+diff --git a/xpfe/appshell/AppWindow.cpp b/xpfe/appshell/AppWindow.cpp
+index ddd7fb3ff3..9ac2fa3954 100644
+--- a/xpfe/appshell/AppWindow.cpp
++++ b/xpfe/appshell/AppWindow.cpp
+@@ -387,7 +387,9 @@ static LayoutDeviceIntSize GetOuterToInnerSizeDifference(nsIWidget* aWindow) {
+   if (!aWindow) {
+     return LayoutDeviceIntSize();
+   }
+-  return aWindow->NormalSizeModeClientToWindowSizeDifference();
++  LayoutDeviceIntSize baseSize(200, 200);
++  LayoutDeviceIntSize windowSize = aWindow->ClientToWindowSize(baseSize);
++  return windowSize - baseSize;
+ }
+ 
+ static CSSIntSize GetOuterToInnerSizeDifferenceInCSSPixels(
+@@ -398,25 +400,17 @@ static CSSIntSize GetOuterToInnerSizeDifferenceInCSSPixels(
+ 
+ NS_IMETHODIMP
+ AppWindow::GetOuterToInnerHeightDifferenceInCSSPixels(uint32_t* aResult) {
+-  if (mWindow && mWindow->PersistClientBounds()) {
+-    *aResult = 0;
+-  } else {
+-    *aResult = GetOuterToInnerSizeDifferenceInCSSPixels(
+-                   mWindow, UnscaledDevicePixelsPerCSSPixel())
+-                   .height;
+-  }
++  *aResult = GetOuterToInnerSizeDifferenceInCSSPixels(
++                 mWindow, UnscaledDevicePixelsPerCSSPixel())
++                 .height;
+   return NS_OK;
+ }
+ 
+ NS_IMETHODIMP
+ AppWindow::GetOuterToInnerWidthDifferenceInCSSPixels(uint32_t* aResult) {
+-  if (mWindow && mWindow->PersistClientBounds()) {
+-    *aResult = 0;
+-  } else {
+-    *aResult = GetOuterToInnerSizeDifferenceInCSSPixels(
+-                   mWindow, UnscaledDevicePixelsPerCSSPixel())
+-                   .width;
+-  }
++  *aResult = GetOuterToInnerSizeDifferenceInCSSPixels(
++                 mWindow, UnscaledDevicePixelsPerCSSPixel())
++                 .width;
+   return NS_OK;
+ }
+ 
+@@ -1937,8 +1931,6 @@ void AppWindow::MaybeSavePersistentPositionAndSize(
+     return;
+   }
+ 
+-  const bool isClient = mWindow->PersistClientBounds();
+-
+   // we use CSS pixels for size, but desktop pixels for position
+   CSSToLayoutDeviceScale sizeScale = UnscaledDevicePixelsPerCSSPixel();
+   DesktopToLayoutDeviceScale posScale = DevicePixelsPerDesktopPixel();
+@@ -1974,8 +1966,8 @@ void AppWindow::MaybeSavePersistentPositionAndSize(
+   }
+ 
+   if (aAttributes.contains(PersistentAttribute::Size)) {
+-    const LayoutDeviceIntRect innerRect =
+-        isClient ? rect : rect - GetOuterToInnerSizeDifference(mWindow);
++    LayoutDeviceIntRect innerRect =
++        rect - GetOuterToInnerSizeDifference(mWindow);
+     if (aPersistString.Find(u"width") >= 0) {
+       sizeString.Truncate();
+       sizeString.AppendInt(NSToIntRound(innerRect.Width() / sizeScale.scale));
+@@ -2557,7 +2549,7 @@ void AppWindow::SizeShell() {
+ 
+   if (mChromeLoaded && mCenterAfterLoad && !positionSet &&
+       mWindow->SizeMode() == nsSizeMode_Normal) {
+-    Center(parentWindow, !parentWindow, false);
++    Center(parentWindow, parentWindow ? false : true, false);
+   }
+ }
+ 

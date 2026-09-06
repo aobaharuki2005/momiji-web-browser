@@ -1,0 +1,363 @@
+diff --git a/widget/cocoa/OSXNotificationCenter.mm b/widget/cocoa/OSXNotificationCenter.mm
+index 77f6152ee821e..e01f8409edc80 100644
+--- a/widget/cocoa/OSXNotificationCenter.mm
++++ b/widget/cocoa/OSXNotificationCenter.mm
+@@ -23,6 +23,62 @@
+ 
+ static constexpr nsLiteralString kActionSuffix = u"-moz"_ns;
+ 
++#if !defined(MAC_OS_X_VERSION_10_8) || (MAC_OS_X_VERSION_MAX_ALLOWED < MAC_OS_X_VERSION_10_8)
++@protocol NSUserNotificationCenterDelegate
++@end
++static NSString* const NSUserNotificationDefaultSoundName = @"DefaultSoundName";
++enum {
++  NSUserNotificationActivationTypeNone = 0,
++  NSUserNotificationActivationTypeContentsClicked = 1,
++  NSUserNotificationActivationTypeActionButtonClicked = 2,
++};
++#endif
++
++#if !defined(MAC_OS_X_VERSION_10_9) || (MAC_OS_X_VERSION_MAX_ALLOWED < MAC_OS_X_VERSION_10_9)
++enum {
++  NSUserNotificationActivationTypeReplied = 3,
++};
++#endif
++
++#if !defined(MAC_OS_X_VERSION_10_10) || (MAC_OS_X_VERSION_MAX_ALLOWED < MAC_OS_X_VERSION_10_10)
++enum { NSUserNotificationActivationTypeAdditionalActionClicked = 4 };
++#endif
++
++@protocol FakeNSUserNotification <NSObject>
++@property(copy) NSString* title;
++@property(copy) NSString* subtitle;
++@property(copy) NSString* informativeText;
++@property(copy) NSString* actionButtonTitle;
++@property(copy) NSDictionary* userInfo;
++@property(copy) NSDate* deliveryDate;
++@property(copy) NSTimeZone* deliveryTimeZone;
++@property(copy) NSMutableArray* additionalActions;
++@property(copy) NSDateComponents* deliveryRepeatInterval;
++@property(copy) NSUserNotificationAction* additionalActivationAction;
++@property(readonly) NSDate* actualDeliveryDate;
++@property(readonly, getter=isPresented) BOOL presented;
++@property(readonly, getter=isRemote) BOOL remote;
++@property(copy) NSString* soundName;
++@property BOOL hasActionButton;
++@property(readonly) NSUserNotificationActivationType activationType;
++@property(copy) NSString* otherButtonTitle;
++@property(copy) NSImage* contentImage;
++@end
++
++@protocol FakeNSUserNotificationCenter <NSObject>
+++ (id<FakeNSUserNotificationCenter>)defaultUserNotificationCenter;
++@property(assign) id<NSUserNotificationCenterDelegate> delegate;
++@property(copy) NSArray* scheduledNotifications;
++- (void)scheduleNotification:(id<FakeNSUserNotification>)notification;
++- (void)removeScheduledNotification:(id<FakeNSUserNotification>)notification;
++@property(readonly) NSArray* deliveredNotifications;
++- (void)deliverNotification:(id<FakeNSUserNotification>)notification;
++- (void)removeDeliveredNotification:(id<FakeNSUserNotification>)notification;
++- (void)removeAllDeliveredNotifications;
++- (void)_removeAllDisplayedNotifications;
++- (void)_removeDisplayedNotification:(id<FakeNSUserNotification>)notification;
++@end
++
+ @interface mozNotificationCenterDelegate
+     : NSObject <NSUserNotificationCenterDelegate> {
+   OSXNotificationCenter* mOSXNC;
+@@ -39,27 +95,39 @@ - (id)initWithOSXNC:(OSXNotificationCenter*)osxnc {
+   return self;
+ }
+ 
+-- (void)userNotificationCenter:(NSUserNotificationCenter*)center
+-        didDeliverNotification:(NSUserNotification*)notification {
++- (void)userNotificationCenter:(id<FakeNSUserNotificationCenter>)center
++        didDeliverNotification:(id<FakeNSUserNotification>)notification {
+ }
+ 
+-- (void)userNotificationCenter:(NSUserNotificationCenter*)center
+-       didActivateNotification:(NSUserNotification*)notification {
+-  mOSXNC->OnActivate([[notification userInfo] valueForKey:@"name"],
+-                     notification.activationType,
+-                     notification.additionalActivationAction);
++- (void)userNotificationCenter:(id<FakeNSUserNotificationCenter>)center
++       didActivateNotification:(id<FakeNSUserNotification>)notification {
++  unsigned long long additionalActionIndex = ULLONG_MAX;
++  if ([notification respondsToSelector:@selector(_alternateActionIndex)]) {
++    NSNumber* alternateActionIndex =
++        [(NSObject*)notification valueForKey:@"_alternateActionIndex"];
++    additionalActionIndex = [alternateActionIndex unsignedLongLongValue];
++  }
++  if (@available(macOS 10.10, *)) {
++    mOSXNC->OnActivate([[notification userInfo] valueForKey:@"name"],
++                       notification.activationType, additionalActionIndex,
++                       notification.additionalActivationAction);
++  } else {
++    mOSXNC->OnActivate([[notification userInfo] valueForKey:@"name"],
++                       notification.activationType, additionalActionIndex,
++                       nullptr);
++  }
+ }
+ 
+-- (BOOL)userNotificationCenter:(NSUserNotificationCenter*)center
+-     shouldPresentNotification:(NSUserNotification*)notification {
++- (BOOL)userNotificationCenter:(id<FakeNSUserNotificationCenter>)center
++     shouldPresentNotification:(id<FakeNSUserNotification>)notification {
+   return YES;
+ }
+ 
+ // This is an undocumented method that we need for parity with Safari.
+ // Apple bug #15440664.
+-- (void)userNotificationCenter:(NSUserNotificationCenter*)center
++- (void)userNotificationCenter:(id<FakeNSUserNotificationCenter>)center
+     didRemoveDeliveredNotifications:(NSArray*)notifications {
+-  for (NSUserNotification* notification in notifications) {
++  for (id<FakeNSUserNotification> notification in notifications) {
+     NSString* name = [[notification userInfo] valueForKey:@"name"];
+     mOSXNC->CloseAlertCocoaString(name);
+   }
+@@ -67,8 +135,8 @@ - (void)userNotificationCenter:(NSUserNotificationCenter*)center
+ 
+ // This is an undocumented method that we need to be notified if a user clicks
+ // the close button.
+-- (void)userNotificationCenter:(NSUserNotificationCenter*)center
+-               didDismissAlert:(NSUserNotification*)notification {
++- (void)userNotificationCenter:(id<FakeNSUserNotificationCenter>)center
++               didDismissAlert:(id<FakeNSUserNotification>)notification {
+   NSString* name = [[notification userInfo] valueForKey:@"name"];
+   mOSXNC->CloseAlertCocoaString(name);
+ }
+@@ -77,6 +145,11 @@ - (void)userNotificationCenter:(NSUserNotificationCenter*)center
+ 
+ namespace mozilla {
+ 
++enum {
++  OSXNotificationActionDisable = 0,
++  OSXNotificationActionSettings = 1,
++};
++
+ class OSXNotificationInfo final : public nsISupports {
+  private:
+   virtual ~OSXNotificationInfo();
+@@ -116,7 +189,7 @@ - (void)userNotificationCenter:(NSUserNotificationCenter*)center
+   NS_OBJC_END_TRY_IGNORE_BLOCK;
+ }
+ 
+-static NSUserNotificationCenter* GetNotificationCenter() {
++static id<FakeNSUserNotificationCenter> GetNotificationCenter() {
+   NS_OBJC_BEGIN_TRY_BLOCK_RETURN;
+ 
+   Class c = NSClassFromString(@"NSUserNotificationCenter");
+@@ -168,7 +241,7 @@ - (void)userNotificationCenter:(NSUserNotificationCenter*)center
+   }
+ 
+   Class unClass = NSClassFromString(@"NSUserNotification");
+-  NSUserNotification* notification = [[[unClass alloc] init] autorelease];
++  id<FakeNSUserNotification> notification = [[[unClass alloc] init] autorelease];
+ 
+   nsAutoString title;
+   nsresult rv = aAlert->GetTitle(title);
+@@ -200,63 +273,71 @@ - (void)userNotificationCenter:(NSUserNotificationCenter*)center
+   bool isSilent;
+   aAlert->GetSilent(&isSilent);
+   notification.soundName = isSilent ? nil : NSUserNotificationDefaultSoundName;
+-
+-  NSMutableArray* additionalActions = [[NSMutableArray alloc] init];
+-
+-  nsTArray<RefPtr<nsIAlertAction>> actions;
+-  MOZ_TRY(aAlert->GetActions(actions));
+-
+-  for (const RefPtr<nsIAlertAction>& action : actions) {
+-    nsAutoString actionName;
+-    MOZ_TRY(action->GetAction(actionName));
+-
+-    nsAutoString actionTitle;
+-    MOZ_TRY(action->GetTitle(actionTitle));
+-
+-    // Add suffix to prevent potential collision with keywords like "settings"
+-    NSString* actionNameNS =
+-        nsCocoaUtils::ToNSString(actionName + kActionSuffix);
+-    NSString* actionTitleNS = nsCocoaUtils::ToNSString(actionTitle);
+-    NSUserNotificationAction* notificationAction =
+-        [NSUserNotificationAction actionWithIdentifier:actionNameNS
+-                                                 title:actionTitleNS];
+-    [additionalActions addObject:notificationAction];
+-  }
++  notification.hasActionButton = NO;
+ 
+   // If this is not an application/extension alert, show additional actions
+   // dealing with permissions.
+   bool isActionable;
+   if (bundle && NS_SUCCEEDED(aAlert->GetActionable(&isActionable)) &&
+       isActionable) {
+-    nsAutoString disableButtonTitle;
++    nsAutoString closeButtonTitle, actionButtonTitle, disableButtonTitle,
++        settingsButtonTitle;
++    bundle->GetStringFromName("closeButton.title", closeButtonTitle);
++    bundle->GetStringFromName("actionButton.label", actionButtonTitle);
+     if (!hostPort.IsEmpty()) {
+       AutoTArray<nsString, 1> formatStrings = {hostPort};
+       bundle->FormatStringFromName("webActions.disableForOrigin.label",
+                                    formatStrings, disableButtonTitle);
+     }
+-
+-    nsAutoString settingsButtonTitle;
+     bundle->GetStringFromName("webActions.settings.label", settingsButtonTitle);
+ 
+-    NSString* actionNameNS = nsCocoaUtils::ToNSString(kAlertActionDisable);
+-    NSString* actionTitleNS = nsCocoaUtils::ToNSString(disableButtonTitle);
+-    NSUserNotificationAction* notificationAction =
+-        [NSUserNotificationAction actionWithIdentifier:actionNameNS
+-                                                 title:actionTitleNS];
+-    [additionalActions addObject:notificationAction];
+-
+-    actionNameNS = nsCocoaUtils::ToNSString(kAlertActionSettings);
+-    actionTitleNS = nsCocoaUtils::ToNSString(settingsButtonTitle);
+-    notificationAction =
+-        [NSUserNotificationAction actionWithIdentifier:actionNameNS
+-                                                 title:actionTitleNS];
+-    [additionalActions addObject:notificationAction];
++    notification.otherButtonTitle = nsCocoaUtils::ToNSString(closeButtonTitle);
++
++    // OS X 10.8 only shows action buttons if the "Alerts" style is set in
++    // Notification Center preferences, and doesn't support the alternate
++    // action menu.
++    if ([notification respondsToSelector:@selector(set_showsButtons:)] &&
++        [notification
++            respondsToSelector:@selector(set_alwaysShowAlternateActionMenu:)] &&
++        [notification
++            respondsToSelector:@selector(set_alternateActionButtonTitles:)]) {
++      notification.hasActionButton = YES;
++      notification.actionButtonTitle =
++          nsCocoaUtils::ToNSString(actionButtonTitle);
++
++      [(NSObject*)notification setValue:@(YES) forKey:@"_showsButtons"];
++      [(NSObject*)notification setValue:@(YES)
++                                 forKey:@"_alwaysShowAlternateActionMenu"];
++      [(NSObject*)notification setValue:@[
++        nsCocoaUtils::ToNSString(disableButtonTitle),
++        nsCocoaUtils::ToNSString(settingsButtonTitle)
++      ]
++                                 forKey:@"_alternateActionButtonTitles"];
++    }
+   }
+ 
+-  notification.additionalActions = additionalActions;
+-  notification.hasActionButton = additionalActions.count == 0;
+-  [additionalActions release];
++  nsTArray<RefPtr<nsIAlertAction>> actions;
++  MOZ_TRY(aAlert->GetActions(actions));
+ 
++  if(@available(macOS 10.10, *)) {
++    NSMutableArray* additionalActions = [[NSMutableArray alloc] init];
++    for (const RefPtr<nsIAlertAction>& action : actions) {
++      nsAutoString actionName;
++      MOZ_TRY(action->GetAction(actionName));
++
++      nsAutoString actionTitle;
++      MOZ_TRY(action->GetTitle(actionTitle));
++
++      NSString* actionNameNS = nsCocoaUtils::ToNSString(actionName);
++      NSString* actionTitleNS = nsCocoaUtils::ToNSString(actionTitle);
++      NSUserNotificationAction* notificationAction =
++          [NSUserNotificationAction actionWithIdentifier:actionNameNS
++                                                   title:actionTitleNS];
++      [additionalActions addObject:notificationAction];
++    }
++    notification.additionalActions = additionalActions;
++    [additionalActions release];
++  }
+   nsAutoString name;
+   rv = aAlert->GetName(name);
+   // Don't let an alert name be more than MAX_NOTIFICATION_NAME_LEN characters.
+@@ -341,10 +422,11 @@ - (void)userNotificationCenter:(NSUserNotificationCenter*)center
+   }
+ 
+   NSArray* notifications = [GetNotificationCenter() deliveredNotifications];
+-  for (NSUserNotification* notification in notifications) {
++  for (id<FakeNSUserNotification> notification in notifications) {
+     NSString* name = [[notification userInfo] valueForKey:@"name"];
+     if ([name isEqualToString:aAlertName]) {
+       [GetNotificationCenter() removeDeliveredNotification:notification];
++      [GetNotificationCenter() _removeDisplayedNotification:notification];
+       break;
+     }
+   }
+@@ -366,6 +448,7 @@ - (void)userNotificationCenter:(NSUserNotificationCenter*)center
+ 
+ void OSXNotificationCenter::OnActivate(
+     NSString* aAlertName, NSUserNotificationActivationType aActivationType,
++    unsigned long long aAdditionalActionIndex,
+     NSUserNotificationAction* aAdditionalActivationAction) {
+   NS_OBJC_BEGIN_TRY_IGNORE_BLOCK;
+ 
+@@ -379,33 +462,47 @@ - (void)userNotificationCenter:(NSUserNotificationCenter*)center
+       if (osxni->mObserver) {
+         switch ((int)aActivationType) {
+           case NSUserNotificationActivationTypeAdditionalActionClicked: {
+-            MOZ_ASSERT(aAdditionalActivationAction);
+-            nsAutoString actionName;
+-            nsCocoaUtils::GetStringForNSString(
+-                aAdditionalActivationAction.identifier, actionName);
+-
+-            if (actionName == kAlertActionDisable) {
+-              osxni->mObserver->Observe(nullptr, "alertdisablecallback",
++            if (@available(macOS 10.10, *)) {
++              MOZ_ASSERT(aAdditionalActivationAction);
++              nsAutoString actionName;
++              nsCocoaUtils::GetStringForNSString(
++                  aAdditionalActivationAction.identifier, actionName);
++
++              if (actionName == kAlertActionDisable) {
++                osxni->mObserver->Observe(nullptr, "alertdisablecallback",
++                                          osxni->mCookie.get());
++                break;
++              }
++              if (actionName == kAlertActionSettings) {
++                osxni->mObserver->Observe(nullptr, "alertsettingscallback",
++                                          osxni->mCookie.get());
++                break;
++              }
++
++              // Trim the suffix
++              actionName.Truncate(actionName.Length() - kActionSuffix.Length());
++
++              nsCOMPtr<nsIAlertAction> action;
++              osxni->mAlertNotification->GetAction(actionName,
++                                                   getter_AddRefs(action));
++              osxni->mObserver->Observe(action, "alertclickcallback",
+                                         osxni->mCookie.get());
+               break;
+             }
+-            if (actionName == kAlertActionSettings) {
+-              osxni->mObserver->Observe(nullptr, "alertsettingscallback",
+-                                        osxni->mCookie.get());
+-              break;
+-            }
+-
+-            // Trim the suffix
+-            actionName.Truncate(actionName.Length() - kActionSuffix.Length());
+-
+-            nsCOMPtr<nsIAlertAction> action;
+-            osxni->mAlertNotification->GetAction(actionName,
+-                                                 getter_AddRefs(action));
+-            osxni->mObserver->Observe(action, "alertclickcallback",
+-                                      osxni->mCookie.get());
+-            break;
++            DISPATCH_FALLTHROUGH;
+           }
+           case NSUserNotificationActivationTypeActionButtonClicked:
++            switch (aAdditionalActionIndex) {
++              case OSXNotificationActionDisable:
++                osxni->mObserver->Observe(nullptr, "alertdisablecallback",
++                                          osxni->mCookie.get());
++                break;
++              case OSXNotificationActionSettings:
++                osxni->mObserver->Observe(nullptr, "alertsettingscallback",
++                                          osxni->mCookie.get());
++                break;
++            }
++            DISPATCH_FALLTHROUGH;
+           default:
+             osxni->mObserver->Observe(nullptr, "alertclickcallback",
+                                       osxni->mCookie.get());

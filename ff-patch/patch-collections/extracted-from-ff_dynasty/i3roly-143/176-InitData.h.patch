@@ -1,0 +1,13 @@
+diff --git a/widget/InitData.h b/widget/InitData.h
+index b774a12aed1f..4013e136ffe0 100644
+--- a/widget/InitData.h
++++ b/widget/InitData.h
+@@ -74,7 +74,7 @@ enum class TransparencyMode : uint8_t {
+ // Basic struct for widget initialization data.
+ // @see Create member function of nsIWidget
+ struct InitData {
+-  WindowType mWindowType = WindowType::TopLevel;
++  WindowType mWindowType = WindowType::TopLevel; 
+   BorderStyle mBorderStyle = BorderStyle::Default;
+   PopupType mPopupHint = PopupType::Panel;
+   PopupLevel mPopupLevel = PopupLevel::Top;

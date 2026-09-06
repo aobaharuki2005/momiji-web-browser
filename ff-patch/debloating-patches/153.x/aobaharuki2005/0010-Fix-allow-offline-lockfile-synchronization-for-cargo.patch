@@ -1,0 +1,25 @@
+From 6da0ab6fb5d9c3f4991e39c9b67e4014e23fe46f Mon Sep 17 00:00:00 2001
+From: aobaharuki2005 <tranbaohnth@outlook.com>
+Date: Fri, 22 May 2026 06:58:30 +0700
+Subject: [PATCH] Fix: allow offline lockfile synchronization for cargo
+
+---
+ build/RunCbindgen.py | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/build/RunCbindgen.py b/build/RunCbindgen.py
+index fbbe9d05842..d0772b8383a 100644
+--- a/build/RunCbindgen.py
++++ b/build/RunCbindgen.py
+@@ -55,7 +55,7 @@ def generate_metadata(output, cargo_config):
+     # within a tree, the Rust dependencies have been vendored in so Cargo won't
+     # touch the lock file.
+     if not buildconfig.substs.get("JS_STANDALONE"):
+-        args.append("--frozen")
++        args.append("--offline")
+ 
+     stdout, returncode = _run_process(args)
+ 
+-- 
+2.50.1 (Apple Git-155)
+

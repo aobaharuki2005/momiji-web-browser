@@ -1,0 +1,18 @@
+diff --git a/toolkit/xre/GeckoArgs.h b/toolkit/xre/GeckoArgs.h
+index 088e40fd7c3b4..795f32b624e49 100644
+--- a/toolkit/xre/GeckoArgs.h
++++ b/toolkit/xre/GeckoArgs.h
+@@ -222,10 +222,12 @@ static CommandLineArg<const char*> sAppOmni{"-appomni", "appomni"};
+ static CommandLineArg<const char*> sProfile{"-profile", "profile"};
+ 
+ static CommandLineArg<UniqueFileHandle> sIPCHandle{"-ipcHandle", "ipchandle"};
++//it ain't workin sorry nika 
++/*
+ #if defined(XP_DARWIN)
+ static CommandLineArg<UniqueMachSendRight> sIPCPort{"-ipcPort", "ipcport"};
+ #endif
+-
++*/
+ static CommandLineArg<mozilla::ipc::ReadOnlySharedMemoryHandle> sJsInitHandle{
+     "-jsInitHandle", "jsinithandle"};
+ static CommandLineArg<mozilla::ipc::ReadOnlySharedMemoryHandle> sPrefsHandle{

@@ -1,0 +1,13 @@
+diff --git a/toolkit/xre/nsNativeAppSupportCocoa.mm b/toolkit/xre/nsNativeAppSupportCocoa.mm
+index e009616e71d8b..8ac34ac40b105 100644
+--- a/toolkit/xre/nsNativeAppSupportCocoa.mm
++++ b/toolkit/xre/nsNativeAppSupportCocoa.mm
+@@ -70,7 +70,7 @@ nsresult GetNativeWindowPointerFromDOMWindow(mozIDOMWindowProxy* a_window,
+ 
+   int major, minor, bugfix;
+   nsCocoaFeatures::GetSystemVersion(major, minor, bugfix);
+-  if (major >= 11 || (major == 10 && minor >= 15)) {
++  if (major >= 11 || (major == 10 && minor >= 7)) {
+     *_retval = true;
+   } else {
+     NSLog(@"Minimum OS version requirement not met!");

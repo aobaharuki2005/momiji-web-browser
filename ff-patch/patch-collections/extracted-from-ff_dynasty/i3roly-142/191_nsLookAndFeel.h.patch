@@ -1,0 +1,21 @@
+diff --git a/widget/cocoa/nsLookAndFeel.h b/widget/cocoa/nsLookAndFeel.h
+index 25d8aab950..86b77124f8 100644
+--- a/widget/cocoa/nsLookAndFeel.h
++++ b/widget/cocoa/nsLookAndFeel.h
+@@ -37,11 +37,15 @@ class nsLookAndFeel final : public nsXPLookAndFeel {
+   // chunk of telemetry logging code at initialization and when we
+   // recieve an event that changes the value of our telemetry probe.
+   static void RecordAccessibilityTelemetry();
+-
++  static bool UseOverlayScrollbars();
+  protected:
+   bool mInitialized = false;
+   bool mRtl = false;
+   int32_t mTitlebarHeight = 0;
++
++  static bool SystemWantsOverlayScrollbars();
++  static bool AllowOverlayScrollbarsOverlap();
++
+ };
+ 
+ #endif  // nsLookAndFeel_h_

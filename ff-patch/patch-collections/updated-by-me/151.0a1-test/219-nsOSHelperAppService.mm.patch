@@ -1,0 +1,25 @@
+diff --git a/uriloader/exthandler/mac/nsOSHelperAppService.mm b/uriloader/exthandler/mac/nsOSHelperAppService.mm
+index d3362680bf5ba..7eb2e3aed31f1 100644
+--- a/uriloader/exthandler/mac/nsOSHelperAppService.mm
++++ b/uriloader/exthandler/mac/nsOSHelperAppService.mm
+@@ -37,10 +37,16 @@ nsresult GetDefaultBundleURL(const nsACString& aScheme, CFURLRef* aBundleURL) {
+       CFURLRef lookupCFURL =
+           ::CFURLCreateWithString(NULL, lookupCFString, NULL);
+       if (lookupCFURL) {
+-        *aBundleURL =
+-            ::LSCopyDefaultApplicationURLForURL(lookupCFURL, kLSRolesAll, NULL);
+-        if (*aBundleURL) {
+-          rv = NS_OK;
++        if (@available(macOS 10.10, *)) {
++          *aBundleURL = ::LSCopyDefaultApplicationURLForURL(lookupCFURL, kLSRolesAll, NULL);
++          if (*aBundleURL) {
++            rv = NS_OK;
++          }
++        } else {
++          OSStatus theErr = ::LSGetApplicationForURL(lookupCFURL, kLSRolesAll, NULL, aBundleURL);
++          if (theErr == noErr && *aBundleURL) {
++            rv = NS_OK;
++          }
+         }
+         ::CFRelease(lookupCFURL);
+       }

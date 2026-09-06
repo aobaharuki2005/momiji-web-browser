@@ -1,0 +1,7 @@
+diff --git a/security/manager/ssl/osclientcerts/dynamic-library/osclientcerts.symbols b/security/manager/ssl/osclientcerts/dynamic-library/osclientcerts.symbols
+new file mode 100644
+index 000000000000..562ecea21d43
+--- /dev/null
++++ b/security/manager/ssl/osclientcerts/dynamic-library/osclientcerts.symbols
+@@ -0,0 +1 @@
++C_GetFunctionList

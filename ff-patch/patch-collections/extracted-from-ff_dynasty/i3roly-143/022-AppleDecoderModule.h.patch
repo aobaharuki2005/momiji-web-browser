@@ -1,0 +1,27 @@
+diff --git a/dom/media/platforms/apple/AppleDecoderModule.h b/dom/media/platforms/apple/AppleDecoderModule.h
+index a91d7eddf4ed..016b527979ba 100644
+--- a/dom/media/platforms/apple/AppleDecoderModule.h
++++ b/dom/media/platforms/apple/AppleDecoderModule.h
+@@ -7,7 +7,6 @@
+ #ifndef mozilla_AppleDecoderModule_h
+ #define mozilla_AppleDecoderModule_h
+ 
+-#include "MediaCodecsSupport.h"
+ #include "PlatformDecoderModule.h"
+ 
+ namespace mozilla {
+@@ -40,9 +39,13 @@ class AppleDecoderModule : public PlatformDecoderModule {
+ 
+   static void Init();
+ 
++  static bool sIsCoreMediaAvailable;
++  static bool sIsCoreVideoAvailable;
++  static bool sIsVDAAvailable;
++  static bool sIsVTAvailable;
++
+   static constexpr int kCMVideoCodecType_H264{'avc1'};
+   static constexpr int kCMVideoCodecType_VP9{'vp09'};
+-
+  private:
+   AppleDecoderModule() = default;
+   virtual ~AppleDecoderModule() = default;

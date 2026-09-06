@@ -1,0 +1,16 @@
+diff --git a/dom/canvas/WebGLContextTextures.cpp b/dom/canvas/WebGLContextTextures.cpp
+index 58edd54aedc66..9e80f534c3b35 100644
+--- a/dom/canvas/WebGLContextTextures.cpp
++++ b/dom/canvas/WebGLContextTextures.cpp
+@@ -29,6 +29,11 @@
+ #include "nsReadableUtils.h"
+ #include "nsString.h"
+ 
++// needed to check if current OS is lower than 10.7
++#if defined(MOZ_WIDGET_COCOA)
++#  include "nsCocoaFeatures.h"
++#endif
++
+ namespace mozilla {
+ 
+ /*virtual*/

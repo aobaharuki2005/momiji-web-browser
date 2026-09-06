@@ -1,0 +1,26 @@
+diff --git a/servo/components/style/values/specified/color.rs b/servo/components/style/values/specified/color.rs
+index 04310e5a8cddb..fa7fe5330a452 100644
+--- a/servo/components/style/values/specified/color.rs
++++ b/servo/components/style/values/specified/color.rs
+@@ -293,6 +293,21 @@ pub enum SystemColor {
+     #[parse(condition = "ParserContext::chrome_rules_enabled")]
+     MozSidebarborder,
+ 
++    /// Font smoothing background colors needed by the Mac OS X theme, based on
++    /// -moz-appearance names.
++    MozMacVibrancyLight,
++    MozMacVibrancyDark,
++    MozMacVibrantTitlebarLight,
++    MozMacVibrantTitlebarDark,
++    MozMacMenupopup,
++    MozMacMenuitem,
++    MozMacActiveMenuitem,
++    MozMacSourceList,
++    MozMacSourceListSelection,
++    MozMacActiveSourceListSelection,
++
++    MozMacTooltip,
++
+     /// Theme accent color.
+     /// https://drafts.csswg.org/css-color-4/#valdef-system-color-accentcolor
+     Accentcolor,

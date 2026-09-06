@@ -1,0 +1,27 @@
+diff --git a/widget/cocoa/GfxInfo.mm b/widget/cocoa/GfxInfo.mm
+index f2ebf794c4db2..9d90450b586ff 100644
+--- a/widget/cocoa/GfxInfo.mm
++++ b/widget/cocoa/GfxInfo.mm
+@@ -487,6 +487,12 @@ static uint32_t IntValueOfCFData(CFDataRef d) {
+         OperatingSystem::OSX, DeviceFamily::IntelWebRenderBlocked,
+         nsIGfxInfo::FEATURE_WEBRENDER, nsIGfxInfo::FEATURE_BLOCKED_DEVICE,
+         "FEATURE_FAILURE_INTEL_GEN5_OR_OLDER");
++
++    // Intel HD3000 disabled due to bug 1661505
++    IMPLEMENT_MAC_DRIVER_BLOCKLIST(
++        OperatingSystem::OSX, DeviceFamily::IntelSandyBridge,
++        nsIGfxInfo::FEATURE_WEBRENDER, nsIGfxInfo::FEATURE_BLOCKED_DEVICE,
++        "FEATURE_FAILURE_INTEL_MAC_HD3000_NO_WEBRENDER");
+   }
+   return *sDriverInfo;
+ }
+@@ -520,9 +526,6 @@ static uint32_t IntValueOfCFData(CFDataRef d) {
+         case OperatingSystem::OSX10_5:
+         case OperatingSystem::OSX10_6:
+         case OperatingSystem::OSX10_7:
+-          *aStatus = nsIGfxInfo::FEATURE_BLOCKED_OS_VERSION;
+-          aFailureId = "FEATURE_FAILURE_CANVAS_OSX_VERSION";
+-          break;
+         default:
+           *aStatus = nsIGfxInfo::FEATURE_STATUS_OK;
+           break;

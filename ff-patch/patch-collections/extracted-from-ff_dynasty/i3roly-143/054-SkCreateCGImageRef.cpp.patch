@@ -1,0 +1,13 @@
+diff --git a/gfx/skia/skia/src/utils/mac/SkCreateCGImageRef.cpp b/gfx/skia/skia/src/utils/mac/SkCreateCGImageRef.cpp
+index c7d91d8889d6..4f5a09cf9a08 100644
+--- a/gfx/skia/skia/src/utils/mac/SkCreateCGImageRef.cpp
++++ b/gfx/skia/skia/src/utils/mac/SkCreateCGImageRef.cpp
+@@ -292,7 +292,7 @@ sk_sp<SkColorSpace> SkMakeColorSpaceFromCGColorSpace(CGColorSpaceRef cgColorSpac
+     }
+ 
+     // Attempt to convert by parsing the ICC profile.
+-    SkUniqueCFRef<CFDataRef> iccData(CGColorSpaceCopyICCData(cgColorSpace));
++    SkUniqueCFRef<CFDataRef> iccData(CGColorSpaceCopyICCProfile(cgColorSpace));
+     if (!iccData) {
+         return nullptr;
+     }

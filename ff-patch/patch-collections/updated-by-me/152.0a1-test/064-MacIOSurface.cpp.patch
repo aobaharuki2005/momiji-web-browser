@@ -1,0 +1,13 @@
+diff --git a/gfx/2d/MacIOSurface.cpp b/gfx/2d/MacIOSurface.cpp
+index 80602d1b2e0f6..9a3471525f7f3 100644
+--- a/gfx/2d/MacIOSurface.cpp
++++ b/gfx/2d/MacIOSurface.cpp
+@@ -169,7 +169,7 @@ static void SetIOSurfaceCommonProperties(
+   auto colorSpace = CFTypeRefPtr<CGColorSpaceRef>::WrapUnderCreateRule(
+       CGDisplayCopyColorSpace(CGMainDisplayID()));
+   auto colorData = CFTypeRefPtr<CFDataRef>::WrapUnderCreateRule(
+-      CGColorSpaceCopyICCData(colorSpace.get()));
++      CGColorSpaceCopyICCProfile(colorSpace.get()));
+   IOSurfaceSetValue(surfaceRef.get(), CFSTR("IOSurfaceColorSpace"),
+                     colorData.get());
+ #endif

@@ -1,0 +1,17 @@
+diff --git a/third_party/libwebrtc/sdk/objc/components/renderer/metal/RTCMTLNSVideoView.m b/third_party/libwebrtc/sdk/objc/components/renderer/metal/RTCMTLNSVideoView.m
+index 168045c09df62..b032fc517c7ec 100644
+--- a/third_party/libwebrtc/sdk/objc/components/renderer/metal/RTCMTLNSVideoView.m
++++ b/third_party/libwebrtc/sdk/objc/components/renderer/metal/RTCMTLNSVideoView.m
+@@ -51,7 +51,11 @@ - (instancetype)initWithCoder:(NSCoder *)aCoder {
+ #pragma mark - Private
+ 
+ + (BOOL)isMetalAvailable {
+-  return [MTLCopyAllDevices() count] > 0;
++    if(@available(macOS 10.11, *)) {
++        return [MTLCopyAllDevices() count] > 0;
++    } else {
++        return 0;
++    }
+ }
+ 
+ - (void)configure {

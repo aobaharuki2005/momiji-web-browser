@@ -1,0 +1,15 @@
+diff --git a/xpcom/base/MacStringHelpers.mm b/xpcom/base/MacStringHelpers.mm
+index 30b447548a..d8e8fefa66 100644
+--- a/xpcom/base/MacStringHelpers.mm
++++ b/xpcom/base/MacStringHelpers.mm
+@@ -21,8 +21,8 @@ void CopyNSStringToXPCOMString(const NSString* aFrom, nsAString& aTo) {
+   }
+ 
+   NSUInteger len = [aFrom length];
+-  if (len > std::numeric_limits<nsAString::size_type>::max()) {
+-    aTo.AllocFailed(std::numeric_limits<nsAString::size_type>::max());
++  if (len > NSUIntegerMax) {
++    aTo.AllocFailed(NSUIntegerMax);
+   }
+ 
+   aTo.SetLength(len);

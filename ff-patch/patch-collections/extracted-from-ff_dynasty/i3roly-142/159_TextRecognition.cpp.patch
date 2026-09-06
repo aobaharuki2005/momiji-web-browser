@@ -1,0 +1,42 @@
+diff --git a/widget/TextRecognition.cpp b/widget/TextRecognition.cpp
+index aa8ff98bb9..80173d36a2 100644
+--- a/widget/TextRecognition.cpp
++++ b/widget/TextRecognition.cpp
+@@ -2,6 +2,14 @@
+  * License, v. 2.0. If a copy of the MPL was not distributed with this
+  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+ 
++#if !defined(MAC_OS_VERSION_10_9) || MAC_OS_X_VERSION_MIN_REQUIRED < MAC_OS_VERSION_10_9
++#include <math.h>
++extern "C" {
++  void __sincospif(float __x, float *__sinp, float *__cosp);
++  void __sincospi(double __x, double *__sinp, double *__cosp);
++}
++#endif // !defined(MAC_OS_VERSION_10_9) || MAC_OS_X_VERSION_MIN_REQUIRED < MAC_OS_VERSION_10_9
++
+ #include "TextRecognition.h"
+ #include "mozilla/dom/Promise.h"
+ #include "mozilla/dom/ShadowRoot.h"
+@@ -10,6 +18,10 @@
+ #include "nsTextNode.h"
+ #include "imgIContainer.h"
+ 
++#ifdef XP_MACOSX
++#  include "nsCocoaFeatures.h"
++#endif
++
+ using namespace mozilla::dom;
+ 
+ namespace mozilla::widget {
+@@ -119,7 +131,10 @@ auto TextRecognition::DoFindText(gfx::DataSourceSurface&,
+ 
+ bool TextRecognition::IsSupported() {
+ #ifdef XP_MACOSX
+-  return true;
++  // Catalina (10.15) or higher is required because of the following API:
++  // VNRecognizeTextRequest - macOS 10.15+
++  // https://developer.apple.com/documentation/vision/vnrecognizetextrequest?language=objc
++  return nsCocoaFeatures::OnCatalinaOrLater();
+ #else
+   return false;
+ #endif

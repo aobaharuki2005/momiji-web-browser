@@ -1,0 +1,23 @@
+diff --git a/widget/cocoa/OSXNotificationCenter.h b/widget/cocoa/OSXNotificationCenter.h
+index 371af50395175..290cab1848560 100644
+--- a/widget/cocoa/OSXNotificationCenter.h
++++ b/widget/cocoa/OSXNotificationCenter.h
+@@ -17,6 +17,10 @@
+ // working.
+ @class mozNotificationCenterDelegate;
+ 
++#if !defined(MAC_OS_X_VERSION_10_8) || (MAC_OS_X_VERSION_MAX_ALLOWED < MAC_OS_X_VERSION_10_8)
++typedef NSInteger NSUserNotificationActivationType;
++#endif
++
+ namespace mozilla {
+ 
+ class OSXNotificationInfo;
+@@ -34,6 +38,7 @@ class OSXNotificationCenter : public nsIAlertsService,
+   void CloseAlertCocoaString(NSString* aAlertName);
+   void OnActivate(NSString* aAlertName,
+                   NSUserNotificationActivationType aActivationType,
++                  unsigned long long aAdditionalActionIndex,
+                   NSUserNotificationAction* aAdditionalActivationAction);
+ 
+  protected:

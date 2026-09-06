@@ -1,0 +1,12 @@
+diff --git a/dom/canvas/WebGLContext.h b/dom/canvas/WebGLContext.h
+index cc989f5ee992d..ce545dc2ad355 100644
+--- a/dom/canvas/WebGLContext.h
++++ b/dom/canvas/WebGLContext.h
+@@ -1276,6 +1276,7 @@ class WebGLContext : public VRefCounted, public SupportsWeakPtr {
+   bool mNeedsFakeNoAlpha = false;
+   bool mNeedsFakeNoDepth = false;
+   bool mNeedsFakeNoStencil = false;
++  bool mNeedsFakeNoStencil_UserFBs = false;
+ 
+   bool mDriverDepthTest = false;
+   bool mDriverStencilTest = false;

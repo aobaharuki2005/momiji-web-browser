@@ -1,0 +1,15 @@
+diff --git a/gfx/gl/GLContext.h b/gfx/gl/GLContext.h
+index ce9fbeb3fb77..bd6f466966d8 100644
+--- a/gfx/gl/GLContext.h
++++ b/gfx/gl/GLContext.h
+@@ -55,6 +55,10 @@ constexpr inline std::array<ElemT, 1 + sizeof...(More)> make_array(
+ #  include "mozilla/ProfilerLabels.h"
+ #endif
+ 
++#if defined(MOZ_WIDGET_COCOA)
++#  include "nsCocoaFeatures.h"
++#endif
++
+ namespace mozilla {
+ 
+ namespace gl {

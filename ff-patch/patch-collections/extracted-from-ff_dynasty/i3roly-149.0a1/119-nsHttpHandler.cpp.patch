@@ -1,0 +1,22 @@
+diff --git a/netwerk/protocol/http/nsHttpHandler.cpp b/netwerk/protocol/http/nsHttpHandler.cpp
+index 0fc582d28e060..30d186a5f4e2b 100644
+--- a/netwerk/protocol/http/nsHttpHandler.cpp
++++ b/netwerk/protocol/http/nsHttpHandler.cpp
+@@ -108,6 +108,7 @@
+ 
+ #if defined(XP_MACOSX)
+ #  include <CoreServices/CoreServices.h>
++#  include "nsCocoaFeatures.h"
+ #endif
+ 
+ //-----------------------------------------------------------------------------
+@@ -1182,7 +1183,8 @@ void nsHttpHandler::InitUserAgentComponents() {
+ #  endif
+ 
+ #elif defined(XP_MACOSX)
+-  mOscpu.AssignLiteral("Intel Mac OS X 10.15");
++   // Always return an "Intel" UA string, even on ARM64 macOS like Safari does.
++   mOscpu = nsPrintfCString("Intel Mac OS X 10.15");
+ #elif defined(ANDROID)
+   mOscpu.AssignLiteral("Linux armv81");
+ #elif defined(XP_IOS)

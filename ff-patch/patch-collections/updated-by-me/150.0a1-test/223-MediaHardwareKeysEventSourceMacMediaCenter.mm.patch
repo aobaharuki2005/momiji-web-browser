@@ -1,0 +1,26 @@
+diff --git a/widget/cocoa/MediaHardwareKeysEventSourceMacMediaCenter.mm b/widget/cocoa/MediaHardwareKeysEventSourceMacMediaCenter.mm
+index 198f5850c1a11..72486d26c4cd0 100644
+--- a/widget/cocoa/MediaHardwareKeysEventSourceMacMediaCenter.mm
++++ b/widget/cocoa/MediaHardwareKeysEventSourceMacMediaCenter.mm
+@@ -235,7 +235,9 @@
+             requestHandler:^NSImage* _Nonnull(CGSize aSize) {
+               return image;
+             }];
+-    [nowPlayingInfo setObject:artwork forKey:MPMediaItemPropertyArtwork];
++    if(@available(macos 10.13.2, *)) {
++      [nowPlayingInfo setObject:artwork forKey:MPMediaItemPropertyArtwork];
++    }
+     [artwork release];
+     [image release];
+ 
+@@ -245,7 +247,9 @@
+   }
+ 
+   if (remove) {
+-    [nowPlayingInfo removeObjectForKey:MPMediaItemPropertyArtwork];
++    if(@available(macos 10.13.2, *)) {
++      [nowPlayingInfo removeObjectForKey:MPMediaItemPropertyArtwork];
++    }
+   }
+ 
+   // The procedure of updating `nowPlayingInfo` is actually an async operation

@@ -1,0 +1,51 @@
+diff --git a/toolkit/xre/MacRunFromDmgUtils.mm b/toolkit/xre/MacRunFromDmgUtils.mm
+index bc32db5648c1a..d2174aca90d28 100644
+--- a/toolkit/xre/MacRunFromDmgUtils.mm
++++ b/toolkit/xre/MacRunFromDmgUtils.mm
+@@ -11,8 +11,8 @@
+ #include <sys/mount.h>
+ #include <sys/param.h>
+ 
+-#include "MacLaunchHelper.h"
+ #include "MacRunFromDmgUtils.h"
++#include "MacLaunchHelper.h"
+ 
+ #include "mozilla/ErrorResult.h"
+ #include "mozilla/intl/Localization.h"
+@@ -34,8 +34,6 @@
+ // https://developer.apple.com/documentation/iokit
+ // https://developer.apple.com/library/archive/documentation/DeviceDrivers/Conceptual/IOKitFundamentals/
+ 
+-using namespace mozilla::MacLaunchHelper;
+-
+ namespace mozilla::MacRunFromDmgUtils {
+ 
+ /**
+@@ -261,19 +259,22 @@ static void ShowInstallFailedDialog() {
+ #ifdef MOZ_UPDATER
+ bool LaunchElevatedDmgInstall(NSString* aBundlePath, NSArray* aArguments) {
+   NSTask* task = [[NSTask alloc] init];
+-  [task setExecutableURL:[NSURL fileURLWithPath:aBundlePath]];
+   if (aArguments) {
+     [task setArguments:aArguments];
+   }
+-  [task launchAndReturnError:nil];
+-
++  if (@available(macOS 10.13, *)) {
++    [task setExecutableURL:[NSURL fileURLWithPath:aBundlePath]];
++    [task launchAndReturnError:nil];
++  } else {
++    [task setLaunchPath:aBundlePath];
++    [task launch];
++  }
+   bool didSucceed = InstallPrivilegedHelper();
+   [task waitUntilExit];
+   [task release];
+   if (!didSucceed) {
+-    AbortElevatedUpdate();
++      AbortElevatedUpdate();
+   }
+-
+   return didSucceed;
+ }
+ #endif

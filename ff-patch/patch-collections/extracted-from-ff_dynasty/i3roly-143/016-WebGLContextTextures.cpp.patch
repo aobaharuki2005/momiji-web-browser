@@ -1,0 +1,70 @@
+diff --git a/dom/canvas/WebGLContextTextures.cpp b/dom/canvas/WebGLContextTextures.cpp
+index a3205d047b1a..44ade5207126 100644
+--- a/dom/canvas/WebGLContextTextures.cpp
++++ b/dom/canvas/WebGLContextTextures.cpp
+@@ -3,36 +3,48 @@
+  * License, v. 2.0. If a copy of the MPL was not distributed with this
+  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+ 
+-#include <algorithm>
+-
+-#include "CanvasUtils.h"
+-#include "GLContext.h"
+-#include "WebGLBuffer.h"
+ #include "WebGLContext.h"
+ #include "WebGLContextUtils.h"
+-#include "WebGLExtensions.h"
+-#include "WebGLFramebuffer.h"
++#include "WebGLBuffer.h"
++#include "WebGLShader.h"
+ #include "WebGLProgram.h"
++#include "WebGLFramebuffer.h"
+ #include "WebGLRenderbuffer.h"
+-#include "WebGLShader.h"
+-#include "WebGLTexelConversions.h"
+ #include "WebGLTexture.h"
+-#include "WebGLValidateStrings.h"
++#include "WebGLExtensions.h"
+ #include "WebGLVertexArray.h"
++
++#include "nsString.h"
++#include "nsDebug.h"
++#include "nsReadableUtils.h"
++
+ #include "gfxContext.h"
+ #include "gfxPlatform.h"
++#include "GLContext.h"
++
++#include "nsContentUtils.h"
++#include "nsError.h"
++#include "nsLayoutUtils.h"
++
++#include "CanvasUtils.h"
+ #include "gfxUtils.h"
++
+ #include "jsfriendapi.h"
++
++#include "WebGLTexelConversions.h"
++#include "WebGLValidateStrings.h"
++#include <algorithm>
++ 
++// needed to check if current OS is lower than 10.7
++#if defined(MOZ_WIDGET_COCOA)
++#  include "nsCocoaFeatures.h"
++#endif
++
++
+ #include "mozilla/DebugOnly.h"
+-#include "mozilla/EndianUtils.h"
+ #include "mozilla/dom/BindingUtils.h"
+ #include "mozilla/dom/ImageData.h"
+-#include "nsContentUtils.h"
+-#include "nsDebug.h"
+-#include "nsError.h"
+-#include "nsLayoutUtils.h"
+-#include "nsReadableUtils.h"
+-#include "nsString.h"
++#include "mozilla/EndianUtils.h"
+ 
+ namespace mozilla {
+ 

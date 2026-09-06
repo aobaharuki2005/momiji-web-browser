@@ -1,0 +1,14 @@
+diff --git a/python/mozboot/mozboot/util.py b/python/mozboot/mozboot/util.py
+index e08f2267308e..d11234b9fd51 100644
+--- a/python/mozboot/mozboot/util.py
++++ b/python/mozboot/mozboot/util.py
+@@ -12,8 +12,7 @@ import certifi
+ from mach.site import PythonVirtualenv
+ from mach.util import get_state_dir
+ 
+-# Keep in sync with rust-version in top-level Cargo.toml.
+-MINIMUM_RUST_VERSION = "1.82.0"
++MINIMUM_RUST_VERSION = "1.72.0"
+ 
+ 
+ def get_tools_dir(srcdir=False):

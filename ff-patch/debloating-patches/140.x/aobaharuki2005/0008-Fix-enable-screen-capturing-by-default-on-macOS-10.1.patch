@@ -1,0 +1,29 @@
+From 6b7b9180225cefc61f7a9076a2b9a0dc30ae3298 Mon Sep 17 00:00:00 2001
+From: aobaharuki2005 <tranbaohnth@outlook.com>
+Date: Thu, 21 May 2026 18:33:26 +0700
+Subject: [PATCH] Fix: enable screen capturing by default on macOS 10.14 and
+ earlier
+
+---
+ widget/cocoa/nsCocoaUtils.mm | 5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
+
+diff --git a/widget/cocoa/nsCocoaUtils.mm b/widget/cocoa/nsCocoaUtils.mm
+index 971b9f897c6..3a9f3b664a5 100644
+--- a/widget/cocoa/nsCocoaUtils.mm
++++ b/widget/cocoa/nsCocoaUtils.mm
+@@ -1487,8 +1487,9 @@ static nsresult GetPermissionState(AVMediaType aMediaType, uint16_t& aState) {
+     return NS_OK;
+   }
+ 
+-  LOG("GetScreenCapturePermissionState(): nothing to do, not on 10.15+");
+-  return NS_ERROR_NOT_IMPLEMENTED;
++  LOG("nsIOSPermissionRequest not available on macOS 10.14 and earlier, enable anyway");
++  aPermissionState = nsIOSPermissionRequest::PERMISSION_STATE_AUTHORIZED;
++  return NS_OK;
+ }
+ 
+ nsresult nsCocoaUtils::RequestVideoCapturePermission(
+-- 
+2.50.1 (Apple Git-155)
+

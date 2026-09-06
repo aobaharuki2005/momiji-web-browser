@@ -1,0 +1,21 @@
+diff --git a/media/libsoundtouch/src/STTypes.h b/media/libsoundtouch/src/STTypes.h
+index a70743dfe438..d80bc2899ef2 100644
+--- a/media/libsoundtouch/src/STTypes.h
++++ b/media/libsoundtouch/src/STTypes.h
+@@ -49,6 +49,16 @@ typedef unsigned long   ulong;
+ 
+ #include "soundtouch_config.h"
+ 
++#if defined(WIN32)
++#if defined(BUILDING_SOUNDTOUCH)
++#define SOUNDTOUCH_API __declspec(dllexport)
++#else
++#define SOUNDTOUCH_API __declspec(dllimport)
++#endif
++#else
++#define SOUNDTOUCH_API
++#endif
++
+ namespace soundtouch
+ {
+     /// Max allowed number of channels

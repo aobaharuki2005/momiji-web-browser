@@ -1,0 +1,25 @@
+diff --git a/gfx/thebes/gfxPlatformMac.cpp b/gfx/thebes/gfxPlatformMac.cpp
+index 3967d1881397a..588a067a88a10 100644
+--- a/gfx/thebes/gfxPlatformMac.cpp
++++ b/gfx/thebes/gfxPlatformMac.cpp
+@@ -1049,7 +1049,7 @@ nsTArray<uint8_t> gfxPlatformMac::GetPlatformCMSOutputProfileData() {
+     return nsTArray<uint8_t>();
+   }
+ 
+-  CFDataRef iccp = ::CGColorSpaceCopyICCData(cspace);
++  CFDataRef iccp = ::CGColorSpaceCopyICCProfile(cspace);
+ 
+   ::CFRelease(cspace);
+ 
+@@ -1071,4 +1071,10 @@ nsTArray<uint8_t> gfxPlatformMac::GetPlatformCMSOutputProfileData() {
+   return result;
+ }
+ 
+-bool gfxPlatformMac::CheckVariationFontSupport() { return true; }
++bool gfxPlatformMac::CheckVariationFontSupport() {
++  // We don't allow variation fonts to be enabled before 10.13,
++  // as although the Core Text APIs existed, they are known to be
++  // fairly buggy.
++  // (Note that Safari also requires 10.13 for variation-font support.)
++  return nsCocoaFeatures::OnHighSierraOrLater();
++}

@@ -1,0 +1,21 @@
+diff --git a/gfx/2d/MacIOSurface.h b/gfx/2d/MacIOSurface.h
+index 499fea89d0843..2124a42b09fe3 100644
+--- a/gfx/2d/MacIOSurface.h
++++ b/gfx/2d/MacIOSurface.h
+@@ -73,10 +73,13 @@ class MacIOSurface final
+       TransferFunction aTransferFunction);
+   static mozilla::gfx::SurfaceFormat SurfaceFormatForPixelFormat(
+       OSType aPixelFormat, bool aHasAlpha);
+-
++  /* Momiji notes: in Firefox 152.0a1, default value assigning is dropped by upstream, so we need to restore it
++  for the benefit of AppleVDADecoder.cpp */
+   explicit MacIOSurface(CFTypeRefPtr<IOSurfaceRef> aIOSurfaceRef,
+-                        bool aHasAlpha, YUVColorSpace aColorSpace,
+-                        TransferFunction aTransferFunction);
++                      bool aHasAlpha = true,
++                      YUVColorSpace aColorSpace = mozilla::gfx::YUVColorSpace::Identity,
++                      TransferFunction aTransferFunction = mozilla::gfx::TransferFunction::SRGB);
++  /* EOMN */
+ 
+   ~MacIOSurface();
+   IOSurfaceID GetIOSurfaceID() const;

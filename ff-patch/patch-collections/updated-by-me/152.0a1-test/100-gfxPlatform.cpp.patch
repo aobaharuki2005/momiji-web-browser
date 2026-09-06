@@ -1,0 +1,12 @@
+diff --git a/gfx/thebes/gfxPlatform.cpp b/gfx/thebes/gfxPlatform.cpp
+index 80dbb0e5808ff..69a4740a90d10 100644
+--- a/gfx/thebes/gfxPlatform.cpp
++++ b/gfx/thebes/gfxPlatform.cpp
+@@ -79,6 +79,7 @@
+ #elif defined(XP_DARWIN)
+ #  include "gfxPlatformMac.h"
+ #  include "gfxQuartzSurface.h"
++#  include "nsCocoaFeatures.h"
+ #elif defined(MOZ_WIDGET_GTK)
+ #  include "gfxPlatformGtk.h"
+ #elif defined(ANDROID)

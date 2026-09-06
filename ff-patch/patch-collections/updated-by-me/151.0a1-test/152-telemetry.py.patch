@@ -1,0 +1,18 @@
+diff --git a/python/mach/mach/telemetry.py b/python/mach/mach/telemetry.py
+index 411d6fd6820e8..58e58e99ab04c 100644
+--- a/python/mach/mach/telemetry.py
++++ b/python/mach/mach/telemetry.py
+@@ -82,10 +82,10 @@ def is_applicable_telemetry_environment():
+ 
+ 
+ def is_telemetry_enabled(settings):
+-    if os.environ.get("DISABLE_TELEMETRY") == "1":
+-        return False
++    # if os.environ.get("DISABLE_TELEMETRY") == "1":
++    return False
+ 
+-    return settings.mach_telemetry.is_enabled
++    # return settings.mach_telemetry.is_enabled
+ 
+ 
+ def arcrc_path():

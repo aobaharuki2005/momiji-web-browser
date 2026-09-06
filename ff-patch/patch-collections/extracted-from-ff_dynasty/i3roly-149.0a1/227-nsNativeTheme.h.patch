@@ -1,0 +1,30 @@
+diff --git a/widget/nsNativeTheme.h b/widget/nsNativeTheme.h
+index 2e61da46ff3ea..f347d06a1f978 100644
+--- a/widget/nsNativeTheme.h
++++ b/widget/nsNativeTheme.h
+@@ -68,16 +68,25 @@ class nsNativeTheme : public nsITimerCallback, public nsINamed {
+ 
+   bool IsButtonTypeMenu(nsIFrame* aFrame);
+ 
++  bool IsSelectedButton(nsIFrame* aFrame) {
++    return CheckBooleanAttr(aFrame, nsGkAtoms::checked) ||
++           CheckBooleanAttr(aFrame, nsGkAtoms::selected);
++  }
++
+   bool IsOpenButton(nsIFrame* aFrame) {
+     return CheckBooleanAttr(aFrame, nsGkAtoms::open);
+   }
+ 
++  bool IsPressedButton(nsIFrame* aFrame);
++
+   // progressbar:
+   bool IsVerticalProgress(nsIFrame* aFrame);
+ 
+   // meter:
+   bool IsVerticalMeter(nsIFrame* aFrame);
+ 
++  // menupopup:
++  bool IsSubmenu(nsIFrame* aFrame, bool* aLeftOfParent);
+   static bool CheckBooleanAttr(nsIFrame* aFrame, nsAtom* aAtom);
+ 
+   // Helpers for progressbar.

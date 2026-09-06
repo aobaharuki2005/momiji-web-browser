@@ -1,0 +1,12 @@
+diff --git a/third_party/rust/getrandom/src/backends.rs b/third_party/rust/getrandom/src/backends.rs
+index 2c539df26161..36726d13a58a 100644
+--- a/third_party/rust/getrandom/src/backends.rs
++++ b/third_party/rust/getrandom/src/backends.rs
+@@ -58,6 +58,7 @@ cfg_if! {
+         target_os = "vita",
+         target_os = "emscripten",
+     ))] {
++        mod use_file;
+         mod getentropy;
+         pub use getentropy::*;
+     } else if #[cfg(any(

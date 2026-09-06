@@ -1,0 +1,25 @@
+From 3e454b2a81feaab78c1f785e8bc5af4972e59b1d Mon Sep 17 00:00:00 2001
+From: aobaharuki2005 <tranbaohnth@outlook.com>
+Date: Tue, 21 Apr 2026 13:16:41 +0700
+Subject: [PATCH] Patch: disable proxy by default
+
+---
+ modules/libpref/init/StaticPrefList.yaml | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/modules/libpref/init/StaticPrefList.yaml b/modules/libpref/init/StaticPrefList.yaml
+index 86a5d6ef75ab4..b1e7e39178b33 100644
+--- a/modules/libpref/init/StaticPrefList.yaml
++++ b/modules/libpref/init/StaticPrefList.yaml
+@@ -14185,7 +14185,7 @@
+ #     PROXYCONFIG_SYSTEM   = 5
+ - name: network.proxy.type
+   type: RelaxedAtomicUint32
+-  value: 5
++  value: 0
+   mirror: always
+ 
+ # Whether to use WPAD while configuring proxy with system settings
+-- 
+2.50.1 (Apple Git-155)
+

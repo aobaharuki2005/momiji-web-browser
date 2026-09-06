@@ -1,0 +1,22 @@
+diff --git a/third_party/rust/metal/src/pipeline/mod.rs b/third_party/rust/metal/src/pipeline/mod.rs
+index fe46bcad4385..9673416199fb 100644
+--- a/third_party/rust/metal/src/pipeline/mod.rs
++++ b/third_party/rust/metal/src/pipeline/mod.rs
+@@ -40,7 +40,7 @@ foreign_obj_type! {
+ 
+ impl PipelineBufferDescriptorArrayRef {
+     pub fn object_at(&self, index: NSUInteger) -> Option<&PipelineBufferDescriptorRef> {
+-        unsafe { msg_send![self, objectAtIndexedSubscript: index] }
++        unsafe { msg_send![self, objectAtIndex: index] }
+     }
+ 
+     pub fn set_object_at(
+@@ -48,7 +48,7 @@ impl PipelineBufferDescriptorArrayRef {
+         index: NSUInteger,
+         buffer_desc: Option<&PipelineBufferDescriptorRef>,
+     ) {
+-        unsafe { msg_send![self, setObject:buffer_desc atIndexedSubscript:index] }
++        unsafe { msg_send![self, setObject:buffer_desc atIndex:index] }
+     }
+ }
+ 

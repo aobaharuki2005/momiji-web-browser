@@ -1,0 +1,13 @@
+diff --git a/gfx/thebes/gfxMacFont.cpp b/gfx/thebes/gfxMacFont.cpp
+index f78ede5aa57bf..b4c0f22f5bbc3 100644
+--- a/gfx/thebes/gfxMacFont.cpp
++++ b/gfx/thebes/gfxMacFont.cpp
+@@ -457,7 +457,7 @@ int32_t gfxMacFont::GetGlyphWidth(uint16_t aGID) {
+   }
+ 
+   CGSize advance;
+-  ::CTFontGetAdvancesForGlyphs(mCTFont, kCTFontOrientationDefault, &aGID,
++  ::CTFontGetAdvancesForGlyphs(mCTFont, kCTFontDefaultOrientation, &aGID,
+                                &advance, 1);
+   return advance.width * 0x10000;
+ }

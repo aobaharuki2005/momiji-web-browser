@@ -1,0 +1,9 @@
+diff --git a/third_party/rust/neqo-udp/.cargo-checksum.json b/third_party/rust/neqo-udp/.cargo-checksum.json
+index 26b80693df2dd..4a0342ad78d04 100644
+--- a/third_party/rust/neqo-udp/.cargo-checksum.json
++++ b/third_party/rust/neqo-udp/.cargo-checksum.json
+@@ -1 +1 @@
+-{"files":{"Cargo.toml":"d1d734ea754ffbb1bd448888ce1e331b37f0dd683459b188ebd741cff59a2e83","build.rs":"bf57cd35a78f636c14c442c1926abc2deca3d137e9d207e4f2f960f5b8363b07","src/lib.rs":"dcc48d821ed987cfc03ffb5e64247e5820ecde9b0461f4db7e426b98749c88a4"},"package":null}
+\ No newline at end of file
++{"files":{},"package":null}
+\ No newline at end of file

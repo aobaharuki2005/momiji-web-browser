@@ -1,0 +1,13 @@
+diff --git a/gfx/thebes/gfxCoreTextShaper.h b/gfx/thebes/gfxCoreTextShaper.h
+index f2e98f342f21b..b61ca0abe30aa 100644
+--- a/gfx/thebes/gfxCoreTextShaper.h
++++ b/gfx/thebes/gfxCoreTextShaper.h
+@@ -48,7 +48,7 @@ class gfxCoreTextShaper : public gfxFontShaper {
+   CFDictionaryRef mAttributesDictRTL;
+ 
+   nsresult SetGlyphsFromRun(gfxShapedText* aShapedText, uint32_t aOffset,
+-                            uint32_t aLength, CTRunRef aCTRun);
++                            uint32_t aLength, CTRunRef aCTRun, int32_t aStringOffset);
+ 
+   CTFontRef CreateCTFontWithFeatures(CGFloat aSize,
+                                      CTFontDescriptorRef aDescriptor);

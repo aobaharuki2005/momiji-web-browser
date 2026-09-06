@@ -1,0 +1,13 @@
+diff --git a/toolkit/components/telemetry/pingsender/moz.build b/toolkit/components/telemetry/pingsender/moz.build
+index e3526f4c3491f..03c38cbbcfc54 100644
+--- a/toolkit/components/telemetry/pingsender/moz.build
++++ b/toolkit/components/telemetry/pingsender/moz.build
+@@ -32,6 +32,8 @@ else:
+         "pingsender_unix_common.cpp",
+     ]
+ 
++if CONFIG["OS_ARCH"] == "Darwin":
++    LDFLAGS += ["-Wl,-rpath,@executable_path/./"]
+ 
+ # Don't use the STL wrappers; we don't link with -lmozalloc, and it really
+ # doesn't matter here anyway.

@@ -1,0 +1,12 @@
+diff --git a/browser/app/moz.build b/browser/app/moz.build
+index 28a965068081c..fb60647289e73 100644
+--- a/browser/app/moz.build
++++ b/browser/app/moz.build
+@@ -126,6 +126,7 @@ if CONFIG["OS_ARCH"] == "Darwin":
+     OS_LIBS += [
+         "-framework CoreFoundation",
+     ]
++    LDFLAGS += ["-Wl,-rpath,@executable_path/./"]
+ 
+ if CONFIG["MOZ_SANDBOX"] and CONFIG["OS_ARCH"] == "WINNT":
+     # For sandbox includes and the include dependencies those have

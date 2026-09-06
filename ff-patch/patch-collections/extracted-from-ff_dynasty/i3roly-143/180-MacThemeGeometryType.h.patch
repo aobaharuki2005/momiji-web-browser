@@ -1,0 +1,22 @@
+diff --git a/widget/cocoa/MacThemeGeometryType.h b/widget/cocoa/MacThemeGeometryType.h
+index d64580f029e6..1a442e9975c5 100644
+--- a/widget/cocoa/MacThemeGeometryType.h
++++ b/widget/cocoa/MacThemeGeometryType.h
+@@ -9,6 +9,17 @@ enum MacThemeGeometryType {
+   eThemeGeometryTypeTitlebar = 1,
+   eThemeGeometryTypeSidebar,
+   eThemeGeometryTypeWindowButtons,
++  eThemeGeometryTypeFullscreenButton,
++  eThemeGeometryTypeMenu,
++  eThemeGeometryTypeHighlightedMenuItem,
++  eThemeGeometryTypeVibrancyLight,
++  eThemeGeometryTypeVibrancyDark,
++  eThemeGeometryTypeVibrantTitlebarLight,
++  eThemeGeometryTypeVibrantTitlebarDark,
++  eThemeGeometryTypeTooltip,
++  eThemeGeometryTypeSourceList,
++  eThemeGeometryTypeSourceListSelection,
++  eThemeGeometryTypeActiveSourceListSelection
+ };
+ 
+ #endif

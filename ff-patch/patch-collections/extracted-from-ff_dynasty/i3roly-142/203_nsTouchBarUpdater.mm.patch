@@ -1,0 +1,27 @@
+diff --git a/widget/cocoa/nsTouchBarUpdater.mm b/widget/cocoa/nsTouchBarUpdater.mm
+index ed0b78c6d1..5f9de0e564 100644
+--- a/widget/cocoa/nsTouchBarUpdater.mm
++++ b/widget/cocoa/nsTouchBarUpdater.mm
+@@ -7,6 +7,7 @@
+ #include "nsTouchBar.h"
+ #include "nsTouchBarInput.h"
+ #include "nsTouchBarUpdater.h"
++#include "nsTouchBarNativeAPIDefines.h"
+ 
+ #include "nsIBaseWindow.h"
+ #include "nsIWidget.h"
+@@ -14,6 +15,14 @@
+ // defined in nsCocoaWindow.mm.
+ extern BOOL sTouchBarIsInitialized;
+ 
++
++#if !defined(MAC_OS_X_VERSION_10_12_2) || \
++    MAC_OS_X_VERSION_MAX_ALLOWED < MAC_OS_X_VERSION_10_12_2
++@interface BaseWindow (NSTouchBarProvider)
++@property(strong) NSTouchBar* touchBar;
++@end
++#endif
++
+ NS_IMPL_ISUPPORTS(nsTouchBarUpdater, nsITouchBarUpdater);
+ 
+ NS_IMETHODIMP

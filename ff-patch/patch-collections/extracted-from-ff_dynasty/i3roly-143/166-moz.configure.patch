@@ -1,0 +1,13 @@
+diff --git a/toolkit/moz.configure b/toolkit/moz.configure
+index 44b91b7bb3e0..54dbcfa6e98c 100644
+--- a/toolkit/moz.configure
++++ b/toolkit/moz.configure
+@@ -2819,7 +2819,7 @@ def wasm_sandboxing_libraries():
+ @depends(dependable(wasm_sandboxing_libraries), build_project, target)
+ def default_wasm_sandboxing_libraries(libraries, build_project, target):
+     if build_project != "tools/rusttests" and target.endianness == "little":
+-        non_default_libs = {}
++        non_default_libs = {"soundtouch"}
+ 
+         return tuple(l for l in libraries if l not in non_default_libs)
+ 

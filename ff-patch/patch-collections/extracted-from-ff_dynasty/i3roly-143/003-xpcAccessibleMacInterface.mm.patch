@@ -1,0 +1,31 @@
+diff --git a/accessible/xpcom/xpcAccessibleMacInterface.mm b/accessible/xpcom/xpcAccessibleMacInterface.mm
+index e05937360b61..040f37cc7a24 100644
+--- a/accessible/xpcom/xpcAccessibleMacInterface.mm
++++ b/accessible/xpcom/xpcAccessibleMacInterface.mm
+@@ -259,7 +259,7 @@ nsresult xpcAccessibleMacInterface::NSObjectToJsValue(
+       return NS_ERROR_FAILURE;
+     }
+     for (size_t i = 0; i < [objArr count]; ++i) {
+-      nsresult rv = NSObjectToJsValue(objArr[i], aCx, v[i]);
++      nsresult rv = NSObjectToJsValue([objArr objectAtIndex:i], aCx, v[i]);
+       NS_ENSURE_SUCCESS(rv, rv);
+     }
+ 
+@@ -297,7 +297,7 @@ nsresult xpcAccessibleMacInterface::NSObjectToJsValue(
+ 
+                           NSMutableDictionary* attrRun =
+                               [attributes mutableCopy];
+-                          attrRun[@"string"] = str;
++                          [attrRun setObject:str forKey:@"string"];
+ 
+                           [attrRunArray addObject:attrRun];
+                         }];
+@@ -520,7 +520,7 @@ id xpcAccessibleMacInterface::JsValueToSpecifiedNSObject(
+       JS_GetPropertyById(aCx, object, ids[i], &currentValue);
+       id unwrappedValue = JsValueToNSObject(currentValue, aCx, &rv);
+       NS_ENSURE_SUCCESS(rv, nil);
+-      dict[unwrappedKey] = unwrappedValue;
++      [dict setObject:unwrappedValue forKey:unwrappedKey];
+     }
+ 
+     *aResult = NS_OK;

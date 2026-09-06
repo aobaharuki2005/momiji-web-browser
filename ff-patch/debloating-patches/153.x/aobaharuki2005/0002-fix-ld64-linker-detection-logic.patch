@@ -1,0 +1,25 @@
+From 188b8903b538ab7883941e108f09f77186c2eed1 Mon Sep 17 00:00:00 2001
+From: aobaharuki2005 <tranbaohnth@outlook.com>
+Date: Mon, 20 Apr 2026 00:28:27 +0700
+Subject: [PATCH 2/2] fix ld64 linker detection logic
+
+---
+ build/moz.configure/toolchain.configure | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/build/moz.configure/toolchain.configure b/build/moz.configure/toolchain.configure
+index 1842548c61..08ebd2a477 100644
+--- a/build/moz.configure/toolchain.configure
++++ b/build/moz.configure/toolchain.configure
+@@ -2026,7 +2026,7 @@ def select_linker_tmpl(host_or_target):
+             # ensure consistent output.
+             env["LC_ALL"] = "C"
+             retcode, stdout, stderr = get_cmd_output(*cmd, env=env)
+-            if retcode == 1 and "Logging ld64 options" in stderr:
++            if retcode == 1 and "unknown options" in stderr:
+                 kind = "ld64"
+ 
+             elif retcode != 0:
+-- 
+2.53.0
+

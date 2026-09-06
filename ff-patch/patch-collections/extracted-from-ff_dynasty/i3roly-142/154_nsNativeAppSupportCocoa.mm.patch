@@ -1,0 +1,13 @@
+diff --git a/toolkit/xre/nsNativeAppSupportCocoa.mm b/toolkit/xre/nsNativeAppSupportCocoa.mm
+index 6f4b96b88d..37c2f03cee 100644
+--- a/toolkit/xre/nsNativeAppSupportCocoa.mm
++++ b/toolkit/xre/nsNativeAppSupportCocoa.mm
+@@ -72,7 +72,7 @@ nsresult GetNativeWindowPointerFromDOMWindow(mozIDOMWindowProxy* a_window,
+   // alert here.  But the alert's message and buttons would require custom
+   // localization.  So (for now at least) we just log an English message
+   // to the console before quitting.
+-  if (major < 10 || (major == 10 && minor < 12)) {
++  if (major < 10 || (major == 10 && minor < 7)) {
+     NSLog(@"Minimum OS version requirement not met!");
+     return NS_OK;
+   }

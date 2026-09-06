@@ -1,0 +1,14 @@
+diff --git a/third_party/rust/zeitstempel/Cargo.toml b/third_party/rust/zeitstempel/Cargo.toml
+index b61a629781a0..1b7a92711911 100644
+--- a/third_party/rust/zeitstempel/Cargo.toml
++++ b/third_party/rust/zeitstempel/Cargo.toml
+@@ -42,6 +42,9 @@ version = "1.0.0"
+ [dependencies.once_cell]
+ version = "1.5.2"
+ 
++[dependencies]
++whatsys = "0.3"
++
+ [target.'cfg(any(target_os = "linux", target_os = "android", target_os = "macos", target_os = "ios"))'.dependencies.libc]
+ version = "0.2"
+ 

@@ -1,0 +1,33 @@
+diff --git a/ipc/chromium/src/chrome/common/ipc_message.cc b/ipc/chromium/src/chrome/common/ipc_message.cc
+index 133c7d3e811ca..83056f5105e87 100644
+--- a/ipc/chromium/src/chrome/common/ipc_message.cc
++++ b/ipc/chromium/src/chrome/common/ipc_message.cc
+@@ -133,8 +133,10 @@ void Message::SetAttachedFileHandles(
+ bool Message::has_any_attachments() const {
+   return !attached_ports_.IsEmpty() || !attached_handles_.IsEmpty()
+ #if defined(XP_DARWIN)
+-         || !attached_send_rights_.IsEmpty() ||
++/* sorry nika it ain't working
++      || !attached_send_rights_.IsEmpty() ||
+          !attached_receive_rights_.IsEmpty()
++*/
+ #endif
+       ;
+ }
+@@ -197,6 +199,8 @@ uint32_t Message::num_send_rights() const {
+   return attached_send_rights_.Length();
+ }
+ 
++//it ain't working sorry nika
++/*
+ bool Message::WriteMachReceiveRight(mozilla::UniqueMachReceiveRight port) {
+   uint32_t index = attached_receive_rights_.Length();
+   WriteUInt32(index);
+@@ -225,6 +229,7 @@ bool Message::ConsumeMachReceiveRight(
+ uint32_t Message::num_receive_rights() const {
+   return attached_receive_rights_.Length();
+ }
++*/
+ #endif
+ 
+ bool Message::WillBeRoutedExternally(
