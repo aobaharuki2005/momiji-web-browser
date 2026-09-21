@@ -13,6 +13,7 @@ body:
       description: Also tell me, what did you expect to happen?
       placeholder: |
         Tell me what you see! Description only.
+        Also tell me in detail what did you do to reproduce the bug.
         In case of lengthy crash dump or error log, please don't paste them all there. Save it in files and attach there.
     validations:
       required: true
