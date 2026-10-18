@@ -1,0 +1,897 @@
+From 42d3ca4cd47ba338ea94600b4364bbed28dcf9ee Mon Sep 17 00:00:00 2001
+From: Jingqi Chen <hobochen96@gmail.com>
+Date: Sun, 18 Oct 2026 15:39:08 -0700
+Subject: [PATCH] Add opt-in variable font and overlap rendering fixes for
+ legacy macOS
+
+Instance requested variation axes with HarfBuzz on systems before 10.13, preserving them through metrics, serialization and WebRender. Independently render raw glyph contours with nonzero fill before 10.10 to preserve overlapping strokes. Both paths are disabled by default and retain native drawing fallback for unsupported fonts.
+---
+ Cargo.lock                                    |   1 +
+ gfx/2d/LegacyMacFont.cpp                      | 361 ++++++++++++++++++
+ gfx/2d/LegacyMacFont.h                        |  31 ++
+ gfx/2d/LegacyMacFontSettings.cpp              |  19 +
+ gfx/2d/ScaledFontMac.cpp                      |  34 +-
+ gfx/2d/ScaledFontMac.h                        |  10 +
+ gfx/2d/moz.build                              |   7 +
+ gfx/harfbuzz/src/moz.build                    |   1 +
+ .../skia/src/ports/SkScalerContext_mac_ct.cpp |  22 +-
+ gfx/thebes/gfxMacFont.cpp                     |  11 +-
+ gfx/thebes/gfxMacFont.h                       |   1 +
+ gfx/thebes/gfxPlatformMac.cpp                 |   9 +-
+ gfx/wr/wr_glyph_rasterizer/Cargo.toml         |   1 +
+ .../src/platform/macos/font.rs                |  64 +++-
+ modules/libpref/init/StaticPrefList.yaml      |  11 +
+ 15 files changed, 567 insertions(+), 16 deletions(-)
+ create mode 100644 gfx/2d/LegacyMacFont.cpp
+ create mode 100644 gfx/2d/LegacyMacFont.h
+ create mode 100644 gfx/2d/LegacyMacFontSettings.cpp
+
+diff --git a/Cargo.lock b/Cargo.lock
+index f51ce893..8f4218ff 100644
+--- a/Cargo.lock
++++ b/Cargo.lock
+@@ -9439,6 +9439,7 @@ dependencies = [
+  "dwrote",
+  "euclid",
+  "firefox-on-glean",
++ "foreign-types",
+  "freetype",
+  "glean",
+  "lazy_static",
+diff --git a/gfx/2d/LegacyMacFont.cpp b/gfx/2d/LegacyMacFont.cpp
+new file mode 100644
+index 00000000..9c15173c
+--- /dev/null
++++ b/gfx/2d/LegacyMacFont.cpp
+@@ -0,0 +1,361 @@
++/* This Source Code Form is subject to the terms of the Mozilla Public
++ * License, v. 2.0. If a copy of the MPL was not distributed with this
++ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
++
++#include "LegacyMacFont.h"
++
++#include <algorithm>
++#include <cmath>
++#include <limits>
++#include <list>
++#include <mutex>
++#include <vector>
++
++#include "hb.h"
++#include "hb-ot.h"
++#include "hb-subset.h"
++
++namespace {
++
++hb_blob_t* ReferenceTable(hb_face_t*, hb_tag_t aTag, void* aFont) {
++  CFDataRef data = CGFontCopyTableForTag(static_cast<CGFontRef>(aFont), aTag);
++  if (!data) {
++    return hb_blob_get_empty();
++  }
++  auto length = CFDataGetLength(data);
++  if (length > std::numeric_limits<unsigned>::max()) {
++    CFRelease(data);
++    return hb_blob_get_empty();
++  }
++  return hb_blob_create(reinterpret_cast<const char*>(CFDataGetBytePtr(data)),
++                        length, HB_MEMORY_MODE_READONLY,
++                        const_cast<void*>(static_cast<const void*>(data)),
++                        [](void* aData) { CFRelease(aData); });
++}
++
++unsigned GetTableTags(const hb_face_t*, unsigned aStart, unsigned* aCount,
++                      hb_tag_t* aTags, void* aFont) {
++  CFArrayRef tags = CGFontCopyTableTags(static_cast<CGFontRef>(aFont));
++  if (!tags) {
++    if (aCount) {
++      *aCount = 0;
++    }
++    return 0;
++  }
++  unsigned total = CFArrayGetCount(tags);
++  if (aCount) {
++    *aCount = std::min(*aCount, total - std::min(aStart, total));
++    for (unsigned i = 0; i < *aCount; ++i) {
++      aTags[i] = uintptr_t(CFArrayGetValueAtIndex(tags, aStart + i));
++    }
++  }
++  CFRelease(tags);
++  return total;
++}
++
++hb_face_t* GetFace(CGFontRef aFont) {
++  static std::mutex mutex;
++  static std::list<std::pair<CGFontRef, hb_face_t*>> faces;
++  std::lock_guard<std::mutex> lock(mutex);
++  auto found = std::find_if(
++      faces.begin(), faces.end(),
++      [aFont](const auto& aEntry) { return aEntry.first == aFont; });
++  if (found != faces.end()) {
++    faces.splice(faces.begin(), faces, found);
++    return hb_face_reference(faces.front().second);
++  }
++  CGFontRetain(aFont);
++  hb_face_t* face = hb_face_create_for_tables(
++      ReferenceTable, aFont,
++      [](void* aData) { CGFontRelease(static_cast<CGFontRef>(aData)); });
++  hb_face_set_get_table_tags_func(face, GetTableTags, aFont, nullptr);
++  hb_face_make_immutable(face);
++  faces.emplace_front(aFont, face);
++  if (faces.size() > 16) {
++    hb_face_destroy(faces.back().second);
++    faces.pop_back();
++  }
++  return hb_face_reference(face);
++}
++
++bool HasTable(hb_face_t* aFace, hb_tag_t aTag) {
++  hb_blob_t* table = hb_face_reference_table(aFace, aTag);
++  bool result = hb_blob_get_length(table) != 0;
++  hb_blob_destroy(table);
++  return result;
++}
++
++bool HasColor(hb_face_t* aFace) {
++  return HasTable(aFace, HB_TAG('C', 'O', 'L', 'R')) ||
++         HasTable(aFace, HB_TAG('s', 'b', 'i', 'x')) ||
++         HasTable(aFace, HB_TAG('C', 'B', 'D', 'T')) ||
++         HasTable(aFace, HB_TAG('S', 'V', 'G', ' '));
++}
++
++struct FontInstance {
++  FontInstance(CGFontRef aSource, CGFontRef aFont,
++               const std::vector<MomijiFontVariation>& aVariations)
++      : source(CGFontRetain(aSource)),
++        font(CGFontRetain(aFont)),
++        variations(aVariations) {}
++  ~FontInstance() {
++    CGFontRelease(source);
++    CGFontRelease(font);
++  }
++  CGFontRef source;
++  CGFontRef font;
++  std::vector<MomijiFontVariation> variations;
++};
++
++std::mutex sInstancesMutex;
++std::list<FontInstance> sInstances;
++
++bool Matches(const FontInstance& aInstance, CGFontRef aSource,
++             const std::vector<MomijiFontVariation>& aVariations) {
++  return aInstance.source == aSource &&
++         aInstance.variations.size() == aVariations.size() &&
++         std::equal(aVariations.begin(), aVariations.end(),
++                    aInstance.variations.begin(),
++                    [](const auto& a, const auto& b) {
++                      return a.tag == b.tag && a.value == b.value;
++                    });
++}
++
++hb_draw_funcs_t* GetDrawFuncs() {
++  static hb_draw_funcs_t* funcs = [] {
++    hb_draw_funcs_t* f = hb_draw_funcs_create();
++    hb_draw_funcs_set_move_to_func(
++        f,
++        [](hb_draw_funcs_t*, void* aPath, hb_draw_state_t*, float x, float y,
++           void*) {
++          CGPathMoveToPoint(static_cast<CGMutablePathRef>(aPath), nullptr, x,
++                            y);
++        },
++        nullptr, nullptr);
++    hb_draw_funcs_set_line_to_func(
++        f,
++        [](hb_draw_funcs_t*, void* aPath, hb_draw_state_t*, float x, float y,
++           void*) {
++          CGPathAddLineToPoint(static_cast<CGMutablePathRef>(aPath), nullptr, x,
++                               y);
++        },
++        nullptr, nullptr);
++    hb_draw_funcs_set_quadratic_to_func(
++        f,
++        [](hb_draw_funcs_t*, void* aPath, hb_draw_state_t*, float cx, float cy,
++           float x, float y, void*) {
++          CGPathAddQuadCurveToPoint(static_cast<CGMutablePathRef>(aPath),
++                                    nullptr, cx, cy, x, y);
++        },
++        nullptr, nullptr);
++    hb_draw_funcs_set_cubic_to_func(
++        f,
++        [](hb_draw_funcs_t*, void* aPath, hb_draw_state_t*, float cx1,
++           float cy1, float cx2, float cy2, float x, float y, void*) {
++          CGPathAddCurveToPoint(static_cast<CGMutablePathRef>(aPath), nullptr,
++                                cx1, cy1, cx2, cy2, x, y);
++        },
++        nullptr, nullptr);
++    hb_draw_funcs_set_close_path_func(
++        f,
++        [](hb_draw_funcs_t*, void* aPath, hb_draw_state_t*, void*) {
++          CGPathCloseSubpath(static_cast<CGMutablePathRef>(aPath));
++        },
++        nullptr, nullptr);
++    hb_draw_funcs_make_immutable(f);
++    return f;
++  }();
++  return funcs;
++}
++
++hb_font_t* GetOutlineFont(CTFontRef aFont) {
++  CGFontRef cgFont = CTFontCopyGraphicsFont(aFont, nullptr);
++  if (!cgFont) {
++    return nullptr;
++  }
++  hb_face_t* face = GetFace(cgFont);
++  CGFontRelease(cgFont);
++  if (HasColor(face) || (!HasTable(face, HB_TAG('g', 'l', 'y', 'f')) &&
++                         !HasTable(face, HB_TAG('C', 'F', 'F', ' ')))) {
++    hb_face_destroy(face);
++    return nullptr;
++  }
++  hb_font_t* font = hb_font_create(face);
++  hb_face_destroy(face);
++  hb_ot_font_set_funcs(font);
++  unsigned upem = hb_face_get_upem(hb_font_get_face(font));
++  hb_font_set_scale(font, upem, upem);
++  return font;
++}
++
++}  // namespace
++
++CGFontRef momiji_legacy_create_font(CGFontRef aFont,
++                                    const MomijiFontVariation* aVariations,
++                                    size_t aCount) {
++  if (!aFont || (aCount && !aVariations)) {
++    return nullptr;
++  }
++  for (size_t i = 0; i < aCount; ++i) {
++    if (!std::isfinite(aVariations[i].value)) {
++      return nullptr;
++    }
++  }
++  hb_face_t* face = GetFace(aFont);
++  unsigned axisCount = hb_ot_var_get_axis_count(face);
++  if (!axisCount || HasColor(face)) {
++    hb_face_destroy(face);
++    return nullptr;
++  }
++  std::vector<hb_ot_var_axis_info_t> axes(axisCount);
++  hb_ot_var_get_axis_infos(face, 0, &axisCount, axes.data());
++  std::vector<MomijiFontVariation> locations;
++  locations.reserve(axisCount);
++  for (const auto& axis : axes) {
++    float value = axis.default_value;
++    for (size_t i = 0; i < aCount; ++i) {
++      if (aVariations[i].tag == axis.tag) {
++        value = aVariations[i].value;
++      }
++    }
++    locations.push_back(
++        {axis.tag, std::max(axis.min_value, std::min(value, axis.max_value))});
++  }
++  {
++    std::lock_guard<std::mutex> lock(sInstancesMutex);
++    auto found = std::find_if(sInstances.begin(), sInstances.end(),
++                              [&](const auto& aInstance) {
++                                return Matches(aInstance, aFont, locations);
++                              });
++    if (found != sInstances.end()) {
++      sInstances.splice(sInstances.begin(), sInstances, found);
++      hb_face_destroy(face);
++      return CGFontRetain(sInstances.front().font);
++    }
++  }
++  hb_subset_input_t* input = hb_subset_input_create_or_fail();
++  if (!input) {
++    hb_face_destroy(face);
++    return nullptr;
++  }
++  hb_set_invert(hb_subset_input_glyph_set(input));
++  hb_set_invert(hb_subset_input_unicode_set(input));
++  hb_set_invert(hb_subset_input_set(input, HB_SUBSET_SETS_LAYOUT_FEATURE_TAG));
++  hb_subset_input_set_flags(
++      input, HB_SUBSET_FLAGS_RETAIN_GIDS | HB_SUBSET_FLAGS_NOTDEF_OUTLINE |
++                 HB_SUBSET_FLAGS_PASSTHROUGH_UNRECOGNIZED |
++                 HB_SUBSET_FLAGS_DOWNGRADE_CFF2);
++  bool ok = true;
++  for (const auto& location : locations) {
++    ok &= hb_subset_input_pin_axis_location(input, face, location.tag,
++                                            location.value);
++  }
++  hb_face_t* instance = ok ? hb_subset_or_fail(face, input) : nullptr;
++  hb_subset_input_destroy(input);
++  hb_face_destroy(face);
++  if (!instance) {
++    return nullptr;
++  }
++  hb_blob_t* blob = hb_face_reference_blob(instance);
++  unsigned length = 0;
++  const char* bytes = hb_blob_get_data(blob, &length);
++  CFDataRef data =
++      length ? CFDataCreate(kCFAllocatorDefault,
++                            reinterpret_cast<const UInt8*>(bytes), length)
++             : nullptr;
++  CGDataProviderRef provider =
++      data ? CGDataProviderCreateWithCFData(data) : nullptr;
++  CGFontRef result =
++      provider ? CGFontCreateWithDataProvider(provider) : nullptr;
++  if (provider) {
++    CGDataProviderRelease(provider);
++  }
++  if (data) {
++    CFRelease(data);
++  }
++  hb_blob_destroy(blob);
++  hb_face_destroy(instance);
++  if (result) {
++    std::lock_guard<std::mutex> lock(sInstancesMutex);
++    sInstances.emplace_front(aFont, result, locations);
++    if (sInstances.size() > 8) {
++      sInstances.pop_back();
++    }
++  }
++  return result;
++}
++
++CGPathRef momiji_legacy_create_glyph_path(CTFontRef aFont, CGGlyph aGlyph,
++                                          const CGAffineTransform* aTransform) {
++  if (!aFont) {
++    return nullptr;
++  }
++  hb_font_t* font = GetOutlineFont(aFont);
++  if (!font) {
++    return nullptr;
++  }
++  CGMutablePathRef path = CGPathCreateMutable();
++  CGPathRef result = nullptr;
++  if (path && hb_font_draw_glyph_or_fail(font, aGlyph, GetDrawFuncs(), path)) {
++    CGFloat scale =
++        CTFontGetSize(aFont) / hb_face_get_upem(hb_font_get_face(font));
++    CGAffineTransform matrix =
++        CGAffineTransformScale(CTFontGetMatrix(aFont), scale, scale);
++    if (aTransform) {
++      matrix = CGAffineTransformConcat(matrix, *aTransform);
++    }
++    result = CGPathCreateCopyByTransformingPath(path, &matrix);
++  }
++  if (path) {
++    CGPathRelease(path);
++  }
++  hb_font_destroy(font);
++  return result;
++}
++
++bool momiji_legacy_draw_glyphs(CTFontRef aFont, const CGGlyph* aGlyphs,
++                               const CGPoint* aPositions, size_t aCount,
++                               CGContextRef aContext) {
++  if (!aFont || !aContext || (aCount && (!aGlyphs || !aPositions))) {
++    return false;
++  }
++  hb_font_t* font = GetOutlineFont(aFont);
++  if (!font) {
++    return false;
++  }
++  unsigned upem = hb_face_get_upem(hb_font_get_face(font));
++  std::vector<CGMutablePathRef> paths;
++  paths.reserve(aCount);
++  bool ok = true;
++  for (size_t i = 0; i < aCount; ++i) {
++    CGMutablePathRef path = CGPathCreateMutable();
++    paths.push_back(path);
++    if (!path ||
++        !hb_font_draw_glyph_or_fail(font, aGlyphs[i], GetDrawFuncs(), path)) {
++      ok = false;
++      break;
++    }
++  }
++  if (ok) {
++    CGFloat scale = CTFontGetSize(aFont) / upem;
++    CGAffineTransform textMatrix = CGContextGetTextMatrix(aContext);
++    CGAffineTransform fontMatrix = CTFontGetMatrix(aFont);
++    for (size_t i = 0; i < aCount; ++i) {
++      CGContextSaveGState(aContext);
++      CGContextConcatCTM(aContext, textMatrix);
++      CGContextTranslateCTM(aContext, aPositions[i].x, aPositions[i].y);
++      CGContextConcatCTM(aContext, fontMatrix);
++      CGContextScaleCTM(aContext, scale, scale);
++      CGContextAddPath(aContext, paths[i]);
++      CGContextFillPath(aContext);
++      CGContextRestoreGState(aContext);
++    }
++  }
++  for (auto path : paths) {
++    if (path) {
++      CGPathRelease(path);
++    }
++  }
++  hb_font_destroy(font);
++  return ok;
++}
+diff --git a/gfx/2d/LegacyMacFont.h b/gfx/2d/LegacyMacFont.h
+new file mode 100644
+index 00000000..3c20b66f
+--- /dev/null
++++ b/gfx/2d/LegacyMacFont.h
+@@ -0,0 +1,31 @@
++/* This Source Code Form is subject to the terms of the Mozilla Public
++ * License, v. 2.0. If a copy of the MPL was not distributed with this
++ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
++
++#ifndef MOZILLA_GFX_LEGACYMACFONT_H_
++#define MOZILLA_GFX_LEGACYMACFONT_H_
++
++#include <ApplicationServices/ApplicationServices.h>
++#include <CoreText/CoreText.h>
++#include <stddef.h>
++#include <stdint.h>
++
++struct MomijiFontVariation {
++  uint32_t tag;
++  float value;
++};
++
++extern "C" {
++bool momiji_legacy_variations_enabled();
++bool momiji_legacy_outlines_enabled();
++CGFontRef momiji_legacy_create_font(CGFontRef aFont,
++                                    const MomijiFontVariation* aVariations,
++                                    size_t aCount);
++CGPathRef momiji_legacy_create_glyph_path(CTFontRef aFont, CGGlyph aGlyph,
++                                          const CGAffineTransform* aTransform);
++bool momiji_legacy_draw_glyphs(CTFontRef aFont, const CGGlyph* aGlyphs,
++                               const CGPoint* aPositions, size_t aCount,
++                               CGContextRef aContext);
++}
++
++#endif
+diff --git a/gfx/2d/LegacyMacFontSettings.cpp b/gfx/2d/LegacyMacFontSettings.cpp
+new file mode 100644
+index 00000000..4b39de7a
+--- /dev/null
++++ b/gfx/2d/LegacyMacFontSettings.cpp
+@@ -0,0 +1,19 @@
++/* This Source Code Form is subject to the terms of the Mozilla Public
++ * License, v. 2.0. If a copy of the MPL was not distributed with this
++ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
++
++#include "LegacyMacFont.h"
++#include "mozilla/StaticPrefs_gfx.h"
++#include "nsCocoaFeatures.h"
++
++bool momiji_legacy_variations_enabled() {
++  return mozilla::StaticPrefs::
++             gfx_font_rendering_legacy_macos_variations_AtStartup() &&
++         !nsCocoaFeatures::OnHighSierraOrLater();
++}
++
++bool momiji_legacy_outlines_enabled() {
++  return mozilla::StaticPrefs::
++             gfx_font_rendering_legacy_macos_outlines_AtStartup() &&
++         !nsCocoaFeatures::OnYosemiteOrLater();
++}
+diff --git a/gfx/2d/ScaledFontMac.cpp b/gfx/2d/ScaledFontMac.cpp
+index 05737ef0..776b1d50 100644
+--- a/gfx/2d/ScaledFontMac.cpp
++++ b/gfx/2d/ScaledFontMac.cpp
+@@ -22,6 +22,9 @@
+ #include "gfxPlatform.h"  // just for HasVariationFontSupport()
+ #include "nsCocoaFeatures.h"
+ #include "mozilla/gfx/Logging.h"
++#ifdef MOZ_WIDGET_COCOA
++#  include "LegacyMacFont.h"
++#endif
+ 
+ #ifdef MOZ_WIDGET_COCOA
+ // prototype for private API
+@@ -467,8 +470,8 @@ static bool GetVariationsForCTFont(CTFontRef aCTFont,
+ bool ScaledFontMac::GetFontInstanceData(FontInstanceDataOutput aCb,
+                                         void* aBaton) {
+   // Collect any variation settings that were incorporated into the CTFont.
+-  std::vector<FontVariation> variations;
+-  if (!GetVariationsForCTFont(mCTFont, &variations)) {
++  std::vector<FontVariation> variations = mLegacyVariations;
++  if (variations.empty() && !GetVariationsForCTFont(mCTFont, &variations)) {
+     return false;
+   }
+ 
+@@ -482,7 +485,11 @@ bool ScaledFontMac::GetWRFontInstanceOptions(
+     Maybe<wr::FontInstanceOptions>* aOutOptions,
+     Maybe<wr::FontInstancePlatformOptions>* aOutPlatformOptions,
+     std::vector<FontVariation>* aOutVariations) {
+-  GetVariationsForCTFont(mCTFont, aOutVariations);
++  if (!mLegacyVariations.empty()) {
++    *aOutVariations = mLegacyVariations;
++  } else {
++    GetVariationsForCTFont(mCTFont, aOutVariations);
++  }
+ 
+   wr::FontInstanceOptions options = {};
+   options.render_mode = wr::FontRenderMode::Subpixel;
+@@ -733,6 +740,18 @@ CGFontRef UnscaledFontMac::CreateCGFontWithVariations(
+   }
+   MOZ_ASSERT(aVariations);
+ 
++#ifdef MOZ_WIDGET_COCOA
++  if (momiji_legacy_variations_enabled()) {
++    std::vector<MomijiFontVariation> variations;
++    variations.reserve(aVariationCount);
++    for (uint32_t i = 0; i < aVariationCount; ++i) {
++      variations.push_back({aVariations[i].mTag, aVariations[i].mValue});
++    }
++    return momiji_legacy_create_font(aFont, variations.data(),
++                                     variations.size());
++  }
++#endif
++
+   AutoRelease<CFDictionaryRef> varDict(CreateVariationDictionaryOrNull(
+       aFont, aCGAxesCache, aCTAxesCache, aVariationCount, aVariations));
+   if (!varDict) {
+@@ -755,7 +774,11 @@ already_AddRefed<ScaledFont> UnscaledFontMac::CreateScaledFont(
+   const ScaledFontMac::InstanceData& instanceData =
+       *reinterpret_cast<const ScaledFontMac::InstanceData*>(aInstanceData);
+   RefPtr<ScaledFontMac> scaledFont;
+-  if (mFontDesc) {
++  bool legacyVariations = false;
++#ifdef MOZ_WIDGET_COCOA
++  legacyVariations = momiji_legacy_variations_enabled();
++#endif
++  if (mFontDesc && !(legacyVariations && aNumVariations)) {
+     AutoRelease<CTFontRef> font(
+         CTFontCreateWithFontDescriptor(mFontDesc, aGlyphSize, nullptr));
+     if (aNumVariations > 0) {
+@@ -791,6 +814,9 @@ already_AddRefed<ScaledFont> UnscaledFontMac::CreateScaledFont(
+                                    instanceData.mUseFontSmoothing,
+                                    instanceData.mApplySyntheticBold,
+                                    instanceData.mHasColorGlyphs);
++    if (legacyVariations && fontRef != mFont) {
++      scaledFont->SetLegacyVariations(aVariations, aNumVariations);
++    }
+   }
+   return scaledFont.forget();
+ }
+diff --git a/gfx/2d/ScaledFontMac.h b/gfx/2d/ScaledFontMac.h
+index 73a7255f..850daeb8 100644
+--- a/gfx/2d/ScaledFontMac.h
++++ b/gfx/2d/ScaledFontMac.h
+@@ -15,6 +15,7 @@
+ #include "2D.h"
+ 
+ #include "ScaledFontBase.h"
++#include <vector>
+ 
+ namespace mozilla {
+ namespace gfx {
+@@ -62,6 +63,14 @@ class ScaledFontMac : public ScaledFontBase {
+ 
+   bool UseFontSmoothing() const { return mUseFontSmoothing; }
+ 
++  void SetLegacyVariations(const FontVariation* aVariations, uint32_t aCount) {
++    if (aCount) {
++      mLegacyVariations.assign(aVariations, aVariations + aCount);
++    } else {
++      mLegacyVariations.clear();
++    }
++  }
++
+   cairo_font_face_t* CreateCairoFontFace(
+       cairo_font_options_t* aFontOptions) override;
+ 
+@@ -76,6 +85,7 @@ class ScaledFontMac : public ScaledFontBase {
+   bool mUseFontSmoothing;
+   bool mApplySyntheticBold;
+   bool mHasColorGlyphs;
++  std::vector<FontVariation> mLegacyVariations;
+ 
+   struct InstanceData {
+     explicit InstanceData(ScaledFontMac* aScaledFont)
+diff --git a/gfx/2d/moz.build b/gfx/2d/moz.build
+index d89cbdf3..faa5f35c 100644
+--- a/gfx/2d/moz.build
++++ b/gfx/2d/moz.build
+@@ -65,6 +65,7 @@ EXPORTS.mozilla.gfx += [
+ 
+ if CONFIG["MOZ_WIDGET_TOOLKIT"] in ("cocoa", "uikit"):
+     EXPORTS.mozilla.gfx += [
++        "LegacyMacFont.h",
+         "MacIOSurface.h",
+         "ScaledFontBase.h",
+         "ScaledFontMac.h",
+@@ -75,6 +76,12 @@ if CONFIG["MOZ_WIDGET_TOOLKIT"] in ("cocoa", "uikit"):
+         "NativeFontResourceMac.cpp",
+         "ScaledFontMac.cpp",
+     ]
++    if CONFIG["MOZ_WIDGET_TOOLKIT"] == "cocoa":
++        LOCAL_INCLUDES += ["/gfx/harfbuzz/src"]
++        SOURCES += [
++            "LegacyMacFont.cpp",
++            "LegacyMacFontSettings.cpp",
++        ]
+ elif CONFIG["MOZ_WIDGET_TOOLKIT"] == "windows":
+     EXPORTS.mozilla.gfx += [
+         "DWriteSettings.h",
+diff --git a/gfx/harfbuzz/src/moz.build b/gfx/harfbuzz/src/moz.build
+index 9c152068..edb8778f 100644
+--- a/gfx/harfbuzz/src/moz.build
++++ b/gfx/harfbuzz/src/moz.build
+@@ -32,6 +32,7 @@ EXPORTS.harfbuzz += [
+     'hb-shape-plan.h',
+     'hb-shape.h',
+     'hb-style.h',
++    'hb-subset.h',
+     'hb-unicode.h',
+     'hb-version.h',
+     'hb.h',
+diff --git a/gfx/skia/skia/src/ports/SkScalerContext_mac_ct.cpp b/gfx/skia/skia/src/ports/SkScalerContext_mac_ct.cpp
+index 0c0d7add..b3829304 100644
+--- a/gfx/skia/skia/src/ports/SkScalerContext_mac_ct.cpp
++++ b/gfx/skia/skia/src/ports/SkScalerContext_mac_ct.cpp
+@@ -10,6 +10,9 @@
+ 
+ #ifdef SK_BUILD_FOR_MAC
+ #import <ApplicationServices/ApplicationServices.h>
++#ifdef MOZ_SKIA
++#include "mozilla/gfx/LegacyMacFont.h"
++#endif
+ #endif
+ 
+ #ifdef SK_BUILD_FOR_IOS
+@@ -327,7 +330,14 @@ CGRGBPixel* SkScalerContext_Mac::Offscreen::getCG(const SkScalerContext_Mac& con
+     // So always make the font transform identity and place the transform on the context.
+     point = CGPointApplyAffineTransform(point, context.fInvTransform);
+ 
+-    CTFontDrawGlyphs(context.fCTFont.get(), &glyphID, &point, 1, fCG.get());
++#if defined(MOZ_SKIA) && defined(SK_BUILD_FOR_MAC)
++    if (!momiji_legacy_outlines_enabled() ||
++        !momiji_legacy_draw_glyphs(context.fCTFont.get(), &glyphID, &point, 1,
++                                 fCG.get()))
++#endif
++    {
++        CTFontDrawGlyphs(context.fCTFont.get(), &glyphID, &point, 1, fCG.get());
++    }
+ 
+     SkASSERT(rowBytesPtr);
+     *rowBytesPtr = rowBytes;
+@@ -707,7 +717,15 @@ SkScalerContext_Mac::generatePath(const SkGlyph& glyph) {
+     }
+ 
+     CGGlyph cgGlyph = SkTo<CGGlyph>(glyph.getGlyphID());
+-    SkUniqueCFRef<CGPathRef> cgPath(CTFontCreatePathForGlyph(fCTFont.get(), cgGlyph, &xform));
++    CGPathRef rawPath = nullptr;
++#if defined(MOZ_SKIA) && defined(SK_BUILD_FOR_MAC)
++    if (momiji_legacy_outlines_enabled()) {
++        rawPath = momiji_legacy_create_glyph_path(fCTFont.get(), cgGlyph, &xform);
++    }
++#endif
++    SkUniqueCFRef<CGPathRef> cgPath(
++        rawPath ? rawPath
++                : CTFontCreatePathForGlyph(fCTFont.get(), cgGlyph, &xform));
+ 
+     if (!cgPath) {
+         return {};
+diff --git a/gfx/thebes/gfxMacFont.cpp b/gfx/thebes/gfxMacFont.cpp
+index d811711d..c217d233 100644
+--- a/gfx/thebes/gfxMacFont.cpp
++++ b/gfx/thebes/gfxMacFont.cpp
+@@ -8,6 +8,7 @@
+ #include "mozilla/Sprintf.h"
+ #include "mozilla/StaticPrefs_gfx.h"
+ #include "mozilla/gfx/ScaledFontMac.h"
++#include "mozilla/gfx/LegacyMacFont.h"
+ 
+ #include <algorithm>
+ 
+@@ -53,7 +54,7 @@ gfxMacFont::gfxMacFont(const RefPtr<UnscaledFontMac>& aUnscaledFont,
+     AutoTArray<gfxFontVariation, 4> vars;
+     aFontEntry->GetVariationsForStyle(vars, *aFontStyle);
+ 
+-    if (aFontEntry->HasOpticalSize()) {
++    if (aFontEntry->HasOpticalSize() && !momiji_legacy_variations_enabled()) {
+       // Because of a Core Text bug, we need to ensure that if the font has
+       // an 'opsz' axis, it is always explicitly set, and NOT to the font's
+       // default value. (See bug 1457417, bug 1478720.)
+@@ -108,6 +109,9 @@ gfxMacFont::gfxMacFont(const RefPtr<UnscaledFontMac>& aUnscaledFont,
+     mCGFont = UnscaledFontMac::CreateCGFontWithVariations(
+         baseFont, aUnscaledFont->CGAxesCache(), aUnscaledFont->CTAxesCache(),
+         vars.Length(), vars.Elements());
++    if (mCGFont && momiji_legacy_variations_enabled()) {
++      mLegacyVariations.AppendElements(vars);
++    }
+     if (!mCGFont) {
+       ::CFRetain(baseFont);
+       mCGFont = baseFont;
+@@ -552,6 +556,11 @@ already_AddRefed<ScaledFont> gfxMacFont::GetScaledFont(
+   if (!newScaledFont) {
+     return nullptr;
+   }
++  if (!mLegacyVariations.IsEmpty()) {
++    static_cast<ScaledFontMac*>(newScaledFont.get())
++        ->SetLegacyVariations(mLegacyVariations.Elements(),
++                              mLegacyVariations.Length());
++  }
+ 
+   InitializeScaledFont(newScaledFont);
+ 
+diff --git a/gfx/thebes/gfxMacFont.h b/gfx/thebes/gfxMacFont.h
+index 0fadeaeb..4a00fc15 100644
+--- a/gfx/thebes/gfxMacFont.h
++++ b/gfx/thebes/gfxMacFont.h
+@@ -83,6 +83,7 @@ class gfxMacFont final : public gfxFont {
+   Metrics mMetrics;
+ 
+   bool mVariationFont;  // true if font has OpenType variations
++  nsTArray<gfxFontVariation> mLegacyVariations;
+ };
+ 
+ #endif /* GFX_MACFONT_H */
+diff --git a/gfx/thebes/gfxPlatformMac.cpp b/gfx/thebes/gfxPlatformMac.cpp
+index 54da7c8e..edb205e7 100644
+--- a/gfx/thebes/gfxPlatformMac.cpp
++++ b/gfx/thebes/gfxPlatformMac.cpp
+@@ -1081,9 +1081,8 @@ nsTArray<uint8_t> gfxPlatformMac::GetPlatformCMSOutputProfileData() {
+ }
+ 
+ bool gfxPlatformMac::CheckVariationFontSupport() {
+-  // We don't allow variation fonts to be enabled before 10.13,
+-  // as although the Core Text APIs existed, they are known to be
+-  // fairly buggy.
+-  // (Note that Safari also requires 10.13 for variation-font support.)
+-  return nsCocoaFeatures::OnHighSierraOrLater();
++  // Native variation APIs before 10.13 are buggy; software instancing is
++  // opt-in. (Note that Safari also requires 10.13 for variation-font support.)
++  return nsCocoaFeatures::OnHighSierraOrLater() ||
++         StaticPrefs::gfx_font_rendering_legacy_macos_variations_AtStartup();
+ }
+diff --git a/gfx/wr/wr_glyph_rasterizer/Cargo.toml b/gfx/wr/wr_glyph_rasterizer/Cargo.toml
+index de3ffa11..785b6181 100644
+--- a/gfx/wr/wr_glyph_rasterizer/Cargo.toml
++++ b/gfx/wr/wr_glyph_rasterizer/Cargo.toml
+@@ -49,4 +49,5 @@ dwrote = "0.11.5"
+ core-foundation = "0.9.2"
+ core-graphics = "0.23"
+ core-text = { version = "20.1", default-features = false }
++foreign-types = "0.5"
+ objc = "0.2"
+diff --git a/gfx/wr/wr_glyph_rasterizer/src/platform/macos/font.rs b/gfx/wr/wr_glyph_rasterizer/src/platform/macos/font.rs
+index 155d0119..6e5449e7 100644
+--- a/gfx/wr/wr_glyph_rasterizer/src/platform/macos/font.rs
++++ b/gfx/wr/wr_glyph_rasterizer/src/platform/macos/font.rs
+@@ -30,6 +30,45 @@ use crate::rasterizer::{GlyphFormat, GlyphRasterError, GlyphRasterResult, Raster
+ use crate::types::FastHashMap;
+ use std::collections::hash_map::Entry;
+ use std::sync::Arc;
++#[cfg(all(feature = "gecko", target_os = "macos"))]
++use foreign_types::ForeignType;
++
++#[cfg(all(feature = "gecko", target_os = "macos"))]
++extern "C" {
++    fn momiji_legacy_variations_enabled() -> bool;
++    fn momiji_legacy_outlines_enabled() -> bool;
++    fn momiji_legacy_create_font(
++        font: *mut core_graphics::sys::CGFont,
++        variations: *const FontVariation,
++        count: usize,
++    ) -> *mut core_graphics::sys::CGFont;
++    fn momiji_legacy_draw_glyphs(
++        font: CTFontRef,
++        glyphs: *const CGGlyph,
++        positions: *const CGPoint,
++        count: usize,
++        context: *mut std::ffi::c_void,
++    ) -> bool;
++}
++
++fn draw_glyph(ct_font: &CTFont, glyph: CGGlyph, origin: CGPoint, context: &CGContext) -> bool {
++    #[cfg(all(feature = "gecko", target_os = "macos"))]
++    unsafe {
++        if momiji_legacy_outlines_enabled()
++            && momiji_legacy_draw_glyphs(
++                ct_font.as_concrete_TypeRef(),
++                &glyph,
++                &origin,
++                1,
++                context.as_ptr() as *mut _,
++            )
++        {
++            return true;
++        }
++    }
++    ct_font.draw_glyphs(&[glyph], &[origin], context.clone());
++    false
++}
+ 
+ const INITIAL_CG_CONTEXT_SIDE_LENGTH: u32 = 32;
+ 
+@@ -214,6 +253,21 @@ extern "C" {
+ }
+ 
+ fn new_ct_font_with_variations(cg_font: &CGFont, size: f64, variations: &[FontVariation]) -> CTFont {
++    #[cfg(all(feature = "gecko", target_os = "macos"))]
++    unsafe {
++        if momiji_legacy_variations_enabled() {
++            let instance = momiji_legacy_create_font(
++                cg_font.as_ptr(),
++                variations.as_ptr(),
++                variations.len(),
++            );
++            if !instance.is_null() {
++                let instance = CGFont::from_ptr(instance);
++                return core_text::font::new_from_CGFont(&instance, size);
++            }
++            return core_text::font::new_from_CGFont(cg_font, size);
++        }
++    }
+     unsafe {
+         let ct_font = core_text::font::new_from_CGFont(cg_font, size);
+     if variations.is_empty() {
+@@ -736,6 +790,7 @@ impl FontContext {
+             }
+         };
+ 
++        let used_raw_outlines;
+         {
+             let cg_context = self.graphics_context.get_context(&raster_size, glyph_type);
+ 
+@@ -797,7 +852,7 @@ impl FontContext {
+                 cg_context.set_text_matrix(&CG_AFFINE_TRANSFORM_IDENTITY);
+             }
+ 
+-            ct_font.draw_glyphs(&[glyph], &[draw_origin], cg_context.clone());
++            used_raw_outlines = draw_glyph(&ct_font, glyph, draw_origin, cg_context);
+ 
+             // We'd like to render all the strikes in a single ct_font.draw_glyphs call,
+             // passing an array of glyph IDs and an array of origins, but unfortunately
+@@ -810,7 +865,7 @@ impl FontContext {
+                     x: draw_origin.x + i as f64 * pixel_step,
+                     y: draw_origin.y,
+                 };
+-                ct_font.draw_glyphs(&[glyph], &[origin], cg_context.clone());
++                draw_glyph(&ct_font, glyph, origin, cg_context);
+             }
+         }
+ 
+@@ -823,7 +878,7 @@ impl FontContext {
+             // allowed to write to the alpha channel, because we're done calling
+             // CG functions now.
+ 
+-            if smooth {
++            if smooth && !used_raw_outlines {
+                 // Convert to linear space for subpixel AA.
+                 // We explicitly do not do this for grayscale AA ("Alpha without
+                 // smoothing" or Mono) because those rendering modes are not
+@@ -849,7 +904,7 @@ impl FontContext {
+                 pixel[3] = pixel[1];
+             }
+ 
+-            if smooth {
++            if smooth && !used_raw_outlines {
+                 // Convert back from linear space into device space, and perform
+                 // some "preblending" based on the text color.
+                 // In Alpha + smoothing mode, this will also convert subpixel AA
+@@ -873,6 +928,7 @@ impl FontContext {
+             },
+             format: match glyph_type {
+                 GlyphType::Bitmap => GlyphFormat::ColorBitmap,
++                GlyphType::Vector if used_raw_outlines => GlyphFormat::Alpha,
+                 GlyphType::Vector => font.get_glyph_format(),
+             },
+             bytes: rasterized_pixels,
+diff --git a/modules/libpref/init/StaticPrefList.yaml b/modules/libpref/init/StaticPrefList.yaml
+index 206b5043..0ad530e0 100644
+--- a/modules/libpref/init/StaticPrefList.yaml
++++ b/modules/libpref/init/StaticPrefList.yaml
+@@ -7739,6 +7739,17 @@
+   mirror: always
+ 
+ #if defined(XP_DARWIN)
++  # Restart required: font instances and glyph caches retain these choices.
++-   name: gfx.font_rendering.legacy_macos.variations
++    type: bool
++    value: false
++    mirror: once
++
++-   name: gfx.font_rendering.legacy_macos.outlines
++    type: bool
++    value: false
++    mirror: once
++
+   # Set to true to revert from HarfBuzz AAT shaping to the old Core Text
+   # backend.
+ -   name: gfx.font_rendering.coretext.enabled
