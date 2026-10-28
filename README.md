@@ -53,6 +53,8 @@ If I've forgotten to put your name here, please let me know and I'll add it.
 
 [Wowfunhappy](https://github.com/Wowfunhappy) - Maintainers of the firefox-dynasty fork of the original project. Without his invaluable forked source, I wouldn't have been able to rebuilt, reverse engineered and revive the project from scratch like today.
 
+[picopin373-cell](https://github.com/picopin373-cell) - new branding set (since Momiji v153.6.0)
+
 ## Contact
 
 In case of any questions, please contact me via email: tranbaohnth@outlook.com.vn
