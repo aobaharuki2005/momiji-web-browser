@@ -7,7 +7,7 @@
 
 # Momiji Web Browser - macOS Legacy (10.7-10.14) support
 
-<span style="display:block;text-align:center">![Screenshot](img/screenshot_new.png)</span>
+<span style="display:block;text-align:center">![New_screenshot](img/screenshot_new2.png)</span>
 
 ---
 > [!IMPORTANT]
