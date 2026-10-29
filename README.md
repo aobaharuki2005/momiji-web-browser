@@ -15,7 +15,7 @@
 >     - Especially, in pre-2010 era machines, Momiji is reported with `SIGILL` crash in thread `Renderer`. If you encounter this, try running Momiji in safe-mode first using Terminal: `/path/to/Momiji.app/Contents/MacOS/momiji --safe-mode` (replace `/path/to/Momiji.app` with your actual Momiji path), then turn off hardware acceleration using the above guide). 
 >      - After that, perform a normal launch to see whether it works. If not, please file a bug in the Issue subpage. For more detail about this caveats, check out for this [issue #13 reference](https://github.com/aobaharuki2005/momiji-web-browser/issues/13#issuecomment-4412459833)
 > - Full screen sharing (in Google Meet, Microsoft Teams, etc.) and Translations is unavailable on macOS 10.7
-> - DRM-encrypted content (e.g. Spotify, Netflix) is unable to play by default, due to unsupported WideVine plugin. If you need this, bring it back by leveraging Momiji Downloader created by Wowfunhappy to install Momiji in this [link](https://mavericksforever.com/).
+
 ---
 
 ## About Momiji
